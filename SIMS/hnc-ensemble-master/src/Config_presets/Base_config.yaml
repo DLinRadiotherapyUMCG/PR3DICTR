@@ -74,3 +74,14 @@ training:
 visualizations:
   calibration:
     num_bins: 10
+
+hyperparam_tuning:
+  optuna:
+    n_trails: 50
+  hyperparams:
+    patience: 
+      type: 'int'
+      name: 'patience'
+      location: ['training']
+      min: 2
+      max: 10
