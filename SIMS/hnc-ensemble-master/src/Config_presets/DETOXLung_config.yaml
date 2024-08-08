@@ -1,0 +1,84 @@
+seed: 42
+
+columns:
+  label: ["RP"]
+  clinical_features: ["ParticleProton", "SmokerActive","SmokerStopped", "Gender"]
+  logistic_regression_features: ['']
+
+paths:
+  csv: "Z:/Robert/DataImports/Data_23_07_2024/ClinicalData"
+  images: "Z:/Robert/DataImports/Data_23_07_2024/ImageData/"
+  output: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
+  results: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
+
+model:
+  model_name: "dcnn_pooling"
+  num_classes: 1
+  filters: [8, 8, 16, 16, 32]
+  kernel_sizes: [7, 5, 4, 3, 3]
+  strides: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+  pad_value: 0
+  lrelu_alpha: 0.1
+  dropout_p: 0.06087816611628816
+  perform_pooling: False
+  linear_units: [16]
+  clinical_variables_position: 1
+  clinical_variables_linear_units: []
+  clinical_variables_dropout_p: [0.3581947628028867]
+  use_bias: True
+  pooling: 'max'
+  pooling_size: 2
+  normalization: 'batch'
+  conv_block_layers: 1
+  num_ohe_classes: 1
+  linear_units_endpoint: [64]
+
+augmentation:
+  isEnabled: true
+  augmentation_list: ['flip','affine','rotate']
+  prob: 0.5
+  strength: 1
+
+preprocessing:
+  isEnabled: false
+  crop: false
+  crop_shape: [96, 96, 96]
+  ct:
+    a_min: -200
+    a_max: 400
+    b_min: 0
+    b_max: 1
+    clip: true
+  rtdose:
+    a_min: 0
+    a_max: 8000
+    b_min: 0
+    b_max: 1
+    clip: true
+  segmentation_map:
+    target_labels: []
+
+training:
+  max_epochs: 4
+  batch_size: 8
+  validation_interval: 1
+  patience: 10
+  optimizer:
+    name: "Adam"
+    learning_rate: 0.0001
+    weight_decay: 0.05
+  loss:
+    name: "multi-loss"
+    weight: [1]
+    reduction: "mean"
+  scheduler:
+    name: "cosine"
+    T_0: 40
+    T_mult: 1
+    eta_min: 0.00000001
+  validation:
+    num_auc_batches: 1
+
+visualizations:
+  calibration:
+    num_bins: 10

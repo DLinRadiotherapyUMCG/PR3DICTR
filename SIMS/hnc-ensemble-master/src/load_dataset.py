@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 
 from src.HNCDataset import HNCDataset
 
-def load_dataset(config, csv_path, patient_ids = None, augment= False):
+def load_dataset(config, csv_path, patient_ids = None, augment= False, split = False, train = True, splitVar = "Split"):
     """
     Loads data for a single csv file.
     :param csv_path:
@@ -15,7 +15,8 @@ def load_dataset(config, csv_path, patient_ids = None, augment= False):
     print(csv_path)
     
     # Create an instance of the HNCDataset
-    dataset = HNCDataset(csv_path, config, patient_ids, augment=augment)
+    dataset = HNCDataset(csv_path, config, patient_ids, augment=augment, 
+                         split = split, train = train, splitVar = splitVar)
 
     # Get an example input to determine the metadata
     example_input, _, _ = dataset[0]

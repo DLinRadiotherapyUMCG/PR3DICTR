@@ -1,4 +1,4 @@
-from src.models.dcnn_lrelu import DCNN_LReLU
+from src.models.dcnn_pooling import DCNN_Pooling
 
 
 def get_model(config, dataset_metadata):
@@ -17,7 +17,7 @@ def get_model(config, dataset_metadata):
 
     if config['model']['model_name'] == 'dcnn_lrelu':
         model_arguments.update(dataset_metadata)
-        model = DCNN_LReLU(**model_arguments)
+        model = DCNN_Pooling(**model_arguments)
     else:
         raise ValueError(f"Model {config['model']['model_name']} not supported.")
 

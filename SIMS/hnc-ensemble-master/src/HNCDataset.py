@@ -1,3 +1,4 @@
+import csv
 from typing import Optional, List
 
 import numpy as np
@@ -8,6 +9,10 @@ from torch.utils.data import Dataset
 
 from src.utils.center_crop_3d import center_crop_3d
 
+def get_delimiter(file_path: str) -> str:
+    with open(file_path, 'r') as csvfile:
+        delimiter = str(csv.Sniffer().sniff(csvfile.read()).delimiter)
+        return delimiter
 
 def preprocess_image_stack(image_stack, config):
     """
@@ -16,56 +21,57 @@ def preprocess_image_stack(image_stack, config):
     :param config:
     :return:
     """
-
-    # Standardization
-    ct_scaler = ScaleIntensityRange(a_min=config['preprocessing']['ct']['a_min'],
-                                    a_max=config['preprocessing']['ct']['a_max'],
-                                    b_min=config['preprocessing']['ct']['b_min'],
-                                    b_max=config['preprocessing']['ct']['b_max'],
-                                    clip=config['preprocessing']['ct']['clip'],
-                                    dtype=np.float32)
-    rtdose_scaler = ScaleIntensityRange(a_min=config['preprocessing']['rtdose']['a_min'],
-                                        a_max=config['preprocessing']['rtdose']['a_max'],
-                                        b_min=config['preprocessing']['rtdose']['b_min'],
-                                        b_max=config['preprocessing']['rtdose']['b_max'],
-                                        clip=config['preprocessing']['rtdose']['clip'],
+    if(config['preprocessing']['isEnabled']):
+        # Standardization
+        ct_scaler = ScaleIntensityRange(a_min=config['preprocessing']['ct']['a_min'],
+                                        a_max=config['preprocessing']['ct']['a_max'],
+                                        b_min=config['preprocessing']['ct']['b_min'],
+                                        b_max=config['preprocessing']['ct']['b_max'],
+                                        clip=config['preprocessing']['ct']['clip'],
                                         dtype=np.float32)
-    segmentation_map_transform = MapLabelValue(
-        orig_labels=[index for index, x in enumerate(config['preprocessing']['segmentation_map']['target_labels'])],
-        target_labels=config['preprocessing']['segmentation_map']['target_labels'])
+        rtdose_scaler = ScaleIntensityRange(a_min=config['preprocessing']['rtdose']['a_min'],
+                                            a_max=config['preprocessing']['rtdose']['a_max'],
+                                            b_min=config['preprocessing']['rtdose']['b_min'],
+                                            b_max=config['preprocessing']['rtdose']['b_max'],
+                                            clip=config['preprocessing']['rtdose']['clip'],
+                                            dtype=np.float32)
+        segmentation_map_transform = MapLabelValue(
+            orig_labels=[index for index, x in enumerate(config['preprocessing']['segmentation_map']['target_labels'])],
+            target_labels=config['preprocessing']['segmentation_map']['target_labels'])
 
-    image_stack[0] = ct_scaler(image_stack[0])
-    image_stack[1] = rtdose_scaler(image_stack[1])
-    image_stack[2] = segmentation_map_transform(image_stack[2])
+        image_stack[0] = ct_scaler(image_stack[0])
+        image_stack[1] = rtdose_scaler(image_stack[1])
+        image_stack[2] = segmentation_map_transform(image_stack[2])
 
     return image_stack
 
 def augmentation(config):
-    augmentation = config['augmentation']['augmentation_list']
-    
-    # Define the MONAI transformations
-    prob = config['augmentation']['prob']
-    strength = config['augmentation']['strength']
-    
     transforms = []
-    
-    possible_augmentation = ['crop','flip','affine','rotate']
-    
-    if 'crop' in augmentation:
-        transforms.append(RandSpatialCrop(roi_size=config['preprocessing']['crop_shape'], random_size=False, random_center=True))
-    
-    if 'flip' in augmentation:
-        transforms.append(RandFlip(prob=prob, spatial_axis=1))
-    
-    if 'affine' in augmentation:
-        transforms.append(RandAffine(prob=prob, translate_range=(7 * strength,) * 3, scale_range=(0.07 * strength,) * 3, padding_mode='border', mode='bilinear'))
-    
-    if 'rotate' in augmentation:
-        transforms.append(RandRotate(prob=prob, range_x=(3.14 / 24 * strength), align_corners=True, padding_mode='border', mode='bilinear'))
-    
-    for aug in augmentation:
-        if aug not in possible_augmentation:
-            print("Augmentation: " + aug + " is not implimented and therefor not applied")
+
+    if(config['augmentation']['isEnabled']):
+        augmentation = config['augmentation']['augmentation_list']
+        
+        # Define the MONAI transformations
+        prob = config['augmentation']['prob']
+        strength = config['augmentation']['strength']
+                
+        possible_augmentation = ['crop','flip','affine','rotate']
+        
+        if 'crop' in augmentation:
+            transforms.append(RandSpatialCrop(roi_size=config['preprocessing']['crop_shape'], random_size=False, random_center=True))
+        
+        if 'flip' in augmentation:
+            transforms.append(RandFlip(prob=prob, spatial_axis=1))
+        
+        if 'affine' in augmentation:
+            transforms.append(RandAffine(prob=prob, translate_range=(7 * strength,) * 3, scale_range=(0.07 * strength,) * 3, padding_mode='border', mode='bilinear'))
+        
+        if 'rotate' in augmentation:
+            transforms.append(RandRotate(prob=prob, range_x=(3.14 / 24 * strength), align_corners=True, padding_mode='border', mode='bilinear'))
+        
+        for aug in augmentation:
+            if aug not in possible_augmentation:
+                print("Augmentation: " + aug + " is not implimented and therefor not applied")
     
     
     return Compose(transforms)
@@ -77,13 +83,21 @@ class HNCDataset(Dataset):
     Returns a tuple of image_stack, clinical_features, and label.
     """
 
-    def __init__(self, csv_path, config, patient_ids, augment = False):
+    def __init__(self, csv_path, config, patient_ids, augment = False, split = False, train = True, splitVar = "Split"):
         self.images_path, self.label_column = config['paths']['images'], config['columns']['label']
         self.config = config
         self.augment = augment
 
         # Read the csv file
-        df = pd.read_csv(csv_path, delimiter=',', dtype={'PatientID': str})
+        delimiterFound = get_delimiter(csv_path)
+        df = pd.read_csv(csv_path, delimiter=delimiterFound, dtype={'PatientID': str})
+
+        if(split):
+            if(train):
+                df = df[df[splitVar] == "train"]
+            else:
+                df = df[df[splitVar] == "val"]     
+
 
         # Filter the data based on the patient ids, if provided.
         if patient_ids:
@@ -116,6 +130,12 @@ class HNCDataset(Dataset):
         ct = np.load(ct_path)
         dose = np.load(dose_path)
         segmentation_map = np.load(segmentation_map_path)
+
+        # Need to be 4 dimensions
+        if(len(ct.shape) == 3):
+            ct = np.expand_dims(ct,axis = 0)
+            dose = np.expand_dims(dose,axis = 0)
+            segmentation_map = np.expand_dims(segmentation_map,axis = 0)
 
         # Stack the images vertically
         image_stack = np.vstack((ct, dose, segmentation_map), dtype=np.float32)

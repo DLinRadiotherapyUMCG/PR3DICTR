@@ -1,7 +1,7 @@
 import logging
 import os
 
-#import wandb
+import wandb
 from src.get_config import get_config
 from src.load_dataset import load_dataset
 from src.save_model import save_model
@@ -9,7 +9,6 @@ from src.train_multi import train
 from src.utils.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
-
 
 # def main():
 #     # Setup
@@ -42,21 +41,20 @@ if __name__ == '__main__':
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
-    config = get_config('Multi_time')
+    config = get_config('DETOXLung_config')
 
     # Disable randomness
     set_random_seed(config['seed'])
 
     # Load the dataset
     logging.info('Loading dataset')
-    train_data, metadata = load_dataset(config, os.path.join(config['paths']['csv'], 'train_full.csv'), augment=True)
-    val_data, _ = load_dataset(config, os.path.join(config['paths']['csv'], 'valid.csv'))
+    train_data, metadata = load_dataset(config, os.path.join(config['paths']['csv'], 'stratified_sampling_full_manual_94.csv'), augment=True, split = True, train = True, splitVar = "Split")
+    val_data, _ = load_dataset(config, os.path.join(config['paths']['csv'], 'stratified_sampling_full_manual_94.csv'), split = True, train = False, splitVar = "Split")
 
+    # ------------------------- Til here be simsing ------------------
     # Start training
-    
     model = train(config, train_data, val_data, metadata)
 
     # Save the model
     save_model(config, model, 'dl_model_full.pth')
-
 
