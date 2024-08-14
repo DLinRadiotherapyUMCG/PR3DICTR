@@ -80,6 +80,6 @@ hyperparam_tuning:
     patience: 
       type: 'int'
       name: 'patience'
-      location: ['training']
+      location: ['training', 'patience']
       min: 2
       max: 10

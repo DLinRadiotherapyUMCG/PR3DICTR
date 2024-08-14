@@ -1,7 +1,7 @@
 import logging
 import os
 
-import wandb
+#import wandb
 from src.get_config import get_config
 from src.load_dataset import load_dataset
 from src.save_model import save_model
