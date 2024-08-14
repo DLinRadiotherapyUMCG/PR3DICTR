@@ -245,12 +245,10 @@ class HNCDataset(Dataset):
         df = pd.read_csv(csv_path, delimiter=delimiterFound, dtype={'PatientID': str})
 
 
-        if(train):
-            df = df[df[splitVar] == "train"]
-        else:
-            df = df[df[splitVar] == "val"]     
-
-
+        # if(train):
+        #     df = df[df[splitVar] == "train"]
+        # else:
+        #     df = df[df[splitVar] == "val"]     
 
         # Filter the data based on the patient ids, if provided.
         if patient_ids:

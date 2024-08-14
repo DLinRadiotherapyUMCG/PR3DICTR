@@ -28,13 +28,11 @@ model:
   use_bias: true
 
 augmentation:
-  isEnabled: true
   augmentation_list: ['crop','flip','affine','rotate']
   prob: 0.5
   strength: 1
 
 preprocessing:
-  isEnabled: true
   crop: true
   crop_shape: [96, 96, 96]
   ct:
@@ -82,6 +80,6 @@ hyperparam_tuning:
     patience: 
       type: 'int'
       name: 'patience'
-      location: ['training']
+      location: ['training', 'patience']
       min: 2
       max: 10

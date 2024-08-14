@@ -6,10 +6,10 @@ columns:
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
 paths:
-  csv: "C:/Users/Luuk/Desktop/SIMS multi-time/SIMS/bagged_datasets/xerostomia_m06"
-  images: "C:/Users/Luuk/Desktop/SIMS multi-time/SIMS/dataset/patients/"
-  output: "C:/Users/Luuk/Desktop/SIMS multi-time/SIMS//hnc-ensemble-master/results/"
-  results: "C:/Users/Luuk/Desktop/SIMS multi-time/SIMS//hnc-ensemble-master/results/"
+  csv: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/bagged_datasets/xerostomia_m06"
+  images: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/dataset/patients/"
+  output: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS//hnc-ensemble-master/results/"
+  results: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS//hnc-ensemble-master/results/"
 
 model:
   model_name: "dcnn_pooling"
@@ -57,3 +57,41 @@ training:
 visualizations:
   calibration:
     num_bins: 10
+
+preprocessing:
+  isEnabled: True
+  crop: True
+  crop_shape: [96, 96, 96]
+  ct:
+    a_min: -200
+    a_max: 400
+    b_min: 0
+    b_max: 1
+    clip: true
+  rtdose:
+    a_min: 0
+    a_max: 8000
+    b_min: 0
+    b_max: 1
+    clip: true
+  segmentation_map:
+    target_labels: []
+
+data:
+  trainfile: 'stratified_sampling_full_manual_94.csv'
+  valfile: 'stratified_sampling_full_manual_94.csv'
+  splitvar: ""
+
+  patientVar: "PatientID"
+  stratifyList: ["RP","SmokerActive","ImmunoTherapy"]
+
+  equalizer:
+    isEnabled: true
+    ratio: 0.5
+    resamplingDirection: 'up'
+
+  augmentation:
+    isEnabled: true
+    augmentation_list: ['flip','affine','rotate']
+    prob: 0.5
+    strength: 1
