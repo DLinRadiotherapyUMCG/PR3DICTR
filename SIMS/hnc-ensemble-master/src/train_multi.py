@@ -20,7 +20,7 @@ def sigmoid(x):
     return 1/(1+np.exp(-x))
 
 
-def train(config, train_data, val_data, metadata):
+def train(config, train_data, val_data, metadata, hyperClass = None):
     """
     Train the model.
     :param config:
@@ -58,6 +58,7 @@ def train(config, train_data, val_data, metadata):
     # Training loop
     logging.info('Starting training loop')
     for epoch in range(config['training']['max_epochs']):
+        resultsEpoch = dict()
         out_tot = dict.fromkeys(labels)
         targets_tot = dict.fromkeys(labels)
         
@@ -118,6 +119,11 @@ def train(config, train_data, val_data, metadata):
         avg_loss = total_loss / num_batches
         logging.info(f'Epoch loss: {avg_loss}')
 
+        resultsEpoch.update({'Train_Loss':avg_loss})
+        keys = list(auc.keys())
+        values = list(auc.values())
+        for i in range(len(keys)):
+            resultsEpoch.update({"Train_AUC_"+keys[i]:values[i]})
 
         # Perform validation
         if epoch % config['training']['validation_interval'] == 0:
@@ -125,6 +131,12 @@ def train(config, train_data, val_data, metadata):
             # wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc, 'val/loss': val_loss, 'val/auc': val_auc})
             logging.info(val_loss)
             logging.info(auc_val)
+            resultsEpoch.update({'Validation_Loss':val_loss})
+
+            keys = list(auc_val.keys())
+            values = list(auc_val.values())
+            for i in range(len(keys)):
+                resultsEpoch.update({"Validation_AUC_"+keys[i]:values[i]})
 
             # Check if this model has the lowest validation loss
             if val_loss < lowest_loss:
@@ -143,6 +155,10 @@ def train(config, train_data, val_data, metadata):
         pd.DataFrame(out_tot).to_csv('temp_pred.csv', sep = ';')
         pd.DataFrame(targets_tot).to_csv('temp_target.csv', sep = ';')
         
+        # Log to hyperparam class if necessary
+        if(hyperClass != None):
+            resultsEpoch.update({"epoch":epoch})
+            hyperClass.UpdateWandB(resultsEpoch,epoch)
         
         # else:
         #     wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc})

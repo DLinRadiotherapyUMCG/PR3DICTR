@@ -12,6 +12,9 @@ from src.utils.set_random_seed import set_random_seed
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file
 
+import matplotlib.pyplot as plt
+
+
 if __name__ == '__main__':
     # Setup
     toxicity, log_level = parse_args()
@@ -19,17 +22,13 @@ if __name__ == '__main__':
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
+    configName = 'DETOXLung_config'
     config = get_config('DETOXLung_config')
 
     # Disable randomness
     set_random_seed(config['seed'])
 
-    # MAIN: DL running class with hyperparameter optimization
     hyperClass = HyperTuning_Handler(config)
-    hyperClass.Operate(config)
-    hyperClass.Stop()
+    df = hyperClass.Optuna_study.trials_dataframe()
 
-    #model = train(config, train_data, val_data, metadata)
-
-    # Save the model
-    #save_model(config, model, 'dl_model_full.pth')
+    print(df)
