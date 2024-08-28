@@ -9,6 +9,8 @@ from src.train_multi import train
 from src.utils.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
+from src.hyper_opt.Optuna_hpt import Optuna_optimalisation
+from src.log_reg.generic_log_reg import train_lr
 
 # def main():
 #     # Setup
@@ -46,18 +48,20 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['seed'])
 
+    model, auc = train_lr(config)
+
     # Load the dataset
-    logging.info('Loading dataset')
-    train_data, metadata = load_dataset(config, os.path.join(config['paths']['csv'], 'train_full.csv'), augment=True)
-    val_data, _ = load_dataset(config, os.path.join(config['paths']['csv'], 'valid.csv'))
+    # logging.info('Loading dataset')
+    # train_data, metadata = load_dataset(config, os.path.join(config['paths']['csv'], 'train_full.csv'), augment=True)
+    # val_data, _ = load_dataset(config, os.path.join(config['paths']['csv'], 'valid.csv'))
 
     
 
-    # ------------------------- Til here be simsing ------------------
-    # Start training
+    # # ------------------------- Til here be simsing ------------------
+    # # Start training
     
-    model = train(config, train_data, val_data, metadata)
+    # model = train(config, train_data, val_data, metadata)
 
-    # Save the model
-    save_model(config, model, 'dl_model_full.pth')
+    # # Save the model
+    # save_model(config, model, 'dl_model_full.pth')
 
