@@ -103,7 +103,6 @@ def UpdateTrial(hyperClass, trial, config):
 
     return val_loss
 
-
 def update_config(dic, location, suggested_value):
     if len(location) == 1:
         dic[location[0]] = suggested_value

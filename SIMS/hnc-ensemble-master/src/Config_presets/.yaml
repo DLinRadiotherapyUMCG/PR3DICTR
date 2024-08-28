@@ -1,7 +1,7 @@
 seed: 5
 
 columns:
-  label: ['W2_Dysphagia','W3_Dysphagia','W4_Dysphagia','W5_Dysphagia','W6_Dysphagia','W7_Dysphagia','W12_Dysphagia','M6_Dysphagia','M12_Dysphagia','M18_Dysphagia','M24_Dysphagia','M36_Dysphagia','M48_Dysphagia','M60_Dysphagia'] 
+  label: ['W2_Dysphagia','W3_Dysphagia','W4_Dysphagia','W5_Dysphagia','W6_Dysphagia','W7_Dysphagia','W12_Dysphagia','M6_Dysphagia','M12_Dysphagia','M18_Dysphagia','M24_Dysphagia','M36_Dysphagia','M48_Dysphagia','M60_Dysphagia']
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
@@ -53,11 +53,6 @@ training:
     eta_min: 0.00000001
   validation:
     num_auc_batches: 1
-
-log_reg:
-  label: 'M6_Dysphagia'
-  print_cof: True
-  save_model: True
 
 visualizations:
   calibration:

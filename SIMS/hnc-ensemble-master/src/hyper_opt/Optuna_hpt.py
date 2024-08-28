@@ -10,6 +10,7 @@ from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 from src.train_multi import validate
 from src.get_loss_function import get_loss_function
+from src.utils.fileHandler import create_file, create_folder
 
 from torch.utils.data import DataLoader
 import os
@@ -67,6 +68,13 @@ def generate_value(trial, hyperinfo):
         suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],hyperinfo['min'],hyperinfo['max'])       
     return suggested_value
 
+def save_trial(model, config, trial_num):
+    out_path = config['hyperparam_tuning']['optuna']['trial_results']
+        
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+    
+    return
 
 def objective(trial, config):
     """
@@ -75,6 +83,11 @@ def objective(trial, config):
     3) evaluate and return model performance
 
     """
+    
+    trial_num = trial.number
+    config['hyperparam_tuning']['optuna']['trial_results'] = config['hyperparam_tuning']['ProjectName'] + '_' + trial_num + '/'
+    
+    
     # Assign values for "regular" hyperparameters
     for key in config['hyperparam_tuning']['hyperparams'].keys():
         hyperinfo = config['hyperparam_tuning']['hyperparams'][key]
@@ -96,16 +109,32 @@ def objective(trial, config):
     # Train model 
     model = train(config, train_data, val_data, metadata)
     
+    save_trial(model, config)
+    
     # Generate validation results
     val_loss, val_auc = validate(loss_function, model, val_loader)
     
     return val_loss
 
+def Optuna_CreateStudy(config):
+    study = None
+    if(config['hyperparam_tuning']['optuna']['IsEnabled']):
+
+        # Check where to keep study information
+        studyName = config['hyperparam_tuning']['ProjectName']
+        pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
+        storage_name = f"sqlite:///{pathOptunaStudyTracker}"
+        create_folder(pathOptunaStudyTracker)
+        print(storage_name)
+
+        study = optuna.create_study(study_name = studyName, storage = storage_name, load_if_exists=True, direction = config['hyperparam_tuning']['optuna']['direction'])
+    return study
+
 def Optuna_optimalisation(config):
     """
     
     """
-    study = optuna.create_study()
+    study = Optuna_CreateStudy(config)
     
     study.optimize(lambda trial: objective(trial, config), config['hyperparam_tuning']['optuna']['n_trails'])
     
