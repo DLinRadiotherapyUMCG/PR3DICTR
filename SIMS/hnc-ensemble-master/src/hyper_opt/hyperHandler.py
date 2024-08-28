@@ -29,7 +29,7 @@ class HyperTuning_Handler():
         WandB_initalise(config)
 
     def Operate(self, config):
-        self.Optuna_study.optimize(lambda trial: UpdateTrial(self, trial, config), config['hyperparam_tuning']['optuna']['n_trails'])
+        self.Optuna_study.optimize(lambda trial: UpdateTrial(self, trial, config), config['hyperparam_tuning']['optuna']['n_trials'])
 
     def UpdateWandB(self,results,epoch):
         UpdateStudy(self.config,results,epoch)
@@ -77,6 +77,8 @@ def UpdateTrial(hyperClass, trial, config):
     # Setup WandB for run
     configWandB = dict(trial.params)  
     configWandB["trial.number"] = trial.number
+    config['general']['trialNumber'] = f"Trial_{trial.number}" 
+    CreateResultDir(config)
     CreateStudy(config,configWandB)
     loss_function = get_loss_function(config)
 
@@ -98,8 +100,10 @@ def UpdateTrial(hyperClass, trial, config):
         print(f"Warning: The training stopped due to an error. Please read the error message carefully: \n{error}")
 
     val_loss, val_auc = validate(loss_function, model, val_loader, config)
-
-    save_model(config, model, 'dl_model_full.pth')
+    try:
+        save_model(config, model, f"DlModelFull_Trial{trial.number}.pth")
+    except:
+        print("WARNING: SAVING NOT WORKING!! PLEASE CHECK")
 
     return val_loss
 
@@ -111,3 +115,8 @@ def update_config(dic, location, suggested_value):
     else:
         dic[location[0]] = update_config(dic[location[0]], location[1:], suggested_value)
         return dic
+    
+def CreateResultDir(config):
+    folderPath = os.path.join(os.path.join(config["paths"]["output"],config["hyperparam_tuning"]["ProjectName"]),config["general"]["trialNumber"])
+    # Create folder if does not exist
+    create_folder(folderPath)

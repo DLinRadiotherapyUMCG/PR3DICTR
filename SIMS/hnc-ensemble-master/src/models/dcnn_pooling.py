@@ -169,51 +169,70 @@ class DCNN_Pooling(torch.nn.Module):
         if config['model']['conv_block_layers'] == 1:
             for i in range(len(in_channels)):
                 use_activation = True
-                if i == 0:
-                    for j in range(in_channels[i]):
-                        self.first_conv_blocks.add_module('conv_block1_%s' % j, small_conv_block(in_channels=1, filters=filters[i],
-                                                            kernel_size=kernel_sizes[i], strides=strides[i],
-                                                            pad_value=pad_value, lrelu_alpha=lrelu_alpha,
-                                                            use_activation=use_activation, normalization=normalization, 
-                                                            pooling=pooling, pooling_size=pooling_size, use_bias=use_bias))
-                else:
-                    self.conv_blocks.add_module('conv_block%s' % i,
-                                                small_conv_block(in_channels=in_channels[i], filters=filters[i],
-                                                        kernel_size=kernel_sizes[i], strides=strides[i],
-                                                        pad_value=pad_value, lrelu_alpha=lrelu_alpha,
-                                                        use_activation=use_activation, normalization=normalization, 
-                                                        pooling=pooling, pooling_size=pooling_size, use_bias=use_bias))
+                self.conv_blocks.add_module('conv_block%s' % i,
+                                            small_conv_block(in_channels=in_channels[i], filters=filters[i],
+                                                    kernel_size=kernel_sizes[i], strides=strides[i],
+                                                    pad_value=pad_value, lrelu_alpha=lrelu_alpha,
+                                                    use_activation=use_activation, normalization=normalization, 
+                                                    pooling=pooling, pooling_size=pooling_size, use_bias=use_bias))
         else:
             for i in range(len(in_channels)):
                 use_activation = True
-                if i == 0:
-                    for j in range(in_channels[i]):
-                        self.first_conv_blocks.add_module('conv_block1_%s' % j, conv_block(in_channels=1, filters=filters[i],
-                                                        kernel_size=kernel_sizes[i], strides=strides[i],
-                                                        pad_value=pad_value, lrelu_alpha=lrelu_alpha, 
-                                                        use_activation=use_activation, normalization=normalization,
-                                                        pooling=pooling, pooling_size=pooling_size,  use_bias=use_bias))
-                else:
-                    self.conv_blocks.add_module('conv_block%s' % i,
+                self.conv_blocks.add_module('conv_block%s' % i,
                                             conv_block(in_channels=in_channels[i], filters=filters[i],
                                                     kernel_size=kernel_sizes[i], strides=strides[i],
                                                     pad_value=pad_value, lrelu_alpha=lrelu_alpha, 
                                                     use_activation=use_activation, normalization=normalization,
                                                     pooling=pooling, pooling_size=pooling_size,  use_bias=use_bias))
 
+        # if config['model']['conv_block_layers'] == 1:
+        #     for i in range(len(in_channels)):
+        #         use_activation = True
+        #         if i == 0:
+        #             for j in range(in_channels[i]):
+        #                 self.first_conv_blocks.add_module('conv_block1_%s' % j, small_conv_block(in_channels=1, filters=filters[i],
+        #                                                     kernel_size=kernel_sizes[i], strides=strides[i],
+        #                                                     pad_value=pad_value, lrelu_alpha=lrelu_alpha,
+        #                                                     use_activation=use_activation, normalization=normalization, 
+        #                                                     pooling=pooling, pooling_size=pooling_size, use_bias=use_bias))
+        #         else:
+        #             self.conv_blocks.add_module('conv_block%s' % i,
+        #                                         small_conv_block(in_channels=in_channels[i], filters=filters[i],
+        #                                                 kernel_size=kernel_sizes[i], strides=strides[i],
+        #                                                 pad_value=pad_value, lrelu_alpha=lrelu_alpha,
+        #                                                 use_activation=use_activation, normalization=normalization, 
+        #                                                 pooling=pooling, pooling_size=pooling_size, use_bias=use_bias))
+        # else:
+        #     for i in range(len(in_channels)):
+        #         use_activation = True
+        #         if i == 0:
+        #             for j in range(in_channels[i]):
+        #                 self.first_conv_blocks.add_module('conv_block1_%s' % j, conv_block(in_channels=1, filters=filters[i],
+        #                                                 kernel_size=kernel_sizes[i], strides=strides[i],
+        #                                                 pad_value=pad_value, lrelu_alpha=lrelu_alpha, 
+        #                                                 use_activation=use_activation, normalization=normalization,
+        #                                                 pooling=pooling, pooling_size=pooling_size,  use_bias=use_bias))
+        #         else:
+        #             self.conv_blocks.add_module('conv_block%s' % i,
+        #                                     conv_block(in_channels=in_channels[i], filters=filters[i],
+        #                                             kernel_size=kernel_sizes[i], strides=strides[i],
+        #                                             pad_value=pad_value, lrelu_alpha=lrelu_alpha, 
+        #                                             use_activation=use_activation, normalization=normalization,
+        #                                             pooling=pooling, pooling_size=pooling_size,  use_bias=use_bias))
+
 
     def forward(self, x, autoencoder=False):
         feature_maps = None
-        for idx, block in enumerate(self.first_conv_blocks):
-            #print(idx)
-            xtemp = x[:,idx,:,:,:].unsqueeze(1)
-            if feature_maps is None:
-                #print(xtemp.shape)
-                feature_maps = block(xtemp)
-                #print(feature_maps.shape)
-            else:
-                feature_maps += block(xtemp)
-        x = feature_maps
+        # for idx, block in enumerate(self.first_conv_blocks):
+        #     #print(idx)
+        #     xtemp = x[:,idx,:,:,:].unsqueeze(1)
+        #     if feature_maps is None:
+        #         #print(xtemp.shape)
+        #         feature_maps = block(xtemp)
+        #         #print(feature_maps.shape)
+        #     else:
+        #         feature_maps += block(xtemp)
+        # x = feature_maps
 
         for block in self.conv_blocks:
             x = block(x)

@@ -10,8 +10,10 @@ def create_file(pathFile):
         if(pathFile.endswith('.db')):
             create_database(pathFile)            
 
-def create_folder(pathFile):
-    dirPath = os.path.dirname(pathFile)
+def create_folder(path):
+    dirPath = path
+    if(os.path.dirname(path) == False):
+        dirPath = os.path.dirname(path)
     if(os.path.exists(dirPath) == False):
         os.mkdir(dirPath)
 

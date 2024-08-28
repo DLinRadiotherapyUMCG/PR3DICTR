@@ -1,14 +1,18 @@
-seed: 42
+general:
+  seed: 42
+  device: "cuda"
+  trialNumber: "Trial_?"
 
 columns:
-  label: ["RP"]
-  clinical_features: ["ParticleProton", "SmokerActive","SmokerStopped", "Gender", 
-  "SmokerStopped", "Age_LargeEqual63","ChemoRad", "ImmunoTherapy", 
-  "Tumour_UpperLoc","Tumor_MiddleLoc","Tumor_LowerLoc"]
+  label: ["RP_OneYear"]
+  clinical_features: ["SmokerActive","SmokerStopped", "Gender",
+  "Age","ChemoRad", "SequantialChemo", "ImmunoTherapy",
+  "OperationPerformed", "T_Stage","N_Stage","M_Stage"]
+  #DosePerFraction","FractionAmount","RT_TreatmentDuration", "Tumour_UpperLoc","Tumor_MiddleLoc","Tumor_LowerLoc"
   logistic_regression_features: ['']
 
 paths:
-  csv: "Z:/Robert/DataImports/Data_23_07_2024/ClinicalData/"
+  csv: "Z:/Robert/DataImports/Data_23_07_2024/ClinicalData/2024_08_27/"
   images: "Z:/Robert/DataImports/Data_23_07_2024/ImageData/"
   output: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
   results: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
@@ -19,10 +23,11 @@ data:
   splitvar: ""
 
   patientVar: "PatientID"
-  stratifyList: ["RP","SmokerActive","ImmunoTherapy"]
+  stratifyList: ["RP_OneYear","SmokerActive","ImmunoTherapy"]
+  Excluded: "ExcludeVar"
 
   equalizer:
-    isEnabled: true
+    isEnabled: True
     ratio: 0.5
     resamplingDirection: 'up'
 
@@ -77,7 +82,7 @@ training:
   max_epochs: 30
   batch_size: 8
   validation_interval: 1
-  patience: 10
+  patience: 8
   optimizer:
     name: "Adam"
     learning_rate: 0.0001
@@ -99,16 +104,16 @@ visualizations:
     num_bins: 10
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_4'
+  ProjectName: 'DETOX-Lung_Project_7'
   WandB:
     IsEnabled: true
     MetricsMonitor: [ "train_AUC","train_loss","train_acc",
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName:
-    n_trails: 30
-    storagePath: 
+    studyName: "DETOX-Lung_Project_7"
+    n_trials: 4
+    storagePath: "Unknown"
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:
@@ -120,12 +125,12 @@ hyperparam_tuning:
     learning_rate: 
       type: 'float'
       location: ['training','optimizer','learning_rate']
-      min: 0.0000001
+      min: 0.0004
       max: 0.001
     optimizer:
       type: 'categorical'
       location: ["training",'optimizer','name']
-      options: ['Adam','AdaBound','sgd']
+      options: ['AdaBound']
     
     #leaky_relu_alpa:
     #  type: 'float'
@@ -135,8 +140,22 @@ hyperparam_tuning:
     batch_size:
       type: 'int'
       location: ["training","batch_size"]
-      min: 1
-      max: 8
+      min: 3
+      max: 5
+
+    augmentation_strength:
+      type: 'float'
+      location: ['data','augmentation',"strength"]
+      min: 0.2
+      max: 3
+
+    augmentation_probability:
+      type: 'float'
+      location: ['data','augmentation',"prob"]
+      min: 0.2
+      max: 0.8
+
+
     #leaky_relu_alpa:
     #  type: 'float'
     #  location : [][],
@@ -152,4 +171,6 @@ Save:
   config: True
   output_values: True
   best_model: False
+  fileNames:
+    modelSummary: "modelSummary.txt"
       

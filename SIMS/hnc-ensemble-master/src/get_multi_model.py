@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-
+import os
 from src.utils.get_encoder import get_encoder
 from src.models.linear_layers import MultiToxOutputHead
 
 import torch
 from torch import nn
+from torchinfo import summary
+
 
 class MultiTox_Classifier(nn.Module):
     def __init__(self, encoder, config, n_features):
@@ -61,15 +63,46 @@ class MultiTox_Classifier(nn.Module):
         return x_dict
 
 def get_classification_model(config, metadata, save_summary=True):
-
-    
+  
     channels,depth,height,width,n_features = metadata['channels'],metadata['depth'],metadata['height'],metadata['width'],metadata['n_features']
     encoder = get_encoder(config, channels, depth, height, width, n_features)
     # Put the image encoder into a model
     model = MultiTox_Classifier(encoder=encoder, config=config, n_features=n_features)
 
-
-    # total_params = get_model_summary(config=config, model=model, input_size=[(config.batch_size, channels, depth, height, width), (config.batch_size, max(n_features, 1))], 
-    #                                             device=config.device, logger=logger, save_to_file=save_summary)
+    get_model_summary(config=config, model=model, input_size=[(config['training']['batch_size'], channels, depth, height, width), (config['training']['batch_size'], max(n_features, 1))], 
+                                                 device=config['general']['device'], save_to_file=save_summary)
         
     return model
+
+
+def get_model_summary(config, model, input_size, device, save_to_file = True):
+    
+    """
+    Get model summary and number of trainable parameters.
+
+    Args:
+        model:
+        input_size:
+        device:
+        logger:
+
+    Returns:
+        total_params (int): number of trainable parameters
+
+    """
+    # Get and save summary
+    verbose = 1
+    txt = str(summary(model=model, input_size=input_size, device=device, verbose=verbose, depth=5,
+                      col_names=["input_size","output_size","num_params", "kernel_size"], row_settings=["var_names"]))
+    if save_to_file:
+        fileLocation = os.path.join(os.path.join(os.path.join(config["paths"]["output"],config["hyperparam_tuning"]["ProjectName"]),config["general"]["trialNumber"]),config['Save']['fileNames']['modelSummary'])   
+        file = open(fileLocation, 'a+', encoding='utf-8')
+        file.write(txt)
+        file.close()
+
+    # Determine number of trainable parameters
+    # Source: https://stackoverflow.com/questions/49201236/check-the-total-number-of-parameters-in-a-pytorch-model
+    # total_params = sum(p.numel() for p in model.parameters())
+    total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    return total_params

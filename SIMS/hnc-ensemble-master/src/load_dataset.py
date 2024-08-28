@@ -4,7 +4,7 @@ from typing import Optional, List, Tuple
 from torch.utils.data import Dataset
 
 from src.HNCDataset import HNCDataset, ToxDataset
-from src.HNCDataset import get_delimiter, get_umcg_n, Data_split
+from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
 import pandas as pd
 
 def load_dataset(config, csv_path, patient_ids = None, augment= False, split = False, train = True, splitVar = "Split"):
@@ -14,9 +14,7 @@ def load_dataset(config, csv_path, patient_ids = None, augment= False, split = F
     :param config:
     :param patient_ids:
     :return: PyTorch Dataset and metadata
-    """
-    print(csv_path)
-    
+    """    
     # Create an instance of the HNCDataset
     dataset = HNCDataset(csv_path, config, patient_ids, augment=augment, 
                          split = split, train = train, splitVar = splitVar)
@@ -38,6 +36,25 @@ def load_dataset(config, csv_path, patient_ids = None, augment= False, split = F
     # Return the dataset and the metadata
     return dataset, metadata
 
+def ValidateImageDataExists(config, df):
+    imagePath = config['paths']['images']
+    ptnDirectories = os.listdir(imagePath)
+
+    ptnClinList = df['PatientID'].tolist()
+    removePtnIDS = []
+    for i in range(len(ptnClinList)):
+        zerosPtnNmbr = str(ptnClinList[i]).rjust(7,'0')
+        if(ptnClinList[i] in ptnDirectories or zerosPtnNmbr in ptnDirectories):
+            pass
+        else:
+            # Not found --> remove
+            removePtnIDS.append(ptnClinList[i])
+    
+    #print(f"Removed ptns = {len(removePtnIDS)}")
+    df = df[(df['PatientID'].isin(removePtnIDS)) == False]
+    return df
+
+
 def load_dataset_total(config, patient_ids = None):
     """
     Load the all datasets with handling the options in
@@ -57,17 +74,23 @@ def load_dataset_total(config, patient_ids = None):
         # Single file to split
         delimiterFound = get_delimiter(trainfile)
         totalDf = pd.read_csv(trainfile, delimiter=delimiterFound, dtype={'PatientID': str})
+
+        totalDf = ValidateImageDataExists(config, totalDf)
+
         
         if patient_ids:
             totalDf = totalDf[totalDf['PatientID'].isin(patient_ids)]
 
         if(config['data']['splitvar'] != ""):
             splitVar = config['data']['splitvar']
-            trainDf = totalDf[totalDf[splitVar] == "train"]
-            valDf = totalDf[totalDf[splitVar] == "val"] 
+            trainDf = totalDf[totalDf[splitVar] == "Train"]
+            valDf = totalDf[totalDf[splitVar] == "Val"] 
+
+            if(config['data']['equalizer']['isEnabled']):
+                trainDf = label_equalizer(trainDf, config)
         else:    
             # Need to split manual
-            trainDf,valDf,testDf = Data_split(totalDf, config, split=[0.7,0.15,0.15])
+            trainDf,valDf,testDf = data_split(totalDf, config, split=[0.7,0.15,0.15])
 
     else:
         # Two seperate files that are allready split
@@ -75,6 +98,8 @@ def load_dataset_total(config, patient_ids = None):
         trainDf = pd.read_csv(trainfile, delimiter=delimiterFound, dtype={'PatientID': str})
         delimiterFound = get_delimiter(valfile)
         valDf = pd.read_csv(valfile, delimiter=delimiterFound, dtype={'PatientID': str})
+
+    print(f"Patient collection --> Train: {trainDf.shape[0]}, Validation: {valDf.shape[0]}")
 
     trainDataset = ToxDataset(config,trainDf)
     valDataset = ToxDataset(config,valDf)
@@ -93,4 +118,3 @@ def load_dataset_total(config, patient_ids = None):
     }
 
     return [trainDataset,valDataset], metadata
-
