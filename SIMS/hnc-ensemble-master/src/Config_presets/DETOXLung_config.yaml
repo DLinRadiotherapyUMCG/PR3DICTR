@@ -2,6 +2,8 @@ general:
   seed: 42
   device: "cuda"
   trialNumber: "Trial_?"
+  patientGroup: 0
+  resultsCurrentDirectory: ""
 
 columns:
   label: ["RP_OneYear"]
@@ -21,10 +23,14 @@ data:
   trainfile: 'stratified_sampling_full_manual_94.csv'
   valfile: 'stratified_sampling_full_manual_94.csv'
   splitvar: ""
-
-  patientVar: "PatientID"
+  patientVar: 'PatientID'
   stratifyList: ["RP_OneYear","SmokerActive","ImmunoTherapy"]
   Excluded: "ExcludeVar"
+
+  kFolds:
+    isEnabled: True
+    Iterations: 3
+    Splits: 5
 
   equalizer:
     isEnabled: True
@@ -40,6 +46,7 @@ data:
 model:
   model_name: "dcnn_pooling"
   num_classes: 1
+  num_down_blocks: 5
   filters: [8, 8, 16, 16, 32]
   kernel_sizes: [7, 5, 4, 3, 3]
   strides: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
@@ -64,7 +71,7 @@ preprocessing:
   crop: false
   crop_shape: [96, 96, 96]
   ct:
-    a_min: -200
+    a_min: -1200
     a_max: 400
     b_min: 0
     b_max: 1
@@ -79,10 +86,10 @@ preprocessing:
     target_labels: []
 
 training:
-  max_epochs: 30
+  max_epochs: 50
   batch_size: 8
   validation_interval: 1
-  patience: 8
+  patience: 16
   optimizer:
     name: "Adam"
     learning_rate: 0.0001
@@ -104,15 +111,15 @@ visualizations:
     num_bins: 10
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_7'
+  ProjectName: 'DETOX-Lung_Project_9'
   WandB:
     IsEnabled: true
     MetricsMonitor: [ "train_AUC","train_loss","train_acc",
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: "DETOX-Lung_Project_7"
-    n_trials: 4
+    studyName: "DETOX-Lung_Project_9"
+    n_trials: 5
     storagePath: "Unknown"
   # ----  Custom Params -------
   # Location:= path variabele in config
@@ -123,11 +130,13 @@ hyperparam_tuning:
     #  min: 2
     #  max: 10
     learning_rate: 
+      name: 'Learning_rate'
       type: 'float'
       location: ['training','optimizer','learning_rate']
       min: 0.0004
       max: 0.001
     optimizer:
+      name: "Optimizer" 
       type: 'categorical'
       location: ["training",'optimizer','name']
       options: ['AdaBound']
@@ -138,23 +147,60 @@ hyperparam_tuning:
     #  min: 0.03
     #  max: 0.1
     batch_size:
+      name: batch_size
       type: 'int'
       location: ["training","batch_size"]
-      min: 3
-      max: 5
+      min: 6
+      max: 16
+      step: 2
 
     augmentation_strength:
+      name: augmentation_strength
       type: 'float'
       location: ['data','augmentation',"strength"]
       min: 0.2
       max: 3
 
     augmentation_probability:
+      name: augmentation_probability
       type: 'float'
       location: ['data','augmentation',"prob"]
       min: 0.2
       max: 0.8
 
+    #n_down_blocks:
+    #  type: 'int'
+    #  name: 'n_down_blocks'
+    #  location: ['model','num_down_blocks']
+    # min: 1
+    #  max: 6
+    #  step: 1
+    #  log: False
+  
+  # Complex hyperparams
+  derived:
+    n_down_blocks:
+      filters:
+        type: 'int'
+        name: 'filter'
+        location: ['model','filters']
+        min: 8
+        max: 64
+        step: 8
+        log: False
+      kernel_sizes:
+        type: 'int'
+        name: 'kernel_size'
+        location: ['model','kernel_sizes']
+        min: 3
+        max: 5
+        step: 2
+        log: False
+      strides:      
+        type: 'categorical'
+        name: 'stride'
+        location: ['model','strides']
+        options: [[1,1,1]]
 
     #leaky_relu_alpa:
     #  type: 'float'

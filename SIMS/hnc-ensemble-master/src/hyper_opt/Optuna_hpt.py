@@ -38,7 +38,7 @@ def derived_hyperparameters(trial, config):
     if 'n_down_blocks' in config['hyperparam_tuning']['hyperparams'].keys():
         for key in config['hyperparam_tuning']['derived']['n_down_blocks']:
             temp_list = []
-            hyperinfo = config['hyperparam_tuning']['hyperparams'][key]  
+            hyperinfo = config['hyperparam_tuning']['derived']['n_down_blocks'][key]  
             location = hyperinfo['location']
             base_name = hyperinfo['name']
             for i in range(config['model']['n_down_blocks']):
@@ -54,10 +54,20 @@ def generate_value(trial, hyperinfo):
     """
     Selects and generates a value based on hyperinfo
     """
+    keys = hyperinfo.keys()
+    step = None
+    log = False
+    if('step' in keys):
+        step = hyperinfo['step']
+    if('log' in keys):
+        log = hyperinfo['log']
+
     if hyperinfo['type'] == 'int':
-        suggested_value = trial.suggest_int(hyperinfo['name'],hyperinfo['min'],hyperinfo['max'],hyperinfo['step'],hyperinfo['log'])
+        if(step == None):
+            step = 1
+        suggested_value = trial.suggest_int(hyperinfo['name'],hyperinfo['min'],hyperinfo['max'],step=step,log=log)
     if hyperinfo['type'] == 'float':
-        suggested_value = trial.suggest_float(hyperinfo['name'],hyperinfo['min'],hyperinfo['max'],hyperinfo['step'],hyperinfo['log'])
+        suggested_value = trial.suggest_float(hyperinfo['name'],hyperinfo['min'],hyperinfo['max'],step=step,log=log)
     if hyperinfo['type'] == 'categorical':
         suggested_value = trial.suggest_categorical(hyperinfo['name'],hyperinfo['options'])       
     if hyperinfo['type'] == 'dis_un':

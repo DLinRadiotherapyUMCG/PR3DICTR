@@ -6,6 +6,7 @@ from src.models.linear_layers import MultiToxOutputHead
 import torch
 from torch import nn
 from torchinfo import summary
+from src.utils.fileHandler import create_file, create_folder
 
 
 class MultiTox_Classifier(nn.Module):
@@ -91,11 +92,12 @@ def get_model_summary(config, model, input_size, device, save_to_file = True):
 
     """
     # Get and save summary
-    verbose = 1
+    verbose = 0
     txt = str(summary(model=model, input_size=input_size, device=device, verbose=verbose, depth=5,
                       col_names=["input_size","output_size","num_params", "kernel_size"], row_settings=["var_names"]))
     if save_to_file:
         fileLocation = os.path.join(os.path.join(os.path.join(config["paths"]["output"],config["hyperparam_tuning"]["ProjectName"]),config["general"]["trialNumber"]),config['Save']['fileNames']['modelSummary'])   
+        create_folder(fileLocation)
         file = open(fileLocation, 'a+', encoding='utf-8')
         file.write(txt)
         file.close()

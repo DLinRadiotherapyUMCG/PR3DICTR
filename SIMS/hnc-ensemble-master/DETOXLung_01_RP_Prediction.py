@@ -28,8 +28,3 @@ if __name__ == '__main__':
     hyperClass = HyperTuning_Handler(config)
     hyperClass.Operate(config)
     hyperClass.Stop()
-
-    #model = train(config, train_data, val_data, metadata)
-
-    # Save the model
-    #save_model(config, model, 'dl_model_full.pth')

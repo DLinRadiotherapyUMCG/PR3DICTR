@@ -12,10 +12,10 @@ def create_file(pathFile):
 
 def create_folder(path):
     dirPath = path
-    if(os.path.dirname(path) == False):
-        dirPath = os.path.dirname(path)
+    if(os.path.isdir(dirPath) == False):
+        dirPath = os.path.dirname(dirPath)
     if(os.path.exists(dirPath) == False):
-        os.mkdir(dirPath)
+        os.makedirs(dirPath)
 
 def create_database(pathFile):
     conn = None

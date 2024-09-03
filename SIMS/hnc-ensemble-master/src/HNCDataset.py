@@ -182,6 +182,12 @@ class ToxDataset(Dataset):
         return len(self.df)
 
     def __getitem__(self, idx):
+        # Check if the dataframe is not none
+        if(self.df.shape[0] == 0):
+            print("No data available in dataset.")
+            return None
+        
+        # Get selected patient
         patient_id = self.df.iloc[idx]['PatientID']
 
         pathPatientDir = self.images_path + str(patient_id).rjust(7,'0')

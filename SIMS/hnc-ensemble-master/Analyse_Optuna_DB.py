@@ -28,7 +28,17 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['seed'])
 
+    # Test a chosen project
+    nameProjectTest = "DETOX-Lung_Project_7"
+    config['hyperparam_tuning']['ProjectName'] = nameProjectTest
+    config['hyperparam_tuning']['optuna']['studyname'] = nameProjectTest
+
+    #Load the existing project
     hyperClass = HyperTuning_Handler(config)
     df = hyperClass.Optuna_study.trials_dataframe()
 
+    # Show the project information
     print(df)
+
+    # Close the project envrionment
+    hyperClass.Stop()

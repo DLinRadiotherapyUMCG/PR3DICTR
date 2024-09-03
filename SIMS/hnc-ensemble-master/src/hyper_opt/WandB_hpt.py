@@ -3,11 +3,12 @@ import wandb
 def WandEnabled(config):
     return config['hyperparam_tuning']['WandB']['IsEnabled']
 
-def CreateStudy(config, dict_params):
+def CreateStudy(config, dict_params, groupName = None):
     if(WandEnabled(config) == True):
         wandb.init(
             project=config['hyperparam_tuning']['ProjectName'],
             config = dict_params,
+            group = groupName,
             reinit = True
         ) 
 

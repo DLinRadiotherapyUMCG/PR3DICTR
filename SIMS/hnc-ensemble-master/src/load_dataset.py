@@ -7,6 +7,8 @@ from src.HNCDataset import HNCDataset, ToxDataset
 from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
 import pandas as pd
 
+from sklearn.model_selection import StratifiedKFold
+
 def load_dataset(config, csv_path, patient_ids = None, augment= False, split = False, train = True, splitVar = "Split"):
     """
     Loads data for a single csv file.
@@ -69,7 +71,8 @@ def load_dataset_total(config, patient_ids = None):
     #   2) Single file that contains splitVar
     #   3) Single file with no splitVar will custom be split in --> train,var,test (warning: test need to be unique by seed --> need to check)
 
-    # Check if 1 single file is given
+    # Check if 1 single file is given (testData is not always available)
+    testDf = pd.DataFrame()
     if(trainfile == valfile):
         # Single file to split
         delimiterFound = get_delimiter(trainfile)
@@ -101,12 +104,30 @@ def load_dataset_total(config, patient_ids = None):
 
     print(f"Patient collection --> Train: {trainDf.shape[0]}, Validation: {valDf.shape[0]}")
 
-    trainDataset = ToxDataset(config,trainDf)
-    valDataset = ToxDataset(config,valDf)
+    # Check and validate if KFolds settings are active
+    trainDataset_Collection = []
+    valDataset_Collection = []
+    testDataset_Collection = []
+    if(config["data"]["kFolds"]["isEnabled"] and config["data"]["kFolds"]["Iterations"] < config["data"]["kFolds"]["Splits"]):
+        # Multiple training and val datasets
+        mergeDf = pd.concat([trainDf,valDf])
+        label = mergeDf[config['columns']['label']]
+        skf = StratifiedKFold(n_splits=config["data"]["kFolds"]["Splits"], shuffle=True, random_state=config["general"]["seed"])
+        for i, (train_index, val_index) in enumerate(skf.split(mergeDf,label)):
+            trainDataset_Collection.append(ToxDataset(config,mergeDf.iloc[train_index]))
+            valDataset_Collection.append(ToxDataset(config,mergeDf.iloc[val_index]))
+            testDataset_Collection.append(ToxDataset(config,testDf))
+            if(i == config["data"]["kFolds"]["Iterations"] - 1):
+                break
+    else:   
+        # Single train and val dataset
+        trainDataset_Collection.append(ToxDataset(config,trainDf))
+        valDataset_Collection.append(ToxDataset(config,valDf))
+        testDataset_Collection.append(ToxDataset(config,testDf))
 
-    example_input, _, _ = trainDataset[0]
+    # Get example patient to get data info
+    example_input, _, _ = trainDataset_Collection[0][0]
     channels, depth, height, width = example_input.shape
-
     n_features = len(config['columns']['clinical_features'])
 
     metadata = {
@@ -117,4 +138,4 @@ def load_dataset_total(config, patient_ids = None):
         "n_features": n_features,
     }
 
-    return [trainDataset,valDataset], metadata
+    return [trainDataset_Collection, valDataset_Collection, testDataset_Collection], metadata

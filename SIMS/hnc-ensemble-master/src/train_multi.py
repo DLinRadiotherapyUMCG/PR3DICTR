@@ -20,7 +20,7 @@ def sigmoid(x):
     return 1/(1+np.exp(-x))
 
 
-def train(config, train_data, val_data, metadata, hyperClass = None):
+def train(config, train_loader, val_loader, metadata, hyperClass = None):
     """
     Train the model.
     :param config:
@@ -32,10 +32,6 @@ def train(config, train_data, val_data, metadata, hyperClass = None):
     
     # Get the names of the end-points being evaluated 
     labels = config['columns']['label']
-    
-    # Get the data loaders
-    train_loader = DataLoader(train_data, batch_size=config['training']['batch_size'], shuffle=True)
-    val_loader = DataLoader(val_data, batch_size=config['training']['batch_size'], shuffle=False)
 
     # Get the model
     logging.info('Getting model')
@@ -107,9 +103,7 @@ def train(config, train_data, val_data, metadata, hyperClass = None):
             # Step the scheduler
             scheduler.step(epoch + (i + 1) / len(train_loader))
 
-            num_batches += 1
-
-        
+            num_batches += 1      
 
         auc = calculate_auc_multi(out_tot,targets_tot,config)
             
