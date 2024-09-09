@@ -4,7 +4,7 @@ import logging
 
 from src.get_config import get_config
 from src.load_dataset import load_dataset, load_dataset_total
-from src.save_model import save_model, save_dataset, save_dataset_summary
+from src.save_model import save_model, save_config, save_dataset, save_dataset_summary
 from src.train_multi import train
 from src.utils.logging import setup_logging
 from src.utils.parse_args import parse_args
@@ -52,14 +52,14 @@ def Optuna_CreateStudy(config):
         print(storage_name)
 
         study = optuna.create_study(study_name = studyName, storage = storage_name, load_if_exists=True)
+        config['general']['firstRun'] = (len(study.get_trials()) == 0)
+        if(config['general']['firstRun']):
+            print("First optuna run has been detected!")
     return study
 
 def UpdateTrial(hyperClass, trial, config):
-    for key in config['hyperparam_tuning']['hyperparams'].keys():
-        hyperinfo = config['hyperparam_tuning']['hyperparams'][key]
-        location = hyperinfo['location']
-        suggested_value = generate_value(trial, hyperinfo)
-        config = update_config(config,location,suggested_value)
+    # Alter normal hyperparameters
+    config = normal_hyperparameters(trial,config)
 
     # Alter any hyperparameters that are dependend on other parameters 
     config = derived_hyperparameters(trial, config)
@@ -103,6 +103,10 @@ def UpdateTrial(hyperClass, trial, config):
             model = train(config, train_loader, val_loader, metadata, hyperClass = hyperClass)
         except Exception as error:
             print(f"Warning: The training stopped due to an error. Please read the error message carefully: \n{error}")
+            if(config['general']['error_ignore']):
+                return None
+            else:
+                raise Exception("Stopped trials due to error.")
 
         # Validation dataset check
         val_loss, val_auc = validate(loss_function, model, val_loader, config)
@@ -127,19 +131,16 @@ def UpdateTrial(hyperClass, trial, config):
 
         # Save model
         try:
-            save_model(config, model, f"DlModelFull_Trial{trial.number}_Fold{i}.pth")
+            save_model(config, model, f"DlModel_Weights.pth")
+            save_config(config,f"DlModel_Config.yaml")
         except:
             print("WARNING: SAVING NOT WORKING!! PLEASE CHECK")
 
         # Save Datasets
-        #try:
         save_dataset(config,trainDataset_col[i],"train_Dataset")
         save_dataset(config,valDataset_col[i],"validation_Dataset")
         save_dataset(config,testDataset_col[i],"test_Dataset")
         save_dataset_summary(config,trainDataset_col[i],valDataset_col[i],testDataset_col[i])
-        logging.info("Saved the patients split data to directory")
-        #except Exception as e:
-            #logging.info(f"Could not save the datasets reason: {e}")
 
         logging.info("Information about the val_auc_array:")
         logging.info(val_auc_col)
@@ -174,7 +175,8 @@ def CreateResultDir(config, KFoldIndex = -1):
     folderPath = os.path.join(os.path.join(config["paths"]["output"],config["hyperparam_tuning"]["ProjectName"]),config["general"]["trialNumber"])
     if(KFoldIndex != -1):
         folderPath = os.path.join(folderPath,f"KFold{KFoldIndex}")
-    
+    folderPath += "\\"
+
     # Create folder if does not exist
     create_folder(folderPath)
     check_names(folderPath)

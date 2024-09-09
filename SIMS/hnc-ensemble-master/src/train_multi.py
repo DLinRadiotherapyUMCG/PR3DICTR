@@ -80,16 +80,13 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
             outputs = model(x=inputs, features=clinical_features)
 
             # Calculate loss
-            loss = loss_function(outputs, targets) # for multi need different loss calculation
+            loss = loss_function(config, outputs, targets) # for multi need different loss calculation
             loss.backward()
 
-            # Calculate AUC
-            lab_indx = 0
-            
-            for label in labels:
-                out_tot[label] = out_tot[label] + list(Sigmoid(outputs[label].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0]))
-                targets_tot[label] = targets_tot[label] + list(targets[:,:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
-                lab_indx+=1
+            # Calculate AUC            
+            for idx, label in enumerate(labels):
+                out_tot[label] = out_tot[label] + list(Sigmoid(outputs[label].cpu().detach().numpy().reshape((1,targets[:,:,idx].shape[0]))[0]))
+                targets_tot[label] = targets_tot[label] + list(targets[:,:,idx].cpu().detach().numpy().reshape((1,targets[:,:,idx].shape[0]))[0])
 
             # Log loss and AUC
             total_loss += loss.item()
@@ -224,3 +221,30 @@ def move_batch_to_device(batch, device):
     clinical_features = clinical_features.to(device=device)
     targets = targets.to(device=device)
     return inputs, clinical_features, targets
+
+def get_output_results(loss_function, model, val_loader, config):
+    model.eval()
+    labels = config['columns']['label']
+      
+    out_tot = dict.fromkeys(labels)
+    targets_tot = dict.fromkeys(labels)
+
+    for label in labels:
+        out_tot[label] = []
+        targets_tot[label] = []
+    
+    Sigmoid = np.vectorize(sigmoid)
+
+    with torch.no_grad():
+        for i, batch in enumerate(val_loader):
+            logging.debug(f'Validation batch {i}')
+            inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+
+            outputs = model(x=inputs, features=clinical_features)
+
+            lab_indx = 0
+            for label in labels:
+                out_tot[label] = out_tot[label] + list(Sigmoid(outputs[label].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0]))
+                targets_tot[label] = targets_tot[label] + list(targets[:,:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
+                lab_indx+=1
+    return(out_tot, targets_tot)

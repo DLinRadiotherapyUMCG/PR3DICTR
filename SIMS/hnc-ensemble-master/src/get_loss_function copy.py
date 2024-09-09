@@ -7,7 +7,7 @@ from src.constants import DEVICE
 
 import torch
 
-def multi_loss(config, outputs_dict, labels_dict):
+def multi_loss(outputs_dict, labels_dict):
 
     predictions = torch.stack(list(outputs_dict.values()), dim=1).type(torch.float32) # transposed! so that num columns = num toxicities
     
@@ -21,7 +21,7 @@ def multi_loss(config, outputs_dict, labels_dict):
     
     predictions = torch.reshape(predictions, targets.shape).to(predictions.dtype)
     
-    loss_function = torch.nn.BCEWithLogitsLoss(reduction='none', pos_weight=torch.tensor(config['training']['loss']['weight'],  dtype=torch.float32, device=DEVICE))
+    loss_function = torch.nn.BCEWithLogitsLoss(reduction='none')
     batch_loss = loss_function(predictions, targets)
 
     mask = (targets >= valid_endpoints_as_tensor[0]) & (targets <= valid_endpoints_as_tensor[1])

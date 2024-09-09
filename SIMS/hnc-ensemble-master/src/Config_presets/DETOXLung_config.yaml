@@ -1,30 +1,32 @@
 general:
   seed: 42
   device: "cuda"
+  firstRun: false
   trialNumber: "Trial_?"
   patientGroup: 0
   resultsCurrentDirectory: ""
+  error_ignore: true
+  endpointRatios: []
 
 columns:
   label: ["RP_OneYear"]
   clinical_features: ["SmokerActive","SmokerStopped", "Gender",
   "Age","ChemoRad", "SequantialChemo", "ImmunoTherapy",
   "OperationPerformed", "T_Stage","N_Stage","M_Stage"]
-  #DosePerFraction","FractionAmount","RT_TreatmentDuration", "Tumour_UpperLoc","Tumor_MiddleLoc","Tumor_LowerLoc"
   logistic_regression_features: ['']
 
 paths:
-  csv: "Z:/Robert/DataImports/Data_23_07_2024/ClinicalData/2024_08_27/"
-  images: "Z:/Robert/DataImports/Data_23_07_2024/ImageData/"
+  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_09_06/"
+  images: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ImageData/"
   output: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
   results: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
 
 data:
-  trainfile: 'stratified_sampling_full_manual_94.csv'
-  valfile: 'stratified_sampling_full_manual_94.csv'
-  splitvar: ""
+  trainfile: 'stratified_sampling_full_manual_94_edited.csv'
+  valfile: 'stratified_sampling_full_manual_94_edited.csv'
+  splitvar: "Split"
   patientVar: 'PatientID'
-  stratifyList: ["RP_OneYear","SmokerActive","ImmunoTherapy"]
+  stratifyList: ["RP_OneYear","SmokerActive","SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy","ChemoRad"]
   Excluded: "ExcludeVar"
 
   kFolds:
@@ -40,13 +42,13 @@ data:
   augmentation:
     isEnabled: true
     augmentation_list: ['flip','affine','rotate']
-    prob: 0.5
+    prob: 0.9
     strength: 1
 
 model:
   model_name: "dcnn_pooling"
   num_classes: 1
-  num_down_blocks: 5
+  n_down_blocks: 5
   filters: [8, 8, 16, 16, 32]
   kernel_sizes: [7, 5, 4, 3, 3]
   strides: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
@@ -54,12 +56,14 @@ model:
   lrelu_alpha: 0.1
   dropout_p: 0.06087816611628816
   perform_pooling: False
+  n_linear_down_blocks: 1
   linear_units: [16]
+  n_clinical_down_blocks: 2
   clinical_variables_position: 1
-  clinical_variables_linear_units: []
+  clinical_variables_linear_units: [32,16]
   clinical_variables_dropout_p: [0.3581947628028867]
   use_bias: True
-  pooling: 'max'
+  pooling: 'max'    # avg, max, nan
   pooling_size: 2
   normalization: 'batch'
   conv_block_layers: 1
@@ -86,49 +90,58 @@ preprocessing:
     target_labels: []
 
 training:
-  max_epochs: 50
+  max_epochs: 100
   batch_size: 8
   validation_interval: 1
-  patience: 16
+  patience: 10
+
   optimizer:
     name: "Adam"
     learning_rate: 0.0001
     weight_decay: 0.05
+
   loss:
     name: "multi-loss"
-    weight: [1]
+    weight: [1.2]
     reduction: "mean"
+    strength_enabled: false
+
   scheduler:
     name: "cosine"
     T_0: 40
     T_mult: 1
     eta_min: 0.00000001
+
   validation:
     num_auc_batches: 1
 
-visualizations:
+visualization:
   calibration:
     num_bins: 10
+  confusion_matrix:
+    threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_9'
+  ProjectName: 'DETOX-Lung_Project_11'
   WandB:
     IsEnabled: true
+    API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
     MetricsMonitor: [ "train_AUC","train_loss","train_acc",
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: "DETOX-Lung_Project_9"
-    n_trials: 5
+    studyName: "DETOX-Lung_Project_11"
+    n_trials: 30
     storagePath: "Unknown"
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:
-    #patience:
-    #  type: 'int'
-    #  location: ['training','patience']
-    #  min: 2
-    #  max: 10
+    Weight_decay: 
+      name: 'Weight_Decay'
+      type: 'float'
+      location: ["training",'optimizer','weight_decay']
+      min: 0
+      max: 1
     learning_rate: 
       name: 'Learning_rate'
       type: 'float'
@@ -139,79 +152,102 @@ hyperparam_tuning:
       name: "Optimizer" 
       type: 'categorical'
       location: ["training",'optimizer','name']
-      options: ['AdaBound']
+      options: ['Adam'] #['AdaBound','Adam','SGD']
     
-    #leaky_relu_alpa:
-    #  type: 'float'
-    #  location: ['training','optimizer','learning_rate']
-    #  min: 0.03
-    #  max: 0.1
     batch_size:
       name: batch_size
-      type: 'int'
+      type: 'categorical'
       location: ["training","batch_size"]
-      min: 6
-      max: 16
-      step: 2
+      options: [4,8,16]
 
     augmentation_strength:
       name: augmentation_strength
       type: 'float'
       location: ['data','augmentation',"strength"]
-      min: 0.2
-      max: 3
+      min: 0.8
+      max: 5
 
     augmentation_probability:
       name: augmentation_probability
       type: 'float'
       location: ['data','augmentation',"prob"]
-      min: 0.2
-      max: 0.8
+      min: 0.6
+      max: 0.98
 
-    #n_down_blocks:
-    #  type: 'int'
-    #  name: 'n_down_blocks'
-    #  location: ['model','num_down_blocks']
-    # min: 1
-    #  max: 6
-    #  step: 1
-    #  log: False
+    # ----  NN Layer Params -------
+    # Indicate amount of layers for different parts of Neural Network
+    n_down_blocks:
+     type: 'int'
+     name: 'n_down_blocks'
+     location: ['model','n_down_blocks']
+     min: 5
+     max: 5
+     step: 1
+     log: False
+
+    n_linear_down_blocks:
+     type: 'int'
+     name: 'n_linear_down_blocks'
+     location: ['model','n_linear_down_blocks']
+     min: 1
+     max: 5
+     step: 1
+     log: False
+
+    n_clinical_down_blocks:
+      type: 'int'
+      name: 'n_clinical_down_blocks'
+      location: ['model','n_clinical_down_blocks']
+      min: 1
+      max: 3
+      step: 1
+      log: False
   
-  # Complex hyperparams
+  # Complex hyperparams: Initialise every layer of the Neural Network with given ranges
   derived:
     n_down_blocks:
       filters:
         type: 'int'
-        name: 'filter'
+        name: 'CNN_filter'
         location: ['model','filters']
         min: 8
-        max: 64
+        max: 32 # 64
         step: 8
         log: False
       kernel_sizes:
         type: 'int'
-        name: 'kernel_size'
+        name: 'CNN_kernel_size'
         location: ['model','kernel_sizes']
         min: 3
-        max: 5
+        max: 7
         step: 2
         log: False
-      strides:      
-        type: 'categorical'
-        name: 'stride'
-        location: ['model','strides']
-        options: [[1,1,1]]
+      #strides:      
+      #  type: 'categorical'
+      #  name: 'stride'
+      #  location: ['model','strides']
+      #  options: [[2,2,2]]
+    
+    n_linear_down_blocks:
+      filters:
+        type: 'int'
+        name: 'Linear_filter'
+        location: ['model','linear_units']
+        min: 8
+        max: 32
+        step: 8
+        log: False
 
-    #leaky_relu_alpa:
-    #  type: 'float'
-    #  location : [][],
-    # min : 0.03
-    #  max : 0.1
-    #equalizer_ratio: 
-    #  type: 'float'
-    #  location: ['data',"equalizer",'ratio']
-    #  min : 0.2 
-    #  max : 0.5
+    n_clinical_down_blocks:
+      filters:
+        type: 'int'
+        name: 'Clin_filter'
+        location: ['model','clinical_variables_linear_units']
+        min: 8
+        max: 64
+        step: 8
+        log: False
+      
         
 Save:
   config: True

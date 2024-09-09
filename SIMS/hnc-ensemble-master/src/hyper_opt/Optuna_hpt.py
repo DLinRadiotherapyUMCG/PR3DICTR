@@ -17,6 +17,7 @@ import os
 
 from functools import partial
 
+
 def update_config(dic, location, suggested_value):
     """
     Function to update the config based on a given location and 
@@ -28,6 +29,24 @@ def update_config(dic, location, suggested_value):
         dic[location[0]] = update_config(dic[location[0]], location[1:], suggested_value)
         return dic
 
+def normal_hyperparameters(trial, config):
+    for key in config['hyperparam_tuning']['hyperparams'].keys():
+        try:
+            hyperinfo = config['hyperparam_tuning']['hyperparams'][key]
+            location = hyperinfo['location']
+
+            # Check if multi is encountered
+            if(hyperinfo['name'].startswith("n_")):
+                suggested_value = generate_value(trial, hyperinfo, config['general']['firstRun'])
+            else:   
+                suggested_value = generate_value(trial, hyperinfo)
+            
+            config = update_config(config,location,suggested_value)
+        except Exception as error:
+                print(f"Could not generate hyperparams [Single] with the name '{key}' with following error:\n {error}")
+                raise Exception("Stopped trials due to error.")
+    return config
+
 def derived_hyperparameters(trial, config):
     '''
     Some hyperparameters are connected/ interdependend, here derived 
@@ -37,20 +56,64 @@ def derived_hyperparameters(trial, config):
     # If the number of down blocks is specified there should be an equal amount of related parameters   
     if 'n_down_blocks' in config['hyperparam_tuning']['hyperparams'].keys():
         for key in config['hyperparam_tuning']['derived']['n_down_blocks']:
-            temp_list = []
-            hyperinfo = config['hyperparam_tuning']['derived']['n_down_blocks'][key]  
-            location = hyperinfo['location']
-            base_name = hyperinfo['name']
-            for i in range(config['model']['n_down_blocks']):
-                hyperinfo['name'] = base_name + str(i)
-                suggested_value = generate_value(trial, hyperinfo)
-                temp_list.append(suggested_value)
-            config = update_config(config,location,temp_list)
+            try:
+                temp_list = []
+                hyperinfo = config['hyperparam_tuning']['derived']['n_down_blocks'][key]  
+                location = hyperinfo['location']
+                base_name = hyperinfo['name']
+                for i in range(config['model']['n_down_blocks']):
+                    hyperinfo_new = hyperinfo.copy()
+                    hyperinfo_new['name'] = base_name + str(i)
+                    suggested_value = generate_value(trial, hyperinfo_new)
+                    temp_list.append(suggested_value)
+                config = update_config(config,location,temp_list)
+            except Exception as error:
+                print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
+                raise Exception("Stopped trials due to error.")
+            
+    if 'n_clinical_down_blocks' in config['hyperparam_tuning']['hyperparams'].keys():
+        for key in config['hyperparam_tuning']['derived']['n_clinical_down_blocks']:
+            try:
+                temp_list = []
+                hyperinfo = config['hyperparam_tuning']['derived']['n_clinical_down_blocks'][key]  
+                location = hyperinfo['location']
+                base_name = hyperinfo['name']
+                for i in range(config['model']['n_clinical_down_blocks']):
+                    hyperinfo_new = hyperinfo.copy()
+                    hyperinfo_new['name'] = base_name + str(i)
+                    suggested_value = generate_value(trial, hyperinfo_new)
+                    temp_list.append(suggested_value)
+                config = update_config(config,location,temp_list)
+            except Exception as error:
+                print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
+                raise Exception("Stopped trials due to error.")
+            
+    if 'n_linear_down_blocks' in config['hyperparam_tuning']['hyperparams'].keys():
+        for key in config['hyperparam_tuning']['derived']['n_linear_down_blocks']:
+            try:
+                temp_list = []
+                hyperinfo = config['hyperparam_tuning']['derived']['n_linear_down_blocks'][key]  
+                location = hyperinfo['location']
+                base_name = hyperinfo['name']
+                for i in range(config['model']['n_linear_down_blocks']):
+                    hyperinfo_new = hyperinfo.copy()
+                    hyperinfo_new['name'] = base_name + str(i)
+                    suggested_value = generate_value(trial, hyperinfo_new)
+                    temp_list.append(suggested_value)
+                config = update_config(config,location,temp_list)
+            except Exception as error:
+                print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
+                raise Exception("Stopped trials due to error.")
             
     return config
 
+def set_minValue(hyperinfo, firstRun):
+    minValue = hyperinfo['min']
+    if(firstRun):
+        minValue = hyperinfo['max']
+    return minValue
 
-def generate_value(trial, hyperinfo):
+def generate_value(trial, hyperinfo, firstRun = False):
     """
     Selects and generates a value based on hyperinfo
     """
@@ -65,17 +128,17 @@ def generate_value(trial, hyperinfo):
     if hyperinfo['type'] == 'int':
         if(step == None):
             step = 1
-        suggested_value = trial.suggest_int(hyperinfo['name'],hyperinfo['min'],hyperinfo['max'],step=step,log=log)
+        suggested_value = trial.suggest_int(hyperinfo['name'], set_minValue(hyperinfo,firstRun), hyperinfo['max'],step=step,log=log)
     if hyperinfo['type'] == 'float':
-        suggested_value = trial.suggest_float(hyperinfo['name'],hyperinfo['min'],hyperinfo['max'],step=step,log=log)
+        suggested_value = trial.suggest_float(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'],step=step,log=log)
     if hyperinfo['type'] == 'categorical':
         suggested_value = trial.suggest_categorical(hyperinfo['name'],hyperinfo['options'])       
     if hyperinfo['type'] == 'dis_un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],hyperinfo['min'],hyperinfo['max'],hyperinfo['q'])       
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'],hyperinfo['q'])       
     if hyperinfo['type'] == 'log_un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],hyperinfo['min'],hyperinfo['max'])
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'])
     if hyperinfo['type'] == 'un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],hyperinfo['min'],hyperinfo['max'])       
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'])       
     return suggested_value
 
 def save_trial(model, config, trial_num):

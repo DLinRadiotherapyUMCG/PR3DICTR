@@ -15,7 +15,7 @@ def create_folder(path):
     if(os.path.isdir(dirPath) == False):
         dirPath = os.path.dirname(dirPath)
     if(os.path.exists(dirPath) == False):
-        os.makedirs(dirPath)
+        os.makedirs(dirPath, exist_ok= True)
 
 def create_database(pathFile):
     conn = None

@@ -56,6 +56,24 @@ def ValidateImageDataExists(config, df):
     df = df[(df['PatientID'].isin(removePtnIDS)) == False]
     return df
 
+def load_dataset_single(csvPath, config, patient_ids = None):
+    delimiterFound = get_delimiter(csvPath)
+    dlDf = pd.read_csv(csvPath, delimiter=delimiterFound, dtype={'PatientID': str})
+    toxDataset = ToxDataset(config,dlDf)
+
+    # Get example patient to get data info
+    example_input, _, _ = toxDataset[0]
+    channels, depth, height, width = example_input.shape
+    n_features = len(config['columns']['clinical_features'])
+
+    metadata = {
+        "channels": channels,
+        "depth": depth,
+        "height": height,
+        "width": width,
+        "n_features": n_features,
+    }
+    return (toxDataset,metadata)
 
 def load_dataset_total(config, patient_ids = None):
     """
@@ -88,9 +106,10 @@ def load_dataset_total(config, patient_ids = None):
             splitVar = config['data']['splitvar']
             trainDf = totalDf[totalDf[splitVar] == "Train"]
             valDf = totalDf[totalDf[splitVar] == "Val"] 
+            testDf = totalDf[totalDf[splitVar] == "Test"] 
 
-            if(config['data']['equalizer']['isEnabled']):
-                trainDf = label_equalizer(trainDf, config)
+            #if(config['data']['equalizer']['isEnabled']):
+            #    trainDf = label_equalizer(trainDf, config)
         else:    
             # Need to split manual
             trainDf,valDf,testDf = data_split(totalDf, config, split=[0.7,0.15,0.15])
@@ -102,7 +121,10 @@ def load_dataset_total(config, patient_ids = None):
         delimiterFound = get_delimiter(valfile)
         valDf = pd.read_csv(valfile, delimiter=delimiterFound, dtype={'PatientID': str})
 
+    # Write information about data
     print(f"Patient collection --> Train: {trainDf.shape[0]}, Validation: {valDf.shape[0]}")
+    if(testDf.shape[0] != 0):
+        print(f"Patient collection --> Test: {testDf.shape[0]}")
 
     # Check and validate if KFolds settings are active
     trainDataset_Collection = []
@@ -114,13 +136,27 @@ def load_dataset_total(config, patient_ids = None):
         label = mergeDf[config['columns']['label']]
         skf = StratifiedKFold(n_splits=config["data"]["kFolds"]["Splits"], shuffle=True, random_state=config["general"]["seed"])
         for i, (train_index, val_index) in enumerate(skf.split(mergeDf,label)):
-            trainDataset_Collection.append(ToxDataset(config,mergeDf.iloc[train_index]))
-            valDataset_Collection.append(ToxDataset(config,mergeDf.iloc[val_index]))
+            trainDf_sel = mergeDf.iloc[train_index]
+            if(config['data']['equalizer']['isEnabled']):
+                trainDf_sel = label_equalizer(trainDf_sel, config)
+            valDf_sel = mergeDf.iloc[val_index]
+
+            # Check sanity is correct
+            if(Complete_SanityCheck(config,[trainDf_sel,valDf_sel,testDf])):
+                raise Exception("ABORT: Datasets contain identical patients! NOT ALLOWED!")
+
+            trainDataset_Collection.append(ToxDataset(config,trainDf_sel))
+            valDataset_Collection.append(ToxDataset(config,valDf_sel))
             testDataset_Collection.append(ToxDataset(config,testDf))
+
             if(i == config["data"]["kFolds"]["Iterations"] - 1):
                 break
     else:   
         # Single train and val dataset
+        if(config['data']['equalizer']['isEnabled']):
+                trainDf = label_equalizer(trainDf, config)
+        if(Complete_SanityCheck(config,[trainDf,valDf,testDf])):
+                raise Exception("ABORT: Datasets contain identical patients! NOT ALLOWED!")
         trainDataset_Collection.append(ToxDataset(config,trainDf))
         valDataset_Collection.append(ToxDataset(config,valDf))
         testDataset_Collection.append(ToxDataset(config,testDf))
@@ -139,3 +175,14 @@ def load_dataset_total(config, patient_ids = None):
     }
 
     return [trainDataset_Collection, valDataset_Collection, testDataset_Collection], metadata
+
+def Complete_SanityCheck(config,dfArray):
+    for i in range(len(dfArray) - 1):
+        for j in range(i + 1,len(dfArray)):
+            if(PtnID_SanityCheck(config,dfArray[i],dfArray[j])):
+                return True
+    return False           
+
+
+def PtnID_SanityCheck(config,df1,df2):
+    return any(df1[config['data']['patientVar']].isin(df2[config['data']['patientVar']]))

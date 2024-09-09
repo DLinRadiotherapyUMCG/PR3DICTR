@@ -1,5 +1,6 @@
 import logging
 import os
+import yaml
 import pandas as pd
 import torch
 from src.utils.fileHandler import create_folder
@@ -43,6 +44,15 @@ def save_dataset(config, dataset, fileName):
     pathToSave = os.path.join(directoryToSave,fileName)
     #print(pathToSave)
     df.to_csv(pathToSave, sep=";")
+
+
+def save_config(config, fileName):
+    directoryToSave = config['general']['resultsCurrentDirectory']
+    if(fileName.endswith(".yaml") == False):
+        fileName = f"{fileName}.yaml"
+    pathConfig = os.path.join(directoryToSave,fileName)
+    with open(pathConfig,'w') as outfile:
+        yaml.dump(config,outfile,default_flow_style=False)
 
 
 def save_dataset_summary(config, trainDataset, valDataset, testDataset):

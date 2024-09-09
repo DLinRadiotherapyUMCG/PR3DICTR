@@ -28,9 +28,9 @@ def UpdateStudy(config, results, epoch):
 
 def WandB_initalise(config):   
     if(WandEnabled(config) == True):
-        # Make sure that you are logged in your python environment (check WandB setup tutorial)    
+        # Make sure that you are logged in your python environment  
         # Login with account
-        wandb.login()            
+        wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])            
     return
 
 def WandB_stop(config):

@@ -26,7 +26,7 @@ def get_optimizer(config, model):
     elif config['training']['optimizer']['name'] == 'AdaBound':
         option = AdaBound(model.parameters(), lr=config['training']['optimizer']['learning_rate'], 
                  final_lr=config['training']['optimizer']['learning_rate']*10, weight_decay=config['training']['optimizer']['weight_decay'])
-    elif config['training']['optimizer']['name'] == 'sgd':
+    elif config['training']['optimizer']['name'] == 'SGD':
         option = SGD(model.parameters(), lr=config['training']['optimizer']['learning_rate'], 
                 weight_decay=config['training']['optimizer']['weight_decay'])
     else:

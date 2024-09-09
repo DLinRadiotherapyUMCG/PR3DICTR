@@ -239,7 +239,7 @@ def plot_CT(axs, CT, slices, HNC_plotting_params):
     )
 
     for i, slice_n in enumerate(slices):
-        axs[i].imshow(CT[slice_n], cmap=cmap, norm=norm)
+        axs[i].imshow(CT[slice_n], cmap = "bone")#, cmap=cmap, norm=norm)
 
 
 def plot_RTDOSE(axs, RTDOSE, slices, RTcmap, is_background=False):
@@ -460,11 +460,11 @@ def plot_slices(
         for layer_idx, layer_name in enumerate(layers_to_plot):
             if layer_name == "CT":
                 CT = row_dict["CT"]
-                CT = rescale_data(
-                    CT,
-                    min_val=HNC_plotting_params["CT"]["min_val"],
-                    max_val=HNC_plotting_params["CT"]["max_val"],
-                )
+                #CT = rescale_data(
+                #    CT,
+                #    min_val=HNC_plotting_params["CT"]["min_val"],
+                #    max_val=HNC_plotting_params["CT"]["max_val"],
+                #)
 
                 plot_CT(axs[row_idx], CT, slice_indexes, HNC_plotting_params)
 

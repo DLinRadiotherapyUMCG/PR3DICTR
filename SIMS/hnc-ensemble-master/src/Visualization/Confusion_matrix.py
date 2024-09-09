@@ -5,7 +5,7 @@ from sklearn import metrics
 from sklearn.metrics import roc_curve
 import numpy as np
 
-def confusion_matrix_bin(true,pred,config):
+def confusion_matrix_bin(true,pred,config, show = False):
     
     threshold = config['visualization']['confusion_matrix']['threshold']
     
@@ -22,8 +22,9 @@ def confusion_matrix_bin(true,pred,config):
 
     cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = [False, True])
     cm_display.plot()
-    plt.savefig(config['paths']['results'] + 'confusion_matrix.png')
-    plt.clf()
-    plt.close('all')
+    if(show == False):
+        plt.savefig(config['paths']['results'] + 'confusion_matrix.png')
+        plt.clf()
+        plt.close('all')
     
     return
