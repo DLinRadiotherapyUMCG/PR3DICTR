@@ -2,7 +2,7 @@ from typing import Optional, List, Tuple
 
 from torch.utils.data import Dataset
 
-from src.HNCDataset import HNCDataset
+from src.dataset.HNCDataset import HNCDataset
 
 def load_dataset(config, csv_path, patient_ids = None, augment= False):
     """

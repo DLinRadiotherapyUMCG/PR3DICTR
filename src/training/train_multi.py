@@ -5,12 +5,12 @@ import wandb
 from torch.utils.data import DataLoader
 
 from src.constants import DEVICE
-from src.get_loss_function import get_loss_function
-from src.get_multi_model import get_classification_model
-from src.get_optimizer import get_optimizer
-from src.get_scheduler import get_scheduler
-from src.Evaluation.calculate_auc import calculate_auc
-from src.Evaluation.calculate_auc import calculate_auc_multi
+from src.utils.loss_func.get_loss_function import get_loss_function
+from src.models.tools.get_multi_model import get_classification_model
+from src.utils.optimizer.get_optimizer import get_optimizer
+from src.utils.scheduler.get_scheduler import get_scheduler
+from src.evaluation.calculate_auc import calculate_auc
+from src.evaluation.calculate_auc import calculate_auc_multi
 
 import pandas as pd
 import numpy as np
@@ -29,6 +29,10 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
     :param metadata:
     :return: Model
     """
+
+    # config run information
+    config['run']['patienceExhausted'] = False
+    config['run']['patienceExhaustedIndex'] = 0
     
     # Get the names of the end-points being evaluated 
     labels = config['columns']['label']
@@ -141,6 +145,8 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
             # Check if patience has been exhausted
             if patience_counter >= config['training']['patience']:
                 logging.info('Patience exhausted, stopping training')
+                config['run']['patienceExhausted'] = True
+                config['run']['patienceExhaustedIndex'] = epoch
                 break
         
         pd.DataFrame(out_tot).to_csv('temp_pred.csv', sep = ';')

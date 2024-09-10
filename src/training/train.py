@@ -5,11 +5,11 @@ import wandb
 from torch.utils.data import DataLoader
 
 from src.constants import DEVICE
-from src.get_loss_function import get_loss_function
-from src.get_model import get_model
-from src.get_optimizer import get_optimizer
-from src.get_scheduler import get_scheduler
-from src.Evaluation.calculate_auc import calculate_auc
+from src.utils.loss_func.get_loss_function import get_loss_function
+from src.models.tools.get_model import get_model
+from src.utils.optimizer.get_optimizer import get_optimizer
+from src.utils.scheduler.get_scheduler import get_scheduler
+from src.evaluation.calculate_auc import calculate_auc
 
 
 def train(config, train_data, val_data, metadata):

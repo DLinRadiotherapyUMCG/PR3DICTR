@@ -10,11 +10,11 @@ from scipy.stats import f_oneway
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import accuracy_score, roc_auc_score
 
-from src.Visualization.plot_slices import plot_slices
+from src.visualization.plot_slices import plot_slices
 from src.constants import ENSEMBLE_MEMBERS
-from src.load_config import load_config
-from src.load_dataset import load_dataset
-from src.utils.logging import setup_logging
+from src.config_presets.tools.load_config import load_config
+from src.dataset.load_dataset import load_dataset
+from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 

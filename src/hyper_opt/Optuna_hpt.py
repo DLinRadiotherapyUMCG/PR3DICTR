@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import optuna
-from src.get_config import get_config
-from src.load_dataset import load_dataset
-from src.save_model import save_model
-from src.train_multi import train
-from src.utils.logging import setup_logging
+from src.config_presets.tools.get_config import get_config
+from src.dataset.load_dataset import load_dataset
+from src.models.tools.save_model import save_model
+from src.training.train_multi import train, validate
+from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
-from src.train_multi import validate
-from src.get_loss_function import get_loss_function
+from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.fileHandler import create_file, create_folder
 
 from torch.utils.data import DataLoader

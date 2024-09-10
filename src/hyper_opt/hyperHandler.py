@@ -2,15 +2,14 @@ import wandb
 import optuna
 import logging
 
-from src.get_config import get_config
-from src.load_dataset import load_dataset, load_dataset_total
-from src.save_model import save_model, save_config, save_dataset, save_dataset_summary
-from src.train_multi import train
-from src.utils.logging import setup_logging
+from src.config_presets.tools.get_config import get_config
+from src.dataset.load_dataset import load_dataset, load_dataset_total
+from src.models.tools.save_model import save_model, save_config, save_dataset, save_dataset_summary
+from src.training.train_multi import train, validate
+from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
-from src.train_multi import validate
-from src.get_loss_function import get_loss_function
+from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.fileHandler import create_file, create_folder
 
 from torch.utils.data import DataLoader
@@ -147,6 +146,12 @@ def UpdateTrial(hyperClass, trial, config):
         #if(np.mean(np.array(val_auc_col)) < 0.7 and i >= 1 and len(trainDataset_col) -1 != i):
         #    logging.info(f"Stopped the folds due to a low validation AUC.")
         #    break
+
+        # Check if run needs to be aborted
+        if(config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience']*2 + 2)) and i == 0):
+            if(len(trainDataset_col) > 1):
+                logging.info("Patience exhausted and ignoring K-split datasets")
+            break
 
 
     if(groupVar != None):

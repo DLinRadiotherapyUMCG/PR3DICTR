@@ -9,7 +9,7 @@ from rich.table import Table
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 import numpy as np
-from src.utils.log_table import log_table
+from src.utils.logging.log_table import log_table
 
 
 def lr_load_data(config, model_index=None):

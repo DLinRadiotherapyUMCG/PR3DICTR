@@ -3,7 +3,7 @@ from typing import Optional, List, Tuple
 
 from torch.utils.data import Dataset
 
-from src.HNCDataset import HNCDataset, ToxDataset
+from src.dataset.HNCDataset import HNCDataset, ToxDataset
 from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
 import pandas as pd
 
