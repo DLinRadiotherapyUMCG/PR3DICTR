@@ -101,7 +101,7 @@ training:
     weight_decay: 0.05
 
   loss:
-    name: "multi-loss"
+    name: "multi-BCEloss"
     weight: [1.2]
     reduction: "mean"
     strength_enabled: false

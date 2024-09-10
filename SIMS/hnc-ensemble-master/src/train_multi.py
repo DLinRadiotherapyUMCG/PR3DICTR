@@ -188,7 +188,7 @@ def validate(loss_function, model, val_loader, config):
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
 
             outputs = model(x=inputs, features=clinical_features)
-            loss = loss_function(outputs, targets)
+            loss = loss_function(config, outputs, targets)
 
             total_loss += loss.item()
             
