@@ -62,7 +62,7 @@ def lr_fit_model(config, X_train, y_train, X_val, y_val):
     :return:
     """
     # Fit the model
-    model = LogisticRegression(random_state=config['seed'])
+    model = LogisticRegression(random_state=config['general']['seed'])
     
     # Messty things to handle any missing data
     X_train_cop = dict.fromkeys(X_train.keys())

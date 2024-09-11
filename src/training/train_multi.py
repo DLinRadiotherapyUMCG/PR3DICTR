@@ -1,3 +1,4 @@
+import os
 import logging
 
 import torch
@@ -149,8 +150,8 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
                 config['run']['patienceExhaustedIndex'] = epoch
                 break
         
-        pd.DataFrame(out_tot).to_csv('temp_pred.csv', sep = ';')
-        pd.DataFrame(targets_tot).to_csv('temp_target.csv', sep = ';')
+        pd.DataFrame(out_tot).to_csv(os.path.join(config['general']['resultsCurrentDirectory'],'temp_pred.csv'), sep = ';')
+        pd.DataFrame(targets_tot).to_csv(os.path.join(config['general']['resultsCurrentDirectory'],'temp_target.csv'), sep = ';')
         
         # Log to hyperparam class if necessary
         if(hyperClass != None):

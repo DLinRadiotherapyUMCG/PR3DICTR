@@ -27,7 +27,7 @@ def main():
     config = load_config(toxicity)
 
     # Disable randomness
-    set_random_seed(config['seed'])
+    set_random_seed(config['general']['seed'])
 
     # Loop over ensembles
     for model_index in range(ENSEMBLE_MEMBERS):

@@ -17,7 +17,7 @@ from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
-from src.utils.fileHandler import create_file
+from src.utils.fileHandler import create_file, create_textfile
 
 if __name__ == '__main__':
     # Setup

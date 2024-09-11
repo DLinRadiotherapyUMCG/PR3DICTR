@@ -16,10 +16,10 @@ columns:
   logistic_regression_features: ['']
 
 paths:
-  csv: "C:/Users/WalR/OneDrive - UMCG/Documents/Data/2024_09_04/ClinicalData/"
-  images: "C:/Users/WalR/OneDrive - UMCG/Documents/Data/2024_09_04/ImageData/"
-  output: "C:/Users/WalR/OneDrive - UMCG/Documents/Detox_lung/Results/"
-  results: "C:/Users/WalR/OneDrive - UMCG/Documents/Detox_lung/Results/"
+  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_09_06/"
+  images: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ImageData/"
+  output: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
+  results: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
 
 run:
   patienceExhausted: False
@@ -105,7 +105,7 @@ training:
     weight_decay: 0.05
 
   loss:
-    name: "multi-BCEloss"
+    name: "BCEloss"
     weight: [1.2]
     reduction: "mean"
     strength_enabled: false
@@ -126,17 +126,16 @@ visualization:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_11'
+  ProjectName: 'DETOX-Lung_Project_12'
   WandB:
-    IsEnabled: true
+    IsEnabled: True
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
     MetricsMonitor: [ "train_AUC","train_loss","train_acc",
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: "DETOX-Lung_Project_11"
+    studyName: "DETOX-Lung_Project_12"
     n_trials: 30
-    storagePath: "Unknown"
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:

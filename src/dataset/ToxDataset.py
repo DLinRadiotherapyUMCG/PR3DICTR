@@ -19,23 +19,23 @@ def preprocess_image_stack(image_stack, config):
     :param config:
     :return:
     """
-    if(config['preprocessing']['isEnabled']):
+    if(config['data']['preprocessing']['isEnabled']):
         # Standardization
-        ct_scaler = ScaleIntensityRange(a_min=config['preprocessing']['ct']['a_min'],
-                                        a_max=config['preprocessing']['ct']['a_max'],
-                                        b_min=config['preprocessing']['ct']['b_min'],
-                                        b_max=config['preprocessing']['ct']['b_max'],
-                                        clip=config['preprocessing']['ct']['clip'],
+        ct_scaler = ScaleIntensityRange(a_min=config['data']['preprocessing']['ct']['a_min'],
+                                        a_max=config['data']['preprocessing']['ct']['a_max'],
+                                        b_min=config['data']['preprocessing']['ct']['b_min'],
+                                        b_max=config['data']['preprocessing']['ct']['b_max'],
+                                        clip=config['data']['preprocessing']['ct']['clip'],
                                         dtype=np.float32)
-        rtdose_scaler = ScaleIntensityRange(a_min=config['preprocessing']['rtdose']['a_min'],
-                                            a_max=config['preprocessing']['rtdose']['a_max'],
-                                            b_min=config['preprocessing']['rtdose']['b_min'],
-                                            b_max=config['preprocessing']['rtdose']['b_max'],
-                                            clip=config['preprocessing']['rtdose']['clip'],
+        rtdose_scaler = ScaleIntensityRange(a_min=config['data']['preprocessing']['rtdose']['a_min'],
+                                            a_max=config['data']['preprocessing']['rtdose']['a_max'],
+                                            b_min=config['data']['preprocessing']['rtdose']['b_min'],
+                                            b_max=config['data']['preprocessing']['rtdose']['b_max'],
+                                            clip=config['data']['preprocessing']['rtdose']['clip'],
                                             dtype=np.float32)
         segmentation_map_transform = MapLabelValue(
-            orig_labels=[index for index, x in enumerate(config['preprocessing']['segmentation_map']['target_labels'])],
-            target_labels=config['preprocessing']['segmentation_map']['target_labels'])
+            orig_labels=[index for index, x in enumerate(config['data']['preprocessing']['segmentation_map']['target_labels'])],
+            target_labels=config['data']['preprocessing']['segmentation_map']['target_labels'])
 
         image_stack[0] = ct_scaler(image_stack[0])
         image_stack[1] = rtdose_scaler(image_stack[1])
@@ -56,7 +56,7 @@ def augmentation(config):
         possible_augmentation = ['crop','flip','affine','rotate']
         
         if 'crop' in augmentation:
-            transforms.append(RandSpatialCrop(roi_size=config['preprocessing']['crop_shape'], random_size=False, random_center=True))
+            transforms.append(RandSpatialCrop(roi_size=config['data']['preprocessing']['crop_shape'], random_size=False, random_center=True))
         
         if 'flip' in augmentation:
             transforms.append(RandFlip(prob=prob, spatial_axis=1))
@@ -109,7 +109,7 @@ class HNCDataset(Dataset):
         self.transforms = augmentation(config)
 
         for transform in self.transforms.transforms:
-            transform.set_random_state(seed=config['seed'])
+            transform.set_random_state(seed=config['general']['seed'])
 
     def __len__(self):
         return len(self.df)
@@ -144,10 +144,10 @@ class HNCDataset(Dataset):
             image_stack = self.transforms(image_stack)
 
         # If cropping is enabled, crop the image
-        if self.config['preprocessing']['crop']:
-            cropped_image_stack = np.empty((image_stack.shape[0], *self.config['preprocessing']['crop_shape']))
+        if self.config['data']['preprocessing']['crop']:
+            cropped_image_stack = np.empty((image_stack.shape[0], *self.config['data']['preprocessing']['crop_shape']))
             for i in range(image_stack.shape[0]):
-                cropped_image_stack[i] = center_crop_3d(image_stack[i], self.config['preprocessing']['crop_shape'])
+                cropped_image_stack[i] = center_crop_3d(image_stack[i], self.config['data']['preprocessing']['crop_shape'])
             image_stack = cropped_image_stack.astype(np.float32)
 
         # Get the label
@@ -176,7 +176,7 @@ class ToxDataset(Dataset):
         self.transforms = augmentation(config)
 
         for transform in self.transforms.transforms:
-            transform.set_random_state(seed=config['seed'])
+            transform.set_random_state(seed=config['general']['seed'])
 
     def __len__(self):
         return len(self.df)
@@ -221,11 +221,11 @@ class ToxDataset(Dataset):
             image_stack = self.transforms(image_stack)
 
         # If cropping is enabled, crop the image
-        if self.config['preprocessing']['crop']:
+        if self.config['data']['preprocessing']['crop']:
             print("Cropping")
-            cropped_image_stack = np.empty((image_stack.shape[0], *self.config['preprocessing']['crop_shape']))
+            cropped_image_stack = np.empty((image_stack.shape[0], *self.config['data']['preprocessing']['crop_shape']))
             for i in range(image_stack.shape[0]):
-                cropped_image_stack[i] = center_crop_3d(image_stack[i], self.config['preprocessing']['crop_shape'])
+                cropped_image_stack[i] = center_crop_3d(image_stack[i], self.config['data']['preprocessing']['crop_shape'])
             image_stack = cropped_image_stack.astype(np.float32)
 
         # Get the label

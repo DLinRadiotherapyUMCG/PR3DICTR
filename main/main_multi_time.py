@@ -6,7 +6,7 @@ from pathlib import Path
 path_src = os.getcwd()
 sys.path.insert(1, path_src)
 
-from src.config_presets.tools.get_config import get_config
+from src.config_presets.tools.get_config import get_config, load_config
 from src.dataset.load_dataset import load_dataset, load_dataset_total
 from src.models.tools.save_model import save_model
 from src.training.train_multi import train
@@ -28,7 +28,7 @@ def main():
     config = load_config('Multi_tox')
 
     # Disable randomness
-    set_random_seed(config['seed'])
+    set_random_seed(config['general']['seed'])
 
     # Load the dataset
     # logging.info('Loading dataset')

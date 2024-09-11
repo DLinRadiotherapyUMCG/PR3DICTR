@@ -10,7 +10,7 @@ from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 from src.utils.loss_func.get_loss_function import get_loss_function
-from src.utils.fileHandler import create_file, create_folder
+from src.utils.fileHandler import create_file, create_folder, create_textfile
 
 from torch.utils.data import DataLoader
 import os
@@ -102,6 +102,7 @@ def UpdateTrial(hyperClass, trial, config):
             model = train(config, train_loader, val_loader, metadata, hyperClass = hyperClass)
         except Exception as error:
             print(f"Warning: The training stopped due to an error. Please read the error message carefully: \n{error}")
+            create_textfile(config['general']['resultsCurrentDirectory'],"ErrorLog",str(error))
             if(config['general']['error_ignore']):
                 return None
             else:

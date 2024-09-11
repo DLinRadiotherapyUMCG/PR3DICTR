@@ -123,12 +123,31 @@ visualizations:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
+  ProjectName: 'Base_Dir'
+  WandB:
+    IsEnabled: false
+    API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
+    MetricsMonitor: [ "train_AUC","train_loss","train_acc",
+      "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    n_trails: 50
+    IsEnabled: True
+    studyName: "Base_Dir"
+    n_trials: 30
+  # ----  Custom Params -------
+  # Location:= path variabele in config
   hyperparams:
-    patience: 
-      type: 'int'
-      name: 'patience'
-      location: ['training', 'patience']
-      min: 2
-      max: 10
+    Weight_decay: 
+      name: 'Weight_Decay'
+      type: 'float'
+      location: ["training",'optimizer','weight_decay']
+      min: 0
+      max: 1
+     
+        
+Save:
+  config: True
+  output_values: True
+  best_model: False
+  fileNames:
+    modelSummary: "modelSummary.txt"
+      

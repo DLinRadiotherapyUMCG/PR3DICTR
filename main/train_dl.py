@@ -29,7 +29,7 @@ from src.utils.fileHandler import create_file
 #     config = load_config(toxicity)
 
 #     # Disable randomness
-#     set_random_seed(config['seed'])
+#     set_random_seed(config['general']['seed'])
 
 #     # Load the dataset
 #     logging.info('Loading dataset')
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     config = get_config('Multi_time')
 
     # Disable randomness
-    set_random_seed(config['seed'])
+    set_random_seed(config['general']['seed'])
 
     model, auc = train_lr(config)
 

@@ -712,7 +712,7 @@ def main():
     config = load_config(toxicity)
 
     # Disable randomness
-    set_random_seed(config['seed'])
+    set_random_seed(config['general']['seed'])
 
     # Get results
     results_df = pd.read_csv(os.path.join(config['paths']['results'], 'results.csv'),
