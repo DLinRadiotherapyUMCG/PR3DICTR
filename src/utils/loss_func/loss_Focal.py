@@ -4,44 +4,67 @@ import torch.nn.functional as F
 
 # TODO: TESTING IF IT WORKS
 
-class FocalLoss(nn.modules.loss._WeightedLoss):
-    def __init__(self, weight: torch.Tensor | None = None, gamma = 2, reduction: str = 'mean') -> None:
-        super().__init__(weight, reduction = reduction)
+class FocalLoss(torch.nn.Module):
+    """
+    https://pytorch.org/vision/main/_modules/torchvision/ops/focal_loss.html
+
+     Loss used in RetinaNet for dense detection: https://arxiv.org/abs/1708.02002.
+
+    Args:
+        inputs (Tensor): A float tensor of arbitrary shape.
+                The predictions for each example.
+        targets (Tensor): A float tensor with the same shape as inputs. Stores the binary
+                classification label for each element in inputs
+                (0 for the negative class and 1 for the positive class).
+        alpha (float or Tensor): Weighting factor in range (0,1) to balance
+                positive vs negative examples or -1 for ignore. Default: ``0.25``.
+        gamma (float): Exponent of the modulating factor (1 - p_t) to
+                balance easy vs hard examples. Default: ``2``.
+        reduction (string): ``'none'`` | ``'mean'`` | ``'sum'``
+                ``'none'``: No reduction will be applied to the output.
+                ``'mean'``: The output will be averaged.
+                ``'sum'``: The output will be summed. Default: ``'none'``.
+    Returns:
+        Loss tensor with the reduction option applied.
+    """
+    def __init__(self, alpha = 0.25, gamma= 2.0, reduction = "none", eps=1e-8, margin=None):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
         self.gamma = gamma
-        self.weight = weight
+        self.reduction = reduction
+        self.eps = eps
+        self.margin = margin
 
-    def forward(self, input, target):
-        ce_loss = F.cross_entropy(input,target, reduction=self.reduction, weight = self.weight)
-        pt = torch.exp(-ce_loss)
-        focal_loss = ((1- pt) ** self.gamma * ce_loss).mean()
-        return focal_loss
-    
-def multi_focal(config, outputs_dict, labels_dict):
+    def forward(self, inputs, targets):
+        
+        if self.margin is not None: # for Focal Margin Loss, we have to subtract the margin 
+            # p2 = torch.clamp(torch.sigmoid(inputs - self.margin), min=self.eps, max=1-self.eps)
+            # ce_loss = F.binary_cross_entropy(p2, targets, reduction="none")
+            p = torch.clamp(torch.sigmoid(inputs - self.margin), min=self.eps, max=1-self.eps)
+            ce_loss = F.binary_cross_entropy_with_logits(inputs - self.margin, targets, reduction="none")
+        else:
+            p = torch.clamp(torch.sigmoid(inputs), min=self.eps, max=1-self.eps)
+            ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
+        
+        
+        p_t = p * targets + (1 - p) * (1 - targets)
+        loss = ce_loss * ((1 - p_t) ** self.gamma)
 
-    predictions = torch.stack(list(outputs_dict.values()), dim=1).type(torch.float32) # transposed! so that num columns = num toxicities
-    
-    # print(predictions.shape)
-    # print(labels_dict)
-    
-    # targets = torch.stack(list(labels_dict.values()), dim=1).type(torch.float32)
-    valid_endpoints_as_tensor = torch.tensor([0,1])
-    
-    targets = labels_dict
-    
-    predictions = torch.reshape(predictions, targets.shape).to(predictions.dtype)
-    
-    loss_function = FocalLoss(weight=torch.tensor(config['training']['loss']['weight'], dtype=torch.float32),reduction='none',) 
-    batch_loss = loss_function(predictions, targets)
+        if self.alpha >= 0:
+            alpha_t = self.alpha * targets + (1 - self.alpha) * (1 - targets)
+            loss = alpha_t * loss
 
-    mask = (targets >= valid_endpoints_as_tensor[0]) & (targets <= valid_endpoints_as_tensor[1])
-
-    # print(batch_loss)
-    batch_loss = torch.nan_to_num(batch_loss, nan=0.0)
-    batch_loss *= mask
+        # Check reduction option and return loss accordingly
+        if self.reduction == "none":
+            pass
+        elif self.reduction == "mean":
+            loss = loss.mean()
+        elif self.reduction == "sum":
+            loss = loss.sum()
+        else:
+            raise ValueError(
+                f"Invalid Value for arg 'reduction': '{self.reduction} \n Supported reduction modes: 'none', 'mean', 'sum'"
+            )
+        
+        return loss
     
-    batch_loss_mean = batch_loss.sum() / mask.sum()
-
-    #print(batch_loss_mean)
-    batch_loss_mean = torch.clamp(batch_loss_mean, min=0, max=10000) 
-
-    return batch_loss_mean

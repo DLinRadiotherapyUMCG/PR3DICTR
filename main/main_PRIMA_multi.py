@@ -77,10 +77,11 @@ if __name__ == '__main__':
                 #print(batch)
 
                 inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
-
+                
+                
                 outputs = model(x=inputs, features=clinical_features)
 
-                loss = loss_function(config, outputs, targets) # for multi need different loss calculation
+                loss = loss_function(outputs, targets) # for multi need different loss calculation
                 loss.backward()
             end = time()
 

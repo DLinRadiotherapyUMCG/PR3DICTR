@@ -9,7 +9,7 @@ general:
   endpointRatios: []
 
 columns:
-  label: "Xerostomia_M06"
+  label: ["Xerostomia_M06"]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
@@ -59,7 +59,7 @@ data:
   dataloader:
     num_workers: 4           # number of workers (cores) to use for data loading in each training batch
     persistent_workers: true # recommend keep this as `true' for faster data loading
-    
+
 
   preprocessing:
     isEnabled: false
@@ -108,9 +108,9 @@ training:
     weight_decay: 0.05
 
   loss:
-    name: "bce-logit"
+    name: "BCE"
     weight: [1]
-    reduction: "mean"
+    reduction: "none"
 
   scheduler:
     name: "cosine"

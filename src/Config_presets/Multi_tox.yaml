@@ -9,7 +9,7 @@ general:
   endpointRatios: []
 
 columns:
-  label: ["Xerostomia_M06"]
+  label: ["Xerostomia_M06"] # , "Dysphagia_M06"]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
@@ -107,9 +107,9 @@ training:
     weight_decay: 0.05
 
   loss:
-    name: "BCEloss"
+    name: "BCE"
     weight: [1]
-    reduction: "mean"
+    reduction: "none"
 
   scheduler:
     name: "cosine"

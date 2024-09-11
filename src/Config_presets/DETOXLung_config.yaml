@@ -105,9 +105,9 @@ training:
     weight_decay: 0.05
 
   loss:
-    name: "BCEloss"
+    name: "BCE"
     weight: [1.2]
-    reduction: "mean"
+    reduction: "none"
     strength_enabled: false
 
   scheduler:

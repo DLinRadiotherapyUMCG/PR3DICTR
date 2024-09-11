@@ -103,7 +103,7 @@ training:
     weight_decay: 0.05
 
   loss:
-    name: "BCEloss"
+    name: "BCE"
     weight: [1]
     reduction: "mean"
 
