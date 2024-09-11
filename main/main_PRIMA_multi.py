@@ -59,7 +59,7 @@ if __name__ == '__main__':
         model = get_classification_model(config, metadata, save_summary=False)  # BUG: this does not make the directories properly? (when wandb and optuna are disabled)
         model.to(device=DEVICE)
 
-        print(model)
+        #print(model)
 
         loss_function = get_loss_function(config)
 
@@ -79,6 +79,8 @@ if __name__ == '__main__':
                 #print(batch)
 
                 inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+
+                print(targets.shape)
                 
                 
                 outputs = model(x=inputs, features=clinical_features)
@@ -92,4 +94,11 @@ if __name__ == '__main__':
 
         print(f"Average time taken (s): {sum(dataloader_times)/len(dataloader_times)}")
 
+        
 
+
+def targets_to_dict(targets, labels_list):
+    targets_dict = dict()
+    for i, label in enumerate(labels_list):
+        targets_dict[label] = targets[:, i]
+    return targets_dict

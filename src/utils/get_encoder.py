@@ -21,7 +21,6 @@ def get_encoder(config, channels, depth, height, width, n_features):
     #dropout_p_endpoint = config.dropout_p_endpoint
     use_bias = config['model']['use_bias']
 
-    
     # Determine number of downsampling blocks
     # n_down_blocks = [sum([x[0] == 2 for x in strides]), sum([x[1] == 2 for x in strides]),
     #                  sum([x[2] == 2 for x in strides])]

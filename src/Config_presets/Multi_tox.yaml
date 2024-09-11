@@ -9,7 +9,7 @@ general:
   endpointRatios: []
 
 columns:
-  label: ["Xerostomia_M06"] # , "Dysphagia_M06"]
+  label: ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
@@ -95,7 +95,7 @@ data:
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
 
   kFolds:
-    isEnabled: true
+    isEnabled: false
     Iterations: 1
     Splits: 5
 
