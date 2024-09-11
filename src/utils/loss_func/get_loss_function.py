@@ -25,7 +25,7 @@ def get_loss_function(config):
     weights = None
     reduction = config['training']['loss']['reduction']
     match(config['training']['loss']['name']):
-        case 'BCEloss':
+        case 'BCE':
             loss_function = torch.nn.BCEWithLogitsLoss(reduction = reduction, pos_weight = weights)
         case 'softmargin':       
             loss_function = torch.nn.MultiLabelSoftMarginLoss(reduction = reduction, weight = weights)  # BUG: does not work properly, the outputted dimensions are incorrect

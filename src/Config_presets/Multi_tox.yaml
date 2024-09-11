@@ -24,9 +24,15 @@ run:
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "dcnn_pooling"
+  model_name: "densenet"
   num_classes: 1
   n_down_blocks: 5
+  resnet:
+    model_depth: 10
+    conv1_kernel_size: 7
+    conv1_stride: 2
+  densenet: 
+    model_depth: 121  # [121, 169, 201, 264]
   filters: [8, 8, 16, 16, 32]
   kernel_sizes: [7, 5, 4, 3, 3]
   strides: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]

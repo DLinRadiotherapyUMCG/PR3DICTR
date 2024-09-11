@@ -59,6 +59,8 @@ if __name__ == '__main__':
         model = get_classification_model(config, metadata, save_summary=False)  # BUG: this does not make the directories properly? (when wandb and optuna are disabled)
         model.to(device=DEVICE)
 
+        print(model)
+
         loss_function = get_loss_function(config)
 
         #train_dataloader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True)
