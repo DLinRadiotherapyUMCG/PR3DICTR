@@ -85,7 +85,7 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
             outputs = model(x=inputs, features=clinical_features)
 
             # Calculate loss
-            loss = loss_function(config, outputs, targets) # for multi need different loss calculation
+            loss = loss_function(outputs, targets) # for multi need different loss calculation
             loss.backward()
 
             # Calculate AUC            
@@ -195,7 +195,7 @@ def validate(loss_function, model, val_loader, config):
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
 
             outputs = model(x=inputs, features=clinical_features)
-            loss = loss_function(config, outputs, targets)
+            loss = loss_function(outputs, targets)
 
             total_loss += loss.item()
             
