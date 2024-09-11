@@ -56,6 +56,11 @@ data:
   stratifyList: ["RP_OneYear","SmokerActive","SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy","ChemoRad"]
   Excluded: "ExcludeVar"
 
+  dataloader:
+    num_workers: 4           # number of workers (cores) to use for data loading in each training batch
+    persistent_workers: true # recommend keep this as `true' for faster data loading
+    
+
   preprocessing:
     isEnabled: false
     crop: true

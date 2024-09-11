@@ -222,7 +222,7 @@ class ToxDataset(Dataset):
 
         # If cropping is enabled, crop the image
         if self.config['data']['preprocessing']['crop']:
-            print("Cropping")
+            #print("Cropping")
             cropped_image_stack = np.empty((image_stack.shape[0], *self.config['data']['preprocessing']['crop_shape']))
             for i in range(image_stack.shape[0]):
                 cropped_image_stack[i] = center_crop_3d(image_stack[i], self.config['data']['preprocessing']['crop_shape'])

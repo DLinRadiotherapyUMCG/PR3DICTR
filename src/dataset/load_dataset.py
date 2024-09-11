@@ -108,6 +108,10 @@ def load_dataset_total(config, patient_ids = None):
             valDf = totalDf[totalDf[splitVar] == "Val"] 
             testDf = totalDf[totalDf[splitVar] == "Test"] 
 
+            # BUG: This is how Daniel defined the splits
+            trainDf = totalDf[totalDf[splitVar] == "train_val"]
+            testDf = totalDf[totalDf[splitVar] == "test"] 
+
             #if(config['data']['equalizer']['isEnabled']):
             #    trainDf = label_equalizer(trainDf, config)
         else:    
