@@ -46,7 +46,6 @@ if __name__ == '__main__':
     # hyperClass.Operate(config)
     # hyperClass.Stop()
 
-
     # Load the dataset
     datasets_col, metadata = load_dataset_total(config)
     trainDataset_col = datasets_col[0]
