@@ -48,16 +48,12 @@ if __name__ == '__main__':
 
 
     # Load the dataset
-
     datasets_col, metadata = load_dataset_total(config)
     trainDataset_col = datasets_col[0]
     valDataset_col= datasets_col[1]
     testDataset_col = datasets_col[2]
 
-    print(metadata)
-
-    # Train the model
-
+    # Train and time a model
     for i in range(len(trainDataset_col)):
 
         model = get_classification_model(config, metadata, save_summary=False)  # BUG: this does not make the directories properly? (when wandb and optuna are disabled)
@@ -66,10 +62,10 @@ if __name__ == '__main__':
         loss_function = get_loss_function(config)
 
         #train_dataloader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True)
-        train_dataloader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, num_workers=8, persistent_workers=True)
+        train_dataloader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
+                                      num_workers=config['data']['dataloader']['num_workers'], persistent_workers=config['data']['dataloader']['persistent_workers'])
         
         dataloader_times = []
-
         #model = train(config, train_loader, val_loader, metadata, hyperClass = hyperClass)
 
 
@@ -86,11 +82,6 @@ if __name__ == '__main__':
 
                 loss = loss_function(config, outputs, targets) # for multi need different loss calculation
                 loss.backward()
-
-                #print(inputs.shape)
-
-                #print(idx)
-
             end = time()
 
             print(f"Time taken (s): {end-start}")

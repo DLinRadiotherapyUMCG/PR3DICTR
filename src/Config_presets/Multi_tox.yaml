@@ -56,6 +56,10 @@ data:
   stratifyList: []
   Excluded: "ExcludeVar"
 
+  dataloader:
+    num_workers: 4           # number of workers (cores) to use for data loading in each training batch
+    persistent_workers: true
+
   preprocessing:
     isEnabled: false
     crop: true

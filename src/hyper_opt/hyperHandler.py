@@ -96,8 +96,10 @@ def UpdateTrial(hyperClass, trial, config):
         CreateStudy(config,configWandB,groupVar)
 
          # Get the data loaders
-        train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True)
-        val_loader = DataLoader(valDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False)
+        train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
+                                      num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
+        val_loader = DataLoader(valDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
+                                 num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
         try:
             model = train(config, train_loader, val_loader, metadata, hyperClass = hyperClass)
         except Exception as error:
@@ -116,7 +118,8 @@ def UpdateTrial(hyperClass, trial, config):
         # Test dataset check
         try:
             if(testDataset_col[i].df.shape[0] != 0):
-                test_loader = DataLoader(testDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False)
+                test_loader = DataLoader(testDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
+                                         num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
                 test_loss, test_auc = validate(loss_function, model, test_loader, config)
                 savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_loss.txt")
                 f = open(savePath,"w")
