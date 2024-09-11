@@ -238,14 +238,15 @@ class Basic_Output_Head(torch.nn.Module):
     def __init__(self, config):
         super(Basic_Output_Head, self).__init__()
 
-        #self.predict_CT_contrast = config.predict_CT_contrast
-        self.endpoint_list = [x for x in config.endpoint_list if "CT+C" not in x]
+        #self.predict_CT_contrast = False
+        self.endpoint_list = [x for x in config['columns']['label'] if "CT+C" not in x]
         self.dropout_p = config.dropout_p 
         self.num_ohe_classes = config.num_ohe_classes
         self.use_bias = config.use_bias
         self.lrelu_alpha = config.lrelu_alpha
         self.linear_units = config.linear_units
         self.linear_units_endpoint = config.linear_units_endpoint
+
 
         self._make_shared_fc_layers()
         # makes:
@@ -256,7 +257,6 @@ class Basic_Output_Head(torch.nn.Module):
         # makes:
         #   self.non_shared_endpoint_fc_layers    
 
-       
 
 
     def forward(self, x, features, vectorize=False):
@@ -264,11 +264,8 @@ class Basic_Output_Head(torch.nn.Module):
 
         # ----- SHARED LAYERS ----- #
        
-
         # Linear layers (SHARED)
         for i, layer in enumerate(self.shared_fc_layers):
-            
-
             x = layer(x)
 
         # ----- NON-SHARED LAYERS, ENDPOINT SPECIFIC ----- #
