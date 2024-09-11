@@ -32,6 +32,6 @@ if __name__ == '__main__':
     set_random_seed(config['general']['seed'])
 
     # MAIN: DL running class with hyperparameter optimization
-    hyperClass = HyperTuning_Handler(config)
-    hyperClass.Operate(config)
-    hyperClass.Stop()
+    # hyperClass = HyperTuning_Handler(config)
+    # hyperClass.Operate(config)
+    # hyperClass.Stop()
