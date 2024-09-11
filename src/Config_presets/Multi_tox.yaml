@@ -24,7 +24,7 @@ run:
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "densenet"
+  model_name: "ViT"
   num_classes: 1
   n_down_blocks: 5
   resnet:
@@ -33,6 +33,15 @@ model:
     conv1_stride: 2
   densenet: 
     model_depth: 121  # [121, 169, 201, 264]
+  ViT:
+    vit_patch_size: 8
+    vit_dim: 128
+    vit_depth: 4
+    vit_heads: 8
+    vit_mlp_dim: 128
+    vit_dim_head: 128
+    vit_emb_dropout: 0.2
+    vit_dropout_p: 0.2  
   filters: [8, 8, 16, 16, 32]
   kernel_sizes: [7, 5, 4, 3, 3]
   strides: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
