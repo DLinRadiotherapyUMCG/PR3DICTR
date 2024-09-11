@@ -79,9 +79,6 @@ if __name__ == '__main__':
                 #print(batch)
 
                 inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
-
-                print(targets.shape)
-                
                 
                 outputs = model(x=inputs, features=clinical_features)
 
