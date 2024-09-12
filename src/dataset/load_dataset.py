@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import Optional, List, Tuple
 
 from torch.utils.data import Dataset
@@ -127,9 +128,9 @@ def load_dataset_total(config, patient_ids = None):
         valDf = pd.read_csv(valfile, delimiter=delimiterFound, dtype={'PatientID': str})
 
     # Write information about data
-    print(f"Patient collection --> Train: {trainDf.shape[0]}, Validation: {valDf.shape[0]}")
-    if(testDf.shape[0] != 0):
-        print(f"Patient collection --> Test: {testDf.shape[0]}")
+    #print(f"Patient collection --> Train: {trainDf.shape[0]}, Validation: {valDf.shape[0]}")
+    #if(testDf.shape[0] != 0):
+    #    print(f"Patient collection --> Test: {testDf.shape[0]}")
 
     # Check and validate if KFolds settings are active
     trainDataset_Collection = []
@@ -150,9 +151,14 @@ def load_dataset_total(config, patient_ids = None):
             if(Complete_SanityCheck(config,[trainDf_sel,valDf_sel,testDf])):
                 raise Exception("ABORT: Datasets contain identical patients! NOT ALLOWED!")
 
+
+            if(config['general']['testMode'] and trainDf.shape[0] > 100):
+                # Only use 100 patients for training dataset
+                trainDf_sel = trainDf_sel.iloc[:100]
             trainDataset_Collection.append(ToxDataset(config,trainDf_sel))
             valDataset_Collection.append(ToxDataset(config,valDf_sel))
             testDataset_Collection.append(ToxDataset(config,testDf))
+
 
             if(i == config["data"]["kFolds"]["Iterations"] - 1):
                 break
@@ -162,6 +168,11 @@ def load_dataset_total(config, patient_ids = None):
                 trainDf = label_equalizer(trainDf, config)
         if(Complete_SanityCheck(config,[trainDf,valDf,testDf])):
                 raise Exception("ABORT: Datasets contain identical patients! NOT ALLOWED!")
+        
+        if(config['general']['testMode'] and trainDf.shape[0] > 100):
+            # Only use 100 patients for training dataset
+            trainDf = trainDf.iloc[:100]
+
         trainDataset_Collection.append(ToxDataset(config,trainDf))
         valDataset_Collection.append(ToxDataset(config,valDf))
         testDataset_Collection.append(ToxDataset(config,testDf))
@@ -178,6 +189,8 @@ def load_dataset_total(config, patient_ids = None):
         "width": width,
         "n_features": n_features,
     }
+
+    logging.info(f"Patient amount in datasets: Train = {trainDataset_Collection[0].df.shape[0]}, Validation = {valDataset_Collection[0].df.shape[0]}, Test = {testDataset_Collection[0].df.shape[0]}")
 
     return [trainDataset_Collection, valDataset_Collection, testDataset_Collection], metadata
 

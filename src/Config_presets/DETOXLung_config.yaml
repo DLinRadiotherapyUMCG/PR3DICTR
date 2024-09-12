@@ -7,6 +7,7 @@ general:
   resultsCurrentDirectory: ""
   error_ignore: true
   endpointRatios: []
+  testMode: False
 
 columns:
   label: ["RP_OneYear"]
@@ -82,8 +83,8 @@ data:
       target_labels: []
 
   kFolds:
-    isEnabled: True
-    Iterations: 3
+    isEnabled: False
+    Iterations: 2
     Splits: 5
 
   equalizer:
@@ -98,7 +99,7 @@ data:
     strength: 1
 
 training:
-  max_epochs: 100
+  max_epochs: 6
   batch_size: 8
   validation_interval: 1
   patience: 10
@@ -142,7 +143,7 @@ hyperparam_tuning:
   optuna:
     IsEnabled: True
     studyName: "DETOX-Lung_Project_13"
-    n_trials: 30
+    n_trials: 1
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:
@@ -150,8 +151,8 @@ hyperparam_tuning:
       name: 'Weight_Decay'
       type: 'float'
       location: ["training",'optimizer','weight_decay']
-      min: 0
-      max: 1
+      min: 0.0
+      max: 0.0001
     learning_rate: 
       name: 'Learning_rate'
       type: 'float'
@@ -169,24 +170,24 @@ hyperparam_tuning:
       location: ['training','loss','name']
       options: ['BCE','focal','hill','ASL']
     
-    loss_lamb:
-      name: Loss_Lamb
-      type: 'float'
-      location: ['training','loss','lamb']
-      min: 0.1
-      max: 2.0
-    loss_margin:
-      name: Loss_Margin
-      type: 'float'
-      location: ['training','loss','margin']
-      min: 0.1
-      max: 2.0
-    loss_gamma:
-      name: loss_gamma
-      type: 'float'
-      location: ['training','loss','gamma']
-      min: 0.1
-      max: 2.0
+    #loss_lamb:
+    #  name: Loss_Lamb
+    #  type: 'float'
+    #  location: ['training','loss','lamb']
+    #  min: 0.1
+    #  max: 2.0
+    #loss_margin:
+    #  name: Loss_Margin
+    #  type: 'float'
+    #  location: ['training','loss','margin']
+    #  min: 0.1
+    #  max: 2.0
+    #loss_gamma:
+    #  name: loss_gamma
+    #  type: 'float'
+    #  location: ['training','loss','gamma']
+    #  min: 0.1
+    #  max: 2.0
     
     batch_size:
       name: batch_size
@@ -225,7 +226,7 @@ hyperparam_tuning:
      name: 'n_linear_down_blocks'
      location: ['model','n_linear_down_blocks']
      min: 1
-     max: 5
+     max: 2
      step: 1
      log: False
 
@@ -233,8 +234,8 @@ hyperparam_tuning:
       type: 'int'
       name: 'n_clinical_down_blocks'
       location: ['model','n_clinical_down_blocks']
-      min: 1
-      max: 3
+      min: 0
+      max: 2
       step: 1
       log: False
   
@@ -279,7 +280,7 @@ hyperparam_tuning:
         name: 'Clin_filter'
         location: ['model','clinical_variables_linear_units']
         min: 8
-        max: 64
+        max: 32
         step: 8
         log: False
       

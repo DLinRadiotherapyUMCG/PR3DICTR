@@ -31,7 +31,12 @@ class HyperTuning_Handler():
         WandB_initalise(config)
 
     def Operate(self, config):
-        self.Optuna_study.optimize(lambda trial: UpdateTrial(self, trial, config), config['hyperparam_tuning']['optuna']['n_trials'])
+        if(config['general']['testMode']):
+            logging.info("WARNING: ------------ TEST MODE IS ACTIVE -------------")
+        if(self.Optuna_study != None):
+            self.Optuna_study.optimize(lambda trial: UpdateTrial(self, trial, config), config['hyperparam_tuning']['optuna']['n_trials'])
+        else:
+            UpdateTrial(self, None, config)
 
     def UpdateWandB(self,results,epoch):
         UpdateStudy(self.config,results,epoch)
@@ -57,16 +62,31 @@ def Optuna_CreateStudy(config):
     return study
 
 def UpdateTrial(hyperClass, trial, config):
-    # Alter normal hyperparameters
-    config = normal_hyperparameters(trial,config)
+    if(trial != None):
+        # Alter normal hyperparameters
+        config = normal_hyperparameters(trial,config)
 
-    # Alter any hyperparameters that are dependend on other parameters 
-    config = derived_hyperparameters(trial, config)
+        # Alter any hyperparameters that are dependend on other parameters 
+        config = derived_hyperparameters(trial, config)
 
-    # Setup WandB for run
-    configWandB = dict(trial.params)  
-    configWandB["trial.number"] = trial.number
-    config['general']['trialNumber'] = f"Trial_{trial.number}" 
+        if(config['hyperparam_tuning']['WandB']['IsEnabled']):
+            # Setup WandB for run
+            configWandB = dict(trial.params)  
+            configWandB["trial.number"] = trial.number
+        config['general']['trialNumber'] = f"Trial_{trial.number}" 
+    else:
+        subdirs = os.listdir(config['paths']['results'])
+        numHigh = 0
+        for i in range(len(subdirs)):
+            valueFound = 0
+            try:
+                valueFound = int(subdirs[i][-3:])
+            except:
+                pass
+            if(valueFound > numHigh):
+                numHigh =  valueFound
+        trialNumber =  numHigh + 1
+        config['general']['trialNumber'] = f"Trial_{str(trialNumber).rjust(3,"0")}" 
 
     # Create result directory
     CreateResultDir(config)
@@ -93,7 +113,9 @@ def UpdateTrial(hyperClass, trial, config):
     for i in range(len(trainDataset_col)):
         if(groupVar != None):
             CreateResultDir(config,i)
-        CreateStudy(config,configWandB,groupVar)
+
+        if(trial != None and config['hyperparam_tuning']['WandB']['IsEnabled']):
+            CreateStudy(config,configWandB,groupVar)
 
          # Get the data loaders
         train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
