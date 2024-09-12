@@ -97,7 +97,6 @@ def load_dataset_total(config, patient_ids = None):
         totalDf = pd.read_csv(trainfile, delimiter=delimiterFound, dtype={'PatientID': str})
 
         totalDf = ValidateImageDataExists(config, totalDf)
-
         
         if patient_ids:
             totalDf = totalDf[totalDf['PatientID'].isin(patient_ids)]

@@ -229,7 +229,7 @@ def move_batch_to_device(batch, device):
     targets = targets.to(device=device)
     return inputs, clinical_features, targets
 
-def get_output_results(loss_function, model, val_loader, config):
+def get_output_results(model, val_loader, config):
     model.eval()
     labels = config['columns']['label']
       
