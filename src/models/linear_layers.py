@@ -240,12 +240,12 @@ class Basic_Output_Head(torch.nn.Module):
 
         #self.predict_CT_contrast = False
         self.endpoint_list = [x for x in config['columns']['label'] if "CT+C" not in x]
-        self.dropout_p = config.dropout_p 
-        self.num_ohe_classes = config.num_ohe_classes
-        self.use_bias = config.use_bias
-        self.lrelu_alpha = config.lrelu_alpha
-        self.linear_units = config.linear_units
-        self.linear_units_endpoint = config.linear_units_endpoint
+        self.dropout_p = config['model']['dropout_p'] 
+        self.num_ohe_classes = config['model']['num_ohe_classes'] 
+        self.use_bias = config['model']['use_bias']
+        self.lrelu_alpha = config['model']['lrelu_alpha']
+        self.linear_units = config['model']['linear_units']
+        self.linear_units_endpoint = config['model']['linear_units_endpoint']
 
 
         self._make_shared_fc_layers()

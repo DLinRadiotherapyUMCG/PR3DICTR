@@ -121,6 +121,7 @@ class TransRP_ViT(nn.Module):
         
 
     def forward(self, x, x_clc, vectorize=False):  
+        #print("X", x.shape, "x_clc", x_clc.shape)
         x = self.patch_embedding(x)
 
         if self.clinical_features_method == "m1":      # add clinical features as an additional patch     
@@ -159,25 +160,25 @@ def get_transrp_vit(config, n_features : int):
     image_encoder_name = config['model']['TransRP']['image_encoder'].lower()
 
     if 'resnet' in image_encoder_name:
-        if config.resnet_model_depth >= 50: 
+        if config['model']['resnet']['model_depth'] >= 50: 
             in_channels = 2048
-        elif config.resnet_model_depth == 10:
+        elif config['model']['resnet']['model_depth'] == 10:
             in_channels = 256
         else:
             in_channels = 512
-        img_size = [6,6,6]   # FIXED SIZE FOR HNC DATA !! (which is [96,96,96] before resnet, and [6,6,6] after
+        img_size = [3,3,3]   # FIXED SIZE FOR HNC DATA !! (which is [96,96,96] before resnet, and [6,6,6] after
         #img_size = [int(i/(2**4)) for i in XXXXXXXX]   # TODO: figure out this bit # downsampled by 2
         
     elif 'densenet' in image_encoder_name:
-        if config.densenet_model_depth == 121:
+        if config['model']['densenet']['model_depth'] == 121:
             in_channels = 1024
-        elif config.densenet_model_depth == 169:
+        elif config['model']['densenet']['model_depth'] == 169:
             in_channels = 1664
-        elif config.densenet_model_depth == 201:
+        elif config['model']['densenet']['model_depth'] == 201:
             in_channels = 1920
         else: # depth = 264
             in_channels = 2688
-        img_size=[6,6,6]   # FIXED SIZE FOR HNC DATA !! (which is [96,96,96] before densenet, and [6,6,6] after)
+        img_size=[3,3,3]   # FIXED SIZE FOR HNC DATA !! (which is [96,96,96] before densenet, and [6,6,6] after)
         #img_size = [int(i/(2**4)) for i in XXXXXXXX]  # TODO: figure out this bit
 
     else:

@@ -2,7 +2,7 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  trialNumber: "Trial_?"
+  trialNumber: "Trial_X"
   patientGroup: 0
   resultsCurrentDirectory: ""
   error_ignore: true
@@ -24,12 +24,12 @@ run:
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "ViT"
+  model_name: "TransRP"
   num_classes: 1
   n_down_blocks: 5
   resnet:
     model_depth: 10
-    conv1_kernel_size: 7
+    conv1_kernel_size: 5
     conv1_stride: 2
   densenet: 
     model_depth: 121  # [121, 169, 201, 264]
@@ -41,6 +41,15 @@ model:
     vit_mlp_dim: 128
     vit_dim_head: 128
     vit_emb_dropout: 0.2
+    vit_dropout_p: 0.2  
+  TransRP:
+    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
+    clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
+    vit_patch_size: [1,1,1]
+    vit_dim: 768
+    vit_depth: 12
+    vit_heads: 12
+    vit_mlp_dim: 3072
     vit_dropout_p: 0.2  
   filters: [8, 8, 16, 16, 32]
   kernel_sizes: [7, 5, 4, 3, 3]
