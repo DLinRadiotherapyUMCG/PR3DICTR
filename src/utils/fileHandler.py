@@ -22,7 +22,7 @@ def create_folder(path):
 
     # Now check to create directories accordingly
     if(os.path.exists(dirPath) == False):
-        os.makedirs(dirPath, exist_ok= True)
+        os.makedirs(dirPath, exist_ok = True)
 
 def create_database(pathFile):
     conn = None

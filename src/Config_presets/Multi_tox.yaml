@@ -9,52 +9,71 @@ general:
   endpointRatios: []
 
 columns:
-  label: "Xerostomia_M06"
+  label: ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
 paths:
-  csv: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/bagged_datasets/xerostomia_m06/"
-  images: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/dataset/patients/"
-  output: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/hnc-ensemble-master/results/"
-  results: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/hnc-ensemble-master/results/"
+  csv: "D:/MT_dataset/"
+  images: "D:/MT_dataset/patients/"
+  output: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT/results"
+  results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT/results"
 
 run:
   patienceExhausted: False
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "dcnn_lrelu"
+  model_name: "ViT"
   num_classes: 1
   n_down_blocks: 5
+  resnet:
+    model_depth: 10
+    conv1_kernel_size: 7
+    conv1_stride: 2
+  densenet: 
+    model_depth: 121  # [121, 169, 201, 264]
+  ViT:
+    vit_patch_size: 8
+    vit_dim: 128
+    vit_depth: 4
+    vit_heads: 8
+    vit_mlp_dim: 128
+    vit_dim_head: 128
+    vit_emb_dropout: 0.2
+    vit_dropout_p: 0.2  
   filters: [8, 8, 16, 16, 32]
   kernel_sizes: [7, 5, 4, 3, 3]
   strides: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
   pad_value: 0
   lrelu_alpha: 0.1
-  dropout_p: 0.06087816611628816
+  dropout_p: 0.0
   perform_pooling: False
   n_linear_down_blocks: 1
   linear_units: [16]
   n_clinical_down_blocks: 2
   clinical_variables_position: 1
-  clinical_variables_linear_units: [32,16]
-  clinical_variables_dropout_p: [0.3581947628028867]
+  clinical_variables_linear_units: [32, 16]
+  clinical_variables_dropout_p: [0.1]
   use_bias: True
   pooling: 'max'    # avg, max, nan
   pooling_size: 2
   normalization: 'batch'
   conv_block_layers: 1
   num_ohe_classes: 1
-  linear_units_endpoint: [64]
+  linear_units_endpoint: []
 
 data:
-  trainfile: 'stratified_sampling_full_manual_94_edited.csv'
-  valfile: 'stratified_sampling_full_manual_94_edited.csv'
+  trainfile: 'stratified_sampling_test_542.csv'
+  valfile: 'stratified_sampling_test_542.csv'
   splitvar: "Split"
   patientVar: 'PatientID'
   stratifyList: []
   Excluded: "ExcludeVar"
+
+  dataloader:
+    num_workers: 4           # number of workers (cores) to use for data loading in each training batch
+    persistent_workers: true
 
   preprocessing:
     isEnabled: false
@@ -77,7 +96,7 @@ data:
 
   kFolds:
     isEnabled: false
-    Iterations: 3
+    Iterations: 1
     Splits: 5
 
   equalizer:
@@ -86,13 +105,13 @@ data:
     resamplingDirection: 'up'
 
   augmentation:
-    isEnabled: false
+    isEnabled: true
     augmentation_list:  ['crop','flip','affine','rotate']
     prob: 0.5
     strength: 1
 
 training:
-  max_epochs: 200
+  max_epochs: 100
   batch_size: 8
   validation_interval: 1
   patience: 10
@@ -103,9 +122,9 @@ training:
     weight_decay: 0.05
 
   loss:
-    name: "BCEloss"
+    name: "BCE"
     weight: [1]
-    reduction: "mean"
+    reduction: "none"
 
   scheduler:
     name: "cosine"
@@ -123,15 +142,15 @@ visualizations:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'PRIMA_MultiTime_Project1'
+  ProjectName: 'PRIMA_MultiTox_Project0'
   WandB:
     IsEnabled: false
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
     MetricsMonitor: [ "train_AUC","train_loss","train_acc",
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    IsEnabled: True
-    studyName: 'PRIMA_MultiTime_Project1'
+    IsEnabled: false
+    studyName: 'PRIMA_MultiTox_Project0'
     n_trials: 30
   # ----  Custom Params -------
   # Location:= path variabele in config

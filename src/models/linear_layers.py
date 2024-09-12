@@ -57,7 +57,6 @@ class MultiToxOutputHead(torch.nn.Module):
     def forward(self, x, features, vectorize=False):
         x_dict = dict()
 
-
         if self.predict_CT_contrast:
             #CT_contrast = 
             CT_contrast = x.clone()
@@ -71,7 +70,6 @@ class MultiToxOutputHead(torch.nn.Module):
             #print("self.clinical_variables_linear_units = ", self.clinical_variables_linear_units)
             for layer in self.clinical_variables_shared_fc_layers:
                 features = layer(features)
-               # print("features", features.shape)
 
         # Linear layers (SHARED)
         for i, layer in enumerate(self.shared_fc_layers):
@@ -80,9 +78,6 @@ class MultiToxOutputHead(torch.nn.Module):
             if i == 0 and self.clinical_variables_position == 1 and (self.n_features > 0) :
                 # Add features to flattened layer
                 x = torch.cat([x, features], dim=1)
-                #print("CONCAT", x.shape)
-            #print("shared", i, x.shape, layer)
-
 
             x = layer(x)
 
@@ -102,7 +97,6 @@ class MultiToxOutputHead(torch.nn.Module):
 
         # ----- NON-SHARED LAYERS, ENDPOINT SPECIFIC ----- #
         # Clone tensor (preserving the gradient)
-        
         for endpoint in self.endpoint_list:
             x_dict[endpoint] = x.clone()
         assert len(x_dict) == len(self.endpoint_heads) or len(x_dict) - 1 == len(self.endpoint_heads)
@@ -244,14 +238,15 @@ class Basic_Output_Head(torch.nn.Module):
     def __init__(self, config):
         super(Basic_Output_Head, self).__init__()
 
-        #self.predict_CT_contrast = config.predict_CT_contrast
-        self.endpoint_list = [x for x in config.endpoint_list if "CT+C" not in x]
+        #self.predict_CT_contrast = False
+        self.endpoint_list = [x for x in config['columns']['label'] if "CT+C" not in x]
         self.dropout_p = config.dropout_p 
         self.num_ohe_classes = config.num_ohe_classes
         self.use_bias = config.use_bias
         self.lrelu_alpha = config.lrelu_alpha
         self.linear_units = config.linear_units
         self.linear_units_endpoint = config.linear_units_endpoint
+
 
         self._make_shared_fc_layers()
         # makes:
@@ -262,7 +257,6 @@ class Basic_Output_Head(torch.nn.Module):
         # makes:
         #   self.non_shared_endpoint_fc_layers    
 
-       
 
 
     def forward(self, x, features, vectorize=False):
@@ -270,11 +264,8 @@ class Basic_Output_Head(torch.nn.Module):
 
         # ----- SHARED LAYERS ----- #
        
-
         # Linear layers (SHARED)
         for i, layer in enumerate(self.shared_fc_layers):
-            
-
             x = layer(x)
 
         # ----- NON-SHARED LAYERS, ENDPOINT SPECIFIC ----- #

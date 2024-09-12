@@ -4,7 +4,6 @@ Same as DCNN, but where LeakyReLU activation has been applied whenever possible.
 import math
 import torch
 from src.models.conv_layers import conv3d_padding_same, pooling_conv
-# from models.linear_layers import MultiToxOutputHead
 
 
 class conv_block(torch.nn.Module):
@@ -152,13 +151,12 @@ class DCNN_Pooling(torch.nn.Module):
     """
 
     def __init__(self, config,
-                 n_input_channels, n_features, filters,
+                 n_input_channels, filters,
                  kernel_sizes, strides, pad_value, lrelu_alpha, 
                  pooling,                 
                  use_bias=False):
         super(DCNN_Pooling, self).__init__()
-        self.n_features = n_features
-
+        
         # Initialize conv blocks
         in_channels = [n_input_channels] + list(filters[:-1])
         self.first_conv_blocks = torch.nn.ModuleList()

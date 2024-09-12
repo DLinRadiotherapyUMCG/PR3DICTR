@@ -9,7 +9,7 @@ general:
   endpointRatios: []
 
 columns:
-  label: "Xerostomia_M06"
+  label: ["Xerostomia_M06"]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
@@ -24,22 +24,46 @@ run:
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "dcnn_lrelu"
+  model_name: "dcnn_pooling"
   num_classes: 1
   n_down_blocks: 5
+  resnet:
+    model_depth: 10    # [10, 18, 34, 50, 101, 152, 200]
+    conv1_kernel_size: 7
+    conv1_stride: 2
+  densenet: 
+    model_depth: 121  # [121, 169, 201, 264]
+  ViT:
+    vit_patch_size: 8
+    vit_dim: 128
+    vit_depth: 4
+    vit_heads: 8
+    vit_mlp_dim: 128
+    vit_dim_head: 128
+    vit_emb_dropout: 0.2
+    vit_dropout_p: 0.2  
+  TransRP:
+    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
+    clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
+    vit_patch_size: [1,1,1]
+    vit_dim: 768
+    vit_depth: 12
+    vit_heads: 12
+    vit_mlp_dim: 3072
+    vit_dropout_p: 0.2  
   filters: [8, 8, 16, 16, 32]
   kernel_sizes: [7, 5, 4, 3, 3]
   strides: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
   pad_value: 0
   lrelu_alpha: 0.1
-  dropout_p: 0.06087816611628816
+  dropout_p: 0.1
   perform_pooling: False
   n_linear_down_blocks: 1
   linear_units: [16]
   n_clinical_down_blocks: 2
   clinical_variables_position: 1
   clinical_variables_linear_units: [32,16]
-  clinical_variables_dropout_p: [0.3581947628028867]
+  clinical_variables_dropout_p: [0.2]
   use_bias: True
   pooling: 'max'    # avg, max, nan
   pooling_size: 2
@@ -55,6 +79,11 @@ data:
   patientVar: 'PatientID'
   stratifyList: ["RP_OneYear","SmokerActive","SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy","ChemoRad"]
   Excluded: "ExcludeVar"
+
+  dataloader:
+    num_workers: 4           # number of workers (cores) to use for data loading in each training batch
+    persistent_workers: true # recommend keep this as `true' for faster data loading
+
 
   preprocessing:
     isEnabled: false
@@ -103,9 +132,9 @@ training:
     weight_decay: 0.05
 
   loss:
-    name: "bce-logit"
+    name: "BCE"
     weight: [1]
-    reduction: "mean"
+    reduction: "none"
 
   scheduler:
     name: "cosine"

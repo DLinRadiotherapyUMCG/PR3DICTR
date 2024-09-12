@@ -176,7 +176,8 @@ def objective(trial, config):
     # load data
     train_data, metadata = load_dataset(config, os.path.join(config['paths']['csv'], config['filenames']['train_csv']), augment=True)
     val_data, _ = load_dataset(config, os.path.join(config['paths']['csv'], config['filenames']['validation_csv']))
-    val_loader = DataLoader(val_data, batch_size=config['training']['batch_size'], shuffle=False)
+    val_loader = DataLoader(val_data, batch_size=config['training']['batch_size'], shuffle=False, 
+                            num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
     
     # Train model 
     model = train(config, train_data, val_data, metadata)

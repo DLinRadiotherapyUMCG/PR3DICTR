@@ -57,6 +57,7 @@ def data_split(df, config, split = [.7,.15,.15], seed = 8):
 
     # Train and Test split
     stratifyItems = config['data']['stratifyList']
+    print("Stratify items: ",stratifyItems)
     combinedColumn = []
     for i in range(len(stratifyItems)):
         if(len(combinedColumn) == 0):
