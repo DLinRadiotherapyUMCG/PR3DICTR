@@ -55,8 +55,12 @@ data:
   valfile: 'stratified_sampling_full_manual_94_edited.csv'
   splitvar: "Split"
   patientVar: 'PatientID'
-  stratifyList: ["RP_OneYear","SmokerActive","SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy","ChemoRad"]
+  stratifyList: ["RP_OneYear", "ImmunoTherapy"]
   Excluded: "ExcludeVar"
+
+  dataloader:
+    num_workers: 4           # number of workers (cores) to use for data loading in each training batch
+    persistent_workers: true # recommend keep this as `true' for faster data loading
 
   preprocessing:
     isEnabled: false
@@ -109,6 +113,9 @@ training:
     weight: [1.2]
     reduction: "none"
     strength_enabled: false
+    lamb: 1.5
+    margin: 1.0
+    gamma: 2.0
 
   scheduler:
     name: "cosine"
@@ -126,7 +133,7 @@ visualization:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_12'
+  ProjectName: 'DETOX-Lung_Project_13'
   WandB:
     IsEnabled: True
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
@@ -134,7 +141,7 @@ hyperparam_tuning:
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: "DETOX-Lung_Project_12"
+    studyName: "DETOX-Lung_Project_13"
     n_trials: 30
   # ----  Custom Params -------
   # Location:= path variabele in config
@@ -149,13 +156,37 @@ hyperparam_tuning:
       name: 'Learning_rate'
       type: 'float'
       location: ['training','optimizer','learning_rate']
-      min: 0.0004
+      min: 0.000001
       max: 0.001
     optimizer:
       name: "Optimizer" 
       type: 'categorical'
       location: ["training",'optimizer','name']
-      options: ['Adam'] #['AdaBound','Adam','SGD']
+      options: ['Adam','AdaBound']
+    loss_function:
+      name: loss_function
+      type: 'categorical'
+      location: ['training','loss','name']
+      options: ['BCE','focal','hill','ASL']
+    
+    loss_lamb:
+      name: Loss_Lamb
+      type: 'float'
+      location: ['training','loss','lamb']
+      min: 0.1
+      max: 2.0
+    loss_margin:
+      name: Loss_Margin
+      type: 'float'
+      location: ['training','loss','margin']
+      min: 0.1
+      max: 2.0
+    loss_gamma:
+      name: loss_gamma
+      type: 'float'
+      location: ['training','loss','gamma']
+      min: 0.1
+      max: 2.0
     
     batch_size:
       name: batch_size
@@ -176,6 +207,7 @@ hyperparam_tuning:
       location: ['data','augmentation',"prob"]
       min: 0.6
       max: 0.98
+
 
     # ----  NN Layer Params -------
     # Indicate amount of layers for different parts of Neural Network

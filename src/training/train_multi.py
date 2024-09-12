@@ -202,7 +202,7 @@ def validate(loss_function, model, val_loader, config):
             
             for lab_indx, label in enumerate(labels):
                 out_tot[label] = out_tot[label] + list(outputs[label].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
-                targets_tot[label] = targets_tot[label] + list(targets[label].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
+                targets_tot[label] = targets_tot[label] + list(targets[:,:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
             
             num_batches += 1
 

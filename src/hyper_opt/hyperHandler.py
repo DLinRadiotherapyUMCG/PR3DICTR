@@ -103,7 +103,7 @@ def UpdateTrial(hyperClass, trial, config):
         try:
             model = train(config, train_loader, val_loader, metadata, hyperClass = hyperClass)
         except Exception as error:
-            print(f"Warning: The training stopped due to an error. Please read the error message carefully: \n{error}")
+            print(f"Warning: The training stopped due to an error. Please read the error message carefully: \n{str(error)}")
             create_textfile(config['general']['resultsCurrentDirectory'],"ErrorLog",str(error))
             if(config['general']['error_ignore']):
                 return None
