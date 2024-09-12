@@ -58,19 +58,18 @@ if __name__ == '__main__':
         model = get_classification_model(config, metadata, save_summary=False)  # BUG: this does not make the directories properly? (when wandb and optuna are disabled)
         model.to(device=DEVICE)
 
-        #print(model)
+        print(model)
 
         loss_function = get_loss_function(config)
 
-        #train_dataloader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True)
-        train_dataloader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
-                                      num_workers=config['data']['dataloader']['num_workers'], persistent_workers=config['data']['dataloader']['persistent_workers'])
+
+        ###### TEST WITH DEFAULT WORKERS (0, which means 1 thread is used) ######
+        train_dataloader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True)
+        
         
         dataloader_times = []
-        #model = train(config, train_loader, val_loader, metadata, hyperClass = hyperClass)
 
-
-        for _ in range(5):
+        for _ in range(3):
             
             start = time()
 
@@ -88,9 +87,36 @@ if __name__ == '__main__':
             print(f"Time taken (s): {end-start}")
             dataloader_times.append(end-start)
 
-        print(f"Average time taken (s): {sum(dataloader_times)/len(dataloader_times)}")
-
+        print(f"Average time taken (s) with one dataloader: {sum(dataloader_times)/len(dataloader_times)}")
         
+
+        ###### TEST WITH 4 PERISTENT WORKERS ######
+        train_dataloader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
+                                      num_workers=4, persistent_workers=True)
+                                      #num_workers=config['data']['dataloader']['num_workers'], persistent_workers=config['data']['dataloader']['persistent_workers'])
+        
+        dataloader_times = []
+
+        for _ in range(3):
+            
+            start = time()
+
+            for batch in tqdm(train_dataloader):
+                #print(batch)
+
+                inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+                
+                outputs = model(x=inputs, features=clinical_features)
+
+                loss = loss_function(outputs, targets) # for multi need different loss calculation
+                loss.backward()
+            end = time()
+
+            print(f"Time taken (s): {end-start}")
+            dataloader_times.append(end-start)
+
+        print(f"Average time taken (s) with one dataloader: {sum(dataloader_times)/len(dataloader_times)}")
+
 
 
 def targets_to_dict(targets, labels_list):

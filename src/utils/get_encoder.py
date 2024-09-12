@@ -44,6 +44,14 @@ def get_encoder(config, channels, depth, height, width, n_features):
                     heads=config['model']['ViT']['vit_heads'], mlp_dim=config['model']['ViT']['vit_mlp_dim'], pool = 'cls', 
                     channels = channels, dim_head = config['model']['ViT']['vit_dim_head'], emb_dropout = config['model']['ViT']['vit_emb_dropout'],
                     dropout = config['model']['ViT']['vit_dropout_p']) 
+        
+    elif model_name.lower() == 'transrp':
+        if config['model']['TransRP']['image_encoder'] == 'resnet':
+            encoder = get_resnet(config=config, model_depth=config['model']['transrp']['model_depth'], channels=channels, lrelu_alpha=lrelu_alpha)
+        elif config['model']['TransRP']['image_encoder'] == 'densenet':
+            encoder = get_desnsenet(config, config['model']['transrp']['model_depth'], channels)
+        else:
+            raise ValueError('Invalid image_encoder for TransRP model: {}.'.format(config['model']['TransRP']['image_encoder']))
     
     else:
         raise ValueError('Invalid model_name: {}.'.format(model_name))

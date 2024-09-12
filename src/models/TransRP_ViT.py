@@ -8,8 +8,8 @@ from monai.networks.blocks.transformerblock import TransformerBlock
 
 import monai
 
-from models.linear_layers import Basic_Output_Head, MultiToxOutputHead
-from models.ViT import  Transformer
+from src.models.linear_layers import Basic_Output_Head, MultiToxOutputHead
+from src.models.ViT import  Transformer
 
 
 class TransRP_ViT(nn.Module):

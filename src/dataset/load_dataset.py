@@ -109,6 +109,8 @@ def load_dataset_total(config, patient_ids = None):
             testDf = totalDf[totalDf[splitVar] == "Test"] 
 
             # BUG: This is how Daniel defined the splits
+            if len(trainDf) == 0 and len(valDf) == 0:
+                trainDf = totalDf[totalDf[splitVar] == "train_val"]
             # trainDf = totalDf[totalDf[splitVar] == "train_val"]
             # testDf = totalDf[totalDf[splitVar] == "test"] 
 
