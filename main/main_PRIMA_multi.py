@@ -55,7 +55,7 @@ if __name__ == '__main__':
     # Train and time a model
     for i in range(len(trainDataset_col)):
 
-        model = get_classification_model(config, metadata, save_summary=False)  # BUG: this does not make the directories properly? (when wandb and optuna are disabled)
+        model = get_classification_model(config, metadata, save_summary=True)  # BUG: this does not make the directories properly? (when wandb and optuna are disabled)
         model.to(device=DEVICE)
 
         print(model)
@@ -65,7 +65,6 @@ if __name__ == '__main__':
 
         ###### TEST WITH DEFAULT WORKERS (0, which means 1 thread is used) ######
         train_dataloader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True)
-        
         
         dataloader_times = []
 
