@@ -3,7 +3,7 @@ import os
 import yaml
 import pandas as pd
 import torch
-from src.utils.fileHandler import create_folder
+from src.utils.fileHandler import create_folder, create_file
 
 def save_model(config, model, modelFile):
     """
@@ -17,7 +17,7 @@ def save_model(config, model, modelFile):
     fileLocation = os.path.join(pathToSave, modelFile)
 
     # Create folder if does not exist
-    create_folder(fileLocation)
+    create_folder(pathToSave)
 
     # Log and Save
     logging.info(f'Saving model to {fileLocation}')

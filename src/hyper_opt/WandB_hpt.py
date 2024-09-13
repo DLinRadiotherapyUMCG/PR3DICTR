@@ -1,13 +1,15 @@
 import wandb
+from src.utils.fileHandler import create_file, create_folder, create_textfile
 
 def WandEnabled(config):
     return config['hyperparam_tuning']['WandB']['IsEnabled']
 
 def CreateStudy(config, dict_params, groupName = None):
+    create_folder(config['general']['resultsCurrentDirectory'])
     if(WandEnabled(config) == True):
         wandb.init(
             project=config['hyperparam_tuning']['ProjectName'],
-            dir=config['general']['resultsCurrentDirectory'],
+            dir=config['general']['resultsCurrentDirectory'][:-1],
             config = dict_params,
             group = groupName,
             reinit = True

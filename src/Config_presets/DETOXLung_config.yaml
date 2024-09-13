@@ -27,7 +27,33 @@ run:
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "dcnn_pooling"
+  model_name: "resnet" #"dcnn_pooling"
+
+  resnet:
+    model_depth: 10    # [10, 18, 34, 50, 101, 152, 200]
+    conv1_kernel_size: 7
+    conv1_stride: 2
+  densenet: 
+    model_depth: 121  # [121, 169, 201, 264]
+  ViT:
+    vit_patch_size: 8
+    vit_dim: 128
+    vit_depth: 4
+    vit_heads: 8
+    vit_mlp_dim: 128
+    vit_dim_head: 128
+    vit_emb_dropout: 0.2
+    vit_dropout_p: 0.2  
+  TransRP:
+    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
+    clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
+    vit_patch_size: [1,1,1]
+    vit_dim: 768
+    vit_depth: 12
+    vit_heads: 12
+    vit_mlp_dim: 3072
+    vit_dropout_p: 0.2  
+
   num_classes: 1
   n_down_blocks: 5
   filters: [8, 8, 16, 16, 32]
@@ -83,8 +109,8 @@ data:
       target_labels: []
 
   kFolds:
-    isEnabled: False
-    Iterations: 2
+    isEnabled: True
+    Iterations: 1
     Splits: 5
 
   equalizer:
@@ -99,7 +125,7 @@ data:
     strength: 1
 
 training:
-  max_epochs: 6
+  max_epochs: 100
   batch_size: 8
   validation_interval: 1
   patience: 10
@@ -134,7 +160,7 @@ visualization:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_13'
+  ProjectName: 'DETOX-Lung_Project_14'
   WandB:
     IsEnabled: True
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
@@ -142,11 +168,17 @@ hyperparam_tuning:
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: "DETOX-Lung_Project_13"
+    studyName: "DETOX-Lung_Project_14"
     n_trials: 1
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:
+    Model_Selected:
+      name: 'Model_Selected'
+      type: 'categorical'
+      location: ["model",'model_name']
+      options: ['resnet']
+
     Weight_decay: 
       name: 'Weight_Decay'
       type: 'float'
@@ -290,5 +322,5 @@ Save:
   output_values: True
   best_model: False
   fileNames:
-    modelSummary: "modelSummary.txt"
+    modelSummary: "modelSummary"
       

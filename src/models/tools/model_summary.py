@@ -4,7 +4,7 @@ from src.utils.get_encoder import get_encoder
 from src.models.linear_layers import MultiToxOutputHead
 
 from torchinfo import summary
-from src.utils.fileHandler import create_folder
+from src.utils.fileHandler import create_folder, create_textfile
 
 
 def get_model_summary(config, model, input_size, device, save_to_file = True):
@@ -27,11 +27,7 @@ def get_model_summary(config, model, input_size, device, save_to_file = True):
     txt = str(summary(model=model, input_size=input_size, device=device, verbose=verbose, depth=5,
                       col_names=["input_size","output_size","num_params", "kernel_size"], row_settings=["var_names"]))
     if save_to_file:
-        fileLocation = os.path.join(os.path.join(os.path.join(config["paths"]["output"],config["hyperparam_tuning"]["ProjectName"]),config["general"]["trialNumber"]),config['Save']['fileNames']['modelSummary'])   
-        create_folder(fileLocation)
-        file = open(fileLocation, 'a+', encoding='utf-8')
-        file.write(txt)
-        file.close()
+        create_textfile(config['general']['resultsCurrentDirectory'],config['Save']['fileNames']['modelSummary'], txt)
 
     # Determine number of trainable parameters
     # Source: https://stackoverflow.com/questions/49201236/check-the-total-number-of-parameters-in-a-pytorch-model

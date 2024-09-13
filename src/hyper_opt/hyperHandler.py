@@ -52,7 +52,7 @@ def Optuna_CreateStudy(config):
         studyName = config['hyperparam_tuning']['ProjectName']
         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
-        create_folder(pathOptunaStudyTracker)
+        create_file(pathOptunaStudyTracker)
         print(storage_name)
 
         study = optuna.create_study(study_name = studyName, storage = storage_name, load_if_exists=True)
@@ -86,7 +86,7 @@ def UpdateTrial(hyperClass, trial, config):
             if(valueFound > numHigh):
                 numHigh =  valueFound
         trialNumber =  numHigh + 1
-        config['general']['trialNumber'] = f"Trial_{str(trialNumber).rjust(3,"0")}" 
+        config['general']['trialNumber'] = f"Trial_{str(trialNumber).rjust(3,'0')}" 
 
     # Create result directory
     CreateResultDir(config)
@@ -179,12 +179,13 @@ def UpdateTrial(hyperClass, trial, config):
                 logging.info("Patience exhausted and ignoring K-split datasets")
             break
 
-
+    val_lossMean =  np.mean(val_loss_col)
     if(groupVar != None):
         val_lossMean =  np.mean(val_loss_col)
-        logging.info(f"The final mean loss: {round(val_lossMean,2)}")
-        # Create a results file for the Folds results and the mean values
-    
+        logging.info(f"The mean loss of K-folds is: {round(val_lossMean,2)}")
+    else:
+        val_lossMean = val_loss_col[0]
+        # Create a results file for the Folds results and the mean values    
 
     return val_lossMean
 
