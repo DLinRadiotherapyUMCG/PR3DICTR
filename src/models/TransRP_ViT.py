@@ -148,42 +148,20 @@ class TransRP_ViT(nn.Module):
     
 
 
-def get_transrp_vit(config, n_features : int):
+def get_transrp_vit(config, n_features : int, feature_map_dim_after_encoder):
     """
     Get the TransRP_ViT model. This function deals with the different image 
     encoders that can be used with the ViT model.
     :param config:
-    :param metadata
+    :param n_features: number of clinical features
+    :param feature_map_dim_after_encoder: the dimensions of the feature map after the encoder
     :return: Model
     """
+    #image_encoder_name = config['model']['TransRP']['image_encoder'].lower()
 
-    image_encoder_name = config['model']['TransRP']['image_encoder'].lower()
-
-    if 'resnet' in image_encoder_name:
-        if config['model']['resnet']['model_depth'] >= 50: 
-            in_channels = 2048
-        elif config['model']['resnet']['model_depth'] == 10:
-            in_channels = 256
-        else:
-            in_channels = 512
-        img_size = [3,3,3]   # FIXED SIZE FOR HNC DATA !! (which is [96,96,96] before resnet, and [6,6,6] after
-        #img_size = [int(i/(2**4)) for i in XXXXXXXX]   # TODO: figure out this bit # downsampled by 2
-        
-    elif 'densenet' in image_encoder_name:
-        if config['model']['densenet']['model_depth'] == 121:
-            in_channels = 1024
-        elif config['model']['densenet']['model_depth'] == 169:
-            in_channels = 1664
-        elif config['model']['densenet']['model_depth'] == 201:
-            in_channels = 1920
-        else: # depth = 264
-            in_channels = 2688
-        img_size=[3,3,3]   # FIXED SIZE FOR HNC DATA !! (which is [96,96,96] before densenet, and [6,6,6] after)
-        #img_size = [int(i/(2**4)) for i in XXXXXXXX]  # TODO: figure out this bit
-
-    else:
-        raise ValueError(f"Image encoder {image_encoder_name} not supported for TransRP model")
-
+    # determine the input size of the ViT block
+    in_channels = feature_map_dim_after_encoder[0]
+    img_size = feature_map_dim_after_encoder[1:]
 
     patch_size = config['model']['TransRP']['vit_patch_size']
     

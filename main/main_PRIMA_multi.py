@@ -60,6 +60,8 @@ if __name__ == '__main__':
         val_loader = DataLoader(valDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
                                  num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
         
+        #model = get_classification_model(config, metadata)
+        
         model = train(config, train_loader, val_loader, metadata, hyperClass = None)
         
 

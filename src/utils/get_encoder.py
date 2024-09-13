@@ -48,8 +48,16 @@ def get_encoder(config, channels, depth, height, width, n_features):
     elif model_name.lower() == 'transrp':
         if config['model']['TransRP']['image_encoder'] == 'resnet':
             encoder = get_resnet(config=config, model_depth=config['model']['resnet']['model_depth'], channels=channels, lrelu_alpha=lrelu_alpha)
+            # these tweaks increase the size of the feature maps for the ViT block (e.g. we remove the downsampling in the last resnet block)
+            encoder.backbone.block3[0].conv1.stride = (1, 1, 1)
+            encoder.backbone.block3[0].downsample[0].stride = (1,1,1)
+
         elif config['model']['TransRP']['image_encoder'] == 'densenet':
             encoder = get_desnsenet(config, config['model']['densenet']['model_depth'], channels)
+            # these tweaks increase the size of the feature maps for the ViT block (e.g. we remove the downsampling in the last densenet block)
+            encoder.features.transition_3.pool.kernel_size = 1
+            encoder.features.transition_3.pool.stride = 1
+            encoder.features.transition_3.conv.stride = (1,1,1)
         else:
             raise ValueError('Invalid image_encoder for TransRP model: {}.'.format(config['model']['TransRP']['image_encoder']))
     

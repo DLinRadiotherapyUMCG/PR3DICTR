@@ -25,7 +25,7 @@ run:
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "resnet"
+  model_name: "TransRP"
   num_classes: 1
   n_down_blocks: 5
   resnet:
@@ -44,13 +44,13 @@ model:
     vit_emb_dropout: 0.2
     vit_dropout_p: 0.2  
   TransRP:
-    image_encoder: 'resnet'  # ['resnet', 'densenet'] (requires their respective configs)
+    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
     clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
     vit_patch_size: [1,1,1]
     vit_dim: 768
     vit_depth: 12
     vit_heads: 12
-    vit_mlp_dim: 3072
+    vit_mlp_dim: 1024
     vit_dropout_p: 0.2  
   filters: [8, 8, 16, 16, 32]
   kernel_sizes: [7, 5, 4, 3, 3]

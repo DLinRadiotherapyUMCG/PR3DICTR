@@ -50,7 +50,7 @@ model:
     vit_dim: 768
     vit_depth: 12
     vit_heads: 12
-    vit_mlp_dim: 3072
+    vit_mlp_dim: 1024
     vit_dropout_p: 0.2  
   filters: [8, 8, 16, 16, 32]
   kernel_sizes: [7, 5, 4, 3, 3]

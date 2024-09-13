@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 from src.constants import DEVICE
 from src.utils.loss_func.get_loss_function import get_loss_function
-from src.models.tools.get_multi_model import get_classification_model
+from src.models.tools.get_classification_model import get_classification_model
 from src.utils.optimizer.get_optimizer import get_optimizer
 from src.utils.scheduler.get_scheduler import get_scheduler
 from src.evaluation.calculate_auc import calculate_auc
@@ -67,7 +67,7 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
             out_tot[label] = []
             targets_tot[label] = []
 
-        logging.info(f'Starting epoch {epoch}')
+        logging.info(f'Epoch {epoch}')
         model.train()
 
         total_loss = 0.0
@@ -141,7 +141,6 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
                 best_model = model.state_dict()  # Save the model state
                 patience_counter = 0 # Reset patience counter
             else:
-                
                 patience_counter += 1 # Increment patience counter
             logging.info(f'  Patience counter: {patience_counter}')
 
