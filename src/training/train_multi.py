@@ -86,7 +86,8 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
 
             # Calculate loss
             loss = loss_function(outputs, targets) # for multi need different loss calculation
-            loss.backward()
+            if loss.grad_fn:
+                loss.backward()
 
             # Calculate AUC            
             for idx, label in enumerate(labels):
@@ -109,11 +110,11 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
 
         auc = calculate_auc_multi(out_tot,targets_tot,config)
             
-        logging.info('Training AUCs')
-        logging.info(auc)
+        #logging.info('Training AUCs')
+        #logging.info(auc)
         # Log epoch loss and AUC
         avg_loss = total_loss / num_batches
-        logging.info(f'Epoch loss: {avg_loss}')
+        logging.info(f'  Training   Loss={avg_loss:.5f}, AUCs={auc}')
 
         resultsEpoch.update({'Train_Loss':avg_loss})
         keys = list(auc.keys())
@@ -125,8 +126,7 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
         if epoch % config['training']['validation_interval'] == 0:
             val_loss, auc_val = validate(loss_function, model, val_loader,config)
             # wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc, 'val/loss': val_loss, 'val/auc': val_auc})
-            logging.info(val_loss)
-            logging.info(auc_val)
+            logging.info(f'  Validation Loss={val_loss:.5f}, AUCs={auc_val}')
             resultsEpoch.update({'Validation_Loss':val_loss})
 
             keys = list(auc_val.keys())
@@ -136,16 +136,18 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
 
             # Check if this model has the lowest validation loss
             if val_loss < lowest_loss:
-                logging.info(f'New lowest loss: {val_loss}')
+                logging.info(f'  New lowest loss: {val_loss:.5f}')
                 lowest_loss = val_loss
                 best_model = model.state_dict()  # Save the model state
                 patience_counter = 0 # Reset patience counter
             else:
+                
                 patience_counter += 1 # Increment patience counter
+            logging.info(f'  Patience counter: {patience_counter}')
 
             # Check if patience has been exhausted
             if patience_counter >= config['training']['patience']:
-                logging.info('Patience exhausted, stopping training')
+                logging.info('  Patience exhausted, stopping training')
                 config['run']['patienceExhausted'] = True
                 config['run']['patienceExhaustedIndex'] = epoch
                 break

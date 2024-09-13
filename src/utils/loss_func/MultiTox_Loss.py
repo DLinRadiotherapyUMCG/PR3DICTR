@@ -42,12 +42,17 @@ class MultiTox_Loss(nn.Module):
         batch_loss = torch.nan_to_num(batch_loss, nan=0.0)
         batch_loss *= mask
         
-        batch_loss_mean = batch_loss.sum() / mask.sum()
+        num_valid_labels = mask.sum()
 
-        #print(batch_loss_mean)
-        batch_loss_mean = torch.clamp(batch_loss_mean, min=0, max=10000) 
+        if num_valid_labels == 0: # in case all labels are missing, the loss will be `nan`, so we return 0 instead
+            return torch.tensor(0.0, device=predictions.device, dtype=predictions.dtype)
+        else:
+            batch_loss_mean = batch_loss.sum() / mask.sum()
 
-        return batch_loss_mean
+            #print(batch_loss_mean)
+            batch_loss_mean = torch.clamp(batch_loss_mean, min=0, max=10000) 
+
+            return batch_loss_mean
 
 
 

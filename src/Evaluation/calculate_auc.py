@@ -38,6 +38,6 @@ def calculate_auc_multi(output,targets,config):
             auc = roc_auc_score(temp_target, temp_out)
         except:
             auc = -1
-        out_dict[i] = auc
+        out_dict[i] = round(auc, 3)
     
     return out_dict

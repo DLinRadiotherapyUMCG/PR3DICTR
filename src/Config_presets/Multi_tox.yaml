@@ -4,27 +4,28 @@ general:
   firstRun: false
   trialNumber: "Trial_X"
   patientGroup: 0
-  resultsCurrentDirectory: ""
+  resultsCurrentDirectory: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
   error_ignore: true
   endpointRatios: []
+  testMode: False
 
 columns:
-  label: ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]
+  label: ["Taste_M06"]  # ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
 paths:
   csv: "D:/MT_dataset/"
   images: "D:/MT_dataset/patients/"
-  output: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT/results"
-  results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT/results"
+  output: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
+  results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
 
 run:
   patienceExhausted: False
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "TransRP"
+  model_name: "resnet"
   num_classes: 1
   n_down_blocks: 5
   resnet:
@@ -43,7 +44,7 @@ model:
     vit_emb_dropout: 0.2
     vit_dropout_p: 0.2  
   TransRP:
-    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
+    image_encoder: 'resnet'  # ['resnet', 'densenet'] (requires their respective configs)
     clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
     vit_patch_size: [1,1,1]
     vit_dim: 768
@@ -81,7 +82,7 @@ data:
   Excluded: "ExcludeVar"
 
   dataloader:
-    num_workers: 4           # number of workers (cores) to use for data loading in each training batch
+    num_workers: 8           # number of workers (cores) to use for data loading in each training batch
     persistent_workers: true
 
   preprocessing:
@@ -104,7 +105,7 @@ data:
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
 
   kFolds:
-    isEnabled: false
+    isEnabled: true
     Iterations: 1
     Splits: 5
 
@@ -127,8 +128,8 @@ training:
 
   optimizer:
     name: "Adam"
-    learning_rate: 0.0001
-    weight_decay: 0.05
+    learning_rate: 0.001
+    weight_decay: 0.00
 
   loss:
     name: "BCE"
