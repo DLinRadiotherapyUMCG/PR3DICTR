@@ -42,9 +42,26 @@ def get_config(name, name_base = 'Base_config', pathGiven = ""):
     
     # Initiate the to be returned config file
     config = base_config.copy()
-    
-    # Replaces or adds information from the experiment config
-    for key in experiment_config.keys():
-        config[key] = experiment_config[key]
+
+    update_config(config, experiment_config)
     
     return config
+
+
+def update_config(base, updates):
+    """
+    Recursively updates the base dictionary with values from the updates dictionary.
+    Only non-dictionary values are overwritten. \
+    (i.e. if only one thing in the 'model' key needs to be updated, the rest of the 'model' dict will remain the same)
+    """
+    for key, value in updates.items():
+        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+            update_config(base[key], value)
+        else:
+            base[key] = value
+
+    # Example usage:
+    # base_config = {'a': 1, 'b': {'c': 2, 'd': 3}}
+    # updates = {'b': {'c': 4}, 'e': 5}
+    # update_config(base_config, updates)
+    # print(base_config)  # Output: {'a': 1, 'b': {'c': 4, 'd': 3}, 'e': 5}
