@@ -35,7 +35,6 @@ def get_config(name, name_base = 'Base_config', pathGiven = ""):
     Constructs config as used throughout the main file 
     """
     
-    
     # Load 
     base_config = load_config(name_base,pathGiven)
     experiment_config = load_config(name,pathGiven)
@@ -44,6 +43,11 @@ def get_config(name, name_base = 'Base_config', pathGiven = ""):
     config = base_config.copy()
 
     update_config(config, experiment_config)
+
+    # if testMode is active, overwrite the settings used in the testMode_config.yaml file
+    if config['general']['testMode']:
+        testMode_config = load_config('testMode_config', pathGiven)
+        update_config(config, testMode_config)
     
     return config
 

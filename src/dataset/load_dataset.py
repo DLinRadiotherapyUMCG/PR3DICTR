@@ -132,6 +132,12 @@ def load_dataset_total(config, patient_ids = None):
     #if(testDf.shape[0] != 0):
     #    print(f"Patient collection --> Test: {testDf.shape[0]}")
 
+    # if in test mode, and want to use a subset of the data, then subsample the datasets
+    if config['general']['testMode'] and "n_patients_total" in config['data']:
+        num_patients_sample = config['data']['n_patients_total']
+        trainDf, valDf, testDf = subsample_datasets(num_patients_sample, trainDf, valDf, testDf)
+        #print(len(trainDf), len(valDf), len(testDf))
+
     # Check and validate if KFolds settings are active
     trainDataset_Collection = []
     valDataset_Collection = []
@@ -151,10 +157,6 @@ def load_dataset_total(config, patient_ids = None):
             if(Complete_SanityCheck(config,[trainDf_sel,valDf_sel,testDf])):
                 raise Exception("ABORT: Datasets contain identical patients! NOT ALLOWED!")
 
-
-            if(config['general']['testMode'] and trainDf.shape[0] > 100):
-                # Only use 100 patients for training dataset
-                trainDf_sel = trainDf_sel.iloc[:100]
             trainDataset_Collection.append(ToxDataset(config,trainDf_sel))
             valDataset_Collection.append(ToxDataset(config,valDf_sel))
             testDataset_Collection.append(ToxDataset(config,testDf))
@@ -193,6 +195,25 @@ def load_dataset_total(config, patient_ids = None):
     logging.info(f"Patient amount in datasets: Train = {trainDataset_Collection[0].df.shape[0]}, Validation = {valDataset_Collection[0].df.shape[0]}, Test = {testDataset_Collection[0].df.shape[0]}")
 
     return [trainDataset_Collection, valDataset_Collection, testDataset_Collection], metadata
+
+
+def subsample_datasets(num_patients_sample, trainDf, valDf, testDf):
+    """
+    Subsample the datasets to that `num_patients_sample` are used in total (across all three datasets).
+    This is used for test mode.
+    """
+    # find the number of patients in each dataset, so that we can preserve the ratio of patients in each dataset (train, val, test)
+    n_train_loaded, n_val_loaded, n_test_loaded = trainDf.shape[0], valDf.shape[0], testDf.shape[0]
+    n_total_loaded = n_train_loaded + n_val_loaded + n_test_loaded
+
+    # Only use 100 patients for training dataset
+    trainDf = trainDf.iloc[:int(n_train_loaded/n_total_loaded * num_patients_sample)]
+    valDf = valDf.iloc[:int(n_val_loaded/n_total_loaded * num_patients_sample)]
+    testDf = testDf.iloc[:int(n_test_loaded/n_total_loaded * num_patients_sample)]
+
+    return trainDf, valDf, testDf
+
+
 
 def Complete_SanityCheck(config,dfArray):
     for i in range(len(dfArray) - 1):

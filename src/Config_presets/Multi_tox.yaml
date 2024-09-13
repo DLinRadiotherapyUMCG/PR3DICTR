@@ -7,7 +7,7 @@ general:
   resultsCurrentDirectory: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
   error_ignore: true
   endpointRatios: []
-  testMode: False
+  testMode: True
 
 columns:
   label: ["Taste_M06"]  # ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]

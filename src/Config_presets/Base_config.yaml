@@ -9,6 +9,7 @@ general:
   endpointRatios: []
   testMode: False
 
+
 columns:
   label: ["Xerostomia_M06"]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
