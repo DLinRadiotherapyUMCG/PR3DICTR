@@ -20,7 +20,7 @@ from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file
 from src.training.train_multi import move_batch_to_device
 from src.constants import DEVICE
-from src.models.tools.get_multi_model import get_classification_model
+from src.models.tools.get_classification_model import get_classification_model
 
 from src.utils.loss_func.get_loss_function import get_loss_function
 
@@ -40,6 +40,9 @@ if __name__ == '__main__':
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
+
+
+    """
 
     # MAIN: DL running class with hyperparameter optimization
     # hyperClass = HyperTuning_Handler(config)
@@ -63,6 +66,8 @@ if __name__ == '__main__':
         #model = get_classification_model(config, metadata)
         
         model = train(config, train_loader, val_loader, metadata, hyperClass = None)
+
+    """
         
 
 
