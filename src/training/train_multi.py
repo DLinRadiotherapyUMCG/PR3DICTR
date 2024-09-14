@@ -138,17 +138,17 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
 
             # Check if this model has the lowest validation loss
             if val_loss < lowest_loss:
-                logging.info(f'  New lowest loss: {val_loss:.5f}')
+                #logging.info(f'  New lowest loss: {val_loss:.5f}')
                 lowest_loss = val_loss
                 best_model = model.state_dict()  # Save the model state
                 patience_counter = 0 # Reset patience counter
             else:
                 patience_counter += 1 # Increment patience counter
-            logging.info(f'  Patience counter: {patience_counter}')
+            logging.info(f'  Patience counter: {patience_counter}, lowest val loss = {lowest_loss:.5f}')
 
             # Check if patience has been exhausted
             if patience_counter >= config['training']['patience']:
-                logging.info('  Patience exhausted, stopping training')
+                logging.info('Patience exhausted, stopping training')
                 config['run']['patienceExhausted'] = True
                 config['run']['patienceExhaustedIndex'] = epoch
                 break
