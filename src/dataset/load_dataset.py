@@ -6,8 +6,10 @@ from torch.utils.data import Dataset
 
 from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
 import pandas as pd
+import numpy as np
 
 from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import LabelEncoder
 
 
 
@@ -38,7 +40,7 @@ def load_dataset_single(csvPath, config, patient_ids = None):
 
 
 
-def load_dataset_total(config, patient_ids = None):    # TODO: re-name to 'load_dataframes'
+def load_dataset_total(config, patient_ids = None):    # TODO: re-name to 'load_dataframes' ?
     """
     Load the all datasets with handling the options in
     the config file. This includes the csvFile
@@ -108,10 +110,12 @@ def load_dataset_total(config, patient_ids = None):    # TODO: re-name to 'load_
     if(config["data"]["kFolds"]["isEnabled"] and config["data"]["kFolds"]["Iterations"] < config["data"]["kFolds"]["Splits"]):
         # Multiple training and val datasets
         mergeDf = pd.concat([trainDf,valDf])
-        label = mergeDf[config['columns']['label']]
+        labels = mergeDf[config['columns']['label']]
+        # encode the labels (makes it possible to use StratifiedKFold for multi-label problems, as it only works on binary or multi-class)
+        encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])
          
         skf = StratifiedKFold(n_splits=config["data"]["kFolds"]["Splits"], shuffle=True, random_state=config["general"]["seed"])
-        for i, (train_index, val_index) in enumerate(skf.split(mergeDf,label)):
+        for i, (train_index, val_index) in enumerate(skf.split(mergeDf,encoded_labels)):
             trainDf_sel = mergeDf.iloc[train_index]
             if(config['data']['equalizer']['isEnabled']):
                 trainDf_sel = label_equalizer(trainDf_sel, config)
