@@ -107,7 +107,7 @@ def load_dataset_total(config, patient_ids = None):    # TODO: re-name to 'load_
     trainDataset_Collection = []
     valDataset_Collection = []
     testDataset_Collection = []
-    if(config["data"]["kFolds"]["isEnabled"] and config["data"]["kFolds"]["Iterations"] < config["data"]["kFolds"]["Splits"]):
+    if(config["data"]["kFolds"]["isEnabled"] and config["data"]["kFolds"]["Iterations"] <= config["data"]["kFolds"]["Splits"]):
         # Multiple training and val datasets
         mergeDf = pd.concat([trainDf,valDf])
         labels = mergeDf[config['columns']['label']]
