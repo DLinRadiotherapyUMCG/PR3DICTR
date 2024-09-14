@@ -2,7 +2,9 @@
 
 import optuna
 from src.config_presets.tools.get_config import get_config
-from src.dataset.load_dataset import load_dataset
+from src.dataset.load_dataset import load_dataset_single
+from src.dataset.get_dataloader import make_dataloader
+from src.dataset.get_transforms import get_transforms
 from src.models.tools.save_model import save_model
 from src.training.train_multi import train, validate
 from src.utils.logging.logging import setup_logging
@@ -174,13 +176,21 @@ def objective(trial, config):
     loss_function = get_loss_function(config)
 
     # load data
-    train_data, metadata = load_dataset(config, os.path.join(config['paths']['csv'], config['filenames']['train_csv']), augment=True)
-    val_data, _ = load_dataset(config, os.path.join(config['paths']['csv'], config['filenames']['validation_csv']))
-    val_loader = DataLoader(val_data, batch_size=config['training']['batch_size'], shuffle=False, 
-                            num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
+    train_DF= load_dataset_single(config, os.path.join(config['paths']['csv'], config['filenames']['train_csv']))
+    val_DF = load_dataset_single(config, os.path.join(config['paths']['csv'], config['filenames']['validation_csv']))
+    # get transforms
+    train_transforms, val_transforms = get_transforms(config)
+    # make dataloaders
+    train_loader, metadata = make_dataloader(config, train_DF, train_transforms, validation_mode=False)
+    val_loader, metadata2 = make_dataloader(config, val_DF, val_transforms, validation_mode=True)
+    
+    # train_loader = DataLoader(train_data, batch_size=config['training']['batch_size'], shuffle=True, 
+    #                           num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
+    # val_loader = DataLoader(val_data, batch_size=config['training']['batch_size'], shuffle=False, 
+    #                         num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
     
     # Train model 
-    model = train(config, train_data, val_data, metadata)
+    model = train(config, train_loader, val_loader, metadata)
     
     save_trial(model, config)
     

@@ -7,10 +7,10 @@ general:
   resultsCurrentDirectory: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
   error_ignore: true
   endpointRatios: []
-  testMode: True
+  testMode: false
 
-columns:
-  label: ["Taste_M06"]  # ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]
+columns: # 
+  label:  ['Aspiration_M06'] #["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
@@ -25,7 +25,7 @@ run:
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "TransRP"
+  model_name: "resnet"
   num_classes: 1
   n_down_blocks: 5
   resnet:
@@ -83,10 +83,9 @@ data:
 
   dataloader:
     num_workers: 8           # number of workers (cores) to use for data loading in each training batch
-    persistent_workers: true
 
   preprocessing:
-    isEnabled: false
+    isEnabled: true
     crop: true
     crop_shape: [96, 96, 96]
     ct:
@@ -102,7 +101,7 @@ data:
       b_max: 1
       clip: true
     segmentation_map:
-      target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
+      target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   kFolds:
     isEnabled: true

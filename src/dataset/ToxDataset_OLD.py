@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 import torch
 from sklearn.model_selection import train_test_split
 
-from src.utils.center_crop_3d import center_crop_3d
+from src.dataset.transforms.center_crop_3d import center_crop_3d
 from src.utils.data_equalizer import data_split, get_delimiter
 
 def preprocess_image_stack(image_stack, config):
@@ -219,6 +219,7 @@ class ToxDataset(Dataset):
 
         # Apply the MONAI transformations
         if self.config['data']['augmentation']['isEnabled']:
+            print("AUGMENTATION")
             image_stack = self.transforms(image_stack)
 
         # If cropping is enabled, crop the image
@@ -248,103 +249,3 @@ class ToxDataset(Dataset):
         return image_stack, clinical_features, labels
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class ToxMonaiDataset(Dataset):
-    """
-    Dataset class for the HNC dataset.
-    Returns a tuple of image_stack, clinical_features, and label.
-    """
-
-    def __init__(self, config, dataframe):
-        self.images_path, self.label_columns = config['paths']['images'], config['columns']['label']
-        self.config = config
-
-        self.df = dataframe
-
-        self.transforms = augmentation(config)
-
-        for transform in self.transforms.transforms:
-            transform.set_random_state(seed=config['general']['seed'])
-
-    def __len__(self):
-        return len(self.df)
-
-    def __getitem__(self, idx):
-        # Check if the dataframe is not none
-        if(self.df.shape[0] == 0):
-            print("No data available in dataset.")
-            return None
-        
-        # Get selected patient
-        patient_id = self.df.iloc[idx]['PatientID']
-
-        pathPatientDir = self.images_path + str(patient_id).rjust(7,'0')
-        if(os.path.exists(pathPatientDir) == False):
-            pathPatientDir = self.images_path + str(patient_id)
-
-        # Construct the file paths for the CT, dose, and segmentation map images
-        ct_path = pathPatientDir + '/ct.npy'
-        dose_path = pathPatientDir + '/rtdose.npy'
-        segmentation_map_path = pathPatientDir + '/segmentation_map.npy'
-
-        # Load the images
-        ct = np.load(ct_path)
-        dose = np.load(dose_path)
-        segmentation_map = np.load(segmentation_map_path)
-
-        # Need to be 4 dimensions
-        if(len(ct.shape) == 3):
-            ct = np.expand_dims(ct,axis = 0)
-            dose = np.expand_dims(dose,axis = 0)
-            segmentation_map = np.expand_dims(segmentation_map,axis = 0)
-
-        # Stack the images vertically
-        image_stack = np.vstack((ct, dose, segmentation_map), dtype=np.float32)
-
-        # Preprocess the image_stack
-        image_stack = preprocess_image_stack(image_stack, self.config).astype(np.float32)
-
-        # Apply the MONAI transformations
-        if self.config['data']['augmentation']['isEnabled']:
-            image_stack = self.transforms(image_stack)
-
-        # If cropping is enabled, crop the image
-        if self.config['data']['preprocessing']['crop']:
-            #print("Cropping")
-            cropped_image_stack = np.empty((image_stack.shape[0], *self.config['data']['preprocessing']['crop_shape']))
-            for i in range(image_stack.shape[0]):
-                cropped_image_stack[i] = center_crop_3d(image_stack[i], self.config['data']['preprocessing']['crop_shape'])
-            image_stack = cropped_image_stack.astype(np.float32)
-
-        # Get the label
-        labels = np.array([self.df[self.df['PatientID'] == patient_id][self.label_columns].values[0]]).astype(np.float32)
-
-
-        #labels_dict = {label_col : torch.tensor(self.df[self.df['PatientID'] == patient_id][label_col].values[0]) for label_col in self.label_columns}
-
-        # print(self.df[self.df['PatientID'] == patient_id][self.label_columns].values[0])
-        # print(self.label_columns)
-        # print(labels_dict)
-        # print(patient_id)
-
-        # Get the clinical features
-        clinical_features = [self.df[self.df['PatientID'] == patient_id][feature].values[0] for feature in
-                             self.config['columns']['clinical_features']]
-        clinical_features = np.array(clinical_features).astype(np.float32)
-
-        return image_stack, clinical_features, labels

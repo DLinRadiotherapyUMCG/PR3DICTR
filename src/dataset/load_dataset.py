@@ -4,40 +4,12 @@ from typing import Optional, List, Tuple
 
 from torch.utils.data import Dataset
 
-from src.dataset.ToxDataset import HNCDataset, ToxDataset
 from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
 import pandas as pd
 
 from sklearn.model_selection import StratifiedKFold
 
-def load_dataset(config, csv_path, patient_ids = None, augment= False, split = False, train = True, splitVar = "Split"):
-    """
-    Loads data for a single csv file.
-    :param csv_path:
-    :param config:
-    :param patient_ids:
-    :return: PyTorch Dataset and metadata
-    """    
-    # Create an instance of the HNCDataset
-    dataset = HNCDataset(csv_path, config, patient_ids, augment=augment, 
-                         split = split, train = train, splitVar = splitVar)
 
-    # Get an example input to determine the metadata
-    example_input, _, _ = dataset[0]
-    channels, depth, height, width = example_input.shape
-
-    n_features = len(config['columns']['clinical_features'])
-
-    metadata = {
-        "channels": channels,
-        "depth": depth,
-        "height": height,
-        "width": width,
-        "n_features": n_features,
-    }
-
-    # Return the dataset and the metadata
-    return dataset, metadata
 
 def ValidateImageDataExists(config, df):
     imagePath = config['paths']['images']
@@ -60,23 +32,13 @@ def ValidateImageDataExists(config, df):
 def load_dataset_single(csvPath, config, patient_ids = None):
     delimiterFound = get_delimiter(csvPath)
     dlDf = pd.read_csv(csvPath, delimiter=delimiterFound, dtype={'PatientID': str})
-    toxDataset = ToxDataset(config,dlDf)
 
-    # Get example patient to get data info
-    example_input, _, _ = toxDataset[0]
-    channels, depth, height, width = example_input.shape
-    n_features = len(config['columns']['clinical_features'])
+    return dlDf
 
-    metadata = {
-        "channels": channels,
-        "depth": depth,
-        "height": height,
-        "width": width,
-        "n_features": n_features,
-    }
-    return (toxDataset,metadata)
 
-def load_dataset_total(config, patient_ids = None):
+
+
+def load_dataset_total(config, patient_ids = None):    # TODO: re-name to 'load_dataframes'
     """
     Load the all datasets with handling the options in
     the config file. This includes the csvFile
@@ -129,15 +91,16 @@ def load_dataset_total(config, patient_ids = None):
 
     # Write information about data
     #print(f"Patient collection --> Train: {trainDf.shape[0]}, Validation: {valDf.shape[0]}")
-    #if(testDf.shape[0] != 0):
+    #if(testDf.shape[0] != 0):all you ne
     #    print(f"Patient collection --> Test: {testDf.shape[0]}")
 
-    # if in test mode, and want to use a subset of the data, then subsample the datasets
+
+    # if in test mode, and we want to use a subset of the data, then subsample the total dataset
     if config['general']['testMode'] and "n_patients_total" in config['data']:
         num_patients_sample = config['data']['n_patients_total']
         trainDf, valDf, testDf = subsample_datasets(num_patients_sample, trainDf, valDf, testDf)
         #print(len(trainDf), len(valDf), len(testDf))
-
+    
     # Check and validate if KFolds settings are active
     trainDataset_Collection = []
     valDataset_Collection = []
@@ -146,6 +109,7 @@ def load_dataset_total(config, patient_ids = None):
         # Multiple training and val datasets
         mergeDf = pd.concat([trainDf,valDf])
         label = mergeDf[config['columns']['label']]
+         
         skf = StratifiedKFold(n_splits=config["data"]["kFolds"]["Splits"], shuffle=True, random_state=config["general"]["seed"])
         for i, (train_index, val_index) in enumerate(skf.split(mergeDf,label)):
             trainDf_sel = mergeDf.iloc[train_index]
@@ -157,9 +121,9 @@ def load_dataset_total(config, patient_ids = None):
             if(Complete_SanityCheck(config,[trainDf_sel,valDf_sel,testDf])):
                 raise Exception("ABORT: Datasets contain identical patients! NOT ALLOWED!")
 
-            trainDataset_Collection.append(ToxDataset(config,trainDf_sel))
-            valDataset_Collection.append(ToxDataset(config,valDf_sel))
-            testDataset_Collection.append(ToxDataset(config,testDf))
+            trainDataset_Collection.append(trainDf_sel)
+            valDataset_Collection.append(valDf_sel)
+            testDataset_Collection.append(testDf)
 
 
             if(i == config["data"]["kFolds"]["Iterations"] - 1):
@@ -175,26 +139,14 @@ def load_dataset_total(config, patient_ids = None):
             # Only use 100 patients for training dataset
             trainDf = trainDf.iloc[:100]
 
-        trainDataset_Collection.append(ToxDataset(config,trainDf))
-        valDataset_Collection.append(ToxDataset(config,valDf))
-        testDataset_Collection.append(ToxDataset(config,testDf))
+        trainDataset_Collection.append(trainDf)
+        valDataset_Collection.append(valDf)
+        testDataset_Collection.append(testDf)
+    
 
-    # Get example patient to get data info
-    example_input, _, _ = trainDataset_Collection[0][0]
-    channels, depth, height, width = example_input.shape
-    n_features = len(config['columns']['clinical_features'])
+    logging.info(f"Patient amount in datasets: Train = {trainDataset_Collection[0].shape[0]}, Validation = {valDataset_Collection[0].shape[0]}, Test = {testDataset_Collection[0].shape[0]}")
 
-    metadata = {
-        "channels": channels,
-        "depth": depth,
-        "height": height,
-        "width": width,
-        "n_features": n_features,
-    }
-
-    logging.info(f"Patient amount in datasets: Train = {trainDataset_Collection[0].df.shape[0]}, Validation = {valDataset_Collection[0].df.shape[0]}, Test = {testDataset_Collection[0].df.shape[0]}")
-
-    return [trainDataset_Collection, valDataset_Collection, testDataset_Collection], metadata
+    return [trainDataset_Collection, valDataset_Collection, testDataset_Collection]#, metadata
 
 
 def subsample_datasets(num_patients_sample, trainDf, valDf, testDf):

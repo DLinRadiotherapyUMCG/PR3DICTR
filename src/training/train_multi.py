@@ -15,7 +15,7 @@ from src.evaluation.calculate_auc import calculate_auc_multi
 
 import pandas as pd
 import numpy as np
-
+import time
 
 def sigmoid(x):
     return 1/(1+np.exp(-x))
@@ -75,6 +75,8 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
         num_batches = 0
         num_auc_batches = 1
 
+        start_epoch_time = time.time()
+
         for i, batch in enumerate(train_loader):
             logging.debug(f'Batch {i} of epoch {epoch}')
 
@@ -91,8 +93,8 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
 
             # Calculate AUC            
             for idx, label in enumerate(labels):
-                out_tot[label] = out_tot[label] + list(Sigmoid(outputs[label].cpu().detach().numpy().reshape((1,targets[:,:,idx].shape[0]))[0]))
-                targets_tot[label] = targets_tot[label] + list(targets[:,:,idx].cpu().detach().numpy().reshape((1,targets[:,:,idx].shape[0]))[0])
+                out_tot[label] = out_tot[label] + list(Sigmoid(outputs[label].cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0]))
+                targets_tot[label] = targets_tot[label] + list(targets[:,idx].cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
 
             # Log loss and AUC
             total_loss += loss.item()
@@ -151,6 +153,8 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
                 config['run']['patienceExhaustedIndex'] = epoch
                 break
         
+        logging.info(f'  Epoch duration = {(time.time() - start_epoch_time):.2f} seconds')
+
         pd.DataFrame(out_tot).to_csv(os.path.join(config['general']['resultsCurrentDirectory'],'temp_pred.csv'), sep = ';')
         pd.DataFrame(targets_tot).to_csv(os.path.join(config['general']['resultsCurrentDirectory'],'temp_target.csv'), sep = ';')
         
@@ -202,8 +206,8 @@ def validate(loss_function, model, val_loader, config):
             
             
             for lab_indx, label in enumerate(labels):
-                out_tot[label] = out_tot[label] + list(outputs[label].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
-                targets_tot[label] = targets_tot[label] + list(targets[:,:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
+                out_tot[label] = out_tot[label] + list(outputs[label].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
+                targets_tot[label] = targets_tot[label] + list(targets[:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
             
             num_batches += 1
 
@@ -220,7 +224,8 @@ def validate(loss_function, model, val_loader, config):
 
 
 def move_batch_to_device(batch, device):
-    inputs, clinical_features, targets = batch
+    # batch is a dictionary
+    inputs, clinical_features, targets = batch['input'], batch['features'], batch['label_list']
     inputs = inputs.to(device=device)
     clinical_features = clinical_features.to(device=device)
     targets = targets.to(device=device)

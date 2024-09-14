@@ -3,7 +3,7 @@ import optuna
 import logging
 
 from src.config_presets.tools.get_config import get_config
-from src.dataset.load_dataset import load_dataset, load_dataset_total
+from src.dataset.load_dataset import load_dataset_total
 from src.models.tools.save_model import save_model, save_config, save_dataset, save_dataset_summary
 from src.training.train_multi import train, validate
 from src.utils.logging.logging import setup_logging
@@ -11,6 +11,8 @@ from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.fileHandler import create_file, create_folder, create_textfile
+from src.dataset.get_dataloader import make_dataloader
+from src.dataset.get_transforms import get_transforms
 
 from torch.utils.data import DataLoader
 import os
@@ -94,34 +96,40 @@ def UpdateTrial(hyperClass, trial, config):
     # Set loss function
     loss_function = get_loss_function(config)
 
-    # Create the datasets
-    datasets_col, metadata = load_dataset_total(config)
-    trainDataset_col = datasets_col[0]
-    valDataset_col= datasets_col[1]
-    testDataset_col = datasets_col[2]
+    # Create the dataset dataframes
+    DFs_col = load_dataset_total(config)
+    trainDF_col = DFs_col[0]
+    valDF_col= DFs_col[1]
+    testDF_col = DFs_col[2]
+
+    # make the training and validation transforms
+    train_transforms, val_transforms = get_transforms(config)
 
     # Check if Kfolds is active --> group
     groupVar = None
-    if(len(trainDataset_col) > 1):
+    if(len(trainDF_col) > 1):
         groupVar = f"Folds{config['general']['trialNumber']}"
 
 
-    logging.info(f"Dataset folds: {len(trainDataset_col)}")
+    logging.info(f"Dataset folds: {len(trainDF_col)}")
     # Amount of Ksplits
     val_loss_col = []
     val_auc_col = []
-    for i in range(len(trainDataset_col)):
+    for i in range(len(trainDF_col)):
         if(groupVar != None):
             CreateResultDir(config,i)
 
         if(trial != None and config['hyperparam_tuning']['WandB']['IsEnabled']):
             CreateStudy(config,configWandB,groupVar)
 
+        train_loader, metadata = make_dataloader(config, trainDF_col[i], train_transforms, validation_mode=False)
+        val_loader, _ = make_dataloader(config, valDF_col[i], val_transforms, validation_mode=True)
+
          # Get the data loaders
-        train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
-                                      num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
-        val_loader = DataLoader(valDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
-                                 num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
+        # train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
+        #                               num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
+        # val_loader = DataLoader(valDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
+        #                          num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
         try:
             model = train(config, train_loader, val_loader, metadata, hyperClass = hyperClass)
         except Exception as error:
@@ -139,9 +147,10 @@ def UpdateTrial(hyperClass, trial, config):
 
         # Test dataset check
         try:
-            if(testDataset_col[i].df.shape[0] != 0):
-                test_loader = DataLoader(testDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
-                                         num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
+            if(testDF_col[i].df.shape[0] != 0):
+                test_loader, _ = make_dataloader(config, testDF_col[i], val_transforms, validation_mode=True)
+                # test_loader = DataLoader(testDF_col[i], batch_size=config['training']['batch_size'], shuffle=False,
+                #                          num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
                 test_loss, test_auc = validate(loss_function, model, test_loader, config)
                 savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_loss.txt")
                 f = open(savePath,"w")
@@ -162,10 +171,10 @@ def UpdateTrial(hyperClass, trial, config):
             print("WARNING: SAVING NOT WORKING!! PLEASE CHECK")
 
         # Save Datasets
-        save_dataset(config,trainDataset_col[i],"train_Dataset")
-        save_dataset(config,valDataset_col[i],"validation_Dataset")
-        save_dataset(config,testDataset_col[i],"test_Dataset")
-        save_dataset_summary(config,trainDataset_col[i],valDataset_col[i],testDataset_col[i])
+        save_dataset(config,trainDF_col[i],"train_Dataset")
+        save_dataset(config,valDF_col[i],"validation_Dataset")
+        save_dataset(config,testDF_col[i],"test_Dataset")
+        save_dataset_summary(config,trainDF_col[i],valDF_col[i],testDF_col[i])
 
         logging.info("Information about the val_auc_array:")
         logging.info(val_auc_col)
@@ -175,7 +184,7 @@ def UpdateTrial(hyperClass, trial, config):
 
         # Check if run needs to be aborted
         if(config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience']*2 + 2)) and i == 0):
-            if(len(trainDataset_col) > 1):
+            if(len(trainDF_col) > 1):
                 logging.info("Patience exhausted and ignoring K-split datasets")
             break
 

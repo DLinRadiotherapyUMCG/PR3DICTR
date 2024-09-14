@@ -10,9 +10,9 @@ path_src = os.getcwd()
 sys.path.insert(1, path_src)
 
 from src.config_presets.tools.get_config import get_config
-from src.dataset.load_dataset import load_dataset, load_dataset_total
+from src.dataset.load_dataset import load_dataset_total
 from src.models.tools.save_model import save_model
-from src.training.train_multi import train
+from src.training.train_multi import train, validate
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
@@ -24,9 +24,9 @@ from src.models.tools.get_classification_model import get_classification_model
 
 from src.utils.loss_func.get_loss_function import get_loss_function
 
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-from time import time
+
+from src.dataset.get_dataloader import make_dataloader
+from src.dataset.get_transforms import get_transforms
 
 
 if __name__ == '__main__':
@@ -50,20 +50,33 @@ if __name__ == '__main__':
     # hyperClass.Stop()
 
     # Load the dataset
-    datasets_col, metadata = load_dataset_total(config)
+    datasets_col = load_dataset_total(config)
     trainDataset_col = datasets_col[0]
     valDataset_col= datasets_col[1]
     testDataset_col = datasets_col[2]
 
+    train_transforms, val_transforms = get_transforms(config)
+
     # Train and time a model
     for i in range(len(trainDataset_col)):
 
-        train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
-                                      num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
-        val_loader = DataLoader(valDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
-                                 num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
+        train_loader, metadata = make_dataloader(config, trainDataset_col[i], train_transforms, validation_mode=False)
+        print(metadata)
+        val_loader, metadata2 = make_dataloader(config, valDataset_col[i], val_transforms, validation_mode=True)
+        print(metadata2)
+        # OLD
+        # train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
+        #                               num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
+        # val_loader = DataLoader(valDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
+        #                          num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
         
-        #model = get_classification_model(config, metadata)
+        # model = get_classification_model(config, metadata)
+        # model.to(device=DEVICE)
+        # model.eval()
+
+        # loss_function = get_loss_function(config)
+
+        # validate(loss_function, model, val_loader, config)
         
         model = train(config, train_loader, val_loader, metadata, hyperClass = None)
 

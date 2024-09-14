@@ -5,7 +5,7 @@ from typing import Optional, List
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from src.utils.center_crop_3d import center_crop_3d
+from src.dataset.transforms.center_crop_3d import center_crop_3d
 
 
 def get_delimiter(file_path: str) -> str:

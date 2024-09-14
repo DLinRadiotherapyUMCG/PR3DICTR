@@ -81,11 +81,16 @@ data:
   patientVar: 'PatientID'
   stratifyList: ["RP_OneYear","SmokerActive","SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy","ChemoRad"]
   Excluded: "ExcludeVar"
+  image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
 
-  dataloader:
-    num_workers: 4           # number of workers (cores) to use for data loading in each training batch
-    persistent_workers: true # recommend keep this as `true' for faster data loading
+  # filenames:
+  #   ct: 'ct.npy'
+  #   rtdose: 'rtdose.npy'
+  #   segmentation_map: 'segmentation_map.npy'
 
+  dataloader: 
+    dataset_type: 'cache' # ['standard', 'cache']  #TODO: 'persistent' is not implemented yet
+    num_workers: 8           # number of workers (cores) to use for data loading in each training batch
 
   preprocessing:
     isEnabled: false
