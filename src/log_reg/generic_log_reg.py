@@ -9,7 +9,7 @@ from rich.table import Table
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 import numpy as np
-from src.utils.logging.log_table import log_table
+# from src.utils.logging.log_table import log_table
 
 
 def lr_load_data(config, model_index=None):
@@ -20,15 +20,13 @@ def lr_load_data(config, model_index=None):
     :param model_index:
     :return:
     """
-    
-    
     if model_index is None:
-        train_data = pd.read_csv(os.path.join(config['paths']['csv'], 'train_full.csv'), delimiter=',',
+        train_data = pd.read_csv(os.path.join(config['paths']['csv'], 'train_full.csv'), delimiter=';', decimal = ',',
                                  dtype={'PatientID': str})
     else:
-        train_data = pd.read_csv(os.path.join(config['paths']['csv'], f'train_{model_index}.csv'), delimiter=',',
+        train_data = pd.read_csv(os.path.join(config['paths']['csv'], f'train_{model_index}.csv'), delimiter=';',
                                  dtype={'PatientID': str})
-    val_data = pd.read_csv(os.path.join(config['paths']['csv'], 'valid.csv'), delimiter=',', dtype={'PatientID': str})
+    val_data = pd.read_csv(os.path.join(config['paths']['csv'], 'valid.csv'), delimiter=';', decimal = ',', dtype={'PatientID': str})
     return train_data, val_data
 
 
@@ -43,7 +41,7 @@ def lr_prepare_data(config, train_data, val_data):
     :return:
     """
     relevant_columns = config['columns']['logistic_regression_features']
-    label = config['log_reg']['label']
+    label = 'Xerostomia_M06'#config['log_reg']['label']
     X_train = train_data[relevant_columns]
     y_train = train_data[label]
     X_val = val_data[relevant_columns]
@@ -62,7 +60,7 @@ def lr_fit_model(config, X_train, y_train, X_val, y_val):
     :return:
     """
     # Fit the model
-    model = LogisticRegression(random_state=config['general']['seed'])
+    model = LogisticRegression(random_state=config['general']['seed'], C=1e10,max_iter = 1000) # C adjusted to resemble logistic regression in R
     
     # Messty things to handle any missing data
     X_train_cop = dict.fromkeys(X_train.keys())
@@ -128,10 +126,10 @@ def train_lr(config):
     # Initialize the model
     model, auc = lr_fit_model(config, X_train, y_train, X_val, y_val)   
     
-    if config['log_reg']['print_cof']:
-        lr_print_model_coefficients(config,model)
-    if config['log_reg']['save_model']:
-        lr_save_model(config,model)
+    # if config['log_reg']['print_cof']:
+    #     lr_print_model_coefficients(config,model)
+    # if config['log_reg']['save_model']:
+    #     lr_save_model(config,model)
         
     return model, auc 
 
