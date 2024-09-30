@@ -14,9 +14,6 @@ def load_CITOR_features(config,relevant_columns, train_data, val_data, toxicity)
     y_val = val_data[label][val_data[label] != -1]    
     return X_train, y_train, X_val, y_val
 
-
-
-
 def CITOR_refit(config, toxicity = 'sticky_saliva_late'):
     
     train_data, val_data = lr_load_data(config)
@@ -78,6 +75,5 @@ def CITOR_refit(config, toxicity = 'sticky_saliva_late'):
     
     auc = roc_auc_score(y, pred)
     print('auc:',auc)
-
-   
+    
     return features, coef
