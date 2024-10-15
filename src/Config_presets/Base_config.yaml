@@ -213,9 +213,7 @@ CITOR:
     label: 'Taste_M06'
     models:
       model1: 
-        features: ['OralCavity_mean_sqrt','Age'] # 'Parotid_mean_ln', ln(mean dose parotid glands), sqrt(oral cavity), age
-      model2:
-        features: ['Parotid_mean_ln','Age'] #,'OralCavity_mean_sqrt'
+        features: ['OralCavity_mean_sqrt','Parotid_mean_ln','Age'] # 'Parotid_mean_ln', ln(mean dose parotid glands), sqrt(oral cavity), age
   taste_loss_early:
     label: 'Taste_loss_w06'
     models:
