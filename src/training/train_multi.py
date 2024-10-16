@@ -177,9 +177,7 @@ def validate(loss_function, model, val_loader, config):
     total_loss = 0.0
     total_auc = 0.0
     num_batches = 0
-    num_auc_batches = config['training']['validation']['num_auc_batches']
     labels = config['columns']['label']
-    
     
     out_tot = dict.fromkeys(labels)
     targets_tot = dict.fromkeys(labels)
@@ -188,7 +186,6 @@ def validate(loss_function, model, val_loader, config):
         out_tot[label] = []
         targets_tot[label] = []
 
-    
     with torch.no_grad():
         for i, batch in enumerate(val_loader):
             logging.debug(f'Validation batch {i}')
@@ -198,7 +195,6 @@ def validate(loss_function, model, val_loader, config):
             loss = loss_function(outputs, targets)
 
             total_loss += loss.item()
-            
             
             for lab_indx, label in enumerate(labels):
                 out_tot[label] = out_tot[label] + list(outputs[label].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
@@ -217,7 +213,6 @@ def validate(loss_function, model, val_loader, config):
 
     return avg_loss, auc
 
-
 def move_batch_to_device(batch, device):
     inputs, clinical_features, targets = batch
     inputs = inputs.to(device=device)
@@ -225,7 +220,7 @@ def move_batch_to_device(batch, device):
     targets = targets.to(device=device)
     return inputs, clinical_features, targets
 
-def get_output_results(model, val_loader, config):
+def get_output_results(model, val_loader, config): # this function is redundant, could just be an option for the validate function
     model.eval()
     labels = config['columns']['label']
       

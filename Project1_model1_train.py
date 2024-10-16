@@ -1,0 +1,86 @@
+import logging
+import os
+import src
+# import sys
+# from pathlib import Path
+# path_src = os.getcwd()
+# sys.path.insert(1, path_src)
+
+#import wandb
+from src.config_presets.tools.get_config import get_config
+from src.dataset.load_dataset import load_dataset, load_dataset_total
+# from src.models.tools.save_model import save_model
+from src.training.train_multi import train
+from src.utils.logging.logging import setup_logging
+from src.utils.parse_args import parse_args
+# from src.utils.set_random_seed import set_random_seed
+from src.hyper_opt.hyperHandler import HyperTuning_Handler
+# from src.utils.fileHandler import create_file
+
+from torch.utils.data import DataLoader
+
+# from src.log_reg.specific_log_reg import CITOR_refit
+
+
+# def main():
+#     # Setup
+#     toxicity, log_level = parse_args()
+#     setup_logging(log_level)
+#     wandb.login()
+#     wandb.init(project=toxicity, job_type='train')
+
+#     # Load the config
+#     config = load_config(toxicity)
+
+#     # Disable randomness
+#     set_random_seed(config['general']['seed'])
+
+#     # Load the dataset
+#     logging.info('Loading dataset')
+#     train_data, metadata = load_dataset(config, os.path.join(config['paths']['csv'], 'train_full.csv'), augment=True)
+#     val_data, _ = load_dataset(config, os.path.join(config['paths']['csv'], 'valid.csv'))
+
+#     # Start training
+#     model = train(config, train_data, val_data, metadata)
+
+#     # Save the model
+#     save_model(config, model, 'dl_model_full.pth')
+
+if __name__ == '__main__':
+    # Setup
+    toxicity, log_level = parse_args()
+    setup_logging(log_level)
+    # wandb.login()
+    # wandb.init(project=toxicity, job_type='train')
+    # Load the config
+    config = get_config('Multi_time')
+
+
+    # a,b = CITOR_refit(config, toxicity = 'xerostomia_late')
+    # for i in range(len(a)):
+    #     print(a[i],b[i])
+    # Disable randomness
+    # set_random_seed(config['general']['seed'])
+
+    # # Load the dataset
+    # logging.info('Loading dataset')
+    # data, metadata = load_dataset_total(config)
+    # train_data= DataLoader(data[0][0],batch_size=config['training']['batch_size'], shuffle=True, 
+    #                                   num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
+    # val_data = DataLoader(data[1][0],batch_size=config['training']['batch_size'], shuffle=True, 
+    #                                   num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
+
+    # # Start training
+    
+    
+    
+    # model = train(config, train_data, val_data, metadata)
+    hyperClass = HyperTuning_Handler(config)
+    hyperClass.Operate(config)
+    hyperClass.Stop()
+    
+
+    # # Save the model
+    # save_model(config, model, 'dl_model_full.pth')
+
+

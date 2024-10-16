@@ -72,7 +72,6 @@ def augmentation(config):
             if aug not in possible_augmentation:
                 print("Augmentation: " + aug + " is not implimented and therefor not applied")
     
-    
     return Compose(transforms)
 
 
@@ -246,22 +245,6 @@ class ToxDataset(Dataset):
         clinical_features = np.array(clinical_features).astype(np.float32)
 
         return image_stack, clinical_features, labels
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class ToxMonaiDataset(Dataset):
