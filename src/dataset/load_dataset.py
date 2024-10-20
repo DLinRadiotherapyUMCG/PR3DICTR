@@ -10,6 +10,19 @@ import pandas as pd
 
 from sklearn.model_selection import StratifiedKFold
 
+def removePtnsExcluded(df, config):
+    excludedVariables = config['data']['ExcludedVar']
+    excludedValues = config['data']['ExcludedValue']
+
+    if(len(excludedVariables) != len(excludedValues)):
+        raise Exception("Exception: Exclusion parameters for patient removal need to have the same size. This contains the excluded variables and values.")
+    
+    for i in range(len(excludedVariables)):
+        df = df.loc[df[excludedVariables[i]] != excludedValues[i]]
+
+    return df
+
+
 def load_dataset(config, csv_path, patient_ids = None, augment= False, split = False, train = True, splitVar = "Split"):
     """
     Loads data for a single csv file.
@@ -96,7 +109,7 @@ def load_dataset_total(config, patient_ids = None):
         # Single file to split
         delimiterFound = get_delimiter(trainfile)
         totalDf = pd.read_csv(trainfile, delimiter=delimiterFound, dtype={'PatientID': str})
-
+        totalDf = removePtnsExcluded(totalDf, config)
         totalDf = ValidateImageDataExists(config, totalDf)
         
         if patient_ids:
@@ -111,14 +124,12 @@ def load_dataset_total(config, patient_ids = None):
             # BUG: This is how Daniel defined the splits
             if len(trainDf) == 0 and len(valDf) == 0:
                 trainDf = totalDf[totalDf[splitVar] == "train_val"]
-            # trainDf = totalDf[totalDf[splitVar] == "train_val"]
-            # testDf = totalDf[totalDf[splitVar] == "test"] 
 
             #if(config['data']['equalizer']['isEnabled']):
             #    trainDf = label_equalizer(trainDf, config)
         else:    
             # Need to split manual
-            trainDf,valDf,testDf = data_split(totalDf, config, split=[0.7,0.15,0.15])
+            trainDf,valDf,testDf = data_split(totalDf, config, split=[0.6,0.20,0.20])
 
     else:
         # Two seperate files that are allready split
@@ -128,15 +139,13 @@ def load_dataset_total(config, patient_ids = None):
         valDf = pd.read_csv(valfile, delimiter=delimiterFound, dtype={'PatientID': str})
 
     # Write information about data
-    #print(f"Patient collection --> Train: {trainDf.shape[0]}, Validation: {valDf.shape[0]}")
-    #if(testDf.shape[0] != 0):
-    #    print(f"Patient collection --> Test: {testDf.shape[0]}")
+
 
     # Check and validate if KFolds settings are active
     trainDataset_Collection = []
     valDataset_Collection = []
     testDataset_Collection = []
-    if(config["data"]["kFolds"]["isEnabled"] and config["data"]["kFolds"]["Iterations"] < config["data"]["kFolds"]["Splits"]):
+    if(config["data"]["kFolds"]["isEnabled"] and config["data"]["kFolds"]["Iterations"] <= config["data"]["kFolds"]["Splits"]):
         # Multiple training and val datasets
         mergeDf = pd.concat([trainDf,valDf])
         label = mergeDf[config['columns']['label']]

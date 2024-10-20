@@ -17,7 +17,7 @@ columns:
   logistic_regression_features: ['']
 
 paths:
-  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_09_06/"
+  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_10_07/"
   images: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ImageData/"
   output: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
   results: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
@@ -83,7 +83,8 @@ data:
   splitvar: "Split"
   patientVar: 'PatientID'
   stratifyList: ["RP_OneYear", "ImmunoTherapy"]
-  Excluded: "ExcludeVar"
+  ExcludedVar: ["MissingLung"]
+  ExcludedValue: ["v"]
 
   dataloader:
     num_workers: 4           # number of workers (cores) to use for data loading in each training batch
@@ -110,8 +111,8 @@ data:
 
   kFolds:
     isEnabled: True
-    Iterations: 1
-    Splits: 5
+    Iterations: 4
+    Splits: 4
 
   equalizer:
     isEnabled: True
@@ -121,22 +122,22 @@ data:
   augmentation:
     isEnabled: true
     augmentation_list: ['flip','affine','rotate']
-    prob: 0.9
-    strength: 1
+    prob: 0.9628202570846732
+    strength: 3.005578369584509
 
 training:
   max_epochs: 100
-  batch_size: 8
+  batch_size: 16
   validation_interval: 1
-  patience: 10
+  patience: 35
 
   optimizer:
     name: "Adam"
-    learning_rate: 0.0001
-    weight_decay: 0.05
+    learning_rate: 0.00040096753586928423
+    weight_decay: 0.0000001178312895422
 
   loss:
-    name: "BCE"
+    name: "focal"
     weight: [1.2]
     reduction: "none"
     strength_enabled: false
@@ -160,7 +161,7 @@ visualization:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_14'
+  ProjectName: 'DETOX-Lung_Project_19'
   WandB:
     IsEnabled: True
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
@@ -168,8 +169,8 @@ hyperparam_tuning:
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: "DETOX-Lung_Project_14"
-    n_trials: 1
+    studyName: "DETOX-Lung_Project_19"
+    n_trials: 25
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:
@@ -178,29 +179,33 @@ hyperparam_tuning:
       type: 'categorical'
       location: ["model",'model_name']
       options: ['resnet']
-
-    Weight_decay: 
-      name: 'Weight_Decay'
-      type: 'float'
-      location: ["training",'optimizer','weight_decay']
-      min: 0.0
-      max: 0.0001
+    #Model_Depth:
+    #  name: "Model_Depth"
+    #  location: ["model","resnet","model_depth"]
+    #  type: 'categorical'
+    #  options: [10,18,34]
+    #Weight_decay: 
+    #  name: 'Weight_Decay'
+    #  type: 'float'
+    #  location: ["training",'optimizer','weight_decay']
+    #  min: 0.00006
+    #  max: 0.00006
     learning_rate: 
       name: 'Learning_rate'
       type: 'float'
       location: ['training','optimizer','learning_rate']
-      min: 0.000001
+      min: 0.00005
       max: 0.001
     optimizer:
       name: "Optimizer" 
       type: 'categorical'
       location: ["training",'optimizer','name']
-      options: ['Adam','AdaBound']
+      options: ['AdaBound','adam']
     loss_function:
       name: loss_function
       type: 'categorical'
       location: ['training','loss','name']
-      options: ['BCE','focal','hill','ASL']
+      options: ['focal','softmargin','hill']
     
     #loss_lamb:
     #  name: Loss_Lamb
@@ -225,51 +230,51 @@ hyperparam_tuning:
       name: batch_size
       type: 'categorical'
       location: ["training","batch_size"]
-      options: [4,8,16]
+      options: [16]
 
-    augmentation_strength:
-      name: augmentation_strength
-      type: 'float'
-      location: ['data','augmentation',"strength"]
-      min: 0.8
-      max: 5
+    #augmentation_strength:
+    #  name: augmentation_strength
+    #  type: 'float'
+    #  location: ['data','augmentation',"strength"]
+    #  min: 2.5
+    #  max: 5
 
-    augmentation_probability:
-      name: augmentation_probability
-      type: 'float'
-      location: ['data','augmentation',"prob"]
-      min: 0.6
-      max: 0.98
+    #augmentation_probability:
+    #  name: augmentation_probability
+    #  type: 'float'
+    #  location: ['data','augmentation',"prob"]
+    #  min: 0.96
+    #  max: 0.96
 
 
     # ----  NN Layer Params -------
     # Indicate amount of layers for different parts of Neural Network
-    n_down_blocks:
-     type: 'int'
-     name: 'n_down_blocks'
-     location: ['model','n_down_blocks']
-     min: 5
-     max: 5
-     step: 1
-     log: False
+    #n_down_blocks:
+    # type: 'int'
+    # name: 'n_down_blocks'
+    # location: ['model','n_down_blocks']
+    # min: 2
+    # max: 5
+    # step: 1
+    # log: False
 
-    n_linear_down_blocks:
-     type: 'int'
-     name: 'n_linear_down_blocks'
-     location: ['model','n_linear_down_blocks']
-     min: 1
-     max: 2
-     step: 1
-     log: False
+    # n_linear_down_blocks:
+    #  type: 'int'
+    #  name: 'n_linear_down_blocks'
+    #  location: ['model','n_linear_down_blocks']
+    #  min: 1
+    #  max: 2
+    #  step: 1
+    #  log: False
 
-    n_clinical_down_blocks:
-      type: 'int'
-      name: 'n_clinical_down_blocks'
-      location: ['model','n_clinical_down_blocks']
-      min: 0
-      max: 2
-      step: 1
-      log: False
+    # n_clinical_down_blocks:
+    #   type: 'int'
+    #   name: 'n_clinical_down_blocks'
+    #   location: ['model','n_clinical_down_blocks']
+    #   min: 0
+    #   max: 2
+    #   step: 1
+    #   log: False
   
   # Complex hyperparams: Initialise every layer of the Neural Network with given ranges
   derived:

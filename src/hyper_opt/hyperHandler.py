@@ -9,8 +9,10 @@ from src.training.train_multi import train, validate
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
+from src.training.train_multi import move_batch_to_device, validate, get_output_results
 from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.fileHandler import create_file, create_folder, create_textfile
+from src.visualization.Confusion_matrix import confusion_matrix_multi
 
 from torch.utils.data import DataLoader
 import os
@@ -138,21 +140,7 @@ def UpdateTrial(hyperClass, trial, config):
         val_auc_col.append(val_auc)
 
         # Test dataset check
-        try:
-            if(testDataset_col[i].df.shape[0] != 0):
-                test_loader = DataLoader(testDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
-                                         num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
-                test_loss, test_auc = validate(loss_function, model, test_loader, config)
-                savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_loss.txt")
-                f = open(savePath,"w")
-                f.close()
-                np.savetxt(savePath,np.array(test_loss))
-                savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_auc.txt")
-                f = open(savePath,"w")
-                f.close()
-                np.savetxt(savePath,np.array(test_auc))
-        except Exception as e:
-            logging.info(f"Could not validate the test dataset with error: {e}")
+        Validate_Dataset(config,testDataset_col[i],model,loss_function)
 
         # Save model
         try:
@@ -160,6 +148,15 @@ def UpdateTrial(hyperClass, trial, config):
             save_config(config,f"DlModel_Config.yaml")
         except:
             print("WARNING: SAVING NOT WORKING!! PLEASE CHECK")
+
+        # Save confusion matrix
+        try:
+            test_loader = DataLoader(testDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
+                                 num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
+            out_tot, targets_tot = get_output_results(model, test_loader, config)
+            confusion_matrix_multi("confusion_matrix_TestDataset", out_tot, targets_tot, config)
+        except:
+            print("Error")
 
         # Save Datasets
         save_dataset(config,trainDataset_col[i],"train_Dataset")
@@ -174,7 +171,7 @@ def UpdateTrial(hyperClass, trial, config):
         #    break
 
         # Check if run needs to be aborted
-        if(config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience']*2 + 2)) and i == 0):
+        if(config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience'] + 10)) and i == 0):
             if(len(trainDataset_col) > 1):
                 logging.info("Patience exhausted and ignoring K-split datasets")
             break
@@ -188,6 +185,23 @@ def UpdateTrial(hyperClass, trial, config):
         # Create a results file for the Folds results and the mean values    
 
     return val_lossMean
+
+def Validate_Dataset(config, dataset, model, loss_function):
+    try:
+        if(dataset.df.shape[0] != 0):
+            test_loader = DataLoader(dataset, batch_size=config['training']['batch_size'], shuffle=False,
+                                        num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
+            test_loss, test_auc = validate(loss_function, model, test_loader, config)
+            savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_loss.txt")
+            f = open(savePath,"w")
+            f.close()
+            np.savetxt(savePath,np.array(test_loss))
+            savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_auc.txt")
+            f = open(savePath,"w")
+            f.close()
+            np.savetxt(savePath,np.array(test_auc))
+    except Exception as e:
+        logging.info(f"Could not validate the test dataset with error: {e}")
 
 def update_config(dic, location, suggested_value):
     if len(location) == 1:
@@ -207,11 +221,10 @@ def CreateResultDir(config, KFoldIndex = -1):
     folderPath = os.path.join(os.path.join(config["paths"]["output"],config["hyperparam_tuning"]["ProjectName"]),config["general"]["trialNumber"])
     if(KFoldIndex != -1):
         folderPath = os.path.join(folderPath,f"KFold{KFoldIndex}")
-    folderPath += "\\"
 
     # Create folder if does not exist
     create_folder(folderPath)
     check_names(folderPath)
 
     logging.info(f"Directory path updated: {folderPath}")
-    config['general']['resultsCurrentDirectory'] = folderPath
+    config['general']['resultsCurrentDirectory'] = folderPath + os.sep
