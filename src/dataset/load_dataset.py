@@ -66,7 +66,7 @@ def ValidateImageDataExists(config, df):
             # Not found --> remove
             removePtnIDS.append(ptnClinList[i])
     
-    #print(f"Removed ptns = {len(removePtnIDS)}")
+    print(f"Removed ptns = {len(removePtnIDS)}")
     df = df[(df['PatientID'].isin(removePtnIDS)) == False]
     return df
 
@@ -200,6 +200,11 @@ def load_dataset_total(config, patient_ids = None):
     }
 
     logging.info(f"Patient amount in datasets: Train = {trainDataset_Collection[0].df.shape[0]}, Validation = {valDataset_Collection[0].df.shape[0]}, Test = {testDataset_Collection[0].df.shape[0]}")
+
+    array = sum(trainDataset_Collection[0].df[config['columns']['label']].to_numpy() == 1)/len(trainDataset_Collection[0].df)
+    balanceClass = array[0]    
+    print(f"Class balance in training dataset is {balanceClass}")
+    config['general']['classImbalance'] = 1- balanceClass
 
     return [trainDataset_Collection, valDataset_Collection, testDataset_Collection], metadata
 

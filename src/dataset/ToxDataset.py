@@ -1,11 +1,12 @@
 import csv
 import os
+import random
 from typing import Optional, List
 
 import numpy as np
 import pandas as pd
 from monai.transforms import ScaleIntensityRange, MapLabelValue, Compose, RandSpatialCrop, RandFlip, RandAffine, \
-    RandRotate, Rand3DElastic
+    RandRotate, Rand3DElastic, RandGaussianNoise
 from torch.utils.data import Dataset
 import torch
 from sklearn.model_selection import train_test_split
@@ -44,37 +45,58 @@ def preprocess_image_stack(image_stack, config):
 
     return image_stack
 
+def check_augmentation_Isenabled(config, augName):
+    keysFound = config['data']['augmentation']['list'].keys()
+    if(augName in keysFound):
+        return config['data']['augmentation']['list'][augName]['Isenabled']
+    return False
+
+
 def augmentation(config):
     transforms = []
 
     if(config['data']['augmentation']['isEnabled']):
-        augmentation = config['data']['augmentation']['augmentation_list']
+        augmentationsFound = config['data']['augmentation']['list'].keys()
         
         # Define the MONAI transformations
-        prob = config['data']['augmentation']['prob']
-        strength = config['data']['augmentation']['strength']
+        #prob = config['data']['augmentation']['prob']
+        #strength = config['data']['augmentation']['strength']
                 
-        possible_augmentation = ['crop','flip','affine','rotate']
+        possible_augmentation = ['crop','flip','affine','rotate',"noise"]
         
-        if 'crop' in augmentation:
+        if check_augmentation_Isenabled(config,'crop'):#'crop' in augmentation:
             transforms.append(RandSpatialCrop(roi_size=config['data']['preprocessing']['crop_shape'], random_size=False, random_center=True))
         
-        if 'flip' in augmentation:
-            transforms.append(RandFlip(prob=prob, spatial_axis=1))
+        #if 'translate' in augmentation:
+            #transforms.append(RandSpatialCrop(roi_size=config['data']['preprocessing']['crop_shape'], random_size=False, random_center=True))
+
+        if check_augmentation_Isenabled(config,'flip'): #'flip' in augmentation:
+            prob = config['data']['augmentation']['list']['flip']['prob']
+            transforms.append(RandFlip(prob=prob, spatial_axis=2))
         
-        if 'affine' in augmentation:
-            transforms.append(RandAffine(prob=prob, translate_range=(7 * strength,) * 3, scale_range=(0.07 * strength,) * 3, padding_mode='border', mode='bilinear'))
+        if check_augmentation_Isenabled(config,'affine'):# 'affine' in augmentation:
+            prob = config['data']['augmentation']['list']['affine']['prob']
+            tr_max = np.random.randint(0, config['data']['augmentation']['list']['affine']['translate_max'], 3)
+            sc_max = np.random.random(3)*config['data']['augmentation']['list']['affine']['scale_max']
+            transforms.append(RandAffine(prob=prob, translate_range=tr_max, scale_range=sc_max, padding_mode='border', mode='bilinear'))
         
-        if 'rotate' in augmentation:
-            transforms.append(RandRotate(prob=prob, range_x=(3.14 / 24 * strength), align_corners=True, padding_mode='border', mode='bilinear'))
+        if check_augmentation_Isenabled(config,'rotate'): #'rotate' in augmentation:
+            prob = config['data']['augmentation']['list']['rotate']['prob']
+            rot_max = config['data']['augmentation']['list']['rotate']['max']/180*3.14 # turn to rad
+            transforms.append(RandRotate(prob=prob, range_x=(rot_max), align_corners=True, padding_mode='border', mode='bilinear'))
         
-        for aug in augmentation:
+        if check_augmentation_Isenabled(config, 'noise'):
+            prob = config['data']['augmentation']['list']['noise']['prob']
+            noise_mean = config['data']['augmentation']['list']['noise']['mean']
+            noise_std = config['data']['augmentation']['list']['noise']['std']
+            transforms.append(RandGaussianNoise(prob = prob, mean = noise_mean, std = noise_std))
+
+        for aug in augmentationsFound:
             if aug not in possible_augmentation:
                 print("Augmentation: " + aug + " is not implimented and therefor not applied")
     
     
     return Compose(transforms)
-
 
 class HNCDataset(Dataset):
     """

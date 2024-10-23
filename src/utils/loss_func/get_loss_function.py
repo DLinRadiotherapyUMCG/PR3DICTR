@@ -30,7 +30,11 @@ def get_loss_function(config):
         case 'softmargin':       
             loss_function = torch.nn.MultiLabelSoftMarginLoss(reduction = reduction, weight = weights)  # BUG: does not work properly, the outputted dimensions are incorrect
         case 'focal':
-            loss_function = FocalLoss(reduction=reduction)    #TODO: add gamma and alpha parameters to configs
+            alpha = -1
+            if(config['training']['loss']['compensate_imbalance']):
+                alpha = config['general']['classImbalance']
+
+            loss_function = FocalLoss(alpha = alpha, reduction=reduction)    #TODO: add gamma and alpha parameters to configs
         case 'hill':
             loss_function = Hill(reduction = reduction) # TODO: add gamma, margin, lamb parameters to configs
         case "ASL":

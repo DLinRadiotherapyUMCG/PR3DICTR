@@ -8,16 +8,17 @@ general:
   error_ignore: true
   endpointRatios: []
   testMode: False
+  classImbalance: 0.25
 
 columns:
   label: ["RP_OneYear"]
   clinical_features: ["SmokerActive","SmokerStopped", "Gender",
-  "Age","ChemoRad", "SequantialChemo", "ImmunoTherapy",
-  "OperationPerformed", "T_Stage","N_Stage","M_Stage"]
+  "Age","ChemoRad", "ImmunoTherapy",
+  "OperationPerformed"] #, "T_Stage","N_Stage","M_Stage"]
   logistic_regression_features: ['']
 
 paths:
-  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_10_07/"
+  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_10_22/"
   images: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ImageData/"
   output: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
   results: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
@@ -83,8 +84,8 @@ data:
   splitvar: "Split"
   patientVar: 'PatientID'
   stratifyList: ["RP_OneYear", "ImmunoTherapy"]
-  ExcludedVar: ["MissingLung"]
-  ExcludedValue: ["v"]
+  ExcludedVar: [] # "MissingLung"
+  ExcludedValue: []
 
   dataloader:
     num_workers: 4           # number of workers (cores) to use for data loading in each training batch
@@ -110,7 +111,7 @@ data:
       target_labels: []
 
   kFolds:
-    isEnabled: True
+    isEnabled: false
     Iterations: 4
     Splits: 4
 
@@ -121,15 +122,34 @@ data:
 
   augmentation:
     isEnabled: true
-    augmentation_list: ['flip','affine','rotate']
-    prob: 0.9628202570846732
-    strength: 3.005578369584509
+    #augmentation_list: ['flip','affine','rotate']
+    #prob: 0.9628202570846732
+    #strength: 3.005578369584509
+
+    list:
+      flip:
+        Isenabled: True
+        prob: 0.5
+      affine:
+        Isenabled: True
+        prob: 0.97
+        translate_max: 15   # pixels
+        scale_max: 0.01
+      rotate:
+        Isenabled: True
+        prob: 0.97
+        max: 160 # degree
+      noise:
+        Isenabled: False
+        prob: 0.2
+        mean: 0
+        std: 0.1
 
 training:
-  max_epochs: 100
+  max_epochs: 60
   batch_size: 16
   validation_interval: 1
-  patience: 35
+  patience: 20
 
   optimizer:
     name: "Adam"
@@ -144,6 +164,7 @@ training:
     lamb: 1.5
     margin: 1.0
     gamma: 2.0
+    compensate_imbalance: True
 
   scheduler:
     name: "cosine"
@@ -161,7 +182,7 @@ visualization:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_19'
+  ProjectName: 'DETOX-Lung_Project_23'
   WandB:
     IsEnabled: True
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
@@ -169,7 +190,7 @@ hyperparam_tuning:
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: "DETOX-Lung_Project_19"
+    studyName: "DETOX-Lung_Project_23"
     n_trials: 25
   # ----  Custom Params -------
   # Location:= path variabele in config
@@ -184,12 +205,19 @@ hyperparam_tuning:
     #  location: ["model","resnet","model_depth"]
     #  type: 'categorical'
     #  options: [10,18,34]
-    #Weight_decay: 
-    #  name: 'Weight_Decay'
-    #  type: 'float'
-    #  location: ["training",'optimizer','weight_decay']
-    #  min: 0.00006
-    #  max: 0.00006
+    Resampling_ratio:
+      name: 'Resampling_ratio'
+      type: 'float'
+      location: ["data","equalizer","ratio"]  
+      min: 0.3
+      max: 0.5
+
+    Weight_decay: 
+      name: 'Weight_Decay'
+      type: 'float'
+      location: ["training",'optimizer','weight_decay']
+      min: 0.00000001
+      max: 0.0000008
     learning_rate: 
       name: 'Learning_rate'
       type: 'float'
@@ -200,12 +228,12 @@ hyperparam_tuning:
       name: "Optimizer" 
       type: 'categorical'
       location: ["training",'optimizer','name']
-      options: ['AdaBound','adam']
+      options: ['AdaBound','Adam']
     loss_function:
       name: loss_function
       type: 'categorical'
       location: ['training','loss','name']
-      options: ['focal','softmargin','hill']
+      options: ['focal']
     
     #loss_lamb:
     #  name: Loss_Lamb

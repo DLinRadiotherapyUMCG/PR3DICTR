@@ -1,6 +1,24 @@
 import logging
 import os
 
+import sys
+from pathlib import Path
+path_Project = Path(os.getcwd())
+path_Git = path_Project.parent
+
+def IncludeDirectory(path, index = 0, indexStop = -1):
+    if(os.path.exists(path) and (index <= indexStop or indexStop == -1)):
+        print(path)
+        sys.path.append(path)
+        children = os.listdir(path)
+        for i in range(len(children)):
+            pathChild = os.path.join(path,children[i])
+            if(os.path.isdir(pathChild)):
+                IncludeDirectory(pathChild, index + 1, indexStop)
+
+# Activate the function
+IncludeDirectory(path_Git,0,1)
+
 import wandb
 from src.config_presets.tools.get_config import get_config
 from src.dataset.load_dataset import load_dataset, load_dataset_total
@@ -12,8 +30,10 @@ from src.utils.set_random_seed import set_random_seed
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file
 
+import sqlite3
 import matplotlib.pyplot as plt
-
+import optuna
+import pandas as pd
 
 if __name__ == '__main__':
     # Setup
@@ -28,17 +48,64 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['general']['seed'])
 
-    # Test a chosen project
-    nameProjectTest = "DETOX-Lung_Project_7"
-    config['hyperparam_tuning']['ProjectName'] = nameProjectTest
-    config['hyperparam_tuning']['optuna']['studyname'] = nameProjectTest
+    study = None
+    if(True):
 
-    #Load the existing project
-    hyperClass = HyperTuning_Handler(config)
-    df = hyperClass.Optuna_study.trials_dataframe()
+        # Check where to keep study information
+        studyName = "Retrieve_Old"
+        #pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
+        pathOptunaStudy = os.path.join(r"C:\Users\r.van.der.wal\Documents\Detox_lung\validate_DB","track_optuna.db")
+        storage_name = f"sqlite:///{pathOptunaStudy}"
+        study = optuna.create_study(study_name = studyName, storage = storage_name, load_if_exists=True)
 
-    # Show the project information
-    print(df)
+    if(study != None):
+        df = study.trials_dataframe()
+        print(df)
 
-    # Close the project envrionment
-    hyperClass.Stop()
+    localTest = False
+    if(localTest):
+        # Test a chosen project
+        nameProjectTest = "DETOX-Lung_Project_7"
+        config['hyperparam_tuning']['ProjectName'] = nameProjectTest
+        config['hyperparam_tuning']['optuna']['studyname'] = nameProjectTest
+
+        #Load the existing project
+        hyperClass = HyperTuning_Handler(config)
+        df = hyperClass.Optuna_study.trials_dataframe()
+
+        # Show the project information
+        print(df)
+
+        # Close the project envrionment
+        hyperClass.Stop()
+    else:
+        pathOptunaStudy = os.path.join(r"C:\Users\r.van.der.wal\Documents\Detox_lung\validate_DB","track_optuna.db")
+        conn = sqlite3.connect(pathOptunaStudy)
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tableNames = cursor.fetchall()
+        print(f"Table Names : {tableNames}")
+
+        df = pd.read_sql_query(f'SELECT * FROM {'studies'}', conn)
+        print(df)
+        df = pd.read_sql_query(f'SELECT * FROM {'study_directions'}', conn)
+        print(df)
+        df = pd.read_sql_query(f'SELECT * FROM {'study_user_attributes'}', conn)
+        print(df)
+        df = pd.read_sql_query(f'SELECT * FROM {'trials'}', conn)
+        print(df)
+        df = pd.read_sql_query(f'SELECT * FROM {'trial_user_attributes'}', conn)
+        print(df)
+        df = pd.read_sql_query(f'SELECT * FROM {'trial_params'}', conn)
+        print(df)
+        df_results = pd.read_sql_query(f'SELECT * FROM {'trial_values'}', conn)
+        print(df_results)
+
+        # Get the best trial
+        minLoss = df_results['value'].min(skipna=True)
+        print(df_results[df_results['value'] == minLoss])
+
+        # Good way to loop
+        print(tableNames[0][0])
+
+        conn.close()
