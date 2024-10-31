@@ -84,7 +84,7 @@ def get_output_results(model, val_loader, config): # this function is redundant,
                 lab_indx+=1
     return(out_tot, targets_tot)
 
-def get_total_evaluation(model_path):
+def get_total_evaluation(model_path, savePath = ""):
     
     # Check if there are fold models in the model location
     folds = os.listdir(model_path)
@@ -92,7 +92,9 @@ def get_total_evaluation(model_path):
     print(folds)
 
     # Load a config to get model architecture information
-    config = load_config(model_path + r'/' + folds[0] + '/DlModel_Config.yaml')
+    path = os.path.join(os.path.join(model_path,folds[0]),"DlModel_Config.yaml")
+    print(path)
+    config = load_config(path)#model_path + r'/' + folds[0] + '/DlModel_Config.yaml')
     
     # Load the testing dataset
     data, metadata = load_dataset_total(config)
@@ -122,8 +124,13 @@ def get_total_evaluation(model_path):
                 out_tot[key] = out_tot[key] + np.array(out[key])*(1/len(folds))       
         
     # General
-    pd.DataFrame(out_tot).to_csv(config['paths']['results'] + 'predictions.csv')
-    pd.DataFrame(targets).to_csv(config['paths']['results'] + 'labels.csv')
+    if(savePath == ""):
+        pd.DataFrame(out_tot).to_csv(config['paths']['results'] + 'predictions.csv')
+        pd.DataFrame(targets).to_csv(config['paths']['results'] + 'labels.csv')
+    else:
+        os.makedirs(savePath)
+        pd.DataFrame(out_tot).to_csv(os.path.join(savePath, 'predictions.csv'))
+        pd.DataFrame(targets).to_csv(os.path.join(savePath, 'labels.csv'))
     
     # Visualization 
     # for key in out_tot.keys():

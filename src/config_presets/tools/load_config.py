@@ -3,14 +3,14 @@ import os
 import yaml
 
 
-def load_config(name):
+def load_config(config_path):
     """
     Load the config file for the toxicity.
     :param tox:
     :return: Config
     """
     
-    config_path = 'src/Config_presets/' + name + '.yaml'
+    #config_path = 'src/Config_presets/' + name + '.yaml'
 
     print(config_path)
 

@@ -170,11 +170,11 @@ def UpdateTrial(hyperClass, trial, config):
         #    logging.info(f"Stopped the folds due to a low validation AUC.")
         #    break
 
-        # Check if run needs to be aborted
-        if(config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience'] + 10)) and i == 0):
-            if(len(trainDataset_col) > 1):
-                logging.info("Patience exhausted and ignoring K-split datasets")
-            break
+        # TODO: Check if run needs to be aborted
+        #if(config['data']['kFolds']['skip_badtrial'] and config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience'] + 10)) and i == 0):
+        #    if(len(trainDataset_col) > 1):
+        #        logging.info("Patience exhausted and ignoring K-split datasets")
+        #    break
 
     val_lossMean =  np.mean(val_loss_col)
     if(groupVar != None):

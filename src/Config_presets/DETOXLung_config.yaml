@@ -31,7 +31,7 @@ model:
   model_name: "resnet" #"dcnn_pooling"
 
   resnet:
-    model_depth: 10    # [10, 18, 34, 50, 101, 152, 200]
+    model_depth: 18    # [10, 18, 34, 50, 101, 152, 200]
     conv1_kernel_size: 7
     conv1_stride: 2
   densenet: 
@@ -111,7 +111,8 @@ data:
       target_labels: []
 
   kFolds:
-    isEnabled: false
+    isEnabled: true
+    skip_badtrial: false
     Iterations: 4
     Splits: 4
 
@@ -135,6 +136,7 @@ data:
         prob: 0.97
         translate_max: 15   # pixels
         scale_max: 0.01
+        z_scale: -0.2
       rotate:
         Isenabled: True
         prob: 0.97
@@ -182,7 +184,7 @@ visualization:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_23'
+  ProjectName: 'DETOX-Lung_Project_25'
   WandB:
     IsEnabled: True
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
@@ -190,8 +192,8 @@ hyperparam_tuning:
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: "DETOX-Lung_Project_23"
-    n_trials: 25
+    studyName: "DETOX-Lung_Project_25"
+    n_trials: 15
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:
@@ -209,7 +211,7 @@ hyperparam_tuning:
       name: 'Resampling_ratio'
       type: 'float'
       location: ["data","equalizer","ratio"]  
-      min: 0.3
+      min: 0.5
       max: 0.5
 
     Weight_decay: 
@@ -217,13 +219,13 @@ hyperparam_tuning:
       type: 'float'
       location: ["training",'optimizer','weight_decay']
       min: 0.00000001
-      max: 0.0000008
+      max: 0.000001
     learning_rate: 
       name: 'Learning_rate'
       type: 'float'
       location: ['training','optimizer','learning_rate']
       min: 0.00005
-      max: 0.001
+      max: 0.01
     optimizer:
       name: "Optimizer" 
       type: 'categorical'
@@ -233,7 +235,7 @@ hyperparam_tuning:
       name: loss_function
       type: 'categorical'
       location: ['training','loss','name']
-      options: ['focal']
+      options: ['BCE']
     
     #loss_lamb:
     #  name: Loss_Lamb

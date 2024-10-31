@@ -78,6 +78,7 @@ def augmentation(config):
             prob = config['data']['augmentation']['list']['affine']['prob']
             tr_max = np.random.randint(0, config['data']['augmentation']['list']['affine']['translate_max'], 3)
             sc_max = np.random.random(3)*config['data']['augmentation']['list']['affine']['scale_max']
+            sc_max[2] = sc_max[2]+config['data']['augmentation']['list']['affine']['z_scale']
             transforms.append(RandAffine(prob=prob, translate_range=tr_max, scale_range=sc_max, padding_mode='border', mode='bilinear'))
         
         if check_augmentation_Isenabled(config,'rotate'): #'rotate' in augmentation:
