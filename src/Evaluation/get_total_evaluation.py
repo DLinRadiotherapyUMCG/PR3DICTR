@@ -84,7 +84,7 @@ def get_output_results(model, val_loader, config): # this function is redundant,
                 lab_indx+=1
     return(out_tot, targets_tot)
 
-def get_total_evaluation(model_path, savePath = ""):
+def get_total_evaluation(model_path, savePath = "", csv_path = "", image_path = ""):
     
     # Check if there are fold models in the model location
     folds = os.listdir(model_path)
@@ -96,6 +96,20 @@ def get_total_evaluation(model_path, savePath = ""):
     print(path)
     config = load_config(path)#model_path + r'/' + folds[0] + '/DlModel_Config.yaml')
     
+    # Overwrite paths if needed
+    if(csv_path != ""):
+        config["paths"]["csv"] = csv_path
+    if(image_path != ""):
+        config["paths"]["images"] = image_path
+        config["general"]["device"]= "cpu"
+    if(savePath != ""):
+        config["paths"]["output"] = savePath
+        config["paths"]["results"] = savePath
+        config['general']['resultsCurrentDirectory'] = savePath + os.path.basename(model_path) + "/"
+        os.makedirs(savePath)
+        print("Updated paths")
+
+
     # Load the testing dataset
     data, metadata = load_dataset_total(config)
     test_data = DataLoader(data[2][0],batch_size=config['training']['batch_size'], shuffle=False, 
@@ -108,8 +122,13 @@ def get_total_evaluation(model_path, savePath = ""):
     i = 0
     for path_fold in folds:   
         model = get_classification_model(config, metadata)
-        model.cuda()
-        model.load_state_dict(torch.load(model_path + r'/' + path_fold + '/DlModel_Weights.pth'))
+        if(config["general"]["device"] != "cpu"):
+            model.cuda()
+        else:
+            device = torch.device('cpu')
+            model.to(device)
+            print("to CPU")
+        model.load_state_dict(torch.load(model_path + r'/' + path_fold + '/DlModel_Weights.pth', map_location=config["general"]["device"]))
         out, targets = get_output_results(model, test_data, config)
 
         out_lists.append(out)
@@ -128,9 +147,9 @@ def get_total_evaluation(model_path, savePath = ""):
         pd.DataFrame(out_tot).to_csv(config['paths']['results'] + 'predictions.csv')
         pd.DataFrame(targets).to_csv(config['paths']['results'] + 'labels.csv')
     else:
-        os.makedirs(savePath)
         pd.DataFrame(out_tot).to_csv(os.path.join(savePath, 'predictions.csv'))
         pd.DataFrame(targets).to_csv(os.path.join(savePath, 'labels.csv'))
+
     
     # Visualization 
     # for key in out_tot.keys():
