@@ -51,7 +51,11 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
 
     # Initialize the best model and lowest validation loss
     best_model = None
-    lowest_loss = np.inf
+    if(config['general']['optimize'] == "AUC"):
+        print("Optimizing based on AUC")
+        lowest = 0
+    else:
+        lowest = np.inf
     patience_counter = 0
     
     Sigmoid = np.vectorize(sigmoid)
@@ -136,13 +140,23 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
                 resultsEpoch.update({"Validation_AUC_"+keys[i]:values[i]})
 
             # Check if this model has the lowest validation loss
-            if val_loss < lowest_loss:
-                logging.info(f'New lowest loss: {val_loss}')
-                lowest_loss = val_loss
-                best_model = model.state_dict()  # Save the model state
-                patience_counter = 0 # Reset patience counter
+            if(config['general']['optimize'] == "AUC"):
+                if values[0] > lowest:
+                    logging.info(f'New highest AUC: {values[0]}')
+                    lowest = values[0]
+                    best_model = model.state_dict()  # Save the model state
+                    patience_counter = 0 # Reset patience counter
+                else:
+                    patience_counter += 1 # Increment patience counter
             else:
-                patience_counter += 1 # Increment patience counter
+                # Check if this model has the lowest validation loss
+                if val_loss < lowest:
+                    logging.info(f'New lowest loss: {val_loss}')
+                    lowest = val_loss
+                    best_model = model.state_dict()  # Save the model state
+                    patience_counter = 0 # Reset patience counter
+                else:
+                    patience_counter += 1 # Increment patience counter
 
             # Check if patience has been exhausted
             if patience_counter >= config['training']['patience']:

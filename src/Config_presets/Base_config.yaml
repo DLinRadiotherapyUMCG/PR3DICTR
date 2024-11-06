@@ -4,6 +4,7 @@ general:
   firstRun: false
   trialNumber: "Trial_?"
   patientGroup: 0
+  optimize: "loss"
   resultsCurrentDirectory: ""
   error_ignore: true
   endpointRatios: []

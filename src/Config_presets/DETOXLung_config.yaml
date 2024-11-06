@@ -4,6 +4,7 @@ general:
   firstRun: false
   trialNumber: "Trial_?"
   patientGroup: 0
+  optimize: "loss"
   resultsCurrentDirectory: ""
   error_ignore: true
   endpointRatios: []
@@ -14,11 +15,11 @@ columns:
   label: ["RP_OneYear"]
   clinical_features: ["SmokerActive","SmokerStopped", "Gender",
   "Age","ChemoRad", "ImmunoTherapy",
-  "OperationPerformed"] #, "T_Stage","N_Stage","M_Stage"]
+  "OperationPerformed","SmokingUntilRecently","Pulmonary_Comorbidity", "RT_FractionDose"] #, "T_Stage","N_Stage","M_Stage"]
   logistic_regression_features: ['']
 
 paths:
-  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_10_22/"
+  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_11_01/"
   images: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ImageData/"
   output: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
   results: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
@@ -134,13 +135,13 @@ data:
       affine:
         Isenabled: True
         prob: 0.97
-        translate_max: 15   # pixels
+        translate_max: 8   # pixels
         scale_max: 0.01
         z_scale: -0.2
       rotate:
         Isenabled: True
         prob: 0.97
-        max: 160 # degree
+        max: 120 # degree
       noise:
         Isenabled: False
         prob: 0.2
@@ -184,7 +185,7 @@ visualization:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_25'
+  ProjectName: 'DETOX-Lung_Project_27'
   WandB:
     IsEnabled: True
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
@@ -192,8 +193,8 @@ hyperparam_tuning:
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: "DETOX-Lung_Project_25"
-    n_trials: 15
+    studyName: "DETOX-Lung_Project_27"
+    n_trials: 60
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:
@@ -202,18 +203,23 @@ hyperparam_tuning:
       type: 'categorical'
       location: ["model",'model_name']
       options: ['resnet']
-    #Model_Depth:
-    #  name: "Model_Depth"
-    #  location: ["model","resnet","model_depth"]
-    #  type: 'categorical'
-    #  options: [10,18,34]
+    Model_Depth:
+      name: "Model_Depth"
+      location: ["model","resnet","model_depth"]
+      type: 'categorical'
+      options: [10,18,34]
     Resampling_ratio:
       name: 'Resampling_ratio'
       type: 'float'
       location: ["data","equalizer","ratio"]  
       min: 0.5
       max: 0.5
-
+    Clin_DropOut:
+      name: 'Clin_Dropout'
+      type: 'float'
+      location: ["model","clinical_variables_dropout_p"]  
+      min: 0.15
+      max: 0.35
     Weight_decay: 
       name: 'Weight_Decay'
       type: 'float'
@@ -225,7 +231,7 @@ hyperparam_tuning:
       type: 'float'
       location: ['training','optimizer','learning_rate']
       min: 0.00005
-      max: 0.01
+      max: 0.003
     optimizer:
       name: "Optimizer" 
       type: 'categorical'
@@ -297,14 +303,14 @@ hyperparam_tuning:
     #  step: 1
     #  log: False
 
-    # n_clinical_down_blocks:
-    #   type: 'int'
-    #   name: 'n_clinical_down_blocks'
-    #   location: ['model','n_clinical_down_blocks']
-    #   min: 0
-    #   max: 2
-    #   step: 1
-    #   log: False
+    n_clinical_down_blocks:
+      type: 'int'
+      name: 'n_clinical_down_blocks'
+      location: ['model','n_clinical_down_blocks']
+      min: 0
+      max: 3
+      step: 1
+      log: False
   
   # Complex hyperparams: Initialise every layer of the Neural Network with given ranges
   derived:
@@ -349,6 +355,14 @@ hyperparam_tuning:
         min: 8
         max: 32
         step: 8
+        log: False
+      clin_pos:
+        type: 'int'
+        name: 'clin_pos'
+        location: ['model','clinical_variables_position']
+        min: 0
+        max: 3
+        step: 1
         log: False
       
         
