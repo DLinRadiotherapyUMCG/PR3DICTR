@@ -30,8 +30,13 @@ class MultiToxOutputHead(torch.nn.Module):
         self.linear_units_endpoint = config['model']['linear_units_endpoint']
         self.clinical_variables_position = config['model']['clinical_variables_position']
         self.seq = config['model']['sequential']
+        self.time_position = config['model']['time_position']
+        self.all_prev_timepoint = config['model']['all_prev_timepoint']
+        self.all_time_positions = config['model']['all_time_positions']
+        # self.seq_freeze = config['model']['freeze_seq']
         self.num_ohe_classes = config['model']['num_ohe_classes'] 
         self.variance_logit_head = False
+        self.end_point_lin_layer_pos = [1,4,6]
 
         if self.clinical_variables_position >= 0 and self.clinical_variables_linear_units is not None and self.linear_units is None:
             raise ValueError('clinical_variables_position >= 0, clinical_variables_linear_units is None, and '
@@ -53,11 +58,16 @@ class MultiToxOutputHead(torch.nn.Module):
         #   self.shared_fc_layers
         #   self.n_sublayers_per_linear_layer
 
-        self._make_non_shared_endpoint_fc_layers()
+        # self._make_non_shared_endpoint_fc_layers()
         # makes:
         #   self.non_shared_endpoint_fc_layers    
-
-
+        if self.seq:
+            self._make_sequential_output_head()
+        else:
+            self._make_non_shared_endpoint_fc_layers()
+        # makes:
+        #   self.non_shared_endpoint_fc_layers   
+        
 
     def forward(self, x, features, vectorize=False):
         x_dict = dict()
@@ -92,8 +102,10 @@ class MultiToxOutputHead(torch.nn.Module):
         # Clone tensor (preserving the gradient)
         
         
+        # Sequential model, i.e. feeding previous predictions into future predictions
         if self.seq:
             for i in range(len(self.endpoint_list)):
+                # First prediction, therefor can't use any previous predictions
                 if i == 0:
                     inp = x.clone()
                     x_dict[self.endpoint_list[i]] = inp.clone()
@@ -101,10 +113,30 @@ class MultiToxOutputHead(torch.nn.Module):
                         x_dict[self.endpoint_list[i]] = layer(x_dict[self.endpoint_list[i]])
 
                 else:
-                    inp = torch.cat([inp,x_dict[self.endpoint_list[i-1]]],dim=1)
-                    x_dict[self.endpoint_list[i]] = inp.clone()
-                    for layer in self.endpoint_heads[self.endpoint_list[i]]:
-                        x_dict[self.endpoint_list[i]] = layer(x_dict[self.endpoint_list[i]])
+                    # if self.time_position == 1 or self.all_time_positions:
+                    #     if self.all_prev_timepoint:
+                    #         inptime = torch.cat([inp,torch.cat([x_dict[endpoint] for endpoint in self.endpoint_list[:i]], dim=1)],dim=1)
+                    #     else:    
+                    #         inptime = torch.cat([inp,x_dict[self.endpoint_list[i-1]]],dim=1)
+                    # else:
+                    #     inptime = inp.clone()
+                                  
+                    x_dict[self.endpoint_list[i]] = inp.clone() # initialize the input to the first layer of the endpoint specific linear layers
+                    
+                    # Before optional position of the time point inject
+                    # for layer in self.endpoint_heads[self.endpoint_list[i]]:
+                    #     x_dict[self.endpoint_list[i]] = layer(x_dict[self.endpoint_list[i]])
+                    
+                    for ii, layer in enumerate(self.endpoint_heads[self.endpoint_list[i]]):
+                        if ((ii == self.end_point_lin_layer_pos[self.time_position - 2]) and not (self.time_position == 1)) or (self.all_time_positions and ii in self.end_point_lin_layer_pos):
+                            if self.all_prev_timepoint:
+                                x_dict[self.endpoint_list[i]] = torch.cat([x_dict[self.endpoint_list[i]],torch.cat([x_dict[endpoint] for endpoint in self.endpoint_list[:i]], dim=1)],dim = 1) # gets all previous predictions
+                            else:
+                                x_dict[self.endpoint_list[i]] = torch.cat([x_dict[self.endpoint_list[i]],x_dict[self.endpoint_list[i-1]]],dim = 1) # gets the last prediction
+                        
+                        x_dict[self.endpoint_list[i]] = layer(x_dict[self.endpoint_list[i]]) 
+
+        # Regular (multi)-model with independend 
         else:    
             for endpoint in self.endpoint_list:
                 x_dict[endpoint] = x.clone()
@@ -176,6 +208,7 @@ class MultiToxOutputHead(torch.nn.Module):
 
         if self.n_features > 0:
             self.n_sublayers_per_linear_layer = len(self.shared_fc_layers) / (len(self.linear_units))
+ 
 
     def _make_non_shared_endpoint_fc_layers(self):
         # Initialize linear layers (NON-SHARED, endpoint specific)
@@ -208,21 +241,34 @@ class MultiToxOutputHead(torch.nn.Module):
             linear_layers_endpoint_dict_i[endpoint] = torch.nn.ModuleList()
         self.endpoint_heads = torch.nn.ModuleDict(linear_layers_endpoint_dict_i)
 
-        for endpoint in self.endpoint_list:
+        
+        for e_num,endpoint in enumerate(self.endpoint_list):
             # loop through the non-shared linear layers
             for i in range(len(self.linear_units_endpoint)):
+                if e_num > 0:
+                    if i == self.time_position - 2 or self.all_time_positions:
+                        if self.all_prev_timepoint:
+                            additional_units = e_num
+                        else:
+                            additional_units = 1
+                    else:
+                        additional_units = 0
+                else:
+                    additional_units = 0
+                    
                 if self.dropout_p > 0:
                     self.endpoint_heads[endpoint].add_module(f'Endpoint_Dropout_{i+1}', torch.nn.Dropout(self.dropout_p))
                 if i == 0:
                     self.endpoint_heads[endpoint].add_module(f'Endpoint_Linear_{i+1}',
-                                                    torch.nn.LazyLinear(out_features=self.linear_units_endpoint[i] + i, bias=self.use_bias))
+                                                    torch.nn.LazyLinear(out_features=self.linear_units_endpoint[i], bias=self.use_bias))
                 else:
                     self.endpoint_heads[endpoint].add_module(f'Endpoint_Linear_{i+1}',
-                                         torch.nn.Linear(in_features=self.linear_units_endpoint[i-1] + i,
-                                                         out_features=self.linear_units_endpoint[i] + i, bias=self.use_bias))
+                                         torch.nn.Linear(in_features=self.linear_units_endpoint[i-1] + additional_units,
+                                                         out_features=self.linear_units_endpoint[i], bias=self.use_bias))
                 self.endpoint_heads[endpoint].add_module(f'Endpoint_LReLU_{i+1}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
             # output layer/head for this toxicity endpoint
+            
             self.endpoint_heads[endpoint].add_module('Output_{}'.format(endpoint),
                                 torch.nn.LazyLinear(out_features=self.num_ohe_classes, bias=self.use_bias))
         
-        
+

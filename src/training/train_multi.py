@@ -16,10 +16,8 @@ from src.evaluation.calculate_auc import calculate_auc_multi
 import pandas as pd
 import numpy as np
 
-
 def sigmoid(x):
     return 1/(1+np.exp(-x))
-
 
 def train(config, train_loader, val_loader, metadata, hyperClass = None):
     """
@@ -42,12 +40,13 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
     logging.info('Getting model')
     model = get_classification_model(config, metadata)
     model.to(device=DEVICE)
+    print(model.parameters())
     # wandb.watch(model, log_freq=100)
 
     # Get loss function, optimizer, and scheduler
     loss_function = get_loss_function(config)
     optimizer = get_optimizer(config, model)
-    scheduler = get_scheduler(config, optimizer)
+    # scheduler = get_scheduler(config, optimizer)
 
     # Initialize the best model and lowest validation loss
     best_model = None
@@ -103,7 +102,7 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
             optimizer.step()
 
             # Step the scheduler
-            scheduler.step(epoch + (i + 1) / len(train_loader))
+            # scheduler.step(epoch + (i + 1) / len(train_loader))
 
             num_batches += 1      
 
@@ -164,13 +163,10 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
     # Log highest AUC
     # wandb.log({'train/highest_auc': highest_auc})
     # logging.info('Finished training')
-
-
-
+    
     model.load_state_dict(best_model)
 
     return model
-
 
 def validate(loss_function, model, val_loader, config):
     model.eval()

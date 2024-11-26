@@ -1,0 +1,55 @@
+seed: 5
+
+columns:
+  label: "Xerostomia_M06"
+  clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
+  logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
+
+paths:
+  csv: "C:/Users/Luuk/Desktop/SIMS multi-time/SIMS/bagged_datasets/xerostomia_m06"
+  images: "C:/Users/Luuk/Desktop/SIMS multi-time/SIMS/dataset/patients/"
+  output: "C:/Users/Luuk/Desktop/SIMS multi-time/SIMS//hnc-ensemble-master/results/"
+  results: "C:/Users/Luuk/Desktop/SIMS multi-time/SIMS//hnc-ensemble-master/results/"
+
+model:
+  model_name: "dcnn_lrelu"
+  num_classes: 1
+  filters: [8, 8, 16, 16, 32]
+  kernel_sizes: [7, 5, 4, 3, 3]
+  strides: [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]]
+  pad_value: 0
+  lrelu_alpha: 0.1
+  dropout_p: [0.06087816611628816]
+  perform_pooling: false
+  linear_units: [16]
+  clinical_variables_position: 0
+  clinical_variables_linear_units: []
+  clinical_variables_dropout_p: [0.3581947628028867]
+  use_bias: true
+
+augmentation:
+  prob: 0.5
+  strength: 1
+
+training:
+  max_epochs: 20
+  batch_size: 8
+  validation_interval: 1
+  patience: 10
+  optimizer:
+    name: "Adam"
+    learning_rate: 0.0001
+    weight_decay: 0.05
+  loss:
+    name: "bce-logit"
+    weight: [1]
+    reduction: "mean"
+  scheduler:
+    name: "cosine"
+    T_0: 40
+    T_mult: 1
+    eta_min: 0.00000001
+
+visualizations:
+  calibration:
+    num_bins: 10

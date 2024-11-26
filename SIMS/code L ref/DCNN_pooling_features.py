@@ -1,0 +1,361 @@
+"""
+Same as DCNN, but where LeakyReLU activation has been applied whenever possible.
+"""
+import math
+import torch
+from layers import conv3d_padding_same
+# from models.linear_layers import MultiToxOutputHead
+
+
+class conv_block(torch.nn.Module):
+    def __init__(self, in_channels, filters, kernel_size, strides, pad_value, lrelu_alpha, use_activation,
+                 normalization='batch', pooling='max', pooling_size=2, use_bias=False):
+        super(conv_block, self).__init__()
+
+        if ((type(kernel_size) == list) or (type(kernel_size) == tuple)) and (len(kernel_size) == 3):
+            kernel_depth = kernel_size[0]
+            kernel_height = kernel_size[1]
+            kernel_width = kernel_size[2]
+        elif type(kernel_size) == int:
+            kernel_depth = kernel_size
+            kernel_height = kernel_size
+            kernel_width = kernel_size
+        else:
+            raise ValueError("Kernel_size is invalid:", kernel_size)
+
+        self.pad = conv3d_padding_same(depth=kernel_depth, height=kernel_height, width=kernel_width,
+                                       pad_value=pad_value)
+        self.conv1 = torch.nn.Conv3d(in_channels=in_channels, out_channels=filters, kernel_size=kernel_size,
+                                     stride=strides, bias=use_bias)
+        self.activation1 = torch.nn.LeakyReLU(negative_slope=lrelu_alpha)
+        self.conv2 = torch.nn.Conv3d(in_channels=filters, out_channels=filters, kernel_size=kernel_size, stride=1,
+                                      bias=use_bias)
+        self.use_activation = use_activation
+        self.activation2 = torch.nn.LeakyReLU(negative_slope=lrelu_alpha)
+
+        if pooling.lower() == 'max':
+            self.pool = torch.nn.MaxPool3d(kernel_size=(pooling_size, pooling_size, pooling_size))
+        elif pooling.lower() == 'avg' or 'average':
+            self.pool = torch.nn.AvgPool3d(kernel_size=(pooling_size, pooling_size, pooling_size))
+        elif pooling.lower() == 'none' or pooling == None:
+            self.pool = None
+        else:
+            raise ValueError("Pooling is invalid:", pooling)
+        
+        if normalization.lower() == "instance":
+            self.norm1 = torch.nn.InstanceNorm3d(filters)
+            self.norm2 = torch.nn.InstanceNorm3d(filters)
+        elif normalization.lower() == "batch":
+            self.norm1 = torch.nn.BatchNorm3d(filters)
+            self.norm2 = torch.nn.BatchNorm3d(filters)
+        elif normalization.lower() == ("none" or None):
+            self.norm1 = None
+            self.norm2 = None
+        else:
+            raise ValueError("Normalization is invalid:", normalization, "\n   CHOOSE: 'instance', 'batch' or None")
+
+    def forward(self, x):
+        x = self.pad(x)
+        x = self.conv1(x)
+
+        x = self.norm1(x)
+        
+        if self.pool is not None:
+            x = self.pool(x)
+
+        if self.use_activation:
+            x = self.activation1(x)
+
+        x = self.pad(x)
+
+        x = self.conv2(x)
+        x = self.norm2(x)
+
+        if self.use_activation:
+            x = self.activation2(x)
+
+        return x
+
+
+
+class small_conv_block(torch.nn.Module):
+    def __init__(self, in_channels, filters, kernel_size, strides, pad_value, lrelu_alpha, use_activation, normalization='batch',
+                 pooling='max', pooling_size=2, use_bias=False):
+        super(small_conv_block, self).__init__()
+
+        if ((type(kernel_size) == list) or (type(kernel_size) == tuple)) and (len(kernel_size) == 3):
+            kernel_depth = kernel_size[0]
+            kernel_height = kernel_size[1]
+            kernel_width = kernel_size[2]
+        elif type(kernel_size) == int:
+            kernel_depth = kernel_size
+            kernel_height = kernel_size
+            kernel_width = kernel_size
+        else:
+            raise ValueError("Kernel_size is invalid:", kernel_size)
+
+        self.pad = conv3d_padding_same(depth=kernel_depth, height=kernel_height, width=kernel_width,
+                                       pad_value=pad_value)
+        self.conv1 = torch.nn.Conv3d(in_channels=in_channels, out_channels=filters, kernel_size=kernel_size,
+                                     stride=strides, bias=use_bias)
+        
+        self.activation1 = torch.nn.LeakyReLU(negative_slope=lrelu_alpha)
+        
+        self.use_activation = use_activation
+
+        if normalization.lower() == "instance":
+            self.norm1 = torch.nn.InstanceNorm3d(filters)
+        elif normalization.lower() == "batch":
+            self.norm1 = torch.nn.BatchNorm3d(filters)
+        elif normalization.lower() == ("none" or None):
+            self.norm1 = None
+        else:
+            raise ValueError("Normalization is invalid:", normalization, "\n   CHOOSE: 'instance', 'batch' or None")
+        
+
+        if pooling.lower() == 'max':
+            self.pool = torch.nn.MaxPool3d(kernel_size=(pooling_size, pooling_size, pooling_size))
+        elif pooling.lower() == 'avg' or 'average':
+            self.pool = torch.nn.AvgPool3d(kernel_size=(pooling_size, pooling_size, pooling_size))
+        elif pooling.lower() == 'none' or pooling == None:
+            self.pool = None
+        else:
+            raise ValueError("Pooling is invalid:", pooling)
+
+    def forward(self, x):
+        x = self.pad(x)
+        x = self.conv1(x)
+
+        x = self.norm1(x)
+        
+        if self.pool is not None:
+            x = self.pool(x)
+
+        if self.use_activation:
+            x = self.activation1(x)
+
+        return x
+
+class Output(torch.nn.Linear):
+    def __init__(self, in_features, out_features, bias=True):
+        super(Output, self).__init__(in_features=in_features, out_features=out_features, bias=bias)
+
+# def output_head_def(x,features,n_features = 0, clinical_variables_linear_units = None, clinical_variables_dropout_p = None,
+#                     use_bias = False, lrelu_alpha = .1,dropout_p = [0], clinical_variables_position = None,
+#                     num_classes = 2,n_down_blocks = 5, filters = [8, 8, 16, 16, 32],linear_units = [16]):
+#     depth,height,width = 96,96,96
+#     end_depth = math.ceil(depth / (2 ** n_down_blocks))
+#     end_height = math.ceil(height / (2 ** n_down_blocks))
+#     end_width = math.ceil(width / (2 ** n_down_blocks))
+    
+    
+#     # Initialize MLP layers for clinical variables
+#     if (n_features > 0) and (clinical_variables_linear_units is not None):
+#         clinical_variables_layers = torch.nn.ModuleList()
+#         clinical_variables_linear_units = [n_features] + clinical_variables_linear_units
+#         for i in range(len(clinical_variables_linear_units) - 1):
+#             clinical_variables_layers.add_module(
+#                 'dropout%s' % i,
+#                 torch.nn.Dropout(clinical_variables_dropout_p[i])
+#             )
+#             clinical_variables_layers.add_module(
+#                 'linear%s' % i,
+#                 torch.nn.Linear(in_features=clinical_variables_linear_units[i],
+#                                 out_features=clinical_variables_linear_units[i + 1],
+#                                 bias=use_bias)
+#             )
+#             clinical_variables_layers.add_module('lrelu%s' % i, torch.nn.LeakyReLU(negative_slope=lrelu_alpha))
+#     else:
+#         clinical_variables_linear_units = [n_features]
+
+#     # Initialize linear layers
+#     linear_layers = torch.nn.ModuleList()
+#     linear_units = [end_depth * end_height * end_width * filters[-1]] + linear_units
+#     for i in range(len(linear_units) - 1):
+#         linear_layers.add_module('dropout%s' % i, torch.nn.Dropout(dropout_p[i]))
+#         linear_layers.add_module('linear%s' % i,
+#                                       torch.nn.Linear(in_features=linear_units[i], out_features=linear_units[i+1],
+#                                                       bias=use_bias))
+#         linear_layers.add_module('lrelu%s' % i, torch.nn.LeakyReLU(negative_slope=lrelu_alpha))
+#     n_sublayers_per_linear_layer = len(linear_layers) / (len(linear_units) - 1)
+
+#     # Initialize output layer
+#     if (n_features > 0) and (clinical_variables_linear_units is not None):
+#         # Add additional input units to the output layer if MLP output is concatenated at the last linear layer
+#         if clinical_variables_position + 1 == len(linear_units) - 1:
+#             out_layer = Output(in_features=linear_units[-1] + clinical_variables_linear_units[-1],
+#                                     out_features=num_classes, bias=use_bias)
+#         else:
+#             out_layer = Output(in_features=linear_units[-1], out_features=num_classes, bias=use_bias)
+#     else:
+#         out_layer = Output(in_features=linear_units[-1] + n_features, out_features=num_classes,
+#                                 bias=use_bias)
+#     x = out_layer(x)
+#     return x
+
+class output_head_def(torch.nn.Module):
+    
+    def __init__(self,n_features = 0, clinical_variables_linear_units = None, clinical_variables_dropout_p = None,
+                        use_bias = False, lrelu_alpha = .1,dropout_p = [0], clinical_variables_position = None,
+                        num_classes = 1,n_down_blocks = 5, filters = [8, 8, 16, 16, 32],linear_units = [16]
+                        ,depth= 96, width = 96, height = 96):
+        
+        super(output_head_def,self).__init__()
+        self.n_features = n_features
+        
+        
+        end_depth = math.ceil(depth / (2 ** n_down_blocks))
+        end_height = math.ceil(height / (2 ** n_down_blocks))
+        end_width = math.ceil(width / (2 ** n_down_blocks))
+        # Initialize MLP layers for clinical variables
+        if (self.n_features > 0) and (clinical_variables_linear_units is not None):
+            clinical_variables_layers = torch.nn.ModuleList()
+            clinical_variables_linear_units = [self.n_features] + clinical_variables_linear_units
+            for i in range(len(clinical_variables_linear_units) - 1):
+                clinical_variables_layers.add_module(
+                    'dropout%s' % i,
+                    torch.nn.Dropout(clinical_variables_dropout_p[i])
+                )
+                clinical_variables_layers.add_module(
+                    'linear%s' % i,
+                    torch.nn.Linear(in_features=clinical_variables_linear_units[i],
+                                    out_features=clinical_variables_linear_units[i + 1],
+                                    bias=use_bias)
+                )
+                clinical_variables_layers.add_module('lrelu%s' % i, torch.nn.LeakyReLU(negative_slope=lrelu_alpha))
+        else:
+            clinical_variables_linear_units = [self.n_features]
+      
+        # Initialize linear layers
+        self.linear_layers = torch.nn.ModuleList()
+        linear_units = [end_depth * end_height * end_width * filters[-1]] + linear_units
+        for i in range(len(linear_units) - 1):
+            self.linear_layers.add_module('dropout%s' % i, torch.nn.Dropout(dropout_p[i]))
+            self.linear_layers.add_module('linear%s' % i,
+                                          torch.nn.Linear(in_features=linear_units[i], out_features=linear_units[i+1],
+                                                          bias=use_bias))
+            self.linear_layers.add_module('lrelu%s' % i, torch.nn.LeakyReLU(negative_slope=lrelu_alpha))
+        self.n_sublayers_per_linear_layer = len(self.linear_layers) / (len(linear_units) - 1)
+      
+        # Initialize output layer
+        if (self.n_features > 0) and (clinical_variables_linear_units is not None):
+            # Add additional input units to the output layer if MLP output is concatenated at the last linear layer
+            if clinical_variables_position + 1 == len(linear_units) - 1:
+                self.out_layer = Output(in_features=linear_units[-1] + clinical_variables_linear_units[-1],
+                                        out_features=num_classes, bias=use_bias)
+            else:
+                self.out_layer = Output(in_features=linear_units[-1], out_features=num_classes, bias=use_bias)
+        else:
+            self.out_layer = Output(in_features=linear_units[-1] +self.n_features, out_features=num_classes,
+                                    bias=use_bias)
+    
+    
+    def forward(self, x,features):
+        # Linear layers
+        for i, layer in enumerate(self.linear_layers):
+            x = layer(x)
+            if (self.n_features > 0) and (
+                    (i + 1) / self.n_sublayers_per_linear_layer == self.clinical_variables_position + 1):
+                # Add features
+                x = torch.cat([x, features], dim=1)
+
+        # Output
+        x = self.out_layer(x)
+        
+        return x
+    
+    
+
+
+
+class DCNN_Pooling(torch.nn.Module):
+    """
+    Deep CNN that used pooling (and not stride) to reduce the feature map size.
+    """
+
+    def __init__(self,
+                 n_input_channels, n_features, filters,
+                 kernel_sizes, pad_value, lrelu_alpha, strides = [],
+                 pooling= 'max', n_down_blocks = 5,              
+                 use_bias=False,
+                 conv_block_layers = 1,
+                 pooling_size = 2,
+                 normalization = 'batch',linear_units = [16],clinical_variables_linear_units = [16], clinical_variables_position = 1):
+        super(DCNN_Pooling, self).__init__()
+        self.n_features = n_features
+
+        # Initialize conv blocks
+        in_channels = [n_input_channels] + list(filters[:-1])
+        self.conv_blocks = torch.nn.ModuleList()
+        pooling_size = pooling_size
+        normalization = normalization
+
+        if conv_block_layers == 1: # if the number of layers per block == 1, use the smaller conv_block
+            for i in range(len(in_channels)):
+                use_activation = True
+                self.conv_blocks.add_module('conv_block%s' % i,
+                                            small_conv_block(in_channels=in_channels[i], filters=filters[i],
+                                                    kernel_size=kernel_sizes[i], strides=strides[i],
+                                                    pad_value=pad_value, lrelu_alpha=lrelu_alpha,
+                                                    use_activation=use_activation, normalization=normalization, 
+                                                    pooling=pooling, pooling_size=pooling_size, use_bias=use_bias))
+        else: # else, 2 layers per block
+            for i in range(len(in_channels)):
+                use_activation = True
+                self.conv_blocks.add_module('conv_block%s' % i,
+                                            conv_block(in_channels=in_channels[i], filters=filters[i],
+                                                    kernel_size=kernel_sizes[i], strides=strides[i],
+                                                    pad_value=pad_value, lrelu_alpha=lrelu_alpha, 
+                                                    use_activation=use_activation, normalization=normalization,
+                                                    pooling=pooling, pooling_size=pooling_size,  use_bias=use_bias))
+
+        # Initialize linear layers
+        self.flatten = torch.nn.Flatten()
+
+        dropout_p = []
+        for i in range(len(linear_units)+1):
+            dropout_p.append(0)
+
+
+        self.output_head = output_head_def(n_features = n_features, clinical_variables_linear_units = clinical_variables_linear_units, clinical_variables_dropout_p = None,
+                            use_bias = False, lrelu_alpha = lrelu_alpha,dropout_p = dropout_p, clinical_variables_position = clinical_variables_position,
+                            num_classes = 2,n_down_blocks = n_down_blocks, filters = filters,linear_units = linear_units)
+
+
+    def forward(self, x, features):
+        """
+        Forward pass of the full model
+        """
+        # DCNN backbone
+        x = self.forward_backbone(x, features)
+
+        # MLP
+        x_dict = self.forward_linear_layers(x, features)
+
+        return x_dict
+    
+    def forward_backbone(self, x, features):  # features are also passed to this function, just for consistency of the forward functions
+        """
+        Does a forward pass of only the backbone. Extracted features are flattened
+        """
+        for block in self.conv_blocks:
+            x = block(x)
+
+        x = self.flatten(x)
+
+        return x
+    
+    def forward_linear_layers(self, x, features):
+        """
+        Does a forward pass of only the linear layers (the decision layers)
+        Includes the entire output head (clinical, shared and non-shared layers)
+        """
+
+        
+        x_dict = self.output_head(x, features)
+
+        return x_dict
+
+        
+
+

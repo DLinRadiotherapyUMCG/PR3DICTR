@@ -31,7 +31,7 @@ def confusion_matrix_multi(nameFile, output, targets, config):
         #    pass
     return
 
-def confusion_matrix_bin(fileName, true, pred,config, show = False):
+def confusion_matrix_bin(true, pred,config, label, show = False):
     
     threshold = config['visualization']['confusion_matrix']['threshold']
     
@@ -47,8 +47,9 @@ def confusion_matrix_bin(fileName, true, pred,config, show = False):
 
     cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = [False, True])
     cm_display.plot()
+    plt.title('Confusion matrix ' + label)
     if(show == False):
-        plt.savefig(config['paths']['results'] + fileName + '_confusion_matrix.png')
+        plt.savefig(config['paths']['results'] + label + '_confusion_matrix.png')
         plt.clf()
         plt.close('all')
     

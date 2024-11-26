@@ -74,9 +74,12 @@ model:
   normalization: 'batch'
   conv_block_layers: 1
   num_ohe_classes: 1
-  n_linear_units_endpoint: 1
-  linear_units_endpoint: [64]
-  sequential: true # determines if the predictions are made sequentially (in order of given labels)
+  n_linear_units_endpoint: 2
+  linear_units_endpoint: [64,64]
+  sequential: true # determines if the predictions are made sequentially (in order of given labels) 
+  time_position: 3
+  all_prev_timepoint: true
+  all_time_positions: true
 
 data:
   trainfile: 'train_full_dys.csv'
@@ -157,7 +160,7 @@ visualizations:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'Resnet_depth_optimization_modeltype3'
+  ProjectName: 'Resnet_depth_optimization_modeltype3_2a_depth'
   WandB:
     IsEnabled: true
     API_Key: "7b92563a48d5645d853fe913d03674ec7337ff47"
@@ -165,7 +168,7 @@ hyperparam_tuning:
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: testWandB_Disabled #"DETOX-Lung_Project_11"
+    studyName: 'Resnet_depth_optimization_modeltype3_2a_depth' #"DETOX-Lung_Project_11"
     n_trials: 30
 
   # ----  Custom Params -------
@@ -175,7 +178,7 @@ hyperparam_tuning:
       name: 'Learning_rate'
       type: 'float'
       location: ['training','optimizer','learning_rate']
-      min: 0.0004
+      min: 0.00001
       max: 0.001
     optimizer:
       name: "Optimizer" 
@@ -206,7 +209,7 @@ hyperparam_tuning:
     resnet_depth:
       name: resnet_depth
       type: 'categorical'
-      location: ["model","model_depth"]
+      location: ["model",'resnet',"model_depth"]
       options: [10,18,34,50]
       
     n_linear_down_blocks:
@@ -217,15 +220,16 @@ hyperparam_tuning:
       max: 3
       step: 1
       log: False
-         
+
     n_linear_units_endpoint:
       type: 'int'
       name: 'n_linear_units_endpoint'
       location: ['model','n_linear_units_endpoint']
-      min: 1
-      max: 3
+      min: 2
+      max: 2
       step: 1
       log: False
+         
 
   derived:
     n_linear_down_blocks:

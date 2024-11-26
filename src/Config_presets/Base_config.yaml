@@ -189,9 +189,9 @@ CITOR:
     label: "Dysphagia_w06"
     models:
       model1:
-        features: ['OralCavity_Ext_meandose','PCM_Med_meandose','PCM_Inf_meandose','DYSFAGIE_UMCGshort_W01_Grade2', 'DYSFAGIE_UMCGshort_W01_Grade3_4','Loctum_OC','Loctum_Pharynx','Loctum_Larynx']
+        features: ['OralCavity_Ext_meandose','PCM_Med_meandose','PCM_Inf_meandose','Dysphagia_W01_Grade2','Dysphagia_W01_Grade3_4','Loctum2_Pharynx','Loctum2_Larynx']
       model2:
-        features: ['PCM_Sup_meandose', 'PCM_Med_meandose', 'PCM_Inf_meandose', 'DYSFAGIE_UMCGshort_W01_Grade2', 'DYSFAGIE_UMCGshort_W01_Grade3_4', 'Loctum_OC', 'Loctum_Pharynx', 'Loctum_Larynx'] 
+        features: ['PCM_Sup_meandose', 'PCM_Med_meandose', 'PCM_Inf_meandose','Dysphagia_W01_Grade2','Dysphagia_W01_Grade3_4','Loctum2_Pharynx','Loctum2_Larynx'] 
   xerostomia_late:
     label: 'Xerostomia_M06'
     models:

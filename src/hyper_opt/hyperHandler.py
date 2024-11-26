@@ -3,7 +3,7 @@ import optuna
 import logging
 
 from src.config_presets.tools.get_config import get_config
-from src.dataset.load_dataset import load_dataset, load_dataset_total
+from src.dataset.load_dataset import load_dataset_total
 from src.models.tools.save_model import save_model, save_config, save_dataset, save_dataset_summary
 from src.training.train_multi import train, validate
 from src.utils.logging.logging import setup_logging
@@ -138,21 +138,21 @@ def UpdateTrial(hyperClass, trial, config):
         val_auc_col.append(val_auc)
 
         # Test dataset check
-        try:
-            if(testDataset_col[i].df.shape[0] != 0):
-                test_loader = DataLoader(testDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
-                                         num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
-                test_loss, test_auc = validate(loss_function, model, test_loader, config)
-                savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_loss.txt")
-                f = open(savePath,"w")
-                f.close()
-                np.savetxt(savePath,np.array(test_loss))
-                savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_auc.txt")
-                f = open(savePath,"w")
-                f.close()
-                np.savetxt(savePath,np.array(test_auc))
-        except Exception as e:
-            logging.info(f"Could not validate the test dataset with error: {e}")
+        # try:
+        #     if(testDataset_col[0].df.shape[0] != 0):
+        #         test_loader = DataLoader(testDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
+        #                                  num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
+        #         test_loss, test_auc = validate(loss_function, model, test_loader, config)
+        #         savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_loss.txt")
+        #         f = open(savePath,"w")
+        #         f.close()
+        #         np.savetxt(savePath,np.array(test_loss))
+        #         savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_auc.txt")
+        #         f = open(savePath,"w")
+        #         f.close()
+        #         np.savetxt(savePath,np.array(test_auc))
+        # except Exception as e:
+        #     logging.info(f"Could not validate the test dataset with error: {e}")
 
         # Save model
         try:
@@ -164,8 +164,8 @@ def UpdateTrial(hyperClass, trial, config):
         # Save Datasets
         save_dataset(config,trainDataset_col[i],"train_Dataset")
         save_dataset(config,valDataset_col[i],"validation_Dataset")
-        save_dataset(config,testDataset_col[i],"test_Dataset")
-        save_dataset_summary(config,trainDataset_col[i],valDataset_col[i],testDataset_col[i])
+        save_dataset(config,testDataset_col[0],"test_Dataset")
+        save_dataset_summary(config,trainDataset_col[i],valDataset_col[i],testDataset_col[0])
 
         logging.info("Information about the val_auc_array:")
         logging.info(val_auc_col)
@@ -174,10 +174,10 @@ def UpdateTrial(hyperClass, trial, config):
         #    break
 
         # Check if run needs to be aborted
-        if(config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience']*2 + 2)) and i == 0):
-            if(len(trainDataset_col) > 1):
-                logging.info("Patience exhausted and ignoring K-split datasets")
-            break
+        # if(config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience']*2 + 2)) and i == 0):
+        #     if(len(trainDataset_col) > 1):
+        #         logging.info("Patience exhausted and ignoring K-split datasets")
+        #     break
 
     val_lossMean =  np.mean(val_loss_col)
     if(groupVar != None):

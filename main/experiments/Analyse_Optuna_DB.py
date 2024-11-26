@@ -1,6 +1,6 @@
 import logging
 import os
-
+import src
 import wandb
 from src.config_presets.tools.get_config import get_config
 from src.dataset.load_dataset import load_dataset, load_dataset_total

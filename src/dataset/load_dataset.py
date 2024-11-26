@@ -6,40 +6,11 @@ import numpy as np
 
 from torch.utils.data import Dataset
 
-from src.dataset.ToxDataset import HNCDataset, ToxDataset
+from src.dataset.ToxDataset import ToxDataset
 from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
 import pandas as pd
 
 from sklearn.model_selection import StratifiedKFold
-
-def load_dataset(config, csv_path, patient_ids = None, augment= False, split = False, train = True, splitVar = "Split"):
-    """
-    Loads data for a single csv file.
-    :param csv_path:
-    :param config:
-    :param patient_ids:
-    :return: PyTorch Dataset and metadata
-    """    
-    # Create an instance of the HNCDataset
-    dataset = HNCDataset(csv_path, config, patient_ids, augment=augment, 
-                         split = split, train = train, splitVar = splitVar)
-
-    # Get an example input to determine the metadata
-    example_input, _, _ = dataset[0]
-    channels, depth, height, width = example_input.shape
-
-    n_features = len(config['columns']['clinical_features'])
-
-    metadata = {
-        "channels": channels,
-        "depth": depth,
-        "height": height,
-        "width": width,
-        "n_features": n_features,
-    }
-
-    # Return the dataset and the metadata
-    return dataset, metadata
 
 def ValidateImageDataExists(config, df):
     imagePath = config['paths']['images']
@@ -136,19 +107,31 @@ def load_dataset_total(config, patient_ids = None):
     valDataset_Collection = []
     testDataset_Collection = []
     
+    testDataset_Collection.append(ToxDataset(config,testDf))
+    
     if(config["data"]["kFolds"]["isEnabled"]):
        label = mergeDf[config['columns']['label']]
        # Check and validate if KFolds settings are active
-
-    
        indxes = np.arange(len(mergeDf))
-      
+       np.random.seed(config['general']['seed'])
+       np.random.shuffle(indxes)
+       
+       val_tot = int(len(mergeDf)*(1/config['data']['kFolds']['Splits']))
        
        for i in range(config["data"]["kFolds"]["Splits"]):
-           np.random.shuffle(indxes)
-           indx = int(((config["data"]["kFolds"]["Splits"]-1)/config["data"]["kFolds"]["Splits"])*len(mergeDf))
-           trainDf_sel = mergeDf.iloc[indxes[:indx]]
-           valDf_sel = mergeDf.iloc[indxes[indx:]]
+           if i == config["data"]["kFolds"]["Splits"]-1:
+               val_indxes = indxes[val_tot*i:]
+           else:
+               val_indxes = indxes[val_tot*i:val_tot*(i+1)]
+           
+           train_indxes = np.setxor1d(indxes,val_indxes) 
+           
+           valDf_sel = mergeDf.iloc[val_indxes]
+           trainDf_sel = mergeDf.iloc[train_indxes]
+           
+           # indx = int(((config["data"]["kFolds"]["Splits"]-1)/config["data"]["kFolds"]["Splits"])*len(mergeDf))
+           # trainDf_sel = mergeDf.iloc[indxes[:indx]]
+           # valDf_sel = mergeDf.iloc[indxes[indx:]]
     
            if(config['data']['equalizer']['isEnabled']):
                trainDf_sel = label_equalizer(trainDf_sel, config)
@@ -160,16 +143,15 @@ def load_dataset_total(config, patient_ids = None):
           
            trainDataset_Collection.append(ToxDataset(config,trainDf_sel))
            valDataset_Collection.append(ToxDataset(config,valDf_sel))
-           testDataset_Collection.append(ToxDataset(config,testDf))
-           
+
            # if(i == config["data"]["kFolds"]["Iterations"] - 1):
            #      break
     else:   
         # Single train and val dataset
         if(config['data']['equalizer']['isEnabled']):
                 trainDf = label_equalizer(trainDf, config)
-        # if(Complete_SanityCheck(config,[trainDf,valDf,testDf])):
-        #         raise Exception("ABORT: Datasets contain identical patients! NOT ALLOWED!")
+        if(Complete_SanityCheck(config,[trainDf,valDf,testDf])):
+                raise Exception("ABORT: Datasets contain identical patients! NOT ALLOWED!")
         
         if(config['general']['testMode'] and trainDf.shape[0] > 100):
             # Only use 100 patients for training dataset
