@@ -233,6 +233,57 @@ def validate(loss_function, model, val_loader, config):
     return avg_loss, auc
 
 
+
+
+def validate_event(loss_function, model, val_loader, config):
+    model.eval()
+    total_loss = 0.0
+    total_auc = 0.0
+    num_batches = 0
+    num_auc_batches = config['training']['validation']['num_auc_batches']
+    labels = config['columns']['label']
+    
+    
+    out_tot = dict.fromkeys(labels)
+    targets_tot = dict.fromkeys(labels)
+    
+    for label in labels:
+        out_tot[label] = []
+        targets_tot[label] = []
+
+    
+    with torch.no_grad():
+        for i, batch in enumerate(val_loader):
+            logging.debug(f'Validation batch {i}')
+            inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+
+            outputs = model(x=inputs, features=clinical_features)
+            loss = loss_function(outputs, targets)
+
+            total_loss += loss.item()
+            
+            
+            for lab_indx, label in enumerate(labels):
+                out_tot[label] = out_tot[label] + list(outputs[label].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
+                targets_tot[label] = targets_tot[label] + list(targets[:,:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
+            
+            num_batches += 1
+
+    auc = calculate_auc_multi(out_tot,targets_tot,config)
+    model.train()
+
+    avg_loss = total_loss / num_batches
+    
+
+    logging.debug(f'Validation loss: {avg_loss}')
+    # logging.debug(f'Validation AUC: {avg_auc}')
+
+    return avg_loss, auc
+
+
+
+
+
 def move_batch_to_device(batch, device):
     inputs, clinical_features, targets = batch
     inputs = inputs.to(device=device)

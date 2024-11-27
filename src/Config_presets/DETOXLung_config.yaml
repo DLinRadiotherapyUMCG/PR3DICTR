@@ -40,14 +40,14 @@ model:
   ViT:
     vit_patch_size: 8
     vit_dim: 128
-    vit_depth: 4
+    vit_depth: 2
     vit_heads: 8
     vit_mlp_dim: 128
     vit_dim_head: 128
     vit_emb_dropout: 0.2
     vit_dropout_p: 0.2  
   TransRP:
-    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
+    image_encoder: 'resnet' # 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
     clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
     vit_patch_size: [1,1,1]
     vit_dim: 768
@@ -85,8 +85,10 @@ data:
   splitvar: "Split"
   patientVar: 'PatientID'
   stratifyList: ["RP_OneYear", "ImmunoTherapy"]
-  ExcludedVar: [] # "MissingLung"
+  ExcludedVar: []
   ExcludedValue: []
+  imageKeys: ["ct","rtdose","segmentation_map"]
+
 
   dataloader:
     num_workers: 4           # number of workers (cores) to use for data loading in each training batch
@@ -124,10 +126,6 @@ data:
 
   augmentation:
     isEnabled: true
-    #augmentation_list: ['flip','affine','rotate']
-    #prob: 0.9628202570846732
-    #strength: 3.005578369584509
-
     list:
       flip:
         Isenabled: True
@@ -135,16 +133,16 @@ data:
       affine:
         Isenabled: True
         prob: 0.97
-        translate_max: 8   # pixels
-        scale_max: 0.01
+        translate_max: 14   # pixels
+        scale_max: 0.02
         z_scale: -0.2
       rotate:
         Isenabled: True
         prob: 0.97
-        max: 120 # degree
+        max: 150 # degree
       noise:
-        Isenabled: False
-        prob: 0.2
+        Isenabled: True
+        prob: 0.3
         mean: 0
         std: 0.1
 
@@ -185,16 +183,16 @@ visualization:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_27'
+  ProjectName: 'DETOX-Lung_Project_resnet'
   WandB:
-    IsEnabled: True
+    IsEnabled: False
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
     MetricsMonitor: [ "train_AUC","train_loss","train_acc",
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    IsEnabled: True
-    studyName: "DETOX-Lung_Project_27"
-    n_trials: 60
+    IsEnabled: False
+    studyName: "DETOX-Lung_Project_resnet"
+    n_trials: 1
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:
@@ -203,11 +201,11 @@ hyperparam_tuning:
       type: 'categorical'
       location: ["model",'model_name']
       options: ['resnet']
-    Model_Depth:
-      name: "Model_Depth"
-      location: ["model","resnet","model_depth"]
-      type: 'categorical'
-      options: [10,18,34]
+    #Model_Depth:
+    #  name: "Model_Depth"
+    #  location: ["model","resnet","model_depth"]
+    #  type: 'categorical'
+    #  options: [10,18,34]
     Resampling_ratio:
       name: 'Resampling_ratio'
       type: 'float'
@@ -236,37 +234,44 @@ hyperparam_tuning:
       name: "Optimizer" 
       type: 'categorical'
       location: ["training",'optimizer','name']
-      options: ['AdaBound','Adam']
+      options: ['Adam']
     loss_function:
       name: loss_function
       type: 'categorical'
       location: ['training','loss','name']
       options: ['BCE']
     
-    #loss_lamb:
-    #  name: Loss_Lamb
-    #  type: 'float'
-    #  location: ['training','loss','lamb']
-    #  min: 0.1
-    #  max: 2.0
-    #loss_margin:
-    #  name: Loss_Margin
-    #  type: 'float'
-    #  location: ['training','loss','margin']
-    #  min: 0.1
-    #  max: 2.0
-    #loss_gamma:
-    #  name: loss_gamma
-    #  type: 'float'
-    #  location: ['training','loss','gamma']
-    #  min: 0.1
-    #  max: 2.0
+    loss_lamb:
+      name: Loss_Lamb
+      type: 'float'
+      location: ['training','loss','lamb']
+      min: 0.1
+      max: 3.0
+    loss_margin:
+      name: Loss_Margin
+      type: 'float'
+      location: ['training','loss','margin']
+      min: 0.1
+      max: 3.0
+    loss_gamma:
+      name: loss_gamma
+      type: 'float'
+      location: ['training','loss','gamma']
+      min: 0.1
+      max: 3.0
     
     batch_size:
       name: batch_size
       type: 'categorical'
       location: ["training","batch_size"]
       options: [16]
+
+    augmentation_noise_std:
+      name: augmentation_strength
+      type: 'float'
+      location: ['data','augmentation',"list","noise","std"]
+      min: 0
+      max: 0.6
 
     #augmentation_strength:
     #  name: augmentation_strength
@@ -303,14 +308,14 @@ hyperparam_tuning:
     #  step: 1
     #  log: False
 
-    n_clinical_down_blocks:
-      type: 'int'
-      name: 'n_clinical_down_blocks'
-      location: ['model','n_clinical_down_blocks']
-      min: 0
-      max: 3
-      step: 1
-      log: False
+    #n_clinical_down_blocks:
+    #  type: 'int'
+    #  name: 'n_clinical_down_blocks'
+    #  location: ['model','n_clinical_down_blocks']
+    #  min: 0
+    #  max: 3
+    #  step: 1
+    #  log: False
   
   # Complex hyperparams: Initialise every layer of the Neural Network with given ranges
   derived:

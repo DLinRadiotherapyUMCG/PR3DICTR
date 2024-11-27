@@ -10,7 +10,7 @@ import torch
 from src.utils.loss_func.loss_Focal import FocalLoss
 from src.utils.loss_func.loss_Hill import Hill
 from src.utils.loss_func.loss_ASL import AsymmetricLossOptimized
-
+from src.utils.loss_func.loss_NegativeLog import NegativeLogLikelihood
 from src.utils.loss_func.MultiTox_Loss import MultiTox_Loss
 
 
@@ -38,6 +38,12 @@ def get_loss_function(config):
         loss_function = Hill(reduction = reduction) # TODO: add gamma, margin, lamb parameters to configs
     elif(config['training']['loss']['name'] == "ASL"):
         loss_function = AsymmetricLossOptimized(reduction = reduction) # TODO: add gamma_neg and gamma_pos parameters to configs
+    elif(config['training']['loss']['name'] == 'NLLL'):
+        # Loss function for time event --> Requires 2 inputs (days, binaryCheckEvent)
+        if(len(config['columns']['label']) != 2):
+            raise Exception(f"Error: NLLL loss function expects 2 labels and got {config['columns']['label']}, abort code.")
+        loss_function = NegativeLogLikelihood(config)
+    
     else:
         raise ValueError(f"Loss function {config['training']['loss']['name']} not supported.")
     

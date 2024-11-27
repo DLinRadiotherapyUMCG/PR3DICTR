@@ -4,7 +4,7 @@ from typing import Optional, List, Tuple
 
 from torch.utils.data import Dataset
 
-from src.dataset.ToxDataset import HNCDataset, ToxDataset
+from src.dataset.ToxDataset import ToxDataset
 from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
 import pandas as pd
 
@@ -31,8 +31,8 @@ def load_dataset(config, csv_path, patient_ids = None, augment= False, split = F
     :param patient_ids:
     :return: PyTorch Dataset and metadata
     """    
-    # Create an instance of the HNCDataset
-    dataset = HNCDataset(csv_path, config, patient_ids, augment=augment, 
+    # Create an instance of the ToxDataset
+    dataset = ToxDataset(csv_path, config, patient_ids, augment=augment, 
                          split = split, train = train, splitVar = splitVar)
 
     # Get an example input to determine the metadata
@@ -187,8 +187,8 @@ def load_dataset_total(config, patient_ids = None):
         testDataset_Collection.append(ToxDataset(config,testDf))
 
     # Get example patient to get data info
-    example_input, _, _ = trainDataset_Collection[0][0]
-    channels, depth, height, width = example_input.shape
+    example_input, _, _ = trainDataset_Collection[0][0]     ### DANIEL ATTENTION MAP: added an extra ", _" to unpack the patientID
+    channels, depth, height, width = example_input.shape 
     n_features = len(config['columns']['clinical_features'])
 
     metadata = {

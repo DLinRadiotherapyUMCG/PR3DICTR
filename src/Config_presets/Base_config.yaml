@@ -80,13 +80,15 @@ data:
   valfile: 'stratified_sampling_full_manual_94_edited.csv'
   splitvar: "Split"
   patientVar: 'PatientID'
-  stratifyList: ["RP_OneYear","SmokerActive","SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy","ChemoRad"]
+  stratifyList: []
   Excluded: "ExcludeVar"
+  imageKeys: ["ct","rtdose","segmentation_map"]
 
   dataloader:
     num_workers: 4           # number of workers (cores) to use for data loading in each training batch
     persistent_workers: true # recommend keep this as `true' for faster data loading
 
+    
 
   preprocessing:
     isEnabled: false

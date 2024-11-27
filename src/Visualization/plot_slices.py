@@ -27,7 +27,7 @@ def fade_colormap(cmap_name, fade_length):
     cmap = [mcolors.hex2color(color) for color in cmap_name]
     for i in range(len(cmap)):
         r, g, b = cmap[i]
-        a = 1
+        a = 0.6
         if i < fade_length:
             exp = pow(i / fade_length, 0.5)
             r, g, b, a = (r * exp, g * exp, b * exp, exp)
@@ -36,11 +36,11 @@ def fade_colormap(cmap_name, fade_length):
 
 
 # Create a colormap for the negative side of the attention map
-neg_cmap = fade_colormap(cc.CET_L6, 60)
+neg_cmap = fade_colormap(cc.CET_R4, 0)
 neg_cmap = list(reversed(neg_cmap))
 
 # Create a colormap for the positive side of the attention map
-pos_cmap = fade_colormap(cc.CET_L4, 60)
+pos_cmap = fade_colormap(cc.CET_R4, 0)
 
 # Append positive and negative colormaps to create a single colormap
 att_cmap = np.concatenate((neg_cmap, pos_cmap))
@@ -58,7 +58,7 @@ HNC_plotting_params = {
         "cmap": "dose",
         "cmap_title": "Dose (Gy)",
         "min_val": 0,
-        "max_val": 8000,
+        "max_val": 9000,
     },
     "RTSTRUCT": {"color": "deeppink", "linewidth": 2, "alpha": 0.8, "cmap": "gray"},
     "Attention": {
@@ -74,6 +74,7 @@ HNC_plotting_params = {
 
 
 def create_colormap(cmap_name, min_value, max_value, HNC_plotting_params=None, N=256):
+    print(min_value)
     if cmap_name == "gray":
         cmap = LinearSegmentedColormap.from_list("CT_cmap", ["black", "white"], N=N)
     elif cmap_name == "RTSTRUCT":
@@ -85,7 +86,8 @@ def create_colormap(cmap_name, min_value, max_value, HNC_plotting_params=None, N
         colors = [(i / 15, 0, 0.5) for i in range(N)]
         cmap = LinearSegmentedColormap.from_list("RTSTRUCT_cmap", colors, N=N)
     elif cmap_name == "Attention":
-        colors_list = HNC_plotting_params["Attention"]["cmap_colors"]
+        min_value = 0
+        colors_list = HNC_plotting_params["Attention"]["cmap_abs_colors"]
         cmap = LinearSegmentedColormap.from_list("Attention_cmap", colors_list, N=N)
     elif cmap_name == "AttentionAbs":
         colors_list = HNC_plotting_params["Attention"]["cmap_abs_colors"]
@@ -348,7 +350,7 @@ def plot_Attention(axs, Attention, slices, HNC_plotting_params, global_att_max):
     att_min = np.min(Attention)
     # If there is negative attention, set the colormap to be symmetric around 0, and
     # pick a symmetric colormap
-    if att_min < 0:
+    if False:#att_min < 0:
         plot_min = -global_att_max
         plot_max = global_att_max
         plot_cmap = HNC_plotting_params["Attention"]["cmap"]
