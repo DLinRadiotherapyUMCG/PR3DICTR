@@ -12,6 +12,7 @@ from src.utils.scheduler.get_scheduler import get_scheduler
 from src.evaluation.calculate_auc import calculate_auc_multi
 from src.training.tools.utils import move_batch_to_device
 from src.training.validate import validate
+from src.models.tools.save_model import save_model, load_model
 
 import pandas as pd
 import numpy as np
@@ -143,8 +144,10 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
                 if values[0] > lowest:
                     logging.info(f'New highest AUC: {values[0]}')
                     lowest = values[0]
-                    best_model = model.state_dict()  # Save the model state
+                    #best_model = model.state_dict()  # Save the model state
                     patience_counter = 0 # Reset patience counter
+
+                    save_model(config, model, f"DlModel_Weights.pth")  # save the best model
                 else:
                     patience_counter += 1 # Increment patience counter
             else:
@@ -152,8 +155,10 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
                 if val_loss < lowest:
                     logging.info(f'New lowest loss: {val_loss}')
                     lowest = val_loss
-                    best_model = model.state_dict()  # Save the model state
+                    #best_model = model.state_dict()  # Save the model state
                     patience_counter = 0 # Reset patience counter
+
+                    save_model(config, model, f"DlModel_Weights.pth") # save the best model
                 else:
                     patience_counter += 1 # Increment patience counter
 
@@ -181,9 +186,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
     # wandb.log({'train/highest_auc': highest_auc})
     # logging.info('Finished training')
 
-
-
-    model.load_state_dict(best_model)
+    model = load_model(config, model, f"DlModel_Weights.pth")
 
     return model
 

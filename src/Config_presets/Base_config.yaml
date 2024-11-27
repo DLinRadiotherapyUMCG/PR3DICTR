@@ -79,8 +79,8 @@ model:
 
 data:
   filename_stratified_sampling_test_csv: 'stratified_sampling_test_542.csv'
-  trainfile: 'stratified_sampling_full_manual_94_edited.csv'
-  valfile: 'stratified_sampling_full_manual_94_edited.csv'
+  #trainfile: 'stratified_sampling_full_manual_94_edited.csv'          # NOTE: deprecated
+  #valfile: 'stratified_sampling_full_manual_94_edited.csv'            # NOTE: deprecated
   splitvar: "Split"
   patientVar: 'PatientID'
   patientID_length: 7

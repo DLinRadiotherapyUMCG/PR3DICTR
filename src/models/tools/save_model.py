@@ -25,6 +25,23 @@ def save_model(config, model, modelFile):
 
 
 
+def load_model(config, model, modelFile):
+    """
+    Load the model from the output directory.
+    :param config:
+    :param model:
+    :param model_path:
+    :return:
+    """
+    pathToSave = config['general']['resultsCurrentDirectory']
+    fileLocation = os.path.join(pathToSave, modelFile)
+
+    # Log and Save
+    logging.info(f'Loading model from {fileLocation}')
+    model.load_state_dict(torch.load(fileLocation))
+    return model
+
+
 def save_dataset(config, dataset, fileName):
     """
     Save the dataset to the output directory

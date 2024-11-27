@@ -157,7 +157,7 @@ hyperparam_tuning:
   ProjectName: 'PRIMA_MultiTox_Project0'
   WandB:
     IsEnabled: false
-    API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
+    API_Key: "c7f0f65fac8b7178ad7c5859ba6114775b16e694"
     MetricsMonitor: [ "train_AUC","train_loss","train_acc",
       "eval_AUC","eval_loss","eval_acc"]
   optuna:

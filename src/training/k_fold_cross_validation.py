@@ -52,7 +52,7 @@ def K_fold_cross_validation(config, hyperClass=None):
 
         # train the model
         model = train(config, model, loss_function, train_loader, val_loader, hyperClass=hyperClass)
-
+        model.eval()
 
         # get the predictions of the trained model on the training and validation (and test) sets
         logging.info('Getting predictions')
@@ -60,6 +60,7 @@ def K_fold_cross_validation(config, hyperClass=None):
         train_loss, train_auc_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader)
         logging.info('   validation set')
         val_loss, val_auc_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader)
+
         if config['general']['use_test_set']:
             logging.info('   test set')
             test_loss, test_auc_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(config, model, loss_function, test_loader)
@@ -82,7 +83,6 @@ def K_fold_cross_validation(config, hyperClass=None):
         save_predictions(config, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list, fold_idx)
 
 
-        # save the results
         # save the results # NOTE: how do we want to do this?
 
 
