@@ -4,7 +4,7 @@ from typing import Optional, List, Tuple
 
 from torch.utils.data import Dataset
 
-from src.dataset.ToxDataset import ToxDataset
+from src.dataset.ToxDataset import HNCDataset, ToxDataset
 from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
 import pandas as pd
 
@@ -22,7 +22,6 @@ def removePtnsExcluded(df, config):
 
     return df
 
-
 def load_dataset(config, csv_path, patient_ids = None, augment= False, split = False, train = True, splitVar = "Split"):
     """
     Loads data for a single csv file.
@@ -31,8 +30,8 @@ def load_dataset(config, csv_path, patient_ids = None, augment= False, split = F
     :param patient_ids:
     :return: PyTorch Dataset and metadata
     """    
-    # Create an instance of the ToxDataset
-    dataset = ToxDataset(csv_path, config, patient_ids, augment=augment, 
+    # Create an instance of the HNCDataset
+    dataset = HNCDataset(csv_path, config, patient_ids, augment=augment, 
                          split = split, train = train, splitVar = splitVar)
 
     # Get an example input to determine the metadata
@@ -124,12 +123,14 @@ def load_dataset_total(config, patient_ids = None):
             # BUG: This is how Daniel defined the splits
             if len(trainDf) == 0 and len(valDf) == 0:
                 trainDf = totalDf[totalDf[splitVar] == "train_val"]
+\               testDf = totalDf[totalDf[splitVar] == "test"] 
+
 
             #if(config['data']['equalizer']['isEnabled']):
             #    trainDf = label_equalizer(trainDf, config)
         else:    
             # Need to split manual
-            trainDf,valDf,testDf = data_split(totalDf, config, split=[0.6,0.20,0.20])
+            trainDf,valDf,testDf = data_split(totalDf, config, split=[0.7,0.15,0.15])
 
     else:
         # Two seperate files that are allready split
@@ -139,13 +140,15 @@ def load_dataset_total(config, patient_ids = None):
         valDf = pd.read_csv(valfile, delimiter=delimiterFound, dtype={'PatientID': str})
 
     # Write information about data
-
+    #print(f"Patient collection --> Train: {trainDf.shape[0]}, Validation: {valDf.shape[0]}")
+    #if(testDf.shape[0] != 0):
+    #    print(f"Patient collection --> Test: {testDf.shape[0]}")
 
     # Check and validate if KFolds settings are active
     trainDataset_Collection = []
     valDataset_Collection = []
     testDataset_Collection = []
-    if(config["data"]["kFolds"]["isEnabled"] and config["data"]["kFolds"]["Iterations"] <= config["data"]["kFolds"]["Splits"]):
+    if(config["data"]["kFolds"]["isEnabled"] and config["data"]["kFolds"]["Iterations"] < config["data"]["kFolds"]["Splits"]):
         # Multiple training and val datasets
         mergeDf = pd.concat([trainDf,valDf])
         label = mergeDf[config['columns']['label']]
@@ -187,8 +190,8 @@ def load_dataset_total(config, patient_ids = None):
         testDataset_Collection.append(ToxDataset(config,testDf))
 
     # Get example patient to get data info
-    example_input, _, _ = trainDataset_Collection[0][0]     ### DANIEL ATTENTION MAP: added an extra ", _" to unpack the patientID
-    channels, depth, height, width = example_input.shape 
+    example_input, _, _ = trainDataset_Collection[0][0]
+    channels, depth, height, width = example_input.shape
     n_features = len(config['columns']['clinical_features'])
 
     metadata = {
@@ -200,11 +203,6 @@ def load_dataset_total(config, patient_ids = None):
     }
 
     logging.info(f"Patient amount in datasets: Train = {trainDataset_Collection[0].df.shape[0]}, Validation = {valDataset_Collection[0].df.shape[0]}, Test = {testDataset_Collection[0].df.shape[0]}")
-
-    array = sum(trainDataset_Collection[0].df[config['columns']['label']].to_numpy() == 1)/len(trainDataset_Collection[0].df)
-    balanceClass = array[0]    
-    print(f"Class balance in training dataset is {balanceClass}")
-    config['general']['classImbalance'] = 1- balanceClass
 
     return [trainDataset_Collection, valDataset_Collection, testDataset_Collection], metadata
 

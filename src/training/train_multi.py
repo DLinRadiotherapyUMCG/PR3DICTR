@@ -107,8 +107,7 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
             optimizer.step()
 
             # Step the scheduler
-            # Remove the scheduler for this part
-            scheduler.step(epoch + (i + 1) / len(train_loader))
+            #scheduler.step(epoch + (i + 1) / len(train_loader))
 
             num_batches += 1      
 

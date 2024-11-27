@@ -51,7 +51,7 @@ def sigmoid(x):
     return 1/(1+np.exp(-x))
 
 def move_batch_to_device(batch, device):
-    inputs, clinical_features, targets, patientID = batch
+    inputs, clinical_features, targets = batch
     inputs = inputs.to(device=device)
     clinical_features = clinical_features.to(device=device)
     targets = targets.to(device=device)
@@ -84,36 +84,19 @@ def get_output_results(model, val_loader, config): # this function is redundant,
                 lab_indx+=1
     return(out_tot, targets_tot)
 
-def get_total_evaluation(model_path, savePath = "", csv_path = "", image_path = "", gpu = False, dataset = 2, single = False):
+def get_total_evaluation(model_path):
     
     # Check if there are fold models in the model location
-    if(single == False):
-        folds = os.listdir(model_path)
-        print(folds)
+    folds = os.listdir(model_path)
+    # folds = folds.sort()
+    print(folds)
 
-        # Load a config to get model architecture information
-        path = os.path.join(os.path.join(model_path,folds[0]),"DlModel_Config.yaml")
-    else:
-        path = os.path.join(model_path,"DlModel_Config.yaml")
-    config = load_config(path)#model_path + r'/' + folds[0] + '/DlModel_Config.yaml')
+    # Load a config to get model architecture information
+    config = load_config(model_path + r'/' + folds[0] + '/DlModel_Config.yaml')
     
-    # Overwrite paths if needed
-    if(csv_path != ""):
-        config["paths"]["csv"] = csv_path
-    if(image_path != ""):
-        config["paths"]["images"] = image_path
-    if(savePath != ""):
-        config["paths"]["output"] = savePath
-        config["paths"]["results"] = savePath
-        config['general']['resultsCurrentDirectory'] = savePath + os.path.basename(model_path) + "/"
-        os.makedirs(savePath, exist_ok = True)
-        print("Updated paths")
-    if(gpu == False):
-        config["general"]["device"]= "cpu"
-
     # Load the testing dataset
     data, metadata = load_dataset_total(config)
-    test_data = DataLoader(data[dataset][0],batch_size=config['training']['batch_size'], shuffle=False, 
+    test_data = DataLoader(data[2][0],batch_size=config['training']['batch_size'], shuffle=False, 
                                       num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
     
     # Get the ensemble predictions
@@ -121,30 +104,14 @@ def get_total_evaluation(model_path, savePath = "", csv_path = "", image_path = 
     tar_lists  = []
     
     i = 0
-    if(single):
+    for path_fold in folds:   
         model = get_classification_model(config, metadata)
-        if(config["general"]["device"] != "cpu"):
-            model.cuda()
-        else:
-            device = torch.device('cpu')
-            model.to(device)
-            print("to CPU")
-        model.load_state_dict(torch.load(model_path + '/DlModel_Weights.pth', map_location=config["general"]["device"]))
+        model.cuda()
+        print('loading model')
+        print(model_path + r'/' + path_fold + '/DlModel_Weights.pth')
+        model.load_state_dict(torch.load(model_path + r'/' + path_fold + '/DlModel_Weights.pth'))
+        print('done')
         out, targets = get_output_results(model, test_data, config)
-        out_tot = dict.fromkeys(out.keys())
-        for key in out_tot.keys():
-            out_tot[key] = np.array(out[key])
-    else:
-        for path_fold in folds:   
-            model = get_classification_model(config, metadata)
-            if(config["general"]["device"] != "cpu"):
-                model.cuda()
-            else:
-                device = torch.device('cpu')
-                model.to(device)
-                print("to CPU")
-            model.load_state_dict(torch.load(model_path + r'/' + path_fold + '/DlModel_Weights.pth', map_location=config["general"]["device"]))
-            out, targets = get_output_results(model, test_data, config)
 
         out_lists.append(out)
         tar_lists.append(targets)
@@ -156,29 +123,16 @@ def get_total_evaluation(model_path, savePath = "", csv_path = "", image_path = 
         else:
             for key in out_tot.keys():
                 out_tot[key] = out_tot[key] + np.array(out[key])*(1/len(folds))       
-
-    namefile = ""    
-    if(dataset == 0):
-        nameFile = "train"
-    elif(dataset == 1):
-        nameFile = "val"
-    elif(dataset == 2):
-        nameFile = "test"
-    
+        
     # General
-    if(savePath == ""):
-        pd.DataFrame(out_tot).to_csv(config['paths']['results'] + f'{nameFile}_pred.csv')
-        pd.DataFrame(targets).to_csv(config['paths']['results'] + f'{nameFile}_labels.csv')
-    else:
-        pd.DataFrame(out_tot).to_csv(os.path.join(savePath, f'{nameFile}_pred.csv'))
-        pd.DataFrame(targets).to_csv(os.path.join(savePath, f'{nameFile}_labels.csv'))
-
+    pd.DataFrame(out_tot).to_csv(config['paths']['results'] + 'predictions.csv')
+    pd.DataFrame(targets).to_csv(config['paths']['results'] + 'labels.csv')
     
     # Visualization 
-    # for key in out_tot.keys():
-    #     true = targets[key]
-    #     pred = out_tot[key]
-    #     get_visualization(config,true,pred, key)
+    for key in out_tot.keys():
+        true = targets[key]
+        pred = out_tot[key]
+        get_visualization(config,true,pred, key)
     
     # # Metrics
     # auc = calculate_auc_multi()

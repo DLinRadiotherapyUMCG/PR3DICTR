@@ -109,12 +109,11 @@ def augmentation(config):
             if aug not in possible_augmentation:
                 print("Augmentation: " + aug + " is not implimented and therefor not applied")
     
-    
     return Compose(transforms)
 
 class ToxDataset(Dataset):
     """
-    Dataset class for the HNC dataset.
+    Dataset class
     Returns a tuple of image_stack, clinical_features, and label.
     """
 
@@ -178,36 +177,12 @@ class ToxDataset(Dataset):
         # Get the label
         labels = np.array([self.df[self.df['PatientID'] == patient_id][self.label_columns].values[0]]).astype(np.float32)
 
-
-        #labels_dict = {label_col : torch.tensor(self.df[self.df['PatientID'] == patient_id][label_col].values[0]) for label_col in self.label_columns}
-
-        # print(self.df[self.df['PatientID'] == patient_id][self.label_columns].values[0])
-        # print(self.label_columns)
-        # print(labels_dict)
-        # print(patient_id)
-
         # Get the clinical features
         clinical_features = [self.df[self.df['PatientID'] == patient_id][feature].values[0] for feature in
                              self.config['columns']['clinical_features']]
         clinical_features = np.array(clinical_features).astype(np.float32)
 
         return image_stack, clinical_features, labels    ### DANIEL ATTENTION MAP: also return patient_id !!!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class ToxMonaiDataset(Dataset):

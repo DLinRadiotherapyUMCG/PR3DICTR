@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from src.utils.get_encoder import get_encoder
-from src.models.linear_layers import MultiToxOutputHead
+from src.models.temp_ff_linear_layers import MultiToxOutputHead
 
 import torch
 from torch import nn
@@ -70,8 +70,8 @@ def get_classification_model(config, metadata, save_summary=True):
     # Put the image encoder into a model
     model = MultiTox_Classifier(encoder=encoder, config=config, n_features=n_features)
 
-    get_model_summary(config=config, model=model, input_size=[(config['training']['batch_size'], channels, depth, height, width), (config['training']['batch_size'], max(n_features, 1))], 
-                                                 device=config['general']['device'], save_to_file=save_summary)
+ #   get_model_summary(config=config, model=model, input_size=[(config['training']['batch_size'], channels, depth, height, width), (config['training']['batch_size'], max(n_features, 1))], 
+  #                                               device=config['general']['device'], save_to_file=save_summary)
         
     return model
 

@@ -48,64 +48,17 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['general']['seed'])
 
-    study = None
-    if(True):
+    # Test a chosen project
+    nameProjectTest = "DETOX-Lung_Project_7"
+    config['hyperparam_tuning']['ProjectName'] = nameProjectTest
+    config['hyperparam_tuning']['optuna']['studyname'] = nameProjectTest
 
-        # Check where to keep study information
-        studyName = "Retrieve_Old"
-        #pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
-        pathOptunaStudy = os.path.join(r"C:\Users\r.van.der.wal\Documents\Detox_lung\validate_DB","track_optuna.db")
-        storage_name = f"sqlite:///{pathOptunaStudy}"
-        study = optuna.create_study(study_name = studyName, storage = storage_name, load_if_exists=True)
+    #Load the existing project
+    hyperClass = HyperTuning_Handler(config)
+    df = hyperClass.Optuna_study.trials_dataframe()
 
-    if(study != None):
-        df = study.trials_dataframe()
-        print(df)
+    # Show the project information
+    print(df)
 
-    localTest = False
-    if(localTest):
-        # Test a chosen project
-        nameProjectTest = "DETOX-Lung_Project_7"
-        config['hyperparam_tuning']['ProjectName'] = nameProjectTest
-        config['hyperparam_tuning']['optuna']['studyname'] = nameProjectTest
-
-        #Load the existing project
-        hyperClass = HyperTuning_Handler(config)
-        df = hyperClass.Optuna_study.trials_dataframe()
-
-        # Show the project information
-        print(df)
-
-        # Close the project envrionment
-        hyperClass.Stop()
-    else:
-        pathOptunaStudy = os.path.join(r"C:\Users\r.van.der.wal\Documents\Detox_lung\validate_DB","track_optuna.db")
-        conn = sqlite3.connect(pathOptunaStudy)
-        cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tableNames = cursor.fetchall()
-        print(f"Table Names : {tableNames}")
-
-        df = pd.read_sql_query(f'SELECT * FROM {'studies'}', conn)
-        print(df)
-        df = pd.read_sql_query(f'SELECT * FROM {'study_directions'}', conn)
-        print(df)
-        df = pd.read_sql_query(f'SELECT * FROM {'study_user_attributes'}', conn)
-        print(df)
-        df = pd.read_sql_query(f'SELECT * FROM {'trials'}', conn)
-        print(df)
-        df = pd.read_sql_query(f'SELECT * FROM {'trial_user_attributes'}', conn)
-        print(df)
-        df = pd.read_sql_query(f'SELECT * FROM {'trial_params'}', conn)
-        print(df)
-        df_results = pd.read_sql_query(f'SELECT * FROM {'trial_values'}', conn)
-        print(df_results)
-
-        # Get the best trial
-        minLoss = df_results['value'].min(skipna=True)
-        print(df_results[df_results['value'] == minLoss])
-
-        # Good way to loop
-        print(tableNames[0][0])
-
-        conn.close()
+    # Close the project envrionment
+    hyperClass.Stop()
