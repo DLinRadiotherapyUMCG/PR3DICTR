@@ -1,9 +1,13 @@
 import torch
 import logging
-from src.constants import DEVICE
+import numpy as np 
 
+from src.constants import DEVICE
 from src.training.tools.utils import move_batch_to_device
 from src.evaluation.calculate_auc import calculate_auc_multi
+
+def sigmoid(x):
+    return 1/(1+np.exp(-x))
 
 
 def validate(config, model, loss_function, val_loader):
@@ -14,6 +18,8 @@ def validate(config, model, loss_function, val_loader):
     num_batches = 0
     #num_auc_batches = config['training']['validation']['num_auc_batches']
     labels = config['columns']['label']
+
+    Sigmoid = np.vectorize(sigmoid)
     
     
     patientIDs_list = []
@@ -36,7 +42,7 @@ def validate(config, model, loss_function, val_loader):
             total_loss += loss.item()            
             
             for lab_indx, label in enumerate(labels):
-                preds_dict[label] = preds_dict[label] + list(outputs[label].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
+                preds_dict[label] = preds_dict[label] + list(Sigmoid(outputs[label].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0]))
                 labels_dict[label] = labels_dict[label] + list(targets[:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
             
             num_batches += 1
