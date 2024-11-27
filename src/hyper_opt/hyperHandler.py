@@ -3,18 +3,16 @@ import optuna
 import logging
 
 from src.config_presets.tools.get_config import get_config
-from src.dataset.load_dataset import load_dataset_total
+from src.dataset.load_dataset import load_dataset, load_dataset_total
 from src.models.tools.save_model import save_model, save_config, save_dataset, save_dataset_summary
 from src.training.train_multi import train, validate
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
-from src.training.train_multi import move_batch_to_device, validate, get_output_results
 from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.fileHandler import create_file, create_folder, create_textfile
-from src.dataset.get_dataloader import make_dataloader
+from src.dataset.get_dataloader import make_dataloader   
 from src.dataset.get_transforms import get_transforms
-from src.visualization.Confusion_matrix import confusion_matrix_multi
 
 from torch.utils.data import DataLoader
 import os
@@ -38,14 +36,7 @@ class HyperTuning_Handler():
         if(config['general']['testMode']):
             logging.info("WARNING: ------------ TEST MODE IS ACTIVE -------------")
         if(self.Optuna_study != None):
-            if(config['training']['loss']['name'] != "NLLL"):
-                print("------------------------------------------------------------------")
-                print("-------------------- Start DL Binary Model---------------------")
-                self.Optuna_study.optimize(lambda trial: UpdateBinaryTrial(self, trial, config), config['hyperparam_tuning']['optuna']['n_trials'])
-            else: 
-                print("------------------------------------------------------------------")
-                print("-------------------- Start DL Event Time Model---------------------")
-                self.Optuna_study.optimize(lambda trial: UpdateEventTrial(self, trial, config), config['hyperparam_tuning']['optuna']['n_trials'])
+            self.Optuna_study.optimize(lambda trial: UpdateTrial(self, trial, config), config['hyperparam_tuning']['optuna']['n_trials'])
         else:
             UpdateTrial(self, None, config)
 
@@ -72,7 +63,7 @@ def Optuna_CreateStudy(config):
             print("First optuna run has been detected!")
     return study
 
-def UpdateBinaryTrial(hyperClass, trial, config):
+def UpdateTrial(hyperClass, trial, config):
     if(trial != None):
         # Alter normal hyperparameters
         config = normal_hyperparameters(trial,config)
@@ -98,6 +89,13 @@ def UpdateBinaryTrial(hyperClass, trial, config):
                 numHigh =  valueFound
         trialNumber =  numHigh + 1
         config['general']['trialNumber'] = f"Trial_{str(trialNumber).rjust(3,'0')}" 
+
+    # Create result directory
+    CreateResultDir(config)
+
+
+
+
 
     # Create result directory
     CreateResultDir(config)
@@ -134,11 +132,6 @@ def UpdateBinaryTrial(hyperClass, trial, config):
         train_loader, metadata = make_dataloader(config, trainDF_col[i], train_transforms, validation_mode=False)
         val_loader, _ = make_dataloader(config, valDF_col[i], val_transforms, validation_mode=True)
 
-         # Get the data loaders
-        # train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
-        #                               num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
-        # val_loader = DataLoader(valDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
-        #                          num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
         try:
             model = train(config, train_loader, val_loader, metadata, hyperClass = hyperClass)
         except Exception as error:
@@ -158,8 +151,6 @@ def UpdateBinaryTrial(hyperClass, trial, config):
         try:
             if(testDF_col[i].df.shape[0] != 0):
                 test_loader, _ = make_dataloader(config, testDF_col[i], val_transforms, validation_mode=True)
-                # test_loader = DataLoader(testDF_col[i], batch_size=config['training']['batch_size'], shuffle=False,
-                #                          num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
                 test_loss, test_auc = validate(loss_function, model, test_loader, config)
                 savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_loss.txt")
                 f = open(savePath,"w")
@@ -171,33 +162,6 @@ def UpdateBinaryTrial(hyperClass, trial, config):
                 np.savetxt(savePath,np.array(test_auc))
         except Exception as e:
             logging.info(f"Could not validate the test dataset with error: {e}")
-        # Save Datasets
-        save_dataset(config,trainDataset_col[i],"train_Dataset")
-        save_dataset(config,valDataset_col[i],"validation_Dataset")
-        save_dataset(config,testDataset_col[i],"test_Dataset")
-        save_dataset_summary(config,trainDataset_col[i],valDataset_col[i],testDataset_col[i])
-
-        logging.info("Information about the val_auc_array:")
-        logging.info(val_auc_col)
-        #if(np.mean(np.array(val_auc_col)) < 0.7 and i >= 1 and len(trainDataset_col) -1 != i):
-        #    logging.info(f"Stopped the folds due to a low validation AUC.")
-        #    break
-
-        # TODO: Check if run needs to be aborted
-        #if(config['data']['kFolds']['skip_badtrial'] and config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience'] + 10)) and i == 0):
-        #    if(len(trainDataset_col) > 1):
-        #        logging.info("Patience exhausted and ignoring K-split datasets")
-        #    break
-
-    val_lossMean =  np.mean(val_loss_col)
-    if(groupVar != None):
-        val_lossMean =  np.mean(val_loss_col)
-        logging.info(f"The mean loss of K-folds is: {round(val_lossMean,2)}")
-    else:
-        val_lossMean = val_loss_col[0]
-        # Create a results file for the Folds results and the mean values    
-
-    return val_lossMean
 
         # Save model
         try:
@@ -207,10 +171,10 @@ def UpdateBinaryTrial(hyperClass, trial, config):
             print("WARNING: SAVING NOT WORKING!! PLEASE CHECK")
 
         # Save Datasets
-        save_dataset(config,trainDataset_col[i],"train_Dataset")
-        save_dataset(config,valDataset_col[i],"validation_Dataset")
-        save_dataset(config,testDataset_col[i],"test_Dataset")
-        save_dataset_summary(config,trainDataset_col[i],valDataset_col[i],testDataset_col[i])
+        save_dataset(config,trainDF_col[i],"train_Dataset")
+        save_dataset(config,valDF_col[i],"validation_Dataset")
+        save_dataset(config,testDF_col[i],"test_Dataset")
+        save_dataset_summary(config,trainDF_col[i],valDF_col[i],testDF_col[i])
 
         logging.info("Information about the val_auc_array:")
         logging.info(val_auc_col)
@@ -220,7 +184,7 @@ def UpdateBinaryTrial(hyperClass, trial, config):
 
         # Check if run needs to be aborted
         if(config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience']*2 + 2)) and i == 0):
-            if(len(trainDataset_col) > 1):
+            if(len(trainDF_col) > 1):
                 logging.info("Patience exhausted and ignoring K-split datasets")
             break
 
@@ -233,41 +197,6 @@ def UpdateBinaryTrial(hyperClass, trial, config):
         # Create a results file for the Folds results and the mean values    
 
     return val_lossMean
-
-    #     # Save model
-    #     try:
-    #         save_model(config, model, f"DlModel_Weights.pth")
-    #         save_config(config,f"DlModel_Config.yaml")
-    #     except:
-    #         print("WARNING: SAVING NOT WORKING!! PLEASE CHECK")
-
-    #     # Save Datasets
-    #     save_dataset(config,trainDF_col[i],"train_Dataset")
-    #     save_dataset(config,valDF_col[i],"validation_Dataset")
-    #     save_dataset(config,testDF_col[i],"test_Dataset")
-    #     save_dataset_summary(config,trainDF_col[i],valDF_col[i],testDF_col[i])
-
-    #     logging.info("Information about the val_auc_array:")
-    #     logging.info(val_auc_col)
-    #     #if(np.mean(np.array(val_auc_col)) < 0.7 and i >= 1 and len(trainDataset_col) -1 != i):
-    #     #    logging.info(f"Stopped the folds due to a low validation AUC.")
-    #     #    break
-
-    #     # Check if run needs to be aborted
-    #     if(config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience']*2 + 2)) and i == 0):
-    #         if(len(trainDF_col) > 1):
-    #             logging.info("Patience exhausted and ignoring K-split datasets")
-    #         break
-
-    # val_lossMean =  np.mean(val_loss_col)
-    # if(groupVar != None):
-    #     val_lossMean =  np.mean(val_loss_col)
-    #     logging.info(f"The mean loss of K-folds is: {round(val_lossMean,2)}")
-    # else:
-    #     val_lossMean = val_loss_col[0]
-    #     # Create a results file for the Folds results and the mean values    
-
-    # return val_lossMean
 
 def update_config(dic, location, suggested_value):
     if len(location) == 1:
@@ -295,3 +224,7 @@ def CreateResultDir(config, KFoldIndex = -1):
 
     logging.info(f"Directory path updated: {folderPath}")
     config['general']['resultsCurrentDirectory'] = folderPath
+    
+    
+    
+    

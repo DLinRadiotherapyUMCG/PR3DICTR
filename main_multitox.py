@@ -20,7 +20,7 @@ from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file
 from src.training.train_multi import move_batch_to_device
 from src.constants import DEVICE
-from src.models.tools.get_multi_model import get_classification_model
+from src.models.tools.get_classification_model import get_classification_model
 
 from src.utils.loss_func.get_loss_function import get_loss_function
 
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # hyperClass.Stop()
 
     # Load the dataset
-    datasets_col, metadata = load_dataset_total(config)
+    datasets_col = load_dataset_total(config)
     trainDataset_col = datasets_col[0]
     valDataset_col= datasets_col[1]
     testDataset_col = datasets_col[2]
@@ -68,25 +68,25 @@ if __name__ == '__main__':
         
         dataloader_times = []
 
-        for _ in range(3):
+        # for _ in range(3):
             
-            start = time()
+        #     start = time()
 
-            for batch in tqdm(train_dataloader):
-                #print(batch)
+        #     for batch in tqdm(train_dataloader):
+        #         #print(batch)
 
-                inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+        #         inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
                 
-                outputs = model(x=inputs, features=clinical_features)
+        #         outputs = model(x=inputs, features=clinical_features)
 
-                loss = loss_function(outputs, targets) # for multi need different loss calculation
-                loss.backward()
-            end = time()
+        #         loss = loss_function(outputs, targets) # for multi need different loss calculation
+        #         loss.backward()
+        #     end = time()
 
-            print(f"Time taken (s): {end-start}")
-            dataloader_times.append(end-start)
+        #     print(f"Time taken (s): {end-start}")
+        #     dataloader_times.append(end-start)
 
-        print(f"Average time taken (s) with one dataloader: {sum(dataloader_times)/len(dataloader_times)}")
+        # print(f"Average time taken (s) with one dataloader: {sum(dataloader_times)/len(dataloader_times)}")
         
 
         ###### TEST WITH 4 PERISTENT WORKERS ######
@@ -96,7 +96,7 @@ if __name__ == '__main__':
         
         dataloader_times = []
 
-        for _ in range(3):
+        for _ in range(1):
             
             start = time()
 

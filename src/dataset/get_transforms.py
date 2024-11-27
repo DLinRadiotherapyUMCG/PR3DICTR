@@ -44,7 +44,7 @@ from monai.utils.enums import TransformBackends
 
 
 from src.dataset.transforms.ConvertMetaTensorToTensor import ConvertMetaTensorToTensor
-
+from src.dataset.transforms.CheckImageDimensions import CheckImageDimensions
 
 
 def get_transforms(config):
@@ -68,7 +68,8 @@ def get_transforms(config):
 
     # get all of the generic transforms (which apply to both the training and the validation/test sets)
     generic_transforms = Compose([
-        LoadImaged(keys=image_keys, image_only=True),
+        LoadImaged(keys=image_keys, image_only=True, ensure_channel_first=False),
+        CheckImageDimensions(keys=image_keys, desired_num_img_dims=config['data']['image_num_dimensions']),                                       # checks if there are enough dimensions (eg. [1,96,96,96] and not [96,96,96]), otherwise fixes it
         EnsureTyped(keys=image_keys + ['features', 'label_list', 'patient_id'], data_type='tensor'),
     ])
 
@@ -77,24 +78,41 @@ def get_transforms(config):
         
         preproc_transforms = []
 
-        if 'ct' in image_keys:
-            preproc_transforms.append(ScaleIntensityRanged(keys=['ct'],
-                                        a_min=config['data']['preprocessing']['ct']['a_min'], a_max=config['data']['preprocessing']['ct']['a_max'],                                         # NOTE: commented out as segmap is not used
-                                        b_min=config['data']['preprocessing']['ct']['b_min'], b_max=config['data']['preprocessing']['ct']['b_max'],
-                                        clip=config['data']['preprocessing']['ct']['clip'])
-                             )
-        if 'rtdose' in image_keys:
-            preproc_transforms.append(ScaleIntensityRanged(keys=['rtdose'],
-                                        a_min=config['data']['preprocessing']['rtdose']['a_min'], a_max=config['data']['preprocessing']['rtdose']['a_max'],                                         # NOTE: commented out as segmap is not used
-                                        b_min=config['data']['preprocessing']['rtdose']['b_min'], b_max=config['data']['preprocessing']['rtdose']['b_max'],
-                                        clip=config['data']['preprocessing']['rtdose']['clip'])
-                             )
-        if 'segmentation_map' in image_keys:
-             preproc_transforms.append( MapLabelValued(
-                 keys=['segmentation_map'],
-                orig_labels=[index for index, x in enumerate(config['data']['preprocessing']['segmentation_map']['target_labels'])],
-                target_labels=config['data']['preprocessing']['segmentation_map']['target_labels']) 
-                ) 
+        for img_key in image_keys:
+            if img_key in config['data']['preprocessing']['needs_scaling']:
+                preproc_transforms.append(ScaleIntensityRanged(keys=['ct'],
+                                            a_min=config['data']['preprocessing'][img_key]['a_min'], a_max=config['data']['preprocessing'][img_key]['a_max'],                                         # NOTE: commented out as segmap is not used
+                                            b_min=config['data']['preprocessing'][img_key]['b_min'], b_max=config['data']['preprocessing'][img_key]['b_max'],
+                                            clip=config['data']['preprocessing'][img_key]['clip'])
+                                        )
+
+            elif img_key in config['data']['preprocessing']['needs_label_mapping']:
+                preproc_transforms.append(MapLabelValued(
+                                            keys=[img_key],
+                                            orig_labels=[index for index, x in enumerate(config['data']['preprocessing'][img_key]['target_labels'])],
+                                            target_labels=config['data']['preprocessing'][img_key]['target_labels']) 
+                    ) 
+
+        #####################################
+
+        # if 'ct' in image_keys:
+        #     preproc_transforms.append(ScaleIntensityRanged(keys=['ct'],
+        #                                 a_min=config['data']['preprocessing']['ct']['a_min'], a_max=config['data']['preprocessing']['ct']['a_max'],                                         # NOTE: commented out as segmap is not used
+        #                                 b_min=config['data']['preprocessing']['ct']['b_min'], b_max=config['data']['preprocessing']['ct']['b_max'],
+        #                                 clip=config['data']['preprocessing']['ct']['clip'])
+        #                      )
+        # if 'rtdose' in image_keys:
+        #     preproc_transforms.append(ScaleIntensityRanged(keys=['rtdose'],
+        #                                 a_min=config['data']['preprocessing']['rtdose']['a_min'], a_max=config['data']['preprocessing']['rtdose']['a_max'],                                         # NOTE: commented out as segmap is not used
+        #                                 b_min=config['data']['preprocessing']['rtdose']['b_min'], b_max=config['data']['preprocessing']['rtdose']['b_max'],
+        #                                 clip=config['data']['preprocessing']['rtdose']['clip'])
+        #                      )
+        # if 'segmentation_map' in image_keys:
+        #      preproc_transforms.append( MapLabelValued(
+        #          keys=['segmentation_map'],
+        #         orig_labels=[index for index, x in enumerate(config['data']['preprocessing']['segmentation_map']['target_labels'])],
+        #         target_labels=config['data']['preprocessing']['segmentation_map']['target_labels']) 
+        #         ) 
              
              
         # add the preproc_transforms to the generic transforms

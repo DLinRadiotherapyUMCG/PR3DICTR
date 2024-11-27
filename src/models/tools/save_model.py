@@ -31,7 +31,7 @@ def save_dataset(config, dataset, fileName):
     - dataset --> Pytorch dataset object
     """
     #print("Dataset")
-    df = dataset.df
+    df = dataset
     #print(df)
     if(df.shape[0] == 0):
         return
@@ -58,14 +58,14 @@ def save_config(config, fileName):
 def save_dataset_summary(config, trainDataset, valDataset, testDataset):
     # Get the patientIds from the different datasets
     ptnVar = config['data']['patientVar']
-    trainDataset_ptns = trainDataset.df[ptnVar].tolist()
-    valDataset_ptns = valDataset.df[ptnVar].tolist()
+    trainDataset_ptns = trainDataset[ptnVar].tolist()
+    valDataset_ptns = valDataset[ptnVar].tolist()
     testDataset_ptns = []
-    if(trainDataset.df.shape[0] != 0):
-        testDataset_ptns = testDataset.df[ptnVar].tolist()
+    if(trainDataset.shape[0] != 0):
+        testDataset_ptns = testDataset[ptnVar].tolist()
     
     # Merge the dataframes to a single again
-    dataframes = [trainDataset.df,valDataset.df,testDataset.df]
+    dataframes = [trainDataset,valDataset,testDataset]
     dfMerged = pd.concat(dataframes)
 
     # Select the columns used during the analysis

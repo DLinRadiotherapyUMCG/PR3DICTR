@@ -145,7 +145,7 @@ class ToxDataset(Dataset):
             pathPatientDir = self.images_path + str(patient_id)
 
         # Construct the file paths for the input image channels
-        imageInputs = self.config["data"]["imageKeys"]
+        imageInputs = self.config["data"]["image_keys"]
         np_image_array = []
         for i in range(len(imageInputs)):
             imagepath = os.path.join(pathPatientDir, imageInputs[i] + '.npy')

@@ -120,8 +120,8 @@ data:
     strength: 1
 
 training:
-  max_epochs: 100
-  batch_size: 8
+  max_epochs: 5
+  batch_size: 16
   validation_interval: 1
   patience: 10
 
@@ -160,7 +160,7 @@ hyperparam_tuning:
   optuna:
     IsEnabled: false
     studyName: 'PRIMA_MultiTox_Project0'
-    n_trials: 30
+    n_trials: 1
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 from src.utils.get_encoder import get_encoder
-from src.models.temp_ff_linear_layers import MultiToxOutputHead
+#from src.models.temp_ff_linear_layers import MultiToxOutputHead   # TODO: ask Luuk whats going on here
+from src.models.linear_layers import MultiToxOutputHead
+
 
 import torch
 from torch import nn

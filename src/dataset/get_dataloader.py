@@ -84,7 +84,7 @@ def prepare_data_dictionaries(config, df):
         for image_key in image_keys:
             data_dicts[idx][image_key] = os.path.join(patients_data_dir, patient_id, image_key + ".npy")
     
-    return data_dicts
+    return data_dicts, patient_ids_list
 
 
 
@@ -121,7 +121,7 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
     
     
     dataset_size = len(df_data)
-    data_dict = prepare_data_dictionaries(config, df_data)  # do some reformatting of the dataframe -> list of dictionaries
+    data_dict, patient_IDs_list = prepare_data_dictionaries(config, df_data)  # do some reformatting of the dataframe -> list of dictionaries
     update_dict = None
 
     # Define Dataset class
@@ -150,14 +150,19 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
 
     # Initialize Dataset
     data_ds = ds_class(**ds_args_dict)
+    data_ds.patient_IDs_list = patient_IDs_list
+    data_ds.df = df_data
 
     # Define DataLoader class
+    from src.dataset.ToxDataLoader import ToxDataLoader
     if dataloader_type in ['standard', None]:
         dl_class = DataLoader
     elif dataloader_type == 'thread':
         dl_class = ThreadDataLoader
     else:
         raise ValueError('Invalid dataloader_type: {}.'.format(dataloader_type))
+    
+    dl_class = ToxDataLoader
 
     # Define Dataloader function arguments
     if validation_mode:   # the validation and test datasets should not be shuffled
@@ -183,7 +188,7 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
         dataloader = dl_class(**dl_args_dict) 
 
         example_data = next(iter(dataloader))
-        #print(example_data.keys())
+        print(example_data.keys())
         #example_input = 
         #print(example_input.shape)
         #example_input = example_data[]

@@ -48,8 +48,8 @@ def confusion_matrix_bin(fileName, true, pred,config, label, show = False):
 
     cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = [False, True])
     cm_display.plot()
-
-	plt.title('Confusion matrix ' + label)
+    
+    plt.title('Confusion matrix ' + label)
     pathResults = config['general']['resultsCurrentDirectory']
     pathToSave = os.path.join(pathResults, fileName + '.png')
 

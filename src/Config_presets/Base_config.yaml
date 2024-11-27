@@ -28,7 +28,7 @@ run:
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "dcnn_pooling"
+  model_name: "resnet"
   num_classes: 1
   n_down_blocks: 5
   resnet:
@@ -82,8 +82,10 @@ data:
   splitvar: "Split"
   patientVar: 'PatientID'
   stratifyList: ["RP_OneYear","SmokerActive","SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy","ChemoRad"]
-  Excluded: "ExcludeVar"
+  ExcludedVar: []
+  ExcludedValue: []
   image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
+  image_num_dimensions: 3  # each image is 3D 
 
   # filenames:
   #   ct: 'ct.npy'
@@ -98,6 +100,8 @@ data:
     isEnabled: false
     crop: true
     crop_shape: [96, 96, 96]
+    needs_scaling: ["ct", "rtdose", 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
+    needs_label_mapping: ["segmentation_map"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
     ct:
       a_min: -200
       a_max: 400
@@ -110,6 +114,11 @@ data:
       b_min: 0
       b_max: 1
       clip: true
+    mri:
+      a_min: 12345
+      a_max: 12345
+      b_min: 0
+      b_max: 1
     segmentation_map:
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
 
