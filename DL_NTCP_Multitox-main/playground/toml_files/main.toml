@@ -1,5 +1,0 @@
-seed = 101
-
-[model]
-model_name = "dcnn_lrelu"
-filters = [8,8,16,16]
