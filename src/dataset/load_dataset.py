@@ -9,6 +9,47 @@ import pandas as pd
 import numpy as np
 
 from sklearn.model_selection import StratifiedKFold
+
+def removePtnsExcluded(df, config):
+    excludedVariables = config['data']['ExcludedVar']
+    excludedValues = config['data']['ExcludedValue']
+
+    if(len(excludedVariables) != len(excludedValues)):
+        raise Exception("Exception: Exclusion parameters for patient removal need to have the same size. This contains the excluded variables and values.")
+    
+    for i in range(len(excludedVariables)):
+        df = df.loc[df[excludedVariables[i]] != excludedValues[i]]
+
+    return df
+
+def load_dataset(config, csv_path, patient_ids = None, augment= False, split = False, train = True, splitVar = "Split"):
+    """
+    Loads data for a single csv file.
+    :param csv_path:
+    :param config:
+    :param patient_ids:
+    :return: PyTorch Dataset and metadata
+    """    
+    # Create an instance of the HNCDataset
+    dataset = HNCDataset(csv_path, config, patient_ids, augment=augment, 
+                         split = split, train = train, splitVar = splitVar)
+
+    # Get an example input to determine the metadata
+    example_input, _, _ = dataset[0]
+    channels, depth, height, width = example_input.shape
+
+    n_features = len(config['columns']['clinical_features'])
+
+    metadata = {
+        "channels": channels,
+        "depth": depth,
+        "height": height,
+        "width": width,
+        "n_features": n_features,
+    }
+
+    # Return the dataset and the metadata
+    return dataset, metadata
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -27,7 +68,7 @@ def ValidateImageDataExists(config, df):
             # Not found --> remove
             removePtnIDS.append(ptnClinList[i])
     
-    #print(f"Removed ptns = {len(removePtnIDS)}")
+    print(f"Removed ptns = {len(removePtnIDS)}")
     df = df[(df['PatientID'].isin(removePtnIDS)) == False]
     return df
 
@@ -60,7 +101,7 @@ def load_dataset_total(config, patient_ids = None):    # TODO: re-name to 'load_
         # Single file to split
         delimiterFound = get_delimiter(trainfile)
         totalDf = pd.read_csv(trainfile, delimiter=delimiterFound, dtype={'PatientID': str})
-
+        totalDf = removePtnsExcluded(totalDf, config)
         totalDf = ValidateImageDataExists(config, totalDf)
         
         if patient_ids:
@@ -75,8 +116,8 @@ def load_dataset_total(config, patient_ids = None):    # TODO: re-name to 'load_
             # BUG: This is how Daniel defined the splits
             if len(trainDf) == 0 and len(valDf) == 0:
                 trainDf = totalDf[totalDf[splitVar] == "train_val"]
-            # trainDf = totalDf[totalDf[splitVar] == "train_val"]
-            # testDf = totalDf[totalDf[splitVar] == "test"] 
+                testDf = totalDf[totalDf[splitVar] == "test"] 
+
 
             #if(config['data']['equalizer']['isEnabled']):
             #    trainDf = label_equalizer(trainDf, config)

@@ -1,4 +1,5 @@
 import logging
+import math
 
 import numpy as np
 from sklearn.metrics import roc_auc_score
@@ -30,14 +31,22 @@ def calculate_auc_multi(output,targets,config):
         temp_target = []
 
         for ii in range(len(predictions[i])):
-            if targets[i][ii] != -1:
-                temp_out.append(float(Sigmoid(predictions[i][ii])))
-                temp_target.append(targets[i][ii])
-        
+            if(targets[i][ii] != -1 or math.isnan(predictions[i][ii])):
+                temp_out_value = float(Sigmoid(predictions[i][ii]))
+                if(math.isnan(temp_out_value)):
+                    print(f"sigmoid generate nan values for {predictions[i][ii]}")
+                else:
+                    temp_out.append(temp_out_value)
+                    temp_target.append(targets[i][ii])
         try:
             auc = roc_auc_score(temp_target, temp_out)
-        except:
+        except Exception as e:
+            print(f"An error occured during AUC: type = {type(e)}, args = {e.args}, message = {e}")
+            print("Additional info for AUC calculation:")
+            print(temp_target)
+            print(temp_out)
             auc = -1
+
         out_dict[i] = round(auc, 3)
     
     return out_dict

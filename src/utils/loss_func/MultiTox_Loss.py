@@ -20,7 +20,7 @@ class MultiTox_Loss(nn.Module):
     def forward(self, outputs_dict, labels_dict):
         predictions = torch.stack(list(outputs_dict.values()), dim=1).type(torch.float32).squeeze(-1) # transposed! so that num columns = num toxicities
     
-        #targets = torch.stack(list(labels_dict.values()), dim=1).type(torch.float32)
+        # targets = torch.stack(list(labels_dict.values()), dim=1).type(torch.float32)
 
 
         #valid_endpoints_as_tensor = torch.tensor([0,1])
@@ -31,14 +31,15 @@ class MultiTox_Loss(nn.Module):
         targets = targets.squeeze(1)
         
         predictions = torch.reshape(predictions, targets.shape).to(predictions.dtype)
+       
+        # print(targets,predictions)
 
-        
         batch_loss = self.loss_function(predictions, targets)
 
-
+        # print(batch_loss)
         mask = (targets >= self.valid_endpoints_as_tensor[0]) & (targets <= self.valid_endpoints_as_tensor[1])
 
-        # print(batch_loss)
+        # print(mask)
         batch_loss = torch.nan_to_num(batch_loss, nan=0.0)
         batch_loss *= mask
         

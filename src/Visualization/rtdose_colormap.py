@@ -29,6 +29,22 @@ HNC_color_mapping_dict = {
     0: (255,255,255),
 }
 
+LUNG_color_mapping_dict = {
+    6900: (248,0,33),
+    6700: (248,0,33),
+    6420: (255,118,74),
+    6000: (46,255,13),
+    5700: (46,255,13),
+    5400: (66,255,253),
+    5000: (251,255,35),
+    4000: (27,62,126),
+    3000: (5,0,253),
+    2000: (5,0,253),
+    1000: (245,245,245),
+    500: (255,255,255),
+    200: (255,255,255),
+}
+
 
 
 
@@ -67,6 +83,8 @@ def create_RTDOSE_cmap(name):
     """
     if name == "HNC":
         colormapping_dict = HNC_color_mapping_dict
+    elif name == "LUNG":
+        colormapping_dict = LUNG_color_mapping_dict
     else:
         raise ValueError(f"Unknown colormap name: {name}")
     

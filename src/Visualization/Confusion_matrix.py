@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.metrics import roc_curve
 import numpy as np
+import os
 
 def sigmoid(x):
     return 1/(1+np.exp(-x))
@@ -31,7 +32,7 @@ def confusion_matrix_multi(nameFile, output, targets, config):
         #    pass
     return
 
-def confusion_matrix_bin(fileName, true, pred,config, show = False):
+def confusion_matrix_bin(fileName, true, pred,config, label, show = False):
     
     threshold = config['visualization']['confusion_matrix']['threshold']
     
@@ -47,8 +48,13 @@ def confusion_matrix_bin(fileName, true, pred,config, show = False):
 
     cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = [False, True])
     cm_display.plot()
+
+	plt.title('Confusion matrix ' + label)
+    pathResults = config['general']['resultsCurrentDirectory']
+    pathToSave = os.path.join(pathResults, fileName + '.png')
+
     if(show == False):
-        plt.savefig(config['paths']['results'] + fileName + '_confusion_matrix.png')
+        plt.savefig(pathToSave)
         plt.clf()
         plt.close('all')
     

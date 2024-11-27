@@ -1,0 +1,85 @@
+model_name = "TransRP_DenseNet121_m2"
+
+# model parameters
+
+seg_target_labels = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+features_dl = ['Sex', 'Age',
+               'Xerostomia_W01_Helemaal_niet', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg',
+                'Aspiration_W01_Helemaal_niet','Aspiration_W01_Een_beetje',  'Aspiration_W01_Nogal_Heel_erg', 
+                'Sticky_W01_Helemaal_niet', 'Sticky_W01_Een_beetje', 'Sticky_W01_Nogal_Heel_erg',
+                'Taste_W01_Helemaal_niet','Taste_W01_Een_beetje',  'Taste_W01_Nogal_Heel_erg', 
+                'Dysphagia_W01_Grade0_1', 'Dysphagia_W01_Grade2', 'Dysphagia_W01_Grade3_4', 
+                'Loctum2_Larynx', 'Loctum2_Oral_Cavity', 'Loctum2_Overig', 'Loctum2_Pharynx',
+                ]
+endpoint_list = ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06"]
+
+n_input_channels = 3 
+normalization = 'batch'
+densenet_model_depth = 121
+conv1_t_size = 5  # 7 (default) # ResNet
+conv1_t_stride = 2  # 2 (default) # ResNet
+pad_value = 0  # (Padding) Value used for padding.
+lrelu_alpha = 0.01  # (LeakyReLU) Negative slope.
+pooling_conv_filters = "NONE"  
+perform_pooling = false
+pooling = 'avg' 
+pooling_size = 2 
+# linear layers
+clinical_variables_position = 1  # (Only if len(features_dl) > 0.)  1 | 2 | 3 | ... The position is where the `clinical_linear_units`
+# will be connected into the shared linear layers, e.g., 1 means that the clinical variables MLP will be added to the first shared linear layer
+# can do up to len(linear_units) + 1, which means the clinical features get added to the first non-shared layer
+clinical_variables_linear_units = []  # (Only if len(features_dl) > 0.) None | list of ints
+linear_units = [256]  # NEW MULTITOX. SHARED linear layers. None | list of ints
+dropout_p = 0.1 # Should have the same length as `linear_units`. None | list of ints
+linear_units_endpoint = [64]  # NEW MULTITOX. NON-SHARED linear layers (endpoint specific)
+use_bias = true
+num_ohe_classes = 1 # Size of One-Hot Encoding output (per toxicity endpoint).  IMPORTANT: define `label_weights` such that len(label_weights) == num_ohe_classes.
+ECE_n_bins = 10
+
+
+
+# training parameters
+weight_init_name = 'kaiming_uniform' 
+kaiming_mode = 'fan_in' 
+kaiming_nonlinearity = 'leaky_relu' 
+gain = 0
+optimizer_name = 'sgd'
+momentum = 0.9
+weight_decay = 0.01
+hessian_power = 1.0
+use_lookahead = false
+lookahead_k = 5
+lookahead_alpha = 0.5 
+
+
+loss_function_name = 'bce'   
+label_weights = false 
+label_pos_weights = false 
+
+auxiliary_loss_func_name = "ESD"  #  "SB-ECE" # None  # "SB-ECE" | "ESD" | None
+SB_ECE_n_bins = 15
+SB_ECE_temperature = 0.005
+loss_reduction = 'none' # Daniel: do not change this
+label_smoothing = 0  
+scheduler_name = "NONE"  # [None, 'cosine', 'cyclic', 'exponential']. 
+grad_max_norm = 1 
+lr = 0.0005  
+T_0restart = 80  
+T_mult = 1 
+eta_min = 1e-10 
+
+batch_size = 8
+
+# augmentation parameters
+
+perform_data_aug = true
+data_aug_p = 1 
+data_aug_strength = 1
+# AugMix
+perform_augmix = false
+mixture_width = 3  
+mixture_depth = [1, 3] 
+augmix_strength = 3
+# MixUp
+perform_mixup = true
+mixup_alpha = 2

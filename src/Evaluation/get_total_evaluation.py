@@ -107,7 +107,10 @@ def get_total_evaluation(model_path):
     for path_fold in folds:   
         model = get_classification_model(config, metadata)
         model.cuda()
+        print('loading model')
+        print(model_path + r'/' + path_fold + '/DlModel_Weights.pth')
         model.load_state_dict(torch.load(model_path + r'/' + path_fold + '/DlModel_Weights.pth'))
+        print('done')
         out, targets = get_output_results(model, test_data, config)
 
         out_lists.append(out)
@@ -126,10 +129,10 @@ def get_total_evaluation(model_path):
     pd.DataFrame(targets).to_csv(config['paths']['results'] + 'labels.csv')
     
     # Visualization 
-    # for key in out_tot.keys():
-    #     true = targets[key]
-    #     pred = out_tot[key]
-    #     get_visualization(config,true,pred, key)
+    for key in out_tot.keys():
+        true = targets[key]
+        pred = out_tot[key]
+        get_visualization(config,true,pred, key)
     
     # # Metrics
     # auc = calculate_auc_multi()

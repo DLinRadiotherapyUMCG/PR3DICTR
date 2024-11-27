@@ -79,12 +79,19 @@ def derived_hyperparameters(trial, config):
                 hyperinfo = config['hyperparam_tuning']['derived']['n_clinical_down_blocks'][key]  
                 location = hyperinfo['location']
                 base_name = hyperinfo['name']
-                for i in range(config['model']['n_clinical_down_blocks']):
-                    hyperinfo_new = hyperinfo.copy()
-                    hyperinfo_new['name'] = base_name + str(i)
-                    suggested_value = generate_value(trial, hyperinfo_new)
-                    temp_list.append(suggested_value)
-                config = update_config(config,location,temp_list)
+
+                if(base_name == "clin_pos"):
+                    hyperinfo['max'] = config['model']['n_clinical_down_blocks']
+                    suggested_value = generate_value(trial, hyperinfo)
+                    config = update_config(config,location,suggested_value)
+                else:
+                    for i in range(config['model']['n_clinical_down_blocks']):
+                        hyperinfo_new = hyperinfo.copy()
+                        hyperinfo_new['name'] = base_name + str(i)
+                        suggested_value = generate_value(trial, hyperinfo_new)
+                        temp_list.append(suggested_value)
+                    config = update_config(config,location,temp_list)
+
             except Exception as error:
                 print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
                 raise Exception("Stopped trials due to error.")
@@ -106,6 +113,23 @@ def derived_hyperparameters(trial, config):
                 print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
                 raise Exception("Stopped trials due to error.")
             
+    if 'n_linear_units_endpoint' in config['hyperparam_tuning']['hyperparams'].keys():
+        for key in config['hyperparam_tuning']['derived']['n_linear_units_endpoint']:
+            try:
+                temp_list = []
+                hyperinfo = config['hyperparam_tuning']['derived']['n_linear_units_endpoint'][key]  
+                location = hyperinfo['location']
+                base_name = hyperinfo['name']
+                for i in range(config['model']['n_linear_units_endpoint']):
+                    hyperinfo_new = hyperinfo.copy()
+                    hyperinfo_new['name'] = base_name + str(i)
+                    suggested_value = generate_value(trial, hyperinfo_new)
+                    temp_list.append(suggested_value)
+                config = update_config(config,location,temp_list)
+            except Exception as error:
+                print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
+                raise Exception("Stopped trials due to error.")
+        
     return config
 
 def set_minValue(hyperinfo, firstRun):
