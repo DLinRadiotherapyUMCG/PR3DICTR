@@ -1,6 +1,7 @@
 import logging
 import os
-
+import numpy as np
+import pandas as pd
 import wandb
 
 # Set working directory to --> "Pred_RT"
@@ -10,16 +11,17 @@ path_src = r"C:\Users\r.van.der.wal\Documents\GitHub\pred_RT"#os.getcwd()
 sys.path.insert(1, path_src)
 print(path_src)
 
+
+
 from src.config_presets.tools.get_config import get_config, load_config
 from src.dataset.load_dataset import load_dataset, load_dataset_total, ValidateImageDataExists
 from src.models.tools.save_model import save_model
-from src.training.train_multi import train
+from src.training.train import train
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file, create_textfile
-from src.dataset.ToxDataset import *
 
 from src.evaluation.get_total_evaluation import get_total_evaluation
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, confusion_matrix

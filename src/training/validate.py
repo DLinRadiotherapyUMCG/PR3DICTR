@@ -11,6 +11,16 @@ def sigmoid(x):
 
 
 def validate(config, model, loss_function, val_loader):
+    """
+    Evaluate the model on the given dataloader.
+    
+    Returns:
+      avg_loss: average loss over the dataloader
+      auc_dict: dictionary of AUC values for each label
+      preds_dict: dictionary of predictions for each label
+      labels_dict: dictionary of true labels for each label
+      patientIDs_list: list of patient IDs in the dataloader
+    """
     model.eval()
 
     total_loss = 0.0

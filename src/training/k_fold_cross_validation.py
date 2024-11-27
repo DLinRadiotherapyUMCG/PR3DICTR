@@ -5,7 +5,7 @@ import numpy as np
 import torch
 
 from src.constants import DEVICE
-from src.training.train_multi import train
+from src.training.train import train
 from src.training.validate import validate
 from src.dataset.load_dataset import load_dataset, generate_K_fold_cross_validation_splits
 from src.models.tools.get_classification_model import get_classification_model
@@ -84,6 +84,7 @@ def K_fold_cross_validation(config, hyperClass=None):
 
 
         # save the results # NOTE: how do we want to do this?
+        # hyperhandler-like stuff here?
 
 
 

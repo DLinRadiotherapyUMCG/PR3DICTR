@@ -9,7 +9,7 @@ from src.config_presets.tools.get_config import get_config
 from src.config_presets.tools.load_config import load_config
 from src.dataset.load_dataset import load_dataset, load_dataset_total
 from src.models.tools.save_model import save_model
-from src.training.train_multi import train
+from src.training.train import train
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
@@ -17,7 +17,7 @@ from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file
 from sklearn.metrics import roc_auc_score
 
-from src.models.tools.get_multi_model import get_classification_model
+from src.models.tools.get_classification_model import get_classification_model
 
 from torch.utils.data import DataLoader
 

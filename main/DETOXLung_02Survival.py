@@ -12,13 +12,12 @@ sys.path.insert(1, path_src)
 from src.config_presets.tools.get_config import get_config
 from src.dataset.load_dataset import load_dataset, load_dataset_total, ValidateImageDataExists
 from src.models.tools.save_model import save_model
-from src.training.train_multi import train
+from src.training.train import train
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file, create_textfile
-from src.dataset.ToxDataset import *
 
 from src.evaluation.get_total_evaluation import get_total_evaluation
 from sklearn.metrics import accuracy_score, roc_auc_score

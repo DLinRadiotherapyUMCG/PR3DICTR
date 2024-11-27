@@ -6,7 +6,7 @@ from src.dataset.load_dataset import load_dataset_single
 from src.dataset.get_dataloader import make_dataloader
 from src.dataset.get_transforms import get_transforms
 from src.models.tools.save_model import save_model
-from src.training.train_multi import train, validate
+from src.training.train import train, validate
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
