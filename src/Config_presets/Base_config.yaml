@@ -10,6 +10,7 @@ general:
   endpointRatios: []
   testMode: False
   classImbalance: 0.25
+  use_test_set: False
 
 
 columns:
@@ -77,11 +78,13 @@ model:
   linear_units_endpoint: [64]
 
 data:
+  filename_stratified_sampling_test_csv: 'stratified_sampling_test_542.csv'
   trainfile: 'stratified_sampling_full_manual_94_edited.csv'
   valfile: 'stratified_sampling_full_manual_94_edited.csv'
   splitvar: "Split"
   patientVar: 'PatientID'
-  stratifyList: ["RP_OneYear","SmokerActive","SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy","ChemoRad"]
+  patientID_length: 7
+  stratifyList: ["RP_OneYear", "SmokerActive", "SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy", "ChemoRad"]
   ExcludedVar: []
   ExcludedValue: []
   image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
@@ -126,6 +129,7 @@ data:
     isEnabled: false
     Iterations: 3
     Splits: 5
+    validation_size: 0.2  # if only 1 split
 
   equalizer:
     isEnabled: false

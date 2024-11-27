@@ -9,6 +9,9 @@ import pandas as pd
 import numpy as np
 
 from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+
 
 def removePtnsExcluded(df, config):
     excludedVariables = config['data']['ExcludedVar']
@@ -22,35 +25,8 @@ def removePtnsExcluded(df, config):
 
     return df
 
-def load_dataset(config, csv_path, patient_ids = None, augment= False, split = False, train = True, splitVar = "Split"):
-    """
-    Loads data for a single csv file.
-    :param csv_path:
-    :param config:
-    :param patient_ids:
-    :return: PyTorch Dataset and metadata
-    """    
-    # Create an instance of the HNCDataset
-    dataset = HNCDataset(csv_path, config, patient_ids, augment=augment, 
-                         split = split, train = train, splitVar = splitVar)
 
-    # Get an example input to determine the metadata
-    example_input, _, _ = dataset[0]
-    channels, depth, height, width = example_input.shape
 
-    n_features = len(config['columns']['clinical_features'])
-
-    metadata = {
-        "channels": channels,
-        "depth": depth,
-        "height": height,
-        "width": width,
-        "n_features": n_features,
-    }
-
-    # Return the dataset and the metadata
-    return dataset, metadata
-from sklearn.preprocessing import LabelEncoder
 
 
 
@@ -61,7 +37,7 @@ def ValidateImageDataExists(config, df):
     ptnClinList = df['PatientID'].tolist()
     removePtnIDS = []
     for i in range(len(ptnClinList)):
-        zerosPtnNmbr = str(ptnClinList[i]).rjust(7,'0')
+        zerosPtnNmbr = str(ptnClinList[i]).rjust(config['data']['patientID_length'],'0')
         if(ptnClinList[i] in ptnDirectories or zerosPtnNmbr in ptnDirectories):
             pass
         else:
@@ -77,6 +53,123 @@ def load_dataset_single(csvPath, config, patient_ids = None):
     dlDf = pd.read_csv(csvPath, delimiter=delimiterFound, dtype={'PatientID': str})
 
     return dlDf
+
+
+
+def load_dataset(config, patient_ids=None):
+    """
+    
+    """
+
+    patientID_col = config['data']['patientVar']
+    # load the dataset (patients are split by 'train_val'/'test') --> one dataframe
+    dataset_csv_dir = os.path.join(config['paths']['csv'], config['data']['filename_stratified_sampling_test_csv'])
+
+    delimiterFound = get_delimiter(dataset_csv_dir)
+    df_total = pd.read_csv(dataset_csv_dir, delimiter=delimiterFound, dtype={'PatientID': str})
+    # make sure the patientID strings are long enough
+    patientID_length = config['data']['patientID_length']
+    df_total[patientID_col] = df_total[patientID_col].apply(lambda x: x.rjust(patientID_length, '0'))  # ['%0.{}d'.format(patient_id_length) % int(x) for x in df[patient_id_col]]
+    
+    df_total = removePtnsExcluded(df_total, config)
+    df_total = ValidateImageDataExists(config, df_total) 
+
+    # TODO: Daniel: idk what the purpose of this was in the old code? was it ever used?
+    # if patient_ids:
+    #     totalDf = totalDf[totalDf[patientID_col].isin(patient_ids)]
+
+    # if in test mode, and we want to use a subset of the data, then subsample the total dataset
+    if config['general']['testMode'] and "n_patients_total" in config['data']:
+        num_patients_sample = config['data']['n_patients_total']
+        df_total = subsample_dataset(num_patients_sample, df_total)
+    
+    # split off the test set
+    df_test = df_total[df_total[config['data']['splitvar']] == "test"]
+    df_train_val = df_total[df_total[config['data']['splitvar']] != "test"]
+
+    
+    assert not PtnID_SanityCheck(config,df_train_val,df_test)
+
+    return df_train_val, df_test
+
+
+
+
+def generate_K_fold_cross_validation_splits(config, df_development_set):
+    """
+    Generates K train-val splits of the develoment dataset, using stratified K-Fold cross-validation.
+    Returns a list of dictionaries, where each dictionary contains a train and a validation dataframe: [{'train': df_t1, 'val': df_v1}, ...]
+    """
+    # Check and validate if KFolds settings are active
+    k_fold_dataframes_collection = []
+
+
+    labels = df_development_set[config['columns']['label']]
+    # encode the labels (makes it possible to use StratifiedKFold for multi-label problems, as it only works on binary or multi-class)
+    encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])
+        
+    skf = StratifiedKFold(n_splits=config["data"]["kFolds"]["Splits"], shuffle=True, random_state=config["general"]["seed"])
+    for i, (train_index, val_index) in enumerate(skf.split(df_development_set,encoded_labels)):
+        train_i_df = df_development_set.iloc[train_index]
+        #trainDf_sel = mergeDf.iloc[train_index]
+        if(config['data']['equalizer']['isEnabled']):
+            train_i_df = label_equalizer(train_i_df, config)
+        val_i_df = df_development_set.iloc[val_index]
+
+        assert not PtnID_SanityCheck(config, train_i_df, val_i_df)
+
+        k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
+
+    return k_fold_dataframes_collection
+
+
+
+def generate_single_train_val_split(config, df_development_set):
+    """
+    A function to split the development set into 1 train and 1 validation set (in case you want to train just one model)
+    # TODO: check that this works properly
+    """
+    labels = df_development_set[config['columns']['label']]
+    train_df, val_df = train_test_split(df_development_set, test_size=config['data']['kFolds']['validation_size'], stratify=labels, random_state=config['general']['seed'])
+    
+    assert not PtnID_SanityCheck(config, train_df, val_df)
+    
+    return train_df, val_df
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -117,6 +210,8 @@ def load_dataset_total(config, patient_ids = None):    # TODO: re-name to 'load_
             if len(trainDf) == 0 and len(valDf) == 0:
                 trainDf = totalDf[totalDf[splitVar] == "train_val"]
                 testDf = totalDf[totalDf[splitVar] == "test"] 
+
+                print("length test set", len(testDf))
 
 
             #if(config['data']['equalizer']['isEnabled']):
@@ -192,6 +287,25 @@ def load_dataset_total(config, patient_ids = None):    # TODO: re-name to 'load_
     logging.info(f"Patient amount in datasets: Train = {trainDataset_Collection[0].shape[0]}, Validation = {valDataset_Collection[0].shape[0]}, Test = {testDataset_Collection[0].shape[0]}")
 
     return [trainDataset_Collection, valDataset_Collection, testDataset_Collection]#, metadata
+
+
+
+
+
+
+def subsample_dataset(num_patients_sample, df_dataset):
+    """
+    Subsample the datasets to that `num_patients_sample` are used in total.
+    This is used for code-testing mode.
+    """
+    # find the number of patients in each dataset, so that we can preserve the ratio of patients in each dataset (train, val, test)
+    n_total_loaded = df_dataset.shape[0]
+    df_dataset = df_dataset.sample(frac=1, random_state=42).reset_index(drop=True) # shuffles the rows of the dataframe
+
+    # Only use 100 patients for training dataset
+    df_dataset = df_dataset.iloc[:int(n_total_loaded * num_patients_sample)]
+    
+    return df_dataset
 
 
 def subsample_datasets(num_patients_sample, trainDf, valDf, testDf):

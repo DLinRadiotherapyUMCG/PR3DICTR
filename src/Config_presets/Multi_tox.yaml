@@ -8,6 +8,7 @@ general:
   error_ignore: true
   endpointRatios: []
   testMode: false
+  use_test_set: False
 
 columns: # 
   label:  ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]
@@ -74,10 +75,12 @@ model:
   linear_units_endpoint: []
 
 data:
+  filename_stratified_sampling_test_csv: 'stratified_sampling_test_542.csv'
   trainfile: 'stratified_sampling_test_542.csv'
   valfile: 'stratified_sampling_test_542.csv'
   splitvar: "Split"
   patientVar: 'PatientID'
+  patientID_length: 7
   stratifyList: []
   Excluded: "ExcludeVar"
 
@@ -105,7 +108,7 @@ data:
 
   kFolds:
     isEnabled: true
-    Iterations: 1
+    Iterations: 2
     Splits: 5
 
   equalizer:
@@ -120,7 +123,7 @@ data:
     strength: 1
 
 training:
-  max_epochs: 5
+  max_epochs: 3
   batch_size: 16
   validation_interval: 1
   patience: 10

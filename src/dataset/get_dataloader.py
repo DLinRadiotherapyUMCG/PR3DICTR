@@ -188,10 +188,7 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
         dataloader = dl_class(**dl_args_dict) 
 
         example_data = next(iter(dataloader))
-        print(example_data.keys())
-        #example_input = 
-        #print(example_input.shape)
-        #example_input = example_data[]
+        
         batch_size1, channels, depth, height, width = example_data['input'].shape
         batch_size2, n_features = example_data['features'].shape
 

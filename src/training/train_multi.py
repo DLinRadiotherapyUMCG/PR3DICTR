@@ -7,11 +7,11 @@ from torch.utils.data import DataLoader
 
 from src.constants import DEVICE
 from src.utils.loss_func.get_loss_function import get_loss_function
-from src.models.tools.get_classification_model import get_classification_model
 from src.utils.optimizer.get_optimizer import get_optimizer
 from src.utils.scheduler.get_scheduler import get_scheduler
-from src.evaluation.calculate_auc import calculate_auc
 from src.evaluation.calculate_auc import calculate_auc_multi
+from src.training.tools.utils import move_batch_to_device
+from src.training.validate import validate
 
 import pandas as pd
 import numpy as np
@@ -21,13 +21,12 @@ def sigmoid(x):
     return 1/(1+np.exp(-x))
 
 
-def train(config, train_loader, val_loader, metadata, hyperClass = None):
+def train(config, model, loss_function, train_loader, val_loader, hyperClass = None):
     """
     Train the model.
     :param config:
     :param train_data:
     :param val_data:
-    :param metadata:
     :return: Model
     """
 
@@ -38,16 +37,11 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
     # Get the names of the end-points being evaluated 
     labels = config['columns']['label']
 
-    # Get the model
-    logging.info('Getting model')
-    model = get_classification_model(config, metadata)
-    model.to(device=DEVICE)
-    # wandb.watch(model, log_freq=100)
-
     # Get loss function, optimizer, and scheduler
     loss_function = get_loss_function(config)
     optimizer = get_optimizer(config, model)
-    scheduler = get_scheduler(config, optimizer)
+    if config['training']['scheduler']['name'] is not False:
+        scheduler = get_scheduler(config, optimizer)
 
     # Initialize the best model and lowest validation loss
     best_model = None
@@ -63,6 +57,7 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
     # Training loop
     logging.info('Starting training loop')
     for epoch in range(config['training']['max_epochs']):
+        current_epoch_num = epoch+1
         resultsEpoch = dict()
         out_tot = dict.fromkeys(labels)
         targets_tot = dict.fromkeys(labels)
@@ -81,8 +76,8 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
 
         start_epoch_time = time.time()
 
-        for i, batch in enumerate(train_loader):
-            logging.debug(f'Batch {i} of epoch {epoch}')
+        for batch_num, batch in enumerate(train_loader):
+            logging.debug(f'Batch {batch_num} of epoch {epoch}')
 
             optimizer.zero_grad(set_to_none=True)
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
@@ -110,11 +105,14 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
             optimizer.step()
 
             # Step the scheduler
-            #scheduler.step(epoch + (i + 1) / len(train_loader))
+            if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
+                scheduler.step(epoch + (batch_num / current_epoch_num))
+            elif config['training']['scheduler']['name'] in ['cyclic']:
+                scheduler.step()
 
             num_batches += 1      
 
-        auc = calculate_auc_multi(out_tot,targets_tot,config)
+        auc = calculate_auc_multi(out_tot, targets_tot, config)
             
         #logging.info('Training AUCs')
         #logging.info(auc)
@@ -130,7 +128,7 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
 
         # Perform validation
         if epoch % config['training']['validation_interval'] == 0:
-            val_loss, auc_val = validate(loss_function, model, val_loader,config)
+            val_loss, auc_val, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader)
             # wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc, 'val/loss': val_loss, 'val/auc': val_auc})
             logging.info(f'  Validation Loss={val_loss:.5f}, AUCs={auc_val}')
             resultsEpoch.update({'Validation_Loss':val_loss})
@@ -168,13 +166,13 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
         
         logging.info(f'  Epoch duration = {(time.time() - start_epoch_time):.2f} seconds')
 
-        pd.DataFrame(out_tot).to_csv(os.path.join(config['general']['resultsCurrentDirectory'],'temp_pred.csv'), sep = ';')
-        pd.DataFrame(targets_tot).to_csv(os.path.join(config['general']['resultsCurrentDirectory'],'temp_target.csv'), sep = ';')
+        #pd.DataFrame(out_tot).to_csv(os.path.join(config['general']['resultsCurrentDirectory'],'temp_pred.csv'), sep = ';')
+        #pd.DataFrame(targets_tot).to_csv(os.path.join(config['general']['resultsCurrentDirectory'],'temp_target.csv'), sep = ';')
         
         # Log to hyperparam class if necessary
         if(hyperClass != None):
             resultsEpoch.update({"epoch":epoch})
-            hyperClass.UpdateWandB(resultsEpoch,epoch)
+            hyperClass.UpdateWandB(resultsEpoch, epoch)
         
         # else:
         #     wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc})
@@ -190,110 +188,54 @@ def train(config, train_loader, val_loader, metadata, hyperClass = None):
     return model
 
 
-def validate(loss_function, model, val_loader, config):
-    model.eval()
-    total_loss = 0.0
-    total_auc = 0.0
-    num_batches = 0
-    num_auc_batches = config['training']['validation']['num_auc_batches']
-    labels = config['columns']['label']
+# def validate(loss_function, model, val_loader, config):
+#     model.eval()
+#     total_loss = 0.0
+#     total_auc = 0.0
+#     num_batches = 0
+#     #num_auc_batches = config['training']['validation']['num_auc_batches']
+#     labels = config['columns']['label']
     
     
-    out_tot = dict.fromkeys(labels)
-    targets_tot = dict.fromkeys(labels)
+#     preds_dict = dict.fromkeys(labels)
+#     labels_dict = dict.fromkeys(labels)
     
-    for label in labels:
-        out_tot[label] = []
-        targets_tot[label] = []
+#     for label in labels:
+#         preds_dict[label] = []
+#         labels_dict[label] = []
 
     
-    with torch.no_grad():
-        for i, batch in enumerate(val_loader):
-            logging.debug(f'Validation batch {i}')
-            inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+#     with torch.no_grad():
+#         for i, batch in enumerate(val_loader):
+#             logging.debug(f'Validation batch {i}')
+#             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
 
-            outputs = model(x=inputs, features=clinical_features)
-            loss = loss_function(outputs, targets)
+#             outputs = model(x=inputs, features=clinical_features)
+#             loss = loss_function(outputs, targets)
 
-            total_loss += loss.item()
+#             total_loss += loss.item()            
             
+#             for lab_indx, label in enumerate(labels):
+#                 preds_dict[label] = preds_dict[label] + list(outputs[label].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
+#                 labels_dict[label] = labels_dict[label] + list(targets[:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
             
-            for lab_indx, label in enumerate(labels):
-                out_tot[label] = out_tot[label] + list(outputs[label].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
-                targets_tot[label] = targets_tot[label] + list(targets[:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
-            
-            num_batches += 1
+#             num_batches += 1
 
-    auc = calculate_auc_multi(out_tot,targets_tot,config)
-    model.train()
+#     auc_dict = calculate_auc_multi(preds_dict, labels_dict, config)
+#     model.train()
 
-    avg_loss = total_loss / num_batches
-    
+#     avg_loss = total_loss / num_batches
 
-    logging.debug(f'Validation loss: {avg_loss}')
-    # logging.debug(f'Validation AUC: {avg_auc}')
+#     logging.debug(f'Validation loss: {avg_loss}')
+#     # logging.debug(f'Validation AUC: {avg_auc}')
 
-    return avg_loss, auc
-
-
-
-
-def validate_event(loss_function, model, val_loader, config):
-    model.eval()
-    total_loss = 0.0
-    total_auc = 0.0
-    num_batches = 0
-    num_auc_batches = config['training']['validation']['num_auc_batches']
-    labels = config['columns']['label']
-    
-    
-    out_tot = dict.fromkeys(labels)
-    targets_tot = dict.fromkeys(labels)
-    
-    for label in labels:
-        out_tot[label] = []
-        targets_tot[label] = []
-
-    
-    with torch.no_grad():
-        for i, batch in enumerate(val_loader):
-            logging.debug(f'Validation batch {i}')
-            inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
-
-            outputs = model(x=inputs, features=clinical_features)
-            loss = loss_function(outputs, targets)
-
-            total_loss += loss.item()
-            
-            
-            for lab_indx, label in enumerate(labels):
-                out_tot[label] = out_tot[label] + list(outputs[label].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
-                targets_tot[label] = targets_tot[label] + list(targets[:,:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
-            
-            num_batches += 1
-
-    auc = calculate_auc_multi(out_tot,targets_tot,config)
-    model.train()
-
-    avg_loss = total_loss / num_batches
-    
-
-    logging.debug(f'Validation loss: {avg_loss}')
-    # logging.debug(f'Validation AUC: {avg_auc}')
-
-    return avg_loss, auc
+#     return avg_loss, auc_dict
 
 
 
 
 
-def move_batch_to_device(batch, device):
-    # batch is a dictionary
-    inputs, clinical_features, targets = batch['input'], batch['features'], batch['label_list']
-    inputs = inputs.to(device=device)
-    clinical_features = clinical_features.to(device=device)
-    targets = targets.to(device=device)
-    return inputs, clinical_features, targets
+
 
 def get_output_results(model, val_loader, config):
     model.eval()

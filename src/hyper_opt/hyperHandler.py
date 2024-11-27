@@ -3,7 +3,7 @@ import optuna
 import logging
 
 from src.config_presets.tools.get_config import get_config
-from src.dataset.load_dataset import load_dataset, load_dataset_total
+from src.dataset.load_dataset import load_dataset_total
 from src.models.tools.save_model import save_model, save_config, save_dataset, save_dataset_summary
 from src.training.train_multi import train, validate
 from src.utils.logging.logging import setup_logging
@@ -90,12 +90,6 @@ def UpdateTrial(hyperClass, trial, config):
         trialNumber =  numHigh + 1
         config['general']['trialNumber'] = f"Trial_{str(trialNumber).rjust(3,'0')}" 
 
-    # Create result directory
-    CreateResultDir(config)
-
-
-
-
 
     # Create result directory
     CreateResultDir(config)
@@ -123,11 +117,11 @@ def UpdateTrial(hyperClass, trial, config):
     val_loss_col = []
     val_auc_col = []
     for i in range(len(trainDF_col)):
-        if(groupVar != None):
-            CreateResultDir(config,i)
+        if (groupVar != None):
+            CreateResultDir(config, i)
 
-        if(trial != None and config['hyperparam_tuning']['WandB']['IsEnabled']):
-            CreateStudy(config,configWandB,groupVar)
+        if (trial != None and config['hyperparam_tuning']['WandB']['IsEnabled']):
+            CreateStudy(config, configWandB, groupVar)
 
         train_loader, metadata = make_dataloader(config, trainDF_col[i], train_transforms, validation_mode=False)
         val_loader, _ = make_dataloader(config, valDF_col[i], val_transforms, validation_mode=True)
@@ -149,7 +143,7 @@ def UpdateTrial(hyperClass, trial, config):
 
         # Test dataset check
         try:
-            if(testDF_col[i].df.shape[0] != 0):
+            if len(testDF_col[i] != 0):
                 test_loader, _ = make_dataloader(config, testDF_col[i], val_transforms, validation_mode=True)
                 test_loss, test_auc = validate(loss_function, model, test_loader, config)
                 savePath = os.path.join(config['general']['resultsCurrentDirectory'],"test_loss.txt")
@@ -166,15 +160,15 @@ def UpdateTrial(hyperClass, trial, config):
         # Save model
         try:
             save_model(config, model, f"DlModel_Weights.pth")
-            save_config(config,f"DlModel_Config.yaml")
+            save_config(config, f"DlModel_Config.yaml")
         except:
             print("WARNING: SAVING NOT WORKING!! PLEASE CHECK")
 
         # Save Datasets
-        save_dataset(config,trainDF_col[i],"train_Dataset")
-        save_dataset(config,valDF_col[i],"validation_Dataset")
-        save_dataset(config,testDF_col[i],"test_Dataset")
-        save_dataset_summary(config,trainDF_col[i],valDF_col[i],testDF_col[i])
+        save_dataset(config,trainDF_col[i], "train_Dataset")
+        save_dataset(config,valDF_col[i], "validation_Dataset")
+        save_dataset(config,testDF_col[i], "test_Dataset")
+        save_dataset_summary(config, trainDF_col[i], valDF_col[i], testDF_col[i])
 
         logging.info("Information about the val_auc_array:")
         logging.info(val_auc_col)
@@ -197,6 +191,8 @@ def UpdateTrial(hyperClass, trial, config):
         # Create a results file for the Folds results and the mean values    
 
     return val_lossMean
+
+
 
 def update_config(dic, location, suggested_value):
     if len(location) == 1:

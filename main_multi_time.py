@@ -31,7 +31,7 @@ def main():
     set_random_seed(config['general']['seed'])
 
     # Load the dataset
-    # logging.info('Loading dataset')
+    # logging.info('Loading dataset')    
     train_data, metadata = load_dataset(config, os.path.join(config['paths']['csv'], 'train_full.csv'), augment=True)
     val_data, _ = load_dataset(config, os.path.join(config['paths']['csv'], 'valid.csv'))
 

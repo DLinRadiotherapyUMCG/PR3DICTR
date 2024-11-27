@@ -10,7 +10,7 @@ path_src = os.getcwd()
 sys.path.insert(1, path_src)
 
 from src.config_presets.tools.get_config import get_config
-from src.dataset.load_dataset import load_dataset, load_dataset_total
+from src.dataset.load_dataset import load_dataset_total
 from src.models.tools.save_model import save_model
 from src.training.train_multi import train
 from src.utils.logging.logging import setup_logging
@@ -24,6 +24,7 @@ from src.utils.loss_func.get_loss_function import get_loss_function
 from src.dataset.get_dataloader import make_dataloader   
 from src.dataset.get_transforms import get_transforms
 
+from src.training.k_fold_cross_validation import K_fold_cross_validation
 
 if __name__ == '__main__':
     # Setup
@@ -37,10 +38,20 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['general']['seed'])
 
+
+
+    K_fold_cross_validation(config)
+
     # # MAIN: DL running class with hyperparameter optimization
-    hyperClass = HyperTuning_Handler(config)
-    hyperClass.Operate(config)
-    hyperClass.Stop()
+    # hyperClass = HyperTuning_Handler(config)
+    # hyperClass.Operate(config)
+    # hyperClass.Stop()
+
+
+
+
+
+
 
     # # Set loss function
     # loss_function = get_loss_function(config)
