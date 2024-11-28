@@ -2,6 +2,7 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
+  experiment_name: 'DETOX-Lung_Project_resnet'
   trialNumber: "Trial_?"
   patientGroup: 0
   optimize: "loss"
@@ -183,7 +184,6 @@ visualization:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'DETOX-Lung_Project_resnet'
   WandB:
     IsEnabled: False
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
@@ -191,7 +191,7 @@ hyperparam_tuning:
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: False
-    studyName: "DETOX-Lung_Project_resnet"
+
     n_trials: 1
   # ----  Custom Params -------
   # Location:= path variabele in config

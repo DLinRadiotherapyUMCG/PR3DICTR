@@ -39,23 +39,25 @@ import pandas as pd
 from src.constants import DEVICE
 
 from src.config_presets.tools.load_config import load_config
-from src.dataset.load_dataset import load_dataset_total
-from src.models.tools.get_multi_model import get_classification_model
+from src.dataset.load_dataset import load_dataset
+from src.models.tools.get_classification_model import get_classification_model
 from src.visualization.get_visualization import get_visualization
 from src.evaluation.calculate_auc import calculate_auc_multi
-
+from src.training.tools.utils import move_batch_to_device
 
 from torch.utils.data import DataLoader
 
 def sigmoid(x):
     return 1/(1+np.exp(-x))
 
-def move_batch_to_device(batch, device):
-    inputs, clinical_features, targets = batch
-    inputs = inputs.to(device=device)
-    clinical_features = clinical_features.to(device=device)
-    targets = targets.to(device=device)
-    return inputs, clinical_features, targets
+
+
+# def move_batch_to_device(batch, device):        # NOTE: Daniel has replaced this with an imported function from src.training.utils 
+#     inputs, clinical_features, targets = batch 
+#     inputs = inputs.to(device=device)
+#     clinical_features = clinical_features.to(device=device)
+#     targets = targets.to(device=device)
+#     return inputs, clinical_features, targets
 
 def get_output_results(model, val_loader, config): # this function is redundant, could just be an option for the validate function
     model.eval()
@@ -95,7 +97,7 @@ def get_total_evaluation(model_path):
     config = load_config(model_path + r'/' + folds[0] + '/DlModel_Config.yaml')
     
     # Load the testing dataset
-    data, metadata = load_dataset_total(config)
+    data, metadata = load_dataset(config)
     test_data = DataLoader(data[2][0],batch_size=config['training']['batch_size'], shuffle=False, 
                                       num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
     

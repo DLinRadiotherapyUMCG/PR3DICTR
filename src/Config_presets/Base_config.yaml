@@ -2,6 +2,7 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
+  experiment_name: 'Base_Experiment'
   trialNumber: "Trial_?"
   patientGroup: 0
   optimize: "loss"
@@ -189,15 +190,15 @@ visualizations:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'Base_Dir'
   WandB:
     IsEnabled: false
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
-    MetricsMonitor: [ "train_AUC","train_loss","train_acc",
-      "eval_AUC","eval_loss","eval_acc"]
+    #MetricsMonitor: [ "train_AUC","train_loss","train_acc",     # NOTE: is not used?
+    #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: "Base_Dir"
+    objectives: ["val_mean_AUC"]
+    objective_direction: ["maximize"]          # must be the same length (and order) as objectives
     n_trials: 30
   # ----  Custom Params -------
   # Location:= path variabele in config

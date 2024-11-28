@@ -5,7 +5,7 @@ import logging
 from src.config_presets.tools.get_config import get_config
 from src.dataset.load_dataset import load_dataset_total
 from src.models.tools.save_model import save_model, save_config, save_dataset, save_dataset_summary
-from src.training.train_multi import train, validate, validate_event
+from src.training.train import train, validate, validate_event
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
@@ -20,8 +20,8 @@ import numpy as np
 
 from functools import partial
 
-from src.hyper_opt.Optuna_hpt import *
-from src.hyper_opt.WandB_hpt import *
+import src.hyper_opt.Optuna_hpt as Optuna_hpt
+import src.hyper_opt.WandB_hpt as WandB_hpt
 
 class HyperTuning_Handler():
     def __init__(self,config):
@@ -30,7 +30,7 @@ class HyperTuning_Handler():
         self.config = config
 
         # Set weight and biases
-        WandB_initalise(config)
+        WandB_hpt.login(config)
 
     def Operate(self, config):
         if(config['general']['testMode']):
@@ -48,17 +48,20 @@ class HyperTuning_Handler():
             UpdateBinaryTrial(self, None, config)
 
     def UpdateWandB(self,results,epoch):
-        UpdateStudy(self.config,results,epoch)
+        WandB_hpt.WandB_log(self.config, results, epoch)
 
     def Stop(self):
-        WandB_stop(self.config)
+        WandB_hpt.WandB_stop(self.config)
+
+
+
 
 def Optuna_CreateStudy(config):
     study = None
     if(config['hyperparam_tuning']['optuna']['IsEnabled']):
 
         # Check where to keep study information
-        studyName = config['hyperparam_tuning']['ProjectName']
+        studyName = config['general']['experiment_name']
         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
         create_file(pathOptunaStudyTracker)
@@ -124,7 +127,7 @@ def UpdateBinaryTrial(hyperClass, trial, config):
             CreateResultDir(config,i)
 
         if(trial != None and config['hyperparam_tuning']['WandB']['IsEnabled']):
-            CreateStudy(config,configWandB,groupVar)
+            WandB_hpt.WandB_create_study(config,configWandB,groupVar)
 
          # Get the data loaders
         train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
@@ -147,9 +150,6 @@ def UpdateBinaryTrial(hyperClass, trial, config):
         val_auc_col.append(val_auc)
 
         # Test dataset check
-<<<<<<< HEAD
-        Validate_Dataset(config,testDataset_col[i],model,loss_function)
-=======
         # try:
         #     if(testDataset_col[0].df.shape[0] != 0):
         #         test_loader = DataLoader(testDataset_col[i], batch_size=config['training']['batch_size'], shuffle=False,
@@ -165,7 +165,6 @@ def UpdateBinaryTrial(hyperClass, trial, config):
         #         np.savetxt(savePath,np.array(test_auc))
         # except Exception as e:
         #     logging.info(f"Could not validate the test dataset with error: {e}")
->>>>>>> origin/L-branch
 
         # Save model
         try:
@@ -195,19 +194,11 @@ def UpdateBinaryTrial(hyperClass, trial, config):
         #    logging.info(f"Stopped the folds due to a low validation AUC.")
         #    break
 
-<<<<<<< HEAD
-        # TODO: Check if run needs to be aborted
-        #if(config['data']['kFolds']['skip_badtrial'] and config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience'] + 10)) and i == 0):
-        #    if(len(trainDataset_col) > 1):
-        #        logging.info("Patience exhausted and ignoring K-split datasets")
-        #    break
-=======
         # Check if run needs to be aborted
         # if(config['run']['patienceExhausted'] and (config['run']['patienceExhaustedIndex'] < (config['training']['patience']*2 + 2)) and i == 0):
         #     if(len(trainDataset_col) > 1):
         #         logging.info("Patience exhausted and ignoring K-split datasets")
         #     break
->>>>>>> origin/L-branch
 
     val_lossMean =  np.mean(val_loss_col)
     if(groupVar != None):
@@ -225,10 +216,10 @@ def UpdateBinaryTrial(hyperClass, trial, config):
 def UpdateEventTrial(hyperClass, trial, config):
     if(trial != None):
         # Alter normal hyperparameters
-        config = normal_hyperparameters(trial,config)
+        config = normal_hyperparameters(config, trial)
 
         # Alter any hyperparameters that are dependend on other parameters 
-        config = derived_hyperparameters(trial, config)
+        config = derived_hyperparameters(config, trial)
 
         if(config['hyperparam_tuning']['WandB']['IsEnabled']):
             # Setup WandB for run
@@ -276,7 +267,7 @@ def UpdateEventTrial(hyperClass, trial, config):
             CreateResultDir(config,i)
 
         if(trial != None and config['hyperparam_tuning']['WandB']['IsEnabled']):
-            CreateStudy(config,configWandB,groupVar)
+            WandB_hpt.WandB_create_study(config,configWandB,groupVar)
 
          # Get the data loaders
         train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
@@ -315,9 +306,9 @@ def UpdateEventTrial(hyperClass, trial, config):
             print("Error")
 
         # Save Datasets
-        save_dataset(config,trainDataset_col[i],"train_Dataset")
-        save_dataset(config,valDataset_col[i],"validation_Dataset")
-        save_dataset(config,testDataset_col[i],"test_Dataset")
+        save_dataset(config, trainDataset_col[i],"train_Dataset")
+        save_dataset(config, valDataset_col[i],"validation_Dataset")
+        save_dataset(config, testDataset_col[i],"test_Dataset")
         save_dataset_summary(config,trainDataset_col[i],valDataset_col[i],testDataset_col[i])
 
         logging.info("Information about the val_auc_array:")
@@ -379,7 +370,7 @@ def check_names(path):
 
 
 def CreateResultDir(config, KFoldIndex = -1):
-    folderPath = os.path.join(os.path.join(config["paths"]["output"],config["hyperparam_tuning"]["ProjectName"]),config["general"]["trialNumber"])
+    folderPath = os.path.join(os.path.join(config["paths"]["output"],config['general']['experiment_name']),config["general"]["trialNumber"])
     if(KFoldIndex != -1):
         folderPath = os.path.join(folderPath,f"KFold{KFoldIndex}")
 

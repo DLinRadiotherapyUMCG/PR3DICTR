@@ -30,6 +30,7 @@ def validate(config, model, loss_function, val_loader):
     labels = config['columns']['label']
 
     Sigmoid = np.vectorize(sigmoid)
+    sigmoid_act = torch.nn.Sigmoid()
     
     
     patientIDs_list = []
@@ -52,7 +53,7 @@ def validate(config, model, loss_function, val_loader):
             total_loss += loss.item()            
             
             for lab_indx, label in enumerate(labels):
-                preds_dict[label] = preds_dict[label] + list(Sigmoid(outputs[label].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0]))
+                preds_dict[label] = preds_dict[label] + list(sigmoid_act(outputs[label]).cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
                 labels_dict[label] = labels_dict[label] + list(targets[:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
             
             num_batches += 1

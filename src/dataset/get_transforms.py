@@ -147,7 +147,11 @@ def get_transforms(config):
                             ])
         else:
             train_transforms = generic_transforms
-    
+
+    else:
+        train_transforms = generic_transforms
+        val_transforms = generic_transforms
+        
     """ Training set transforms """
     
 

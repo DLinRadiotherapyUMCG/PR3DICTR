@@ -2,7 +2,8 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  trialNumber: "Trial_X"
+  experiment_name: 'MultiTox_Optuna_01'
+  trialNumber: "Trial_Y"
   patientGroup: 0
   resultsCurrentDirectory: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
   error_ignore: true
@@ -109,7 +110,7 @@ data:
   kFolds:
     isEnabled: true
     Iterations: 2
-    Splits: 5
+    Splits: 2
 
   equalizer:
     isEnabled: false
@@ -154,16 +155,16 @@ visualizations:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'PRIMA_MultiTox_Project0'
   WandB:
-    IsEnabled: false
+    IsEnabled: true
     API_Key: "c7f0f65fac8b7178ad7c5859ba6114775b16e694"
-    MetricsMonitor: [ "train_AUC","train_loss","train_acc",
-      "eval_AUC","eval_loss","eval_acc"]
+    #MetricsMonitor: [ "train_AUC","train_loss","train_acc",
+    #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    IsEnabled: false
-    studyName: 'PRIMA_MultiTox_Project0'
-    n_trials: 1
+    IsEnabled: true
+    objectives: ["val_mean_AUC"]         
+    objective_direction: ["maximize"]
+    n_trials: 2
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:

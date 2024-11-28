@@ -2,6 +2,7 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
+  experiment_name: 'Resnet_depth_optimization_modeltype3_2a_depth'
   trialNumber: "Trial_?"
   patientGroup: 0
   resultsCurrentDirectory: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Project1/results/SIMS"
@@ -160,7 +161,6 @@ visualizations:
     threshold: 'YoudenJ'
 
 hyperparam_tuning:
-  ProjectName: 'Resnet_depth_optimization_modeltype3_2a_depth'
   WandB:
     IsEnabled: true
     API_Key: "7b92563a48d5645d853fe913d03674ec7337ff47"
@@ -168,7 +168,6 @@ hyperparam_tuning:
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
     IsEnabled: True
-    studyName: 'Resnet_depth_optimization_modeltype3_2a_depth' #"DETOX-Lung_Project_11"
     n_trials: 30
 
   # ----  Custom Params -------

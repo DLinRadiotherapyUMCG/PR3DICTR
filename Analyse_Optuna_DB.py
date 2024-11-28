@@ -16,6 +16,7 @@ from src.utils.set_random_seed import set_random_seed
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file
 from sklearn.metrics import roc_auc_score
+from src.training.tools.utils import move_batch_to_device
 
 from src.models.tools.get_classification_model import get_classification_model
 
@@ -30,12 +31,12 @@ import matplotlib.pyplot as plt
 def sigmoid(x):
     return 1/(1+np.exp(-x))
 
-def move_batch_to_device(batch, device):
-    inputs, clinical_features, targets = batch
-    inputs = inputs.to(device=device)
-    clinical_features = clinical_features.to(device=device)
-    targets = targets.to(device=device)
-    return inputs, clinical_features, targets
+# def move_batch_to_device(batch, device):         # NOTE: Daniel has replaced this with an imported function from src.training.utils 
+#     inputs, clinical_features, targets = batch
+#     inputs = inputs.to(device=device)
+#     clinical_features = clinical_features.to(device=device)
+#     targets = targets.to(device=device)
+#     return inputs, clinical_features, targets
 
 def get_output_results(model, val_loader, config): # this function is redundant, could just be an option for the validate function
     model.eval()
@@ -151,8 +152,8 @@ if __name__ == '__main__':
 
     # Test a chosen project
     nameProjectTest = "Resnet_depth_optimization_modeltype2"
-    config['hyperparam_tuning']['ProjectName'] = nameProjectTest
-    config['hyperparam_tuning']['optuna']['studyname'] = nameProjectTest
+    config['general']['experiment_name'] = nameProjectTest
+    #config['hyperparam_tuning']['optuna']['studyname'] = nameProjectTest
 
     #Load the existing project
     hyperClass = HyperTuning_Handler(config)

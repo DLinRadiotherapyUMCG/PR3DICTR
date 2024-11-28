@@ -1,6 +1,8 @@
 import os
 import logging
-
+import pandas as pd
+import numpy as np
+import time
 import torch
 import wandb
 from torch.utils.data import DataLoader
@@ -14,9 +16,11 @@ from src.training.tools.utils import move_batch_to_device
 from src.training.validate import validate
 from src.models.tools.save_model import save_model, load_model
 
-import pandas as pd
-import numpy as np
-import time
+
+
+from src.hyper_opt.WandB_hpt import  WandB_is_enabled
+
+
 
 def sigmoid(x):
     return 1/(1+np.exp(-x))
@@ -55,10 +59,12 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
     
     Sigmoid = np.vectorize(sigmoid)
 
+    sigmoid_act = torch.nn.Sigmoid()
+
     # Training loop
     logging.info('Starting training loop')
-    for epoch in range(config['training']['max_epochs']):
-        current_epoch_num = epoch+1
+    for epoch_num in range(1, config['training']['max_epochs'] + 1):
+        #current_epoch_num = epoch+1
         resultsEpoch = dict()
         out_tot = dict.fromkeys(labels)
         targets_tot = dict.fromkeys(labels)
@@ -67,7 +73,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             out_tot[label] = []
             targets_tot[label] = []
 
-        logging.info(f'Epoch {epoch}')
+        logging.info(f'Epoch {epoch_num}')
         model.train()
 
         total_loss = 0.0
@@ -78,7 +84,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         start_epoch_time = time.time()
 
         for batch_num, batch in enumerate(train_loader):
-            logging.debug(f'Batch {batch_num} of epoch {epoch}')
+            logging.debug(f'Batch {batch_num} of epoch {epoch_num}')
 
             optimizer.zero_grad(set_to_none=True)
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
@@ -93,7 +99,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
 
             # Calculate AUC            
             for idx, label in enumerate(labels):
-                out_tot[label] = out_tot[label] + list(Sigmoid(outputs[label].cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0]))
+                out_tot[label] = out_tot[label] + list(sigmoid_act(outputs[label]).cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
                 targets_tot[label] = targets_tot[label] + list(targets[:,idx].cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
 
             # Log loss and AUC
@@ -107,7 +113,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
 
             # Step the scheduler
             if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
-                scheduler.step(epoch + (batch_num / current_epoch_num))
+                scheduler.step(epoch_num + (batch_num / epoch_num))
             elif config['training']['scheduler']['name'] in ['cyclic']:
                 scheduler.step()
 
@@ -126,9 +132,10 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         values = list(auc.values())
         for i in range(len(keys)):
             resultsEpoch.update({"Train_AUC_"+keys[i]:values[i]})
+        resultsEpoch.update({"Train_AUC" : np.mean(values)})
 
         # Perform validation
-        if epoch % config['training']['validation_interval'] == 0:
+        if epoch_num % config['training']['validation_interval'] == 0:
             val_loss, auc_val, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader)
             # wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc, 'val/loss': val_loss, 'val/auc': val_auc})
             logging.info(f'  Validation Loss={val_loss:.5f}, AUCs={auc_val}')
@@ -137,7 +144,8 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             keys = list(auc_val.keys())
             values = list(auc_val.values())
             for i in range(len(keys)):
-                resultsEpoch.update({"Validation_AUC_"+keys[i]:values[i]})
+                resultsEpoch.update({"Validation_AUC_"+keys[i] : values[i]})
+            resultsEpoch.update({"Validation_AUC" : np.mean(values)})
 
             # Check if this model has the lowest validation loss
             if(config['general']['optimize'] == "AUC"):
@@ -166,18 +174,15 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             if patience_counter >= config['training']['patience']:
                 logging.info('Patience exhausted, stopping training')
                 config['run']['patienceExhausted'] = True
-                config['run']['patienceExhaustedIndex'] = epoch
+                config['run']['patienceExhaustedIndex'] = epoch_num
                 break
         
         logging.info(f'  Epoch duration = {(time.time() - start_epoch_time):.2f} seconds')
 
-        #pd.DataFrame(out_tot).to_csv(os.path.join(config['general']['resultsCurrentDirectory'],'temp_pred.csv'), sep = ';')
-        #pd.DataFrame(targets_tot).to_csv(os.path.join(config['general']['resultsCurrentDirectory'],'temp_target.csv'), sep = ';')
-        
-        # Log to hyperparam class if necessary
-        if(hyperClass != None):
-            resultsEpoch.update({"epoch":epoch})
-            hyperClass.UpdateWandB(resultsEpoch, epoch)
+
+        if WandB_is_enabled(config):
+            resultsEpoch.update({"epoch":epoch_num})
+            wandb.log(resultsEpoch)
         
         # else:
         #     wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc})

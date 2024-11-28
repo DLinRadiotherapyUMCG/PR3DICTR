@@ -1,22 +1,22 @@
 import wandb
 from src.utils.fileHandler import create_file, create_folder, create_textfile
 
-def WandEnabled(config):
+def WandB_is_enabled(config):
     return config['hyperparam_tuning']['WandB']['IsEnabled']
 
-def CreateStudy(config, dict_params, groupName = None):
+def WandB_create_study(config, dict_params, groupName = None):
     create_folder(config['general']['resultsCurrentDirectory'])
-    if(WandEnabled(config) == True):
+    if (WandB_is_enabled(config) == True):
         wandb.init(
-            project=config['hyperparam_tuning']['ProjectName'],
+            project=config['general']['experiment_name'],
             dir=config['general']['resultsCurrentDirectory'][:-1],
             config = dict_params,
             group = groupName,
             reinit = True
         ) 
 
-def UpdateStudy(config, results, epoch):
-    if(WandEnabled(config) == True):
+def WandB_log(config, results, epoch):   # UpdateStudy
+    if (WandB_is_enabled(config) == True):
         infoSend = dict()
         keys = list(results.keys())
         for i in range(len(keys)):
@@ -29,13 +29,35 @@ def UpdateStudy(config, results, epoch):
         #for i in range(len(results)):
 
 
-def WandB_initalise(config):   
-    if(WandEnabled(config) == True):
+
+def login(config):   
+    if WandB_is_enabled(config) == True:
         # Make sure that you are logged in your python environment  
         # Login with account
         wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])            
     return
 
+
+
 def WandB_stop(config):
-    if(WandEnabled(config) == True):
-        wandb.finish()
+    if(WandB_is_enabled(config) == True):
+        wandb.finish(quiet=True)
+
+
+
+
+def single_WandB_group(config, project_name, groupName = None):
+    #wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])  
+
+    #if(WandEnabled(config) == True):
+    wandb.init(
+        project = project_name,
+        group = groupName,
+        dir=config['general']['resultsCurrentDirectory'][:-1],
+        config = config,
+        reinit = True
+    ) 
+
+    print(project_name)
+    print(groupName)
+    

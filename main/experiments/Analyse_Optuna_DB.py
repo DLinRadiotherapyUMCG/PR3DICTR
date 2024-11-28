@@ -23,7 +23,7 @@ import wandb
 from src.config_presets.tools.get_config import get_config
 from src.dataset.load_dataset import load_dataset, load_dataset_total
 from src.models.tools.save_model import save_model
-from src.training.train_multi import train
+from src.training.train import train
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
@@ -50,8 +50,8 @@ if __name__ == '__main__':
 
     # Test a chosen project
     nameProjectTest = "DETOX-Lung_Project_7"
-    config['hyperparam_tuning']['ProjectName'] = nameProjectTest
-    config['hyperparam_tuning']['optuna']['studyname'] = nameProjectTest
+    config['general']['experiment_name'] = nameProjectTest
+    #config['hyperparam_tuning']['optuna']['studyname'] = nameProjectTest
 
     #Load the existing project
     hyperClass = HyperTuning_Handler(config)

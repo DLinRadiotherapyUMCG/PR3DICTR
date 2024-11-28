@@ -30,7 +30,7 @@ def update_config(dic, location, suggested_value):
         dic[location[0]] = update_config(dic[location[0]], location[1:], suggested_value)
         return dic
 
-def normal_hyperparameters(trial, config):
+def normal_hyperparameters(config, trial):
     for key in config['hyperparam_tuning']['hyperparams'].keys():
         try:
             hyperinfo = config['hyperparam_tuning']['hyperparams'][key]
@@ -48,7 +48,7 @@ def normal_hyperparameters(trial, config):
                 raise Exception("Stopped trials due to error.")
     return config
 
-def derived_hyperparameters(trial, config):
+def derived_hyperparameters(config, trial):
     '''
     Some hyperparameters are connected/ interdependend, here derived 
     hyperparameters are to be set.
@@ -183,7 +183,7 @@ def objective(trial, config):
     """
     
     trial_num = trial.number
-    config['hyperparam_tuning']['optuna']['trial_results'] = config['hyperparam_tuning']['ProjectName'] + '_' + trial_num + '/'
+    config['hyperparam_tuning']['optuna']['trial_results'] = config['general']['experiment_name'] + '_' + trial_num + '/'
     
     
     # Assign values for "regular" hyperparameters
@@ -228,7 +228,7 @@ def Optuna_CreateStudy(config):
     if(config['hyperparam_tuning']['optuna']['IsEnabled']):
 
         # Check where to keep study information
-        studyName = config['hyperparam_tuning']['ProjectName']
+        studyName = config['general']['experiment_name']
         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
         create_folder(pathOptunaStudyTracker)
