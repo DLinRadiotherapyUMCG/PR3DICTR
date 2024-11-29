@@ -122,9 +122,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         model.train()
 
         total_loss = 0.0
-        total_auc = 0.0
         num_batches = 0
-        num_auc_batches = 1
 
         start_epoch_time = time.time()
   
@@ -133,7 +131,6 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             logging.debug(f'Batch {batch_num} of epoch {epoch_num}')
             #it.update(1)
             
-
             # if batch_num == 0:
             #     print("IDs first batch: ", batch['patient_id'])
 
@@ -210,18 +207,17 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
 
             # Check if this model has the lowest validation loss
             if(config['general']['optimize'] == "AUC"):
-                if values[0] > lowest:
+                if val_loss[0] > lowest:
                     logging.info(f'New highest AUC: {values[0]}')
                     lowest = values[0]
-                    #best_model = model.state_dict()  # Save the model state
                     patience_counter = 0 # Reset patience counter
 
                     #best_model_state_dict = copy.deepcopy(model.state_dict())
                     if config['Save']['best_model']: 
                         save_model(config, model, f"DlModel_Weights.pth")
                     else:
-                        best_model_state_dict = copy.deepcopy(model.state_dict())
-                    #save_model(config, model, f"DlModel_Weights.pth")  # save the best model
+                        best_model_state_dict = copy.deepcopy(model.state_dict())  # must do a deepcopy of the state_dict to avoid the model being updated
+                    
                 else:
                     patience_counter += 1 # Increment patience counter
             else:
@@ -229,15 +225,13 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
                 if val_loss < lowest:
                     logging.info(f'New lowest loss: {val_loss}')
                     lowest = val_loss
-                    #best_model = model.state_dict()  # Save the model state
                     patience_counter = 0 # Reset patience counter
-
                     
                     if config['Save']['best_model']: 
                         save_model(config, model, f"DlModel_Weights.pth")
                     else:
                         best_model_state_dict = copy.deepcopy(model.state_dict())
-                    #save_model(config, model, f"DlModel_Weights.pth") # save the best model
+                    
                 else:
                     patience_counter += 1 # Increment patience counter
 

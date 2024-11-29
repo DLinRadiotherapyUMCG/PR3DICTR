@@ -5,7 +5,7 @@ Created on Wed Aug 14 13:25:03 2024
 @author: HoekL02
 """
 
-from src.visualization.Calibration import calibration_plot
+from src.visualization.calibration_plot import calibration_plot
 from src.visualization.Confusion_matrix import confusion_matrix_bin
 from src.visualization.ROC_curve import ROC_curve
 

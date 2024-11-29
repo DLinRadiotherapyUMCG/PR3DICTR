@@ -103,8 +103,7 @@ def K_fold_cross_validation(config):
             test_patientIDs_list = []
             test_preds_dict = {endpoint: [] for endpoint in endpoint_list}
             test_targets_dict = {endpoint: [] for endpoint in endpoint_list}
-
-
+        
 
         """    
         Handling Results  
@@ -145,7 +144,7 @@ def K_fold_cross_validation(config):
         WandB_stop(config)
 
 
-
+    
     # compute mean AUC per endpoint
     train_aucs_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in train_aucs_list_dict.items()}
     val_aucs_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_aucs_list_dict.items()}

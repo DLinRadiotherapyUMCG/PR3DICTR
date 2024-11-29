@@ -87,7 +87,7 @@ data:
 
   dataloader:
     num_workers: 8           # number of workers (cores) to use for data loading in each training batch
-
+  
   preprocessing:
     isEnabled: true
     crop: true
