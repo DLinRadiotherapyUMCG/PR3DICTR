@@ -4,7 +4,7 @@ from src.models.dcnn_pooling import DCNN_Pooling
 from src.models.resnet import get_resnet
 from src.models.densenet import get_desnsenet
 from src.models.ViT import ViT
-
+from src.models.HIPT import HIPT
 
 def get_encoder(config, channels, depth, height, width, n_features):
     """
@@ -44,7 +44,11 @@ def get_encoder(config, channels, depth, height, width, n_features):
                     heads=config['model']['ViT']['vit_heads'], mlp_dim=config['model']['ViT']['vit_mlp_dim'], pool = 'cls', 
                     channels = channels, dim_head = config['model']['ViT']['vit_dim_head'], emb_dropout = config['model']['ViT']['vit_emb_dropout'],
                     dropout = config['model']['ViT']['vit_dropout_p']) 
-        
+    
+
+    elif model_name == 'HIPT':
+        encoder = HIPT(channels, depth, height, width)
+
     elif model_name.lower() == 'transrp':
         if config['model']['TransRP']['image_encoder'] == 'resnet':
             encoder = get_resnet(config=config, model_depth=config['model']['resnet']['model_depth'], channels=channels, lrelu_alpha=lrelu_alpha)

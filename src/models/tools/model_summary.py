@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-from src.utils.get_encoder import get_encoder
-from src.models.linear_layers import MultiToxOutputHead
 
 from torchinfo import summary
 from src.utils.fileHandler import create_folder, create_textfile

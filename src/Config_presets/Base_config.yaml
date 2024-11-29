@@ -48,6 +48,8 @@ model:
     vit_dim_head: 128
     vit_emb_dropout: 0.2
     vit_dropout_p: 0.2  
+  #HIPT:
+
   TransRP:
     image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
     clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 

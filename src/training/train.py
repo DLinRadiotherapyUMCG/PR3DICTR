@@ -6,7 +6,8 @@ import time
 import torch
 import wandb
 import copy
-from torch.utils.data import DataLoader
+from tqdm import tqdm
+
 
 from src.constants import DEVICE
 from src.utils.loss_func.get_loss_function import get_loss_function
@@ -126,9 +127,12 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         num_auc_batches = 1
 
         start_epoch_time = time.time()
-
-        for batch_num, batch in enumerate(train_loader):
+  
+        #it = tqdm(len(train_loader))
+        for batch_num, batch in enumerate(train_loader):  # , disable=config["hyperparam_tuning"]["optuna"]["IsEnabled"]
             logging.debug(f'Batch {batch_num} of epoch {epoch_num}')
+            #it.update(1)
+            
 
             # if batch_num == 0:
             #     print("IDs first batch: ", batch['patient_id'])
@@ -173,6 +177,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             if epoch_num == 1 and batch_num==0:
                 plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)     
 
+        #it.close()
         auc = calculate_auc_multi(out_tot, targets_tot, config)
             
         #logging.info('Training AUCs')
