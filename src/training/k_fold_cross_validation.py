@@ -20,7 +20,7 @@ from src.utils.list_dicts import append_to_list_dicts
 from src.hyper_opt.WandB_hpt import single_WandB_group, login, WandB_stop
 
 
-def K_fold_cross_validation(config, hyperClass=None):
+def K_fold_cross_validation(config):
     """
     desc.
     """
@@ -49,6 +49,11 @@ def K_fold_cross_validation(config, hyperClass=None):
 
     # make K fold splits
     k_fold_dataframes_list = generate_K_fold_cross_validation_splits(config, df_train_val)
+    
+    # cap the number of iterations, if it is less than the number of k-splits to make
+    n_iterations = config['data']['kFolds']['n_iterations']
+    if n_iterations < len(k_fold_dataframes_list):
+        k_fold_dataframes_list = k_fold_dataframes_list[:n_iterations]
 
     # get the data transforms
     train_transforms, val_transforms = get_transforms(config)
@@ -76,19 +81,22 @@ def K_fold_cross_validation(config, hyperClass=None):
         model.to(device=DEVICE)
 
         # train the model
-        model = train(config, model, loss_function, train_loader, val_loader, hyperClass=hyperClass)
+        model = train(config, model, loss_function, train_loader, val_loader)
         model.eval()
 
         # get the predictions of the trained model on the training and validation (and test) sets
-        logging.info('Getting predictions')
-        logging.info('   training set')
+        logging.info('Getting predictions of best model from this fold:')
+        logging.info('   Training set')
         train_loss, train_auc_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader)
-        logging.info('   validation set')
+        print("   ", train_loss, train_auc_dict)
+        logging.info('   Validation set')
         val_loss, val_auc_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader)
+        print("   ",val_loss, val_auc_dict)
 
         if config['general']['use_test_set']:
-            logging.info('   test set')
+            logging.info('   Test set')
             test_loss, test_auc_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(config, model, loss_function, test_loader)
+            print("   ",test_loss, test_auc_dict)
         else:
             test_loss = None
             test_auc_dict = {endpoint: None for endpoint in endpoint_list}
@@ -134,7 +142,7 @@ def K_fold_cross_validation(config, hyperClass=None):
         # hyperhandler-like stuff here?
 
         # stop WandB for this fold (init a new one on the next fold)
-        WandB_stop(config) 
+        WandB_stop(config)
 
 
 

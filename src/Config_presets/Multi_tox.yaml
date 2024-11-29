@@ -109,8 +109,8 @@ data:
 
   kFolds:
     isEnabled: true
-    Iterations: 2
-    Splits: 2
+    n_iterations: 2
+    n_splits: 5
 
   equalizer:
     isEnabled: false
@@ -124,7 +124,7 @@ data:
     strength: 1
 
 training:
-  max_epochs: 3
+  max_epochs: 10
   batch_size: 16
   validation_interval: 1
   patience: 10
@@ -210,7 +210,7 @@ hyperparam_tuning:
 Save:
   config: True
   output_values: True
-  best_model: False
+  best_model: True
   fileNames:
     modelSummary: "modelSummary.txt"
       

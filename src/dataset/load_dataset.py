@@ -108,7 +108,7 @@ def generate_K_fold_cross_validation_splits(config, df_development_set):
     # encode the labels (makes it possible to use StratifiedKFold for multi-label problems, as it only works on binary or multi-class)
     encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])
         
-    skf = StratifiedKFold(n_splits=config["data"]["kFolds"]["Splits"], shuffle=True, random_state=config["general"]["seed"])
+    skf = StratifiedKFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
     for i, (train_index, val_index) in enumerate(skf.split(df_development_set,encoded_labels)):
         train_i_df = df_development_set.iloc[train_index]
         #trainDf_sel = mergeDf.iloc[train_index]

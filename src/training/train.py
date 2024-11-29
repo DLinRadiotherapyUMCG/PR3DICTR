@@ -5,6 +5,7 @@ import numpy as np
 import time
 import torch
 import wandb
+import copy
 from torch.utils.data import DataLoader
 
 from src.constants import DEVICE
@@ -49,7 +50,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         scheduler = get_scheduler(config, optimizer)
 
     # Initialize the best model and lowest validation loss
-    best_model = None
+    best_model_state_dict = None
     if(config['general']['optimize'] == "AUC"):
         print("Optimizing based on AUC")
         lowest = 0
@@ -57,7 +58,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         lowest = np.inf
     patience_counter = 0
     
-    Sigmoid = np.vectorize(sigmoid)
+    #Sigmoid = np.vectorize(sigmoid)
 
     sigmoid_act = torch.nn.Sigmoid()
 
@@ -155,7 +156,12 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
                     #best_model = model.state_dict()  # Save the model state
                     patience_counter = 0 # Reset patience counter
 
-                    save_model(config, model, f"DlModel_Weights.pth")  # save the best model
+                    #best_model_state_dict = copy.deepcopy(model.state_dict())
+                    if config['Save']['best_model']: 
+                        save_model(config, model, f"DlModel_Weights.pth")
+                    else:
+                        best_model_state_dict = copy.deepcopy(model.state_dict())
+                    #save_model(config, model, f"DlModel_Weights.pth")  # save the best model
                 else:
                     patience_counter += 1 # Increment patience counter
             else:
@@ -166,7 +172,12 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
                     #best_model = model.state_dict()  # Save the model state
                     patience_counter = 0 # Reset patience counter
 
-                    save_model(config, model, f"DlModel_Weights.pth") # save the best model
+                    
+                    if config['Save']['best_model']: 
+                        save_model(config, model, f"DlModel_Weights.pth")
+                    else:
+                        best_model_state_dict = copy.deepcopy(model.state_dict())
+                    #save_model(config, model, f"DlModel_Weights.pth") # save the best model
                 else:
                     patience_counter += 1 # Increment patience counter
 
@@ -191,53 +202,13 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
     # wandb.log({'train/highest_auc': highest_auc})
     # logging.info('Finished training')
 
-    model = load_model(config, model, f"DlModel_Weights.pth")
+    #model = load_model(config, model, f"DlModel_Weights.pth")
+    if config['Save']['best_model']: 
+        model = load_model(config, model, f"DlModel_Weights.pth")
+    else:
+        model.load_state_dict(best_model_state_dict)    
 
     return model
-
-
-# def validate(loss_function, model, val_loader, config):
-#     model.eval()
-#     total_loss = 0.0
-#     total_auc = 0.0
-#     num_batches = 0
-#     #num_auc_batches = config['training']['validation']['num_auc_batches']
-#     labels = config['columns']['label']
-    
-    
-#     preds_dict = dict.fromkeys(labels)
-#     labels_dict = dict.fromkeys(labels)
-    
-#     for label in labels:
-#         preds_dict[label] = []
-#         labels_dict[label] = []
-
-    
-#     with torch.no_grad():
-#         for i, batch in enumerate(val_loader):
-#             logging.debug(f'Validation batch {i}')
-#             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
-
-#             outputs = model(x=inputs, features=clinical_features)
-#             loss = loss_function(outputs, targets)
-
-#             total_loss += loss.item()            
-            
-#             for lab_indx, label in enumerate(labels):
-#                 preds_dict[label] = preds_dict[label] + list(outputs[label].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
-#                 labels_dict[label] = labels_dict[label] + list(targets[:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,lab_indx].shape[0]))[0])
-            
-#             num_batches += 1
-
-#     auc_dict = calculate_auc_multi(preds_dict, labels_dict, config)
-#     model.train()
-
-#     avg_loss = total_loss / num_batches
-
-#     logging.debug(f'Validation loss: {avg_loss}')
-#     # logging.debug(f'Validation AUC: {avg_auc}')
-
-#     return avg_loss, auc_dict
 
 
 

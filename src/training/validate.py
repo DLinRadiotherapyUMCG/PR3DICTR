@@ -6,8 +6,6 @@ from src.constants import DEVICE
 from src.training.tools.utils import move_batch_to_device
 from src.evaluation.calculate_auc import calculate_auc_multi
 
-def sigmoid(x):
-    return 1/(1+np.exp(-x))
 
 
 def validate(config, model, loss_function, val_loader):
@@ -29,9 +27,7 @@ def validate(config, model, loss_function, val_loader):
     #num_auc_batches = config['training']['validation']['num_auc_batches']
     labels = config['columns']['label']
 
-    Sigmoid = np.vectorize(sigmoid)
     sigmoid_act = torch.nn.Sigmoid()
-    
     
     patientIDs_list = []
     preds_dict = dict.fromkeys(labels)

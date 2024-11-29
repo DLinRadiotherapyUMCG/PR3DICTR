@@ -84,10 +84,11 @@ class MultiTox_Classifier(nn.Module):
 
 def get_classification_model(config, metadata, save_summary=True):
   
-    channels,depth,height,width,n_features = metadata['channels'],metadata['depth'],metadata['height'],metadata['width'],metadata['n_features']
+    channels,depth,height,width,n_features = metadata['channels'], metadata['depth'], metadata['height'], metadata['width'], metadata['n_features']
     encoder = get_encoder(config, channels, depth, height, width, n_features)
     # Put the image encoder into a model
     model = MultiTox_Classifier(encoder=encoder, config=config, n_features=n_features, metadata=metadata)
+
 
     get_model_summary(config=config, model=model, input_size=[(config['training']['batch_size'], channels, depth, height, width), (config['training']['batch_size'], max(n_features, 1))], 
                                                 device=config['general']['device'], save_to_file=save_summary)
