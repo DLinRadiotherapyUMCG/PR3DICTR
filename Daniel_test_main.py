@@ -18,6 +18,7 @@ from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
+import src.hyper_opt.WandB_hpt as WandB_hpt
 
 
 from src.utils.fileHandler import create_file, create_textfile
@@ -43,14 +44,14 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['general']['seed'])
 
-    #activate_WandB(config)
+    WandB_hpt.login(config)
 
 
-    #K_fold_cross_validation(config)
+    K_fold_cross_validation(config)
 
     # # MAIN: DL running class with hyperparameter optimization
-    hyperClass = HyperTuning_Handler(config)
-    hyperClass.run_experiment(config)
+    #hyperClass = HyperTuning_Handler(config)
+    #hyperClass.run_experiment(config)
     #hyperClass.Stop()
 
 

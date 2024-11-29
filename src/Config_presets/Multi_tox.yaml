@@ -2,8 +2,8 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  experiment_name: 'MultiTox_Optuna_01'
-  trialNumber: "Trial_Y"
+  experiment_name: 'MultiTox_CV_2'
+  trialNumber: "Trial_11_TRP"
   patientGroup: 0
   resultsCurrentDirectory: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
   error_ignore: true
@@ -27,7 +27,7 @@ run:
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "resnet"
+  model_name: "TransRP"
   num_classes: 1
   n_down_blocks: 5
   resnet:
@@ -46,7 +46,7 @@ model:
     vit_emb_dropout: 0.2
     vit_dropout_p: 0.2  
   TransRP:
-    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
+    image_encoder: 'resnet'  # ['resnet', 'densenet'] (requires their respective configs)
     clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
     vit_patch_size: [1,1,1]
     vit_dim: 768
@@ -109,7 +109,7 @@ data:
 
   kFolds:
     isEnabled: true
-    n_iterations: 2
+    n_iterations: 1
     n_splits: 5
 
   equalizer:
@@ -118,14 +118,14 @@ data:
     resamplingDirection: 'up'
 
   augmentation:
-    isEnabled: true
-    augmentation_list:  ['crop','flip','affine','rotate']
+    isEnabled: false
+    augmentation_list: ['crop','flip','affine','rotate']
     prob: 0.5
     strength: 1
 
 training:
-  max_epochs: 10
-  batch_size: 16
+  max_epochs: 2
+  batch_size: 8
   validation_interval: 1
   patience: 10
 

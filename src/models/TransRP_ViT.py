@@ -31,7 +31,7 @@ class TransRP_ViT(nn.Module):
         mlp_dim: int = 3072,
         num_layers: int = 12,
         num_heads: int = 12,
-        pos_embed: str = "conv",
+        proj_type: str = "conv",
         dropout_rate: float = 0.0,
         spatial_dims: int = 3,
         clinical_features_method: str = "m3",
@@ -46,7 +46,7 @@ class TransRP_ViT(nn.Module):
             mlp_dim: dimension of feedforward layer.
             num_layers: number of transformer blocks.
             num_heads: number of attention heads.
-            pos_embed: position embedding layer type.
+            proj_type: position embedding layer type.
             num_classes: number of classes if classification is used.
             dropout_rate: faction of the input units to drop.
             spatial_dims: number of spatial dimensions.
@@ -60,13 +60,13 @@ class TransRP_ViT(nn.Module):
         Examples::
 
             # for single channel input with image size of (96,96,96), conv position embedding and segmentation backbone
-            >>> net = ViT(in_channels=1, img_size=(96,96,96), pos_embed='conv')
+            >>> net = ViT(in_channels=1, img_size=(96,96,96), proj_type='conv')
 
             # for 3-channel with image size of (128,128,128), 24 layers and classification backbone
-            >>> net = ViT(in_channels=3, img_size=(128,128,128), pos_embed='conv', classification=True)
+            >>> net = ViT(in_channels=3, img_size=(128,128,128), proj_type='conv', classification=True)
 
             # for 3-channel with image size of (224,224), 12 layers and classification backbone
-            >>> net = ViT(in_channels=3, img_size=(224,224), pos_embed='conv', classification=True, spatial_dims=2)
+            >>> net = ViT(in_channels=3, img_size=(224,224), proj_type='conv', classification=True, spatial_dims=2)
 
         """
 
@@ -94,7 +94,7 @@ class TransRP_ViT(nn.Module):
             patch_size=patch_size,
             hidden_size=hidden_size, # new
             num_heads=num_heads,
-            pos_embed=pos_embed,
+            proj_type=proj_type,
             dropout_rate=dropout_rate,
             spatial_dims=spatial_dims,
         )
@@ -175,7 +175,7 @@ def get_transrp_vit(config, n_features : int, feature_map_dim_after_encoder):
         mlp_dim = config['model']['TransRP']['vit_mlp_dim'],  
         num_layers = config['model']['TransRP']['vit_depth'],
         num_heads = config['model']['TransRP']['vit_heads'],
-        pos_embed = 'conv',
+        proj_type = 'conv',
         dropout_rate = config['model']['TransRP']['vit_dropout_p'],
         spatial_dims=3,
         clinical_features_method = config['model']['TransRP']['clinical_features_method'],

@@ -74,7 +74,6 @@ HNC_plotting_params = {
 
 
 def create_colormap(cmap_name, min_value, max_value, HNC_plotting_params=None, N=256):
-    print(min_value)
     if cmap_name == "gray":
         cmap = LinearSegmentedColormap.from_list("CT_cmap", ["black", "white"], N=N)
     elif cmap_name == "RTSTRUCT":

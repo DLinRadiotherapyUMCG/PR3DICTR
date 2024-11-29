@@ -80,7 +80,7 @@ def get_transforms(config):
 
         for img_key in image_keys:
             if img_key in config['data']['preprocessing']['needs_scaling']:
-                preproc_transforms.append(ScaleIntensityRanged(keys=['ct'],
+                preproc_transforms.append(ScaleIntensityRanged(keys=[img_key],
                                             a_min=config['data']['preprocessing'][img_key]['a_min'], a_max=config['data']['preprocessing'][img_key]['a_max'],                                         # NOTE: commented out as segmap is not used
                                             b_min=config['data']['preprocessing'][img_key]['b_min'], b_max=config['data']['preprocessing'][img_key]['b_max'],
                                             clip=config['data']['preprocessing'][img_key]['clip'])
@@ -169,7 +169,7 @@ def get_transforms(config):
                 random_transforms.append(RandSpatialCropd(keys=[concat_key], roi_size=config['data']['preprocessing']['crop_shape'], random_size=False, random_center=True))
             
             elif aug == 'flip':
-                random_transforms.append(RandFlipd(keys=[concat_key], prob=data_aug_p, spatial_axis=1))   # NOTE: should this just be 50% all of the time?
+                random_transforms.append(RandFlipd(keys=[concat_key], prob=0.5, spatial_axis=-1))   # NOTE: This one is just 50% all of the time
             
             elif aug == 'affine':
                 random_transforms.append(RandAffined(keys=[concat_key], prob=data_aug_p, translate_range=(7 * data_aug_strength,) * 3, scale_range=(0.07 * data_aug_strength,) * 3, padding_mode='border', mode='bilinear'))

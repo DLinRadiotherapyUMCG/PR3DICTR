@@ -19,12 +19,55 @@ from src.models.tools.save_model import save_model, load_model
 
 
 
-from src.hyper_opt.WandB_hpt import  WandB_is_enabled
+from src.hyper_opt.WandB_hpt import WandB_is_enabled
+from src.visualization.plot_slices import plot_slices
 
+import matplotlib.pyplot as plt
 
 
 def sigmoid(x):
     return 1/(1+np.exp(-x))
+
+def plot_model_inputs(config, plot_inputs, epoch):
+    """
+    Plots the model inputs (CT, RTDOSE, Segmentation) used during training, and saves the figure as a png.
+    Args:
+        config (ConfigObject): configuration object
+        plot_inputs (list): list of model input images
+        epoch (int): current epoch number
+    """
+    for patient_idx in range(min(1, len(plot_inputs))):
+        
+        ct_range = (config['data']['preprocessing']['ct']['a_max'] - config['data']['preprocessing']['ct']['a_min'])
+        rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
+        
+        CT = (plot_inputs[patient_idx][0].cpu() * ct_range) + config['data']['preprocessing']['ct']['a_min']
+        RTDOSE = plot_inputs[patient_idx][1].cpu() * rtdose_range
+        RTSTRUCT = plot_inputs[patient_idx][2].cpu()
+
+        plotting_rows_dicts = [
+            {
+                "Label": "CT",
+                "CT": CT
+            },
+            {
+                "Label": "RTDOSE",
+                "RTDOSE": RTDOSE
+            },
+            {
+                "Label": "RTSTRUCT",
+                "RTSTRUCT": RTSTRUCT
+            }
+        ]
+
+        slices = [20, 30, 40, 50, 60, 70, 80, 90]
+        fig, axes = plot_slices(plotting_rows_dicts, slices)# , title=f"{patient_id} slices")
+
+        filename=os.path.join(config['general']['resultsCurrentDirectory'],'epoch_{}_idx_{}.png'.format(epoch, patient_idx))
+        #print(filename)
+        fig.savefig(filename, bbox_inches='tight')
+        plt.close(fig)
+
 
 
 def train(config, model, loss_function, train_loader, val_loader, hyperClass = None):
@@ -87,6 +130,9 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         for batch_num, batch in enumerate(train_loader):
             logging.debug(f'Batch {batch_num} of epoch {epoch_num}')
 
+            # if batch_num == 0:
+            #     print("IDs first batch: ", batch['patient_id'])
+
             optimizer.zero_grad(set_to_none=True)
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
 
@@ -118,7 +164,14 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             elif config['training']['scheduler']['name'] in ['cyclic']:
                 scheduler.step()
 
-            num_batches += 1      
+            num_batches += 1 
+
+
+            # plot model inputs
+            #print(epoch_num)
+            #print(batch_num)
+            if epoch_num == 1 and batch_num==0:
+                plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)     
 
         auc = calculate_auc_multi(out_tot, targets_tot, config)
             
@@ -134,6 +187,8 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         for i in range(len(keys)):
             resultsEpoch.update({"Train_AUC_"+keys[i]:values[i]})
         resultsEpoch.update({"Train_AUC" : np.mean(values)})
+
+        
 
         # Perform validation
         if epoch_num % config['training']['validation_interval'] == 0:
