@@ -105,7 +105,11 @@ class ToxDataLoader(_TorchDataLoader):
 
         super().__init__(dataset=dataset, num_workers=num_workers, **kwargs)
 
-    def get_patient(self, requested_patientID):
+    
+    def get_patient(self, requested_patientID: str):
+        """
+        Custom function to get the data of a specific patient from the dataset, by providing the patientID.
+        """
         patient_ID_list = self.dataset.patient_IDs_list
 
         requested_patient_idx = patient_ID_list.index(requested_patientID)

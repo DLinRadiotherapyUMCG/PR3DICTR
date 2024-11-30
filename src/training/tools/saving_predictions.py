@@ -2,13 +2,13 @@ import pandas as pd
 import torch
 import os
 
-def concatenate_predictions(config, list_of_pred_list_dicts, list_of_true_list_dicts):
+def concatenate_predictions(config, list_of_pred_list_dicts: list[dict], list_of_true_list_dicts: list[dict]):
     """
     Function to concatenate N list dicts of predictions and true labels into a single list dict of preds and true labels.
     For example, this function can merge together all of the training preds and validation preds into a single dict of preds.
     
     Args:
-        config (dict): configuration dictionary
+        config (dict): config dictionary
         list_of_pred_list_dicts (list of dicts): list of dicts of lists of PyTorch tensors
         list_of_true_list_dicts (list of dicts): list of dicts of lists of PyTorch tensors
     Returns:
@@ -29,16 +29,17 @@ def concatenate_predictions(config, list_of_pred_list_dicts, list_of_true_list_d
 
 
 
-def save_predictions(config, patient_ids, y_pred_list_dict, y_true_list_dict, mode_list, external_set=False):
+def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dict, y_true_list_dict: dict, mode_list: list[str], external_set: bool = False):
+
     """
     Save prediction and corresponding true labels to csv.
 
     Args:
-        config (dict): configuration dictionary
-        patient_ids (list): list of patient ids
+        config (dict): config dictionary
+        patient_ids (list): list of patient IDs (each ID is a string)
         y_pred_list_dict (dict of lists): dict of lists of PyTorch tensors
         y_true_list_dict (dict of lists): dict of lists of PyTorch tensors
-        mode_list (list): list of strings
+        mode_list (list): list of strings (e.b. ['train', 'val', 'train', 'train','train','val', 'train', ...])
 
     Returns:
 

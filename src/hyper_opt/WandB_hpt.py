@@ -1,10 +1,10 @@
 import wandb
 from src.utils.fileHandler import create_file, create_folder, create_textfile
 
-def WandB_is_enabled(config):
+def WandB_is_enabled(config: dict):
     return config['hyperparam_tuning']['WandB']['IsEnabled']
 
-def WandB_create_study(config, dict_params, groupName = None):
+def WandB_create_study(config: dict, dict_params, groupName = None):
     create_folder(config['general']['resultsCurrentDirectory'])
     if (WandB_is_enabled(config) == True):
         wandb.init(
@@ -15,7 +15,7 @@ def WandB_create_study(config, dict_params, groupName = None):
             reinit = True
         ) 
 
-def WandB_log(config, results, epoch):   # UpdateStudy
+def WandB_log(config: dict, results, epoch):   # UpdateStudy
     if (WandB_is_enabled(config) == True):
         infoSend = dict()
         keys = list(results.keys())
@@ -30,7 +30,7 @@ def WandB_log(config, results, epoch):   # UpdateStudy
 
 
 
-def login(config):   
+def login(config: dict) -> None:   
     if WandB_is_enabled(config) == True:
         # Make sure that you are logged in your python environment  
         # Login with account
@@ -39,14 +39,18 @@ def login(config):
 
 
 
-def WandB_stop(config):
+def WandB_stop(config: dict) -> None:
     if(WandB_is_enabled(config) == True):
         wandb.finish(quiet=True)
 
 
 
 
-def single_WandB_group(config, project_name, groupName = None):
+def initialise_WandB_group(config: dict, project_name: str, groupName = None) -> None:
+    """
+    A WandB group is a collection of runs that are grouped together. 
+    This is useful for grouping together K-folds of the same trial or model.
+    """
     #wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])  
 
     #if(WandEnabled(config) == True):
@@ -58,6 +62,6 @@ def single_WandB_group(config, project_name, groupName = None):
         reinit = True
     ) 
 
-    print(project_name)
-    print(groupName)
+    #print(project_name)
+    #print(groupName)
     

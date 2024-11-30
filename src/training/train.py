@@ -19,7 +19,6 @@ from src.training.validate import validate
 from src.models.tools.save_model import save_model, load_model
 
 
-
 from src.hyper_opt.WandB_hpt import WandB_is_enabled
 from src.visualization.plot_slices import plot_slices
 

@@ -45,7 +45,7 @@ if __name__ == '__main__':
     set_random_seed(config['general']['seed'])
 
 
-    from src.dataset.get_transforms import get_random_augmentations_from_config
+    from src.dataset.get_transforms import get_random_augmentation_names_from_config
 
     #transforms = get_random_augmentations_from_config(config)
 
