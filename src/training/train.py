@@ -83,6 +83,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
     # config run information
     config['run']['patienceExhausted'] = False
     config['run']['patienceExhaustedIndex'] = 0
+    show_pbar = config['training']['progress_bar']
     
     # Get the names of the end-points being evaluated 
     labels = config['columns']['label']
@@ -122,13 +123,18 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         model.train()
 
         total_loss = 0.0
-        num_batches = 0
+        num_batches_per_epoch = len(train_loader)
 
         start_epoch_time = time.time()
   
         #it = tqdm(len(train_loader))
-        for batch_num, batch in enumerate(train_loader):  # , disable=config["hyperparam_tuning"]["optuna"]["IsEnabled"]
+        if show_pbar:
+            pbar = tqdm(total=len(train_loader), desc=f'Epoch {epoch_num}', position=0, leave=True)
+
+        for batch_num, batch in enumerate(train_loader, start=1):  # , disable=config["hyperparam_tuning"]["optuna"]["IsEnabled"]
             logging.debug(f'Batch {batch_num} of epoch {epoch_num}')
+
+            if show_pbar: pbar.update(1)
             #it.update(1)
             
             # if batch_num == 0:
@@ -161,18 +167,18 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
 
             # Step the scheduler
             if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
-                scheduler.step(epoch_num + (batch_num / epoch_num))
+                scheduler.step(epoch_num + (batch_num / num_batches_per_epoch))
             elif config['training']['scheduler']['name'] in ['cyclic']:
                 scheduler.step()
-
-            num_batches += 1 
 
 
             # plot model inputs
             #print(epoch_num)
             #print(batch_num)
-            if epoch_num == 1 and batch_num==0:
+            if epoch_num == 1 and batch_num==1:
                 plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)     
+
+        if show_pbar: pbar.close()
 
         #it.close()
         auc = calculate_auc_multi(out_tot, targets_tot, config)
@@ -180,7 +186,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         #logging.info('Training AUCs')
         #logging.info(auc)
         # Log epoch loss and AUC
-        avg_loss = total_loss / num_batches
+        avg_loss = total_loss / num_batches_per_epoch
         logging.info(f'  Training   Loss={avg_loss:.5f}, AUCs={auc}')
 
         resultsEpoch.update({'Train_Loss':avg_loss})
@@ -205,7 +211,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
                 resultsEpoch.update({"Validation_AUC_"+keys[i] : values[i]})
             resultsEpoch.update({"Validation_AUC" : np.mean(values)})
 
-            # Check if this model has the lowest validation loss
+            # Check if this model has the lowest validation loss        # TODO: turn this into a function? it's basically the same code twice
             if(config['general']['optimize'] == "AUC"):
                 if val_loss[0] > lowest:
                     logging.info(f'New highest AUC: {values[0]}')

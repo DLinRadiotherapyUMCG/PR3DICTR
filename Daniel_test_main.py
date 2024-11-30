@@ -44,6 +44,12 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['general']['seed'])
 
+
+    from src.dataset.get_transforms import get_random_augmentations_from_config
+
+    #transforms = get_random_augmentations_from_config(config)
+
+
     WandB_hpt.login(config)
 
 

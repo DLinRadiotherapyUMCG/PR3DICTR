@@ -130,20 +130,22 @@ data:
     list:
       flip:
         Isenabled: True
-        prob: 0.5
+        #prob: 0.5
+      random_crop:  
+        isEnabled: False
       affine:
         Isenabled: True
-        prob: 0.97
+        #prob: 0.97
         translate_max: 14   # pixels
         scale_max: 0.02
         z_scale: -0.2
       rotate:
         Isenabled: True
-        prob: 0.97
+        #prob: 0.97
         max: 150 # degree
       noise:
         Isenabled: True
-        prob: 0.3
+        #prob: 0.3
         mean: 0
         std: 0.1
 
