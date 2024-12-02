@@ -65,7 +65,7 @@ def K_fold_cross_validation(config):
     for fold_idx, dataset_split_dict in enumerate(k_fold_dataframes_list, start=1):
         
         logging.info(f'Fold {fold_idx}/{len(k_fold_dataframes_list)}')
-
+        
         initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'])
 
         create_results_directory(config, fold_idx)

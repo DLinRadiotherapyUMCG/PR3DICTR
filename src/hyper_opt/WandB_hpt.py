@@ -53,14 +53,15 @@ def initialise_WandB_group(config: dict, project_name: str, groupName = None) ->
     """
     #wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])  
 
-    #if(WandEnabled(config) == True):
-    wandb.init(
-        project = project_name,
-        group = groupName,
-        dir=config['general']['resultsCurrentDirectory'][:-1],
-        config = config,
-        reinit = True
-    ) 
+    if(WandB_is_enabled(config) == True):
+    #if config['hyperparam_tuning']['WandB']['IsEnabled']:
+        wandb.init(
+            project = project_name,
+            group = groupName,
+            dir=config['general']['resultsCurrentDirectory'][:-1],
+            config = config,
+            reinit = True
+        ) 
 
     #print(project_name)
     #print(groupName)

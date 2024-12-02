@@ -5,7 +5,7 @@ general:
   experiment_name: 'MT_test_transforms'
   trialNumber: "Trial_1"
   patientGroup: 0
-  resultsCurrentDirectory: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
+  resultsCurrentDirectory: "C:/Users/d.c.macrae/Documents/pred_RT" # "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
   error_ignore: true
   endpointRatios: []
   testMode: false
@@ -17,10 +17,10 @@ columns: #
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
 paths:
-  csv: "D:/MT_dataset/"
-  images: "D:/MT_dataset/patients/"
-  output: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
-  results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
+  csv: "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
+  images: "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
+  output: "C:/Users/d.c.macrae/Documents/pred_rt_results"
+  results: "C:/Users/d.c.macrae/Documents/pred_rt_results"
 
 run:
   patienceExhausted: False
@@ -171,7 +171,7 @@ visualizations:
 
 hyperparam_tuning:
   WandB:
-    IsEnabled: true
+    IsEnabled: false
     API_Key: "c7f0f65fac8b7178ad7c5859ba6114775b16e694"
     #MetricsMonitor: [ "train_AUC","train_loss","train_acc",
     #  "eval_AUC","eval_loss","eval_acc"]
