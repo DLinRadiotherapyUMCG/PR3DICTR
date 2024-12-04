@@ -40,7 +40,7 @@ def login(config: dict) -> None:
 
 
 def WandB_stop(config: dict) -> None:
-    if(WandB_is_enabled(config) == True):
+    if (WandB_is_enabled(config) == True):
         wandb.finish(quiet=True)
 
 
@@ -53,7 +53,7 @@ def initialise_WandB_group(config: dict, project_name: str, groupName = None) ->
     """
     #wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])  
 
-    if(WandB_is_enabled(config) == True):
+    if (WandB_is_enabled(config) == True):
     #if config['hyperparam_tuning']['WandB']['IsEnabled']:
         wandb.init(
             project = project_name,
@@ -66,3 +66,17 @@ def initialise_WandB_group(config: dict, project_name: str, groupName = None) ->
     #print(project_name)
     #print(groupName)
     
+
+
+def update_WandB_summary_table(config, best_log_dict):
+    """
+
+    """
+    if (WandB_is_enabled(config) == True):
+        # supress the WandB summary-maker 
+        # (it somehow insists on using the most recent log, not the 'best', even if you define what that is)
+        for key in best_log_dict.keys():
+            wandb.define_metric(key, summary="none")
+
+        # update the best log. This appears in the 'summary' tab in WandB (the table of results)
+        wandb.run.summary.update(best_log_dict)

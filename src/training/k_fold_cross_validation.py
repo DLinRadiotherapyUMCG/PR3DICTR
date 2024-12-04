@@ -133,6 +133,7 @@ def K_fold_cross_validation(config):
         #                                                                                                 [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict],
         #                                                                                                 [train_loss, val_loss, test_loss]
         #                                                                                                 )
+        
         train_losses_list.append(train_loss)
         val_losses_list.append(val_loss)
         test_losses_list.append(test_loss)

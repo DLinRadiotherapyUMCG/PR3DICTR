@@ -102,7 +102,7 @@ def generate_K_fold_cross_validation_splits(config, df_development_set):
     """
     # Check and validate if KFolds settings are active
     k_fold_dataframes_collection = []
-
+    
 
     labels = df_development_set[config['columns']['label']]
     # encode the labels (makes it possible to use StratifiedKFold for multi-label problems, as it only works on binary or multi-class)

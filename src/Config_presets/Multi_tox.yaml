@@ -77,8 +77,6 @@ model:
 
 data:
   filename_stratified_sampling_test_csv: 'stratified_sampling_test_542.csv'
-  trainfile: 'stratified_sampling_test_542.csv'
-  valfile: 'stratified_sampling_test_542.csv'
   splitvar: "Split"
   patientVar: 'PatientID'
   patientID_length: 7

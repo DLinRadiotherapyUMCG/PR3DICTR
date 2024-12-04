@@ -19,7 +19,7 @@ from src.training.validate import validate
 from src.models.tools.save_model import save_model, load_model
 
 
-from src.hyper_opt.WandB_hpt import WandB_is_enabled
+from src.hyper_opt.WandB_hpt import WandB_is_enabled, update_WandB_summary_table
 from src.visualization.plot_slices import plot_slices
 
 import matplotlib.pyplot as plt
@@ -110,7 +110,9 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
     logging.info('Starting training loop')
     for epoch_num in range(1, config['training']['max_epochs'] + 1):
         #current_epoch_num = epoch+1
-        resultsEpoch = dict()
+        improved = False # Flag to indicate if the model has improved on this epoch
+        results_log = dict()
+        best_log_dict = None
         out_tot = dict.fromkeys(labels)
         targets_tot = dict.fromkeys(labels)
         
@@ -188,12 +190,12 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         avg_loss = total_loss / num_batches_per_epoch
         logging.info(f'  Training   Loss={avg_loss:.5f}, AUCs={auc}')
 
-        resultsEpoch.update({'Train_Loss':avg_loss})
+        results_log.update({'Train_Loss':avg_loss})
         keys = list(auc.keys())
         values = list(auc.values())
         for i in range(len(keys)):
-            resultsEpoch.update({"Train_AUC_"+keys[i]:values[i]})
-        resultsEpoch.update({"Train_AUC" : np.mean(values)})
+            results_log.update({"Train_AUC_"+keys[i]:values[i]})
+        results_log.update({"Train_AUC" : np.mean(values)})
 
         
 
@@ -202,20 +204,20 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             val_loss, auc_val, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader)
             # wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc, 'val/loss': val_loss, 'val/auc': val_auc})
             logging.info(f'  Validation Loss={val_loss:.5f}, AUCs={auc_val}')
-            resultsEpoch.update({'Validation_Loss':val_loss})
+            results_log.update({'Validation_Loss':val_loss})
 
             keys = list(auc_val.keys())
             values = list(auc_val.values())
             for i in range(len(keys)):
-                resultsEpoch.update({"Validation_AUC_"+keys[i] : values[i]})
-            resultsEpoch.update({"Validation_AUC" : np.mean(values)})
+                results_log.update({"Validation_AUC_"+keys[i] : values[i]})
+            results_log.update({"Validation_AUC" : np.mean(values)})
 
             # Check if this model has the lowest validation loss        # TODO: turn this into a function? it's basically the same code twice
             if(config['general']['optimize'] == "AUC"):
                 if val_loss[0] > lowest:
                     logging.info(f'New highest AUC: {values[0]}')
                     lowest = values[0]
-                    patience_counter = 0 # Reset patience counter
+                    improved = True
 
                     #best_model_state_dict = copy.deepcopy(model.state_dict())
                     if config['Save']['best_model']: 
@@ -231,6 +233,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
                     logging.info(f'New lowest loss: {val_loss}')
                     lowest = val_loss
                     patience_counter = 0 # Reset patience counter
+                    improved = True
                     
                     if config['Save']['best_model']: 
                         save_model(config, model, f"DlModel_Weights.pth")
@@ -238,6 +241,7 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
                         best_model_state_dict = copy.deepcopy(model.state_dict())
                     
                 else:
+                    
                     patience_counter += 1 # Increment patience counter
 
             # Check if patience has been exhausted
@@ -251,8 +255,13 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
 
 
         if WandB_is_enabled(config):
-            resultsEpoch.update({"epoch":epoch_num})
-            wandb.log(resultsEpoch)
+            results_log.update({"epoch":epoch_num})
+            wandb.log(results_log)
+
+            if improved:
+                best_log_dict = copy.deepcopy(results_log)
+                update_WandB_summary_table(config, best_log_dict)
+
         
         # else:
         #     wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc})
