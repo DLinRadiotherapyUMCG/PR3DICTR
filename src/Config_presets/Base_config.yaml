@@ -99,8 +99,11 @@ data:
   #   segmentation_map: 'segmentation_map.npy'
 
   dataloader: 
-    dataset_type: 'cache' # ['standard', 'cache']  #TODO: 'persistent' is not implemented yet
+    dataset_type: 'cache' # ['standard', 'cache', 'smartcache']  #TODO: 'persistent' is not implemented yet
     num_workers: 8           # number of workers (cores) to use for data loading in each training batch
+    smartcache:
+      cache_rate: 0.5  # half of dataset is in RAM
+      num_replace_workers: 4 # number of workers to replace cache
 
   preprocessing:
     isEnabled: false
@@ -133,6 +136,7 @@ data:
     Iterations: 3
     Splits: 5
     validation_size: 0.2  # if only 1 split
+    split_strategy: 'stratified'  # ['stratified', 'random']
 
   equalizer:
     isEnabled: false

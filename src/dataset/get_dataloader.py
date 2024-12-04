@@ -9,7 +9,7 @@ import random
 import logging
 import numpy as np
 import pandas as pd
-from monai.data import Dataset, CacheDataset, PersistentDataset, GDSDataset, DataLoader, ThreadDataLoader, ThreadBuffer
+from monai.data import Dataset, CacheDataset, PersistentDataset, GDSDataset, DataLoader, ThreadDataLoader, ThreadBuffer, SmartCacheDataset
 from monai.transforms import (
     Compose,
     ConcatItemsd,
@@ -113,7 +113,7 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
     dataset_type = 'cache'
     dataloader_type = 'standard'
     batch_size = config['training']['batch_size']
-    cache_rate = 1
+    #cache_rate = 1
     num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else 1
     persistent_workers = True if num_workers > 0 else False#  config['data']['dataloader']['persistent_workers']
     drop_last = False
@@ -129,11 +129,16 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
         ds_class = Dataset
     elif dataset_type == 'cache':
         ds_class = CacheDataset
-        update_dict = {'cache_rate': cache_rate, 'num_workers': num_workers, "runtime_cache": 'process'}
+        update_dict = {'cache_rate': 1, 'num_workers': num_workers, "runtime_cache": 'process'}
     # elif dataset_type == 'persistent':
     #     ds_class = PersistentDataset
     #     update_dict = {'cache_dir': cache_dir}
     #     create_folder_if_not_exists(cache_dir)
+    elif dataset_type == 'smartcache':
+        ds_class = SmartCacheDataset
+        update_dict = {'cache_rate': config['data']['dataloader']['smartcache']['cache_rate'], 
+                       'num_workers': num_workers, "num_replace_workers": 
+                       config['data']['dataloader']['smartcache']['num_replace_workers']}
     else:
         raise ValueError('Invalid dataset_type: {}.'.format(dataset_type))
     

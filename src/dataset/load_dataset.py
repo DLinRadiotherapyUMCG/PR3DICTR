@@ -8,7 +8,7 @@ from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, labe
 import pandas as pd
 import numpy as np
 
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
@@ -103,13 +103,18 @@ def generate_K_fold_cross_validation_splits(config, df_development_set):
     # Check and validate if KFolds settings are active
     k_fold_dataframes_collection = []
     
+    if config["data"]["kFolds"]["split_strategy"] == 'stratified':
+        # encode the labels (makes it possible to use StratifiedKFold for multi-label problems, as it only works on binary or multi-class)
+        labels = df_development_set[config['columns']['label']]
+        encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])   
+        kf_splitter = StratifiedKFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
+    elif config["data"]["kFolds"]["split_strategy"] == 'random':
+        kf_splitter = KFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
+    else:
+        raise Exception("Exception: K-fold split strategy not recognized. Please check the configuration file.")
 
-    labels = df_development_set[config['columns']['label']]
-    # encode the labels (makes it possible to use StratifiedKFold for multi-label problems, as it only works on binary or multi-class)
-    encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])
-        
-    skf = StratifiedKFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
-    for i, (train_index, val_index) in enumerate(skf.split(df_development_set,encoded_labels)):
+    
+    for i, (train_index, val_index) in enumerate(kf_splitter.split(df_development_set,encoded_labels)):
         train_i_df = df_development_set.iloc[train_index]
         #trainDf_sel = mergeDf.iloc[train_index]
         if(config['data']['equalizer']['isEnabled']):
