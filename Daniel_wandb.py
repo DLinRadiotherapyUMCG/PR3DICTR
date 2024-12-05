@@ -15,7 +15,7 @@ def main():
     wandb.login(key="c7f0f65fac8b7178ad7c5859ba6114775b16e694") 
 
     for trial_n in range(3):
-        wandb.init(project="test_WB_8", group="test_group_4", reinit=True)
+        wandb.init(project="test_WB_0", group="test_group_1", reinit=True)
         # define a metric we are interested in the minimum of
         #wandb.define_metric("loss", goal="minimize", summary="best")
         #wandb.define_metric("loss", summary="best")
@@ -32,11 +32,16 @@ def main():
             loss = random.uniform(0, 1 / (i + 1))
             acc = random.uniform(1 / (i + 1), 1)
 
+            loss_v = random.uniform(0, 1 / (i + 1))
+            acc_v = random.uniform(1 / (i + 1), 1)
+
             
             log_dict = {
                 'epoch': i,
-                "loss":loss,
-                "acc": acc,
+                "train/loss":loss,
+                "train/acc": acc,
+                "val/loss":loss_v,
+                "val/acc": acc_v,
             }
             #wandb.log(log_dict, commit=commit, step=i)
             wandb.log(log_dict, step=i)

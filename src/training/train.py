@@ -25,9 +25,6 @@ from src.visualization.plot_slices import plot_slices
 import matplotlib.pyplot as plt
 
 
-def sigmoid(x):
-    return 1/(1+np.exp(-x))
-
 def plot_model_inputs(config, plot_inputs, epoch):
     """
     Plots the model inputs (CT, RTDOSE, Segmentation) used during training, and saves the figure as a png.
@@ -42,7 +39,7 @@ def plot_model_inputs(config, plot_inputs, epoch):
         rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
         
         CT = (plot_inputs[patient_idx][0].cpu() * ct_range) + config['data']['preprocessing']['ct']['a_min']
-        RTDOSE = plot_inputs[patient_idx][1].cpu() * rtdose_range
+        RTDOSE = plot_inputs[patient_idx][1].cpu() * rtdose_range + config['data']['preprocessing']['rtdose']['a_min']
         RTSTRUCT = plot_inputs[patient_idx][2].cpu()
 
         plotting_rows_dicts = [
@@ -60,8 +57,13 @@ def plot_model_inputs(config, plot_inputs, epoch):
             }
         ]
 
-        slices = [20, 30, 40, 50, 60, 70, 80, 90]
-        fig, axes = plot_slices(plotting_rows_dicts, slices)# , title=f"{patient_id} slices")
+        num_CT_slices = CT.shape[0]
+        num_plot_slices = config['training']['num_plot_slices']
+
+        slices = list(range(0, num_CT_slices, num_CT_slices // (num_plot_slices + 1)))[1:-1]
+
+        #slices = [20, 30, 40, 50, 60, 70, 80, 90]
+        fig, axes = plot_slices(plotting_rows_dicts, slices, RTcmap=config['general']['region'])# , title=f"{patient_id} slices")
 
         filename=os.path.join(config['general']['resultsCurrentDirectory'],'epoch_{}_idx_{}.png'.format(epoch, patient_idx))
         #print(filename)
@@ -102,7 +104,6 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         lowest = np.inf
     patience_counter = 0
     
-    #Sigmoid = np.vectorize(sigmoid)
 
     sigmoid_act = torch.nn.Sigmoid()
 
@@ -172,12 +173,10 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             elif config['training']['scheduler']['name'] in ['cyclic']:
                 scheduler.step()
 
-
             # plot model inputs
-            #print(epoch_num)
-            #print(batch_num)
-            if epoch_num == 1 and batch_num==1:
-                plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)     
+            if (config['Save']['plot_training_slices']['isEnabled']) and (epoch_num == 1 or epoch_num % config['Save']['plot_training_slices']['every_n_epochs'] == 0) and (batch_num == 1):
+                plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)
+ 
 
         if show_pbar: pbar.close()
 
@@ -279,34 +278,3 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
     return model
 
 
-
-
-
-
-
-def get_output_results(model, val_loader, config):
-    model.eval()
-    labels = config['columns']['label']
-      
-    out_tot = dict.fromkeys(labels)
-    targets_tot = dict.fromkeys(labels)
-
-    for label in labels:
-        out_tot[label] = []
-        targets_tot[label] = []
-    
-    Sigmoid = np.vectorize(sigmoid)
-
-    with torch.no_grad():
-        for i, batch in enumerate(val_loader):
-            logging.debug(f'Validation batch {i}')
-            inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
-
-            outputs = model(x=inputs, features=clinical_features)
-
-            lab_indx = 0
-            for label in labels:
-                out_tot[label] = out_tot[label] + list(Sigmoid(outputs[label].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0]))
-                targets_tot[label] = targets_tot[label] + list(targets[:,:,lab_indx].cpu().detach().numpy().reshape((1,targets[:,:,lab_indx].shape[0]))[0])
-                lab_indx+=1
-    return(out_tot, targets_tot)

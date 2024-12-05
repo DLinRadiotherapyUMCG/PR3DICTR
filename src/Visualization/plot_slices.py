@@ -58,7 +58,7 @@ HNC_plotting_params = {
         "cmap": "dose",
         "cmap_title": "Dose (Gy)",
         "min_val": 0,
-        "max_val": 9000,
+        "max_val": 8000,
     },
     "RTSTRUCT": {"color": "deeppink", "linewidth": 2, "alpha": 0.8, "cmap": "gray"},
     "Attention": {
@@ -71,6 +71,34 @@ HNC_plotting_params = {
         "background_color": "black",
     },
 }
+
+
+LUNG_plotting_params = {
+    "CT": {
+        "cmap": "gray",
+        "cmap_title": "HU",
+        "min_val": -1200,
+        "max_val": 400,
+    },
+    "RTDOSE": {
+        "cmap": "dose",
+        "cmap_title": "Dose (Gy)",
+        "min_val": 0,
+        "max_val": 8000,
+    },
+    "RTSTRUCT": {"color": "deeppink", "linewidth": 2, "alpha": 0.8, "cmap": "gray"},
+    "Attention": {
+        "cmap": "Attention",
+        "cmap_abs": "AttentionAbs",
+        "cmap_colors": att_cmap,
+        "cmap_abs_colors": att_cmap_abs,
+        "cmap_title": None,
+        "alpha": 1,
+        "background_color": "black",
+    },
+}
+
+
 
 
 def create_colormap(cmap_name, min_value, max_value, HNC_plotting_params=None, N=256):
@@ -192,7 +220,7 @@ def make_row_colorbar(
 
 def rescale_data(data, min_val, max_val):
     """
-    Rescales the data from the [0,1] range (to the CT or RTDoSE ranges).
+    Rescales the data from the [0,1] range (to the CT or RTDose ranges).
     """
     if data.min() >= 0 and data.max() <= 1:
         return data * (max_val - min_val) + min_val
@@ -240,7 +268,7 @@ def plot_CT(axs, CT, slices, HNC_plotting_params):
     )
 
     for i, slice_n in enumerate(slices):
-        axs[i].imshow(CT[slice_n], cmap = "bone")#, cmap=cmap, norm=norm)
+        axs[i].imshow(CT[slice_n], cmap=cmap, norm=norm)
 
 
 def plot_RTDOSE(axs, RTDOSE, slices, RTcmap, is_background=False):
@@ -393,10 +421,17 @@ def plot_slices(
     row_dicts,
     slice_indexes,
     title=None,
-    HNC_plotting_params=HNC_plotting_params,
-    RTcmap="HNC",
+    #HNC_plotting_params=HNC_plotting_params,
+    RT_region="HNC",
     verbose=False,
 ):
+    if RT_region == "HNC":
+        HNC_plotting_params=HNC_plotting_params
+    elif RT_region == "LUNG":
+        HNC_plotting_params=LUNG_plotting_params
+    else:
+        raise ValueError("Invalid RTcmap")
+
     slice_count = len(slice_indexes)
     row_count = len(row_dicts)
 
@@ -486,7 +521,7 @@ def plot_slices(
                     axs[row_idx],
                     RTDOSE,
                     slice_indexes,
-                    RTcmap,
+                    RT_region,
                     is_background=rtdose_is_background,
                 )
 
@@ -523,7 +558,7 @@ def plot_slices(
             num_slices=slice_count,
             colorbar_layer_name=colorbar_layer_name,
             HNC_plotting_params=HNC_plotting_params,
-            RTcmap=RTcmap,
+            RTcmap=RT_region,
             global_att_max=global_att_max,
         )
 
