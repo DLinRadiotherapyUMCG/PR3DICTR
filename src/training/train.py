@@ -189,12 +189,12 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         avg_loss = total_loss / num_batches_per_epoch
         logging.info(f'  Training   Loss={avg_loss:.5f}, AUCs={auc}')
 
-        results_log.update({'Train_Loss':avg_loss})
+        results_log.update({'train/train_loss':avg_loss})
         keys = list(auc.keys())
         values = list(auc.values())
         for i in range(len(keys)):
-            results_log.update({"Train_AUC_"+keys[i]:values[i]})
-        results_log.update({"Train_AUC" : np.mean(values)})
+            results_log.update({"train/train_AUC_"+keys[i]:values[i]})
+        results_log.update({"train/train_AUC" : np.mean(values)})
 
         
 
@@ -203,13 +203,13 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             val_loss, auc_val, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader)
             # wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc, 'val/loss': val_loss, 'val/auc': val_auc})
             logging.info(f'  Validation Loss={val_loss:.5f}, AUCs={auc_val}')
-            results_log.update({'Validation_Loss':val_loss})
+            results_log.update({'val/val_loss':val_loss})
 
             keys = list(auc_val.keys())
             values = list(auc_val.values())
             for i in range(len(keys)):
-                results_log.update({"Validation_AUC_"+keys[i] : values[i]})
-            results_log.update({"Validation_AUC" : np.mean(values)})
+                results_log.update({"val/val_AUC_"+keys[i] : values[i]})
+            results_log.update({"val/valalidation_AUC" : np.mean(values)})
 
             # Check if this model has the lowest validation loss        # TODO: turn this into a function? it's basically the same code twice
             if(config['general']['optimize'] == "AUC"):
