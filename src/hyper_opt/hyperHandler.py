@@ -15,7 +15,6 @@ from src.dataset.get_dataloader import make_dataloader
 from src.dataset.get_transforms import get_transforms
 from src.training.k_fold_cross_validation import K_fold_cross_validation
 
-from torch.utils.data import DataLoader
 import os
 import numpy as np
 
@@ -29,28 +28,29 @@ import src.hyper_opt.WandB_hpt as WandB_hpt
 class HyperTuning_Handler():
     def __init__(self,config):
         # Set optuna
-        self.Optuna_study = Optuna_initialise_study(config) 
+        self.Optuna_study = Optuna_hpt.Optuna_initialise_study(config) 
         self.config = config
 
 
-        self.using_WandB = config['hyperparam_tuning']['WandB']['IsEnabled']
 
-        if (self.using_WandB):
-            # Log into weights and biases
-            WandB_hpt.login(config)
+        # NOTE: deprecated. is now in experimentHandler
+        # self.using_WandB = config['hyperparam_tuning']['WandB']['IsEnabled']
+        # if (self.using_WandB):
+        #     # Log into weights and biases
+        #     WandB_hpt.login(config)
 
 
-    def run_experiment(self, config):
+    def run_optimize_experiment(self):
         
-        if(config['general']['testMode']):
-            logging.info("WARNING: ------------ TEST MODE IS ACTIVE -------------")
+        # if(self.config['general']['testMode']):
+        #     logging.info("WARNING: ------------ TEST MODE IS ACTIVE -------------")
 
         # self.Optuna_study.optimize(
         #     func = run_trial(self, config, trial)
         # )
-        n_trials = config['hyperparam_tuning']['optuna']['n_trials']
+        n_trials = self.config['hyperparam_tuning']['optuna']['n_trials']
 
-        self.Optuna_study.optimize(lambda trial: run_trial(config, trial), n_trials)
+        self.Optuna_study.optimize(lambda trial: run_trial(self.config, trial), n_trials)
 
 
 
@@ -76,30 +76,30 @@ def results_handler(config, results):
 
 
 
-def Optuna_initialise_study(config):
-    study = None
-    if (config['hyperparam_tuning']['optuna']['IsEnabled']):
+# def Optuna_initialise_study(config):
+#     study = None
+#     if (config['hyperparam_tuning']['optuna']['IsEnabled']):
 
-        # Check where to keep study information
-        studyName = config['general']['experiment_name']
-        pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
-        storage_name = f"sqlite:///{pathOptunaStudyTracker}"
-        create_file(pathOptunaStudyTracker)
-        print(storage_name)
+#         # Check where to keep study information
+#         studyName = config['general']['experiment_name']
+#         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
+#         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
+#         create_file(pathOptunaStudyTracker)
+#         print(storage_name)
 
-        study = optuna.create_study(
-                            study_name = studyName, 
-                            storage = storage_name, 
-                            load_if_exists=True,
-                            directions= config['hyperparam_tuning']['optuna']['objective_direction']
-                            )
+#         study = optuna.create_study(
+#                             study_name = studyName, 
+#                             storage = storage_name, 
+#                             load_if_exists=True,
+#                             directions= config['hyperparam_tuning']['optuna']['objective_direction']
+#                             )
 
-        # check if an experiment has been run before
-        config['general']['firstRun'] = (len(study.get_trials()) == 0)
-        if (config['general']['firstRun']):
-            print("First optuna run has been detected!")
+#         # check if an experiment has been run before
+#         config['general']['firstRun'] = (len(study.get_trials()) == 0)
+#         if (config['general']['firstRun']):
+#             print("First optuna run has been detected!")
 
-    return study
+#     return study
 
 
 
@@ -120,8 +120,6 @@ def run_trial(config, trial):
 
     return optuna_results
     # end.
-    
-    
 
 
 def update_trial_hyperparameters(config, trial):
@@ -136,15 +134,10 @@ def update_trial_hyperparameters(config, trial):
 
 
 
-def update_config(dic, location, suggested_value):
-    if len(location) == 1:
-        dic[location[0]] = suggested_value
-        return dic
-    else:
-        dic[location[0]] = update_config(dic[location[0]], location[1:], suggested_value)
-        return dic
-    
-
-    
-    
-    
+# def update_config(dic, location, suggested_value):
+#     if len(location) == 1:
+#         dic[location[0]] = suggested_value
+#         return dic
+#     else:
+#         dic[location[0]] = update_config(dic[location[0]], location[1:], suggested_value)
+#         return dic

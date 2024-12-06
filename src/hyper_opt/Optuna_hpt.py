@@ -138,6 +138,7 @@ def set_minValue(hyperinfo, firstRun):
         minValue = hyperinfo['max']
     return minValue
 
+
 def generate_value(trial, hyperinfo, firstRun = False):
     """
     Selects and generates a value based on hyperinfo
@@ -166,83 +167,57 @@ def generate_value(trial, hyperinfo, firstRun = False):
         suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'])       
     return suggested_value
 
-def save_trial(model, config, trial_num):
-    out_path = config['hyperparam_tuning']['optuna']['trial_results']
+# def save_trial(model, config, trial_num):
+#     out_path = config['hyperparam_tuning']['optuna']['trial_results']
         
-    if not os.path.exists(out_path):
-        os.makedirs(out_path)
+#     if not os.path.exists(out_path):
+#         os.makedirs(out_path)
     
-    return
+#     return
 
-def objective(trial, config):
-    """
-    1) Create a "working" config file 
-    2) Use this to train a model
-    3) evaluate and return model performance
 
-    """
-    
-    trial_num = trial.number
-    config['hyperparam_tuning']['optuna']['trial_results'] = config['general']['experiment_name'] + '_' + trial_num + '/'
-    
-    
-    # Assign values for "regular" hyperparameters
-    for key in config['hyperparam_tuning']['hyperparams'].keys():
-        hyperinfo = config['hyperparam_tuning']['hyperparams'][key]
-        location = hyperinfo['location']
-        suggested_value = generate_value(trial, hyperinfo)
-        config = update_config(config,location,suggested_value)
 
-    # Alter any hyperparameters that are dependend on other parameters 
-    config = derived_hyperparameters(trial, config)
 
-    # Train with the local config file
-    loss_function = get_loss_function(config)
+# def Optuna_CreateStudy(config):
+#     study = None
+#     if(config['hyperparam_tuning']['optuna']['IsEnabled']):
 
-    # load data
-    train_DF= load_dataset_single(config, os.path.join(config['paths']['csv'], config['filenames']['train_csv']))
-    val_DF = load_dataset_single(config, os.path.join(config['paths']['csv'], config['filenames']['validation_csv']))
-    # get transforms
-    train_transforms, val_transforms = get_transforms(config)
-    # make dataloaders
-    train_loader, metadata = make_dataloader(config, train_DF, train_transforms, validation_mode=False)
-    val_loader, metadata2 = make_dataloader(config, val_DF, val_transforms, validation_mode=True)
-    
-    # train_loader = DataLoader(train_data, batch_size=config['training']['batch_size'], shuffle=True, 
-    #                           num_workers = config['data']['dataloader']['num_workers'], persistent_workers = config['data']['dataloader']['persistent_workers'])
-    # val_loader = DataLoader(val_data, batch_size=config['training']['batch_size'], shuffle=False, 
-    #                         num_workers = 1, persistent_workers = config['data']['dataloader']['persistent_workers'])
-    
-    # Train model 
-    model = train(config, train_loader, val_loader, metadata)
-    
-    save_trial(model, config)
-    
-    # Generate validation results
-    val_loss, val_auc = validate(loss_function, model, val_loader)
-    
-    return val_loss
+#         # Check where to keep study information
+#         studyName = config['general']['experiment_name']
+#         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
+#         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
+#         create_folder(pathOptunaStudyTracker)
+#         print(storage_name)
 
-def Optuna_CreateStudy(config):
+#         study = optuna.create_study(study_name = studyName, storage = storage_name, load_if_exists=True, direction = config['hyperparam_tuning']['optuna']['direction'])
+#     return study
+
+
+
+def Optuna_initialise_study(config):
     study = None
-    if(config['hyperparam_tuning']['optuna']['IsEnabled']):
+    if (config['hyperparam_tuning']['optuna']['IsEnabled']):
 
         # Check where to keep study information
         studyName = config['general']['experiment_name']
         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
-        create_folder(pathOptunaStudyTracker)
+        create_file(pathOptunaStudyTracker)
         print(storage_name)
 
-        study = optuna.create_study(study_name = studyName, storage = storage_name, load_if_exists=True, direction = config['hyperparam_tuning']['optuna']['direction'])
+        study = optuna.create_study(
+                            study_name = studyName, 
+                            storage = storage_name, 
+                            load_if_exists=True,
+                            directions= config['hyperparam_tuning']['optuna']['objective_direction']
+                            )
+
+        # check if an experiment has been run before
+        config['general']['firstRun'] = (len(study.get_trials()) == 0)
+        if (config['general']['firstRun']):
+            print("First optuna run has been detected!")
+
     return study
 
-def Optuna_optimalisation(config):
-    """
-    
-    """
-    study = Optuna_CreateStudy(config)
-    
-    study.optimize(lambda trial: objective(trial, config), config['hyperparam_tuning']['optuna']['n_trails'])
-    
-    return
+
+
