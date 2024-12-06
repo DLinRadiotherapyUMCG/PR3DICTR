@@ -58,7 +58,7 @@ def plot_model_inputs(config, plot_inputs, epoch):
         ]
 
         num_CT_slices = CT.shape[0]
-        num_plot_slices = config['training']['num_plot_slices']
+        num_plot_slices = config['Save']['plot_training_slices']['n_patients_per_epoch']
 
         slices = list(range(0, num_CT_slices, num_CT_slices // (num_plot_slices + 1)))[1:-1]
 
