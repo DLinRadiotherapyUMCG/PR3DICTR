@@ -2,10 +2,10 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  experiment_name: 'MT_test_transforms'
+  experiment_name: 'MT_test_WandB_0'
   trialNumber: "Trial_1"
   patientGroup: 0
-  resultsCurrentDirectory: "C:/Users/d.c.macrae/Documents/pred_RT" # "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"
+  resultsCurrentDirectory:  "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_RT"
   error_ignore: true
   endpointRatios: []
   testMode: false
@@ -17,10 +17,10 @@ columns: #
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
 paths:
-  csv: "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
-  images: "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
-  output: "C:/Users/d.c.macrae/Documents/pred_rt_results"
-  results: "C:/Users/d.c.macrae/Documents/pred_rt_results"
+  csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
+  images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset/patients/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
+  output: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_rt_results"
+  results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results" # "C:/Users/d.c.macrae/Documents/pred_rt_results"
 
 run:
   patienceExhausted: False
@@ -107,7 +107,7 @@ data:
 
   kFolds:
     isEnabled: true
-    n_iterations: 1
+    n_iterations: 2
     n_splits: 5
 
   equalizer:
@@ -130,14 +130,14 @@ data:
         z_scale: -0.2
       rotate:
         isEnabled: True
-        max: 150 # degree
+        max: 20 # degree
       noise:
-        isEnabled: True
+        isEnabled: False
         mean: 0
         std: 0.1
 
 training:
-  max_epochs: 2
+  max_epochs: 10
   batch_size: 16
   validation_interval: 1
   patience: 10
@@ -169,7 +169,7 @@ visualizations:
 
 hyperparam_tuning:
   WandB:
-    IsEnabled: false
+    IsEnabled: true
     API_Key: "c7f0f65fac8b7178ad7c5859ba6114775b16e694"
     #MetricsMonitor: [ "train_AUC","train_loss","train_acc",
     #  "eval_AUC","eval_loss","eval_acc"]

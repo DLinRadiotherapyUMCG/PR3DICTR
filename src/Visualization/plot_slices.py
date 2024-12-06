@@ -47,6 +47,7 @@ att_cmap = np.concatenate((neg_cmap, pos_cmap))
 # Keep only the positive side for abosulte attention maps
 att_cmap_abs = pos_cmap
 
+
 HNC_plotting_params = {
     "CT": {
         "cmap": "gray",
@@ -71,7 +72,6 @@ HNC_plotting_params = {
         "background_color": "black",
     },
 }
-
 
 LUNG_plotting_params = {
     "CT": {
@@ -416,6 +416,15 @@ def plot_empty_img(axs, color="black"):
 
 """ MAIN """
 
+def get_plotting_params(RT_region, HNC_plotting_params=HNC_plotting_params, LUNG_plotting_params=LUNG_plotting_params):
+    if RT_region == "HNC":
+        HNC_plotting_params=HNC_plotting_params
+    elif RT_region == "LUNG":
+        HNC_plotting_params=LUNG_plotting_params
+    else:
+        raise ValueError("Invalid RTcmap")
+    return HNC_plotting_params
+
 
 def plot_slices(
     row_dicts,
@@ -425,12 +434,8 @@ def plot_slices(
     RT_region="HNC",
     verbose=False,
 ):
-    if RT_region == "HNC":
-        HNC_plotting_params=HNC_plotting_params
-    elif RT_region == "LUNG":
-        HNC_plotting_params=LUNG_plotting_params
-    else:
-        raise ValueError("Invalid RTcmap")
+    
+    HNC_plotting_params = get_plotting_params(RT_region)
 
     slice_count = len(slice_indexes)
     row_count = len(row_dicts)

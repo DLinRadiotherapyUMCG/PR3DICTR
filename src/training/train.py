@@ -20,59 +20,12 @@ from src.models.tools.save_model import save_model, load_model
 
 
 from src.hyper_opt.WandB_hpt import WandB_is_enabled, update_WandB_summary_table
-from src.visualization.plot_slices import plot_slices
-
-import matplotlib.pyplot as plt
-
-
-def plot_model_inputs(config, plot_inputs, epoch):
-    """
-    Plots the model inputs (CT, RTDOSE, Segmentation) used during training, and saves the figure as a png.
-    Args:
-        config (ConfigObject): configuration object
-        plot_inputs (list): list of model input images
-        epoch (int): current epoch number
-    """
-    for patient_idx in range(min(1, len(plot_inputs))):
-        
-        ct_range = (config['data']['preprocessing']['ct']['a_max'] - config['data']['preprocessing']['ct']['a_min'])
-        rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
-        
-        CT = (plot_inputs[patient_idx][0].cpu() * ct_range) + config['data']['preprocessing']['ct']['a_min']
-        RTDOSE = plot_inputs[patient_idx][1].cpu() * rtdose_range + config['data']['preprocessing']['rtdose']['a_min']
-        RTSTRUCT = plot_inputs[patient_idx][2].cpu()
-
-        plotting_rows_dicts = [
-            {
-                "Label": "CT",
-                "CT": CT
-            },
-            {
-                "Label": "RTDOSE",
-                "RTDOSE": RTDOSE
-            },
-            {
-                "Label": "RTSTRUCT",
-                "RTSTRUCT": RTSTRUCT
-            }
-        ]
-
-        num_CT_slices = CT.shape[0]
-        num_plot_slices = config['Save']['plot_training_slices']['n_patients_per_epoch']
-
-        slices = list(range(0, num_CT_slices, num_CT_slices // (num_plot_slices + 1)))[1:-1]
-
-        #slices = [20, 30, 40, 50, 60, 70, 80, 90]
-        fig, axes = plot_slices(plotting_rows_dicts, slices, RTcmap=config['general']['region'])# , title=f"{patient_id} slices")
-
-        filename=os.path.join(config['general']['resultsCurrentDirectory'],'epoch_{}_idx_{}.png'.format(epoch, patient_idx))
-        #print(filename)
-        fig.savefig(filename, bbox_inches='tight')
-        plt.close(fig)
+from src.visualization.plot_model_inputs import plot_model_inputs
 
 
 
-def train(config, model, loss_function, train_loader, val_loader, hyperClass = None):
+
+def train(config, model, loss_function, train_loader, val_loader):
     """
     Train the model.
     :param config:
@@ -137,10 +90,6 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             logging.debug(f'Batch {batch_num} of epoch {epoch_num}')
 
             if show_pbar: pbar.update(1)
-            #it.update(1)
-            
-            # if batch_num == 0:
-            #     print("IDs first batch: ", batch['patient_id'])
 
             optimizer.zero_grad(set_to_none=True)
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
@@ -158,11 +107,8 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
                 out_tot[label] = out_tot[label] + list(sigmoid_act(outputs[label]).cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
                 targets_tot[label] = targets_tot[label] + list(targets[:,idx].cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
 
-            # Log loss and AUC
+            # Log the batch loss to the epoch loss
             total_loss += loss.item()
-            # if auc is not None:
-            #     total_auc += auc
-            #     num_auc_batches += 1
 
             # Update model weights
             optimizer.step()
@@ -189,12 +135,12 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
         avg_loss = total_loss / num_batches_per_epoch
         logging.info(f'  Training   Loss={avg_loss:.5f}, AUCs={auc}')
 
-        results_log.update({'train/train_loss':avg_loss})
+        results_log.update({'train/loss':avg_loss})
         keys = list(auc.keys())
         values = list(auc.values())
         for i in range(len(keys)):
-            results_log.update({"train/train_AUC_"+keys[i]:values[i]})
-        results_log.update({"train/train_AUC" : np.mean(values)})
+            results_log.update({"train/AUC_"+keys[i]:values[i]})
+        results_log.update({"train/mean_AUC" : np.mean(values)})
 
         
 
@@ -203,13 +149,13 @@ def train(config, model, loss_function, train_loader, val_loader, hyperClass = N
             val_loss, auc_val, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader)
             # wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc, 'val/loss': val_loss, 'val/auc': val_auc})
             logging.info(f'  Validation Loss={val_loss:.5f}, AUCs={auc_val}')
-            results_log.update({'val/val_loss':val_loss})
+            results_log.update({'val/loss':val_loss})
 
             keys = list(auc_val.keys())
             values = list(auc_val.values())
             for i in range(len(keys)):
-                results_log.update({"val/val_AUC_"+keys[i] : values[i]})
-            results_log.update({"val/valalidation_AUC" : np.mean(values)})
+                results_log.update({"val/AUC_"+keys[i] : values[i]})
+            results_log.update({"val/mean_AUC" : np.mean(values)})
 
             # Check if this model has the lowest validation loss        # TODO: turn this into a function? it's basically the same code twice
             if(config['general']['optimize'] == "AUC"):
