@@ -2,7 +2,7 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  experiment_name: 'MT_test_WandB_HP2'
+  experiment_name: 'MT_test_WandB_HP4'
   trialNumber: "Trial_1"
   resultsCurrentDirectory:  "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
@@ -171,27 +171,27 @@ hyperparam_tuning:
     isEnabled: true
     objectives: ["val_mean_AUC"]         
     objective_direction: ["maximize"]
-    n_trials: 2
+    n_trials: 5
   # ----  Custom Params -------
-  # Location:= path variabele in config
+  # Location:= path variable in config
   hyperparams:
-    Weight_decay: 
-      name: 'Weight_Decay'
-      type: 'float'
-      location: ["training",'optimizer','weight_decay']
-      min: 0
-      max: 1
-    learning_rate: 
-      name: 'Learning_rate'
-      type: 'float'
-      location: ['training','optimizer','learning_rate']
-      min: 0.0004
-      max: 0.001
-    optimizer:
-      name: "Optimizer" 
-      type: 'categorical'
-      location: ["training",'optimizer','name']
-      options: ['Adam'] #['AdaBound','Adam','SGD']
+    # Weight_decay: 
+    #   name: 'Weight_Decay'
+    #   type: 'float'
+    #   location: ["training",'optimizer','weight_decay']
+    #   min: 0
+    #   max: 1
+    # learning_rate: 
+    #   name: 'Learning_rate'
+    #   type: 'float'
+    #   location: ['training','optimizer','learning_rate']
+    #   min: 0.0004
+    #   max: 0.001
+    # optimizer:
+    #   name: "Optimizer" 
+    #   type: 'categorical'
+    #   location: ["training",'optimizer','name']
+    #   options: ['Adam'] #['AdaBound','Adam','SGD']
     
     batch_size:
       name: batch_size
@@ -199,19 +199,19 @@ hyperparam_tuning:
       location: ["training","batch_size"]
       options: [4,8,16]
 
-    augmentation_strength:
-      name: augmentation_strength
-      type: 'float'
-      location: ['data','augmentation',"strength"]
-      min: 0.8
-      max: 5
+    # augmentation_strength:
+    #   name: augmentation_strength
+    #   type: 'float'
+    #   location: ['data','augmentation',"strength"]
+    #   min: 0.8
+    #   max: 5
 
-    augmentation_probability:
-      name: augmentation_probability
-      type: 'float'
-      location: ['data','augmentation',"prob"]
-      min: 0.6
-      max: 0.98
+    # augmentation_probability:
+    #   name: augmentation_probability
+    #   type: 'float'
+    #   location: ['data','augmentation',"prob"]
+    #   min: 0.6
+    #   max: 0.98
       
         
 Save:

@@ -18,6 +18,7 @@ from src.utils.list_dicts import append_to_list_dicts
 
 
 from src.hyper_opt.WandB_hpt import initialise_WandB_group, login, WandB_stop
+from src.evaluation.mainMetricHandler import mainMetricHandler
 
 
 def K_fold_cross_validation(config, config_for_wandb=None):
@@ -83,31 +84,35 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         train_loader, metadata = make_dataloader(config, train_data, train_transforms, validation_mode=False)
         val_loader, _ = make_dataloader(config, val_data, val_transforms, validation_mode=True)
 
+        metricHandler = mainMetricHandler(config)
+
+
         # initialise a model
         logging.info('Getting model')
         model = get_classification_model(config, metadata=metadata, save_summary=True)
         model.to(device=DEVICE)
 
         # train the model
-        model = train(config, model, loss_function, train_loader, val_loader)
+        model = train(config, model, loss_function, train_loader, val_loader, metricHandler)
         model.eval()
 
         # get the predictions of the trained model on the training and validation (and test) sets
         logging.info('Getting predictions of best model from this fold:')
         logging.info('   Training set')
-        train_loss, train_auc_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader)
-        print("   ", train_loss, train_auc_dict)
+        train_loss, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
+        print("   ", train_loss, train_mean_metric_val, train_metric_dict)
         logging.info('   Validation set')
-        val_loss, val_auc_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader)
-        print("   ",val_loss, val_auc_dict)
+        val_loss, val_mean_metric_val, val_metric_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
+        print("   ",val_loss, val_mean_metric_val, val_metric_dict)
 
         if config['general']['use_test_set']:
             logging.info('   Test set')
-            test_loss, test_auc_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(config, model, loss_function, test_loader)
-            print("   ",test_loss, test_auc_dict)
+            test_loss, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(config, model, loss_function, test_loader, metricHandler)
+            print("   ",test_loss, test_mean_metric_val, test_metric_dict)
         else:
             test_loss = None
-            test_auc_dict = {endpoint: None for endpoint in endpoint_list}
+            test_mean_metric_val = None
+            test_metric_dict = {endpoint: None for endpoint in endpoint_list}
             test_patientIDs_list = []
             test_preds_dict = {endpoint: [] for endpoint in endpoint_list}
             test_targets_dict = {endpoint: [] for endpoint in endpoint_list}
@@ -130,12 +135,9 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         # concatenate all of the AUC dicts and loss dicts
         [train_aucs_list_dict, val_aucs_list_dict, test_aucs_list_dict] = append_to_list_dicts(config, 
                                                                                                [train_aucs_list_dict, val_aucs_list_dict, test_aucs_list_dict], 
-                                                                                               [train_auc_dict, val_auc_dict, test_auc_dict]
+                                                                                               [train_metric_dict, val_metric_dict, test_metric_dict]
                                                                                                )
-        # train_aucs_list.append(train_auc_dict)
-        # val_aucs_list.append(val_auc_dict)
-        # test_aucs_list.append(test_auc_dict)
-
+       
         # [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict] = append_to_list_dicts(config,
         #                                                                                                 [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict],
         #                                                                                                 [train_loss, val_loss, test_loss]

@@ -52,7 +52,7 @@ def initialise_WandB_group(config: dict, project_name: str, groupName = None, co
     This is useful for grouping together K-folds of the same trial or model.
     """
     #wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])  
-
+    print(config_for_wandb)
     if (WandB_is_enabled(config) == True):
     #if config['hyperparam_tuning']['WandB']['IsEnabled']:
         wandb.init(

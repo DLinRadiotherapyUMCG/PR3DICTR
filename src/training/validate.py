@@ -8,7 +8,7 @@ from src.evaluation.calculate_auc import calculate_auc_multi
 
 
 
-def validate(config, model, loss_function, val_loader):
+def validate(config, model, loss_function, val_loader, metric_handler):
     """
     Evaluate the model on the given dataloader.
     
@@ -53,7 +53,8 @@ def validate(config, model, loss_function, val_loader):
             num_batches += 1
             patientIDs_list += list(batch['patient_id'])
 
-    auc_dict = calculate_auc_multi(preds_dict, labels_dict, config)
+    mean_metric_value, metric_dict = metric_handler.calculate_metric(preds_dict, labels_dict)
+    #auc_dict = calculate_auc_multi(preds_dict, labels_dict, config)
     model.train()
 
     avg_loss = total_loss / num_batches
@@ -61,4 +62,4 @@ def validate(config, model, loss_function, val_loader):
     logging.debug(f'Validation loss: {avg_loss}')
     # logging.debug(f'Validation AUC: {avg_auc}')
 
-    return avg_loss, auc_dict, preds_dict, labels_dict, patientIDs_list
+    return avg_loss, mean_metric_value, metric_dict, preds_dict, labels_dict, patientIDs_list

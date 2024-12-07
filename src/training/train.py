@@ -21,11 +21,11 @@ from src.models.tools.save_model import save_model, load_model
 
 from src.hyper_opt.WandB_hpt import WandB_is_enabled, update_WandB_summary_table
 from src.visualization.plot_model_inputs import plot_model_inputs
+from src.evaluation.mainMetricHandler import mainMetricHandler
 
 
 
-
-def train(config, model, loss_function, train_loader, val_loader):
+def train(config, model, loss_function, train_loader, val_loader, metricHandler):
     """
     Train the model.
     :param config:
@@ -47,6 +47,10 @@ def train(config, model, loss_function, train_loader, val_loader):
     optimizer = get_optimizer(config, model)
     if config['training']['scheduler']['name'] is not False:
         scheduler = get_scheduler(config, optimizer)
+
+    # get the main metric with which to evaluate the training loop (e.g. AUC)
+    #metricHandler = mainMetricHandler(config)
+    metric_name = metricHandler.metric_name
 
     # Initialize the best model and lowest validation loss
     best_model_state_dict = None
@@ -127,38 +131,41 @@ def train(config, model, loss_function, train_loader, val_loader):
         if show_pbar: pbar.close()
 
         # it.close()
+        # Calculate evaluation metric
+        train_mean_metric_value, train_metric_dict = metricHandler.calculate_metric(out_tot, targets_tot)
         auc = calculate_auc_multi(out_tot, targets_tot, config)
+
+        print(f"Train AUC: {auc}")
+        print(f"Train AUC2: {train_metric_dict}")
             
         # Log epoch loss and AUC
         avg_loss = total_loss / num_batches_per_epoch
-        logging.info(f'  Training   Loss={avg_loss:.5f}, AUCs={auc}')
+        logging.info(f'  Training   Loss={avg_loss:.5f}, AUCs={train_metric_dict}')
 
         results_log.update({'train/loss':avg_loss})
-        keys = list(auc.keys())
-        values = list(auc.values())
-        for i in range(len(keys)):
-            results_log.update({"train/AUC_"+keys[i]:values[i]})
-        results_log.update({"train/mean_AUC" : np.mean(values)})
+        
+        for key, val in train_metric_dict.items():
+            results_log.update({f"train/{metric_name}_{key}" : val})
+        
+        results_log.update({f"train/mean_{metric_name}" : train_mean_metric_value})
 
         
         # Perform validation
         if epoch_num % config['training']['validation_interval'] == 0:
-            val_loss, auc_val, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader)
+            val_loss, val_mean_metric_value, val_metric_dict, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
             # wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc, 'val/loss': val_loss, 'val/auc': val_auc})
-            logging.info(f'  Validation Loss={val_loss:.5f}, AUCs={auc_val}')
+            logging.info(f'  Validation Loss={val_loss:.5f}, AUCs={val_metric_dict}')
             results_log.update({'val/loss':val_loss})
 
-            keys = list(auc_val.keys())
-            values = list(auc_val.values())
-            for i in range(len(keys)):
-                results_log.update({"val/AUC_"+keys[i] : values[i]})
-            results_log.update({"val/mean_AUC" : np.mean(values)})
+            for key, val in val_metric_dict.items():
+                results_log.update({f"val/{metric_name}_{key}" : val})
+            results_log.update({f"val/mean_{metric_name}" : val_mean_metric_value})
 
             # Check if this model has the lowest validation loss        # TODO: turn this into a function? it's basically the same code twice
             if(config['general']['optimize'] == "AUC"):
-                if val_loss[0] > lowest:
-                    logging.info(f'New highest AUC: {values[0]}')
-                    lowest = values[0]
+                if val_mean_metric_value > lowest:
+                    logging.info(f'New highest {metric_name}: {val_mean_metric_value}')
+                    lowest = val_mean_metric_value[0]
                     improved = True
 
                     #best_model_state_dict = copy.deepcopy(model.state_dict())
