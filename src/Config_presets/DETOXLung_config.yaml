@@ -8,13 +8,11 @@ general:
   patientGroup: 0
   optimize: "loss"
   resultsCurrentDirectory: ""
-  error_ignore: true
-  endpointRatios: []
   testMode: False
-  classImbalance: 0.25
+  use_test_set: False
 
 columns:
-  label: ["RP_OneYear"]
+  labels: ["RP_OneYear"]
   clinical_features: ["SmokerActive","SmokerStopped", "Gender",
   "Age","ChemoRad", "ImmunoTherapy",
   "OperationPerformed","SmokingUntilRecently","Pulmonary_Comorbidity", "RT_FractionDose"] #, "T_Stage","N_Stage","M_Stage"]
@@ -188,12 +186,12 @@ visualization:
 
 hyperparam_tuning:
   WandB:
-    IsEnabled: False
+    isEnabled: False
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
     MetricsMonitor: [ "train_AUC","train_loss","train_acc",
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    IsEnabled: False
+    isEnabled: False
 
     n_trials: 1
   # ----  Custom Params -------

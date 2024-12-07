@@ -22,10 +22,8 @@ def validate(config, model, loss_function, val_loader):
     model.eval()
 
     total_loss = 0.0
-    total_auc = 0.0
     num_batches = 0
-    #num_auc_batches = config['training']['validation']['num_auc_batches']
-    labels = config['columns']['label']
+    labels = config['columns']['labels']
 
     sigmoid_act = torch.nn.Sigmoid()
     

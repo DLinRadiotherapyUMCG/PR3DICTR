@@ -37,10 +37,10 @@ def train(config, model, loss_function, train_loader, val_loader):
     # config run information
     config['run']['patienceExhausted'] = False
     config['run']['patienceExhaustedIndex'] = 0
-    show_pbar = config['training']['progress_bar']
+    show_pbar = config['training']['show_progress_bar']
     
     # Get the names of the end-points being evaluated 
-    labels = config['columns']['label']
+    labels = config['columns']['labels']
 
     # Get loss function, optimizer, and scheduler
     loss_function = get_loss_function(config)
@@ -126,11 +126,9 @@ def train(config, model, loss_function, train_loader, val_loader):
 
         if show_pbar: pbar.close()
 
-        #it.close()
+        # it.close()
         auc = calculate_auc_multi(out_tot, targets_tot, config)
             
-        #logging.info('Training AUCs')
-        #logging.info(auc)
         # Log epoch loss and AUC
         avg_loss = total_loss / num_batches_per_epoch
         logging.info(f'  Training   Loss={avg_loss:.5f}, AUCs={auc}')
@@ -143,7 +141,6 @@ def train(config, model, loss_function, train_loader, val_loader):
         results_log.update({"train/mean_AUC" : np.mean(values)})
 
         
-
         # Perform validation
         if epoch_num % config['training']['validation_interval'] == 0:
             val_loss, auc_val, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader)
@@ -186,7 +183,6 @@ def train(config, model, loss_function, train_loader, val_loader):
                         best_model_state_dict = copy.deepcopy(model.state_dict())
                     
                 else:
-                    
                     patience_counter += 1 # Increment patience counter
 
             # Check if patience has been exhausted

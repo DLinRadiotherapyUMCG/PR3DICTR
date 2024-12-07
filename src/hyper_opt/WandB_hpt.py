@@ -2,7 +2,7 @@ import wandb
 from src.utils.fileHandler import create_file, create_folder, create_textfile
 
 def WandB_is_enabled(config: dict):
-    return config['hyperparam_tuning']['WandB']['IsEnabled']
+    return config['hyperparam_tuning']['WandB']['isEnabled']
 
 def WandB_create_study(config: dict, dict_params, groupName = None):
     create_folder(config['general']['resultsCurrentDirectory'])
@@ -46,7 +46,7 @@ def WandB_stop(config: dict) -> None:
 
 
 
-def initialise_WandB_group(config: dict, project_name: str, groupName = None) -> None:
+def initialise_WandB_group(config: dict, project_name: str, groupName = None, config_for_wandb=None) -> None:
     """
     A WandB group is a collection of runs that are grouped together. 
     This is useful for grouping together K-folds of the same trial or model.
@@ -59,7 +59,7 @@ def initialise_WandB_group(config: dict, project_name: str, groupName = None) ->
             project = project_name,
             group = groupName,
             dir=config['general']['resultsCurrentDirectory'][:-1],
-            config = config,
+            config = config_for_wandb,
             reinit = True
         ) 
 

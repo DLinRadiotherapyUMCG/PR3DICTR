@@ -54,7 +54,7 @@ def prepare_data_dictionaries(config, df):
     image_keys = config['data']['image_keys']
 
     clinical_features_columns = config['columns']['clinical_features']
-    label_columns = config['columns']['label']
+    label_columns = config['columns']['labels']
     
 
     patient_ids_list = [str(patient_id) for patient_id in df['PatientID']]

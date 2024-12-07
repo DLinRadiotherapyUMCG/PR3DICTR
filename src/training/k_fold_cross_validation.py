@@ -20,11 +20,18 @@ from src.utils.list_dicts import append_to_list_dicts
 from src.hyper_opt.WandB_hpt import initialise_WandB_group, login, WandB_stop
 
 
-def K_fold_cross_validation(config):
+def K_fold_cross_validation(config, config_for_wandb=None):
     """
     desc.
     """
-    endpoint_list = config['columns']['label']
+    n_splits = config['data']['kFolds']['n_splits']
+    n_iterations = config['data']['kFolds']['n_iterations']
+    if n_splits < n_iterations:
+        raise ValueError("The number of k-fold splits must be greater than or equal to the number of k-fold iterations.")
+    elif n_iterations == 0:
+        raise ValueError("The number of k-fold iterations must be greater than 0.")
+
+    endpoint_list = config['columns']['labels']
 
     train_aucs_list = []
     val_aucs_list = []
@@ -66,7 +73,7 @@ def K_fold_cross_validation(config):
         
         logging.info(f'Fold {fold_idx}/{len(k_fold_dataframes_list)}')
         
-        initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'])
+        initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=config_for_wandb)
 
         create_results_directory(config, fold_idx)
 

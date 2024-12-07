@@ -18,6 +18,7 @@ from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
+from src.experiments.experimentHandler import experimentHandler
 import src.hyper_opt.WandB_hpt as WandB_hpt
 
 
@@ -32,6 +33,11 @@ from src.training.k_fold_cross_validation import K_fold_cross_validation
 
 #from src.hyper_opt.WandB_hpt import login
 
+import numpy as np
+import random
+import torch
+from monai.utils import set_determinism
+
 if __name__ == '__main__':
     # Setup
     toxicity, log_level = parse_args()
@@ -43,6 +49,19 @@ if __name__ == '__main__':
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
+    seed = config['general']['seed']
+    # Set seed
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    #torch.cuda.manual_seed_all(seed)
+    set_determinism(seed=seed)
+
+
+    # Make deterministic
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
     from src.dataset.get_transforms import get_random_augmentation_names_from_config
@@ -50,15 +69,15 @@ if __name__ == '__main__':
     #transforms = get_random_augmentations_from_config(config)
 
 
-    WandB_hpt.login(config)
+    
 
 
-    K_fold_cross_validation(config)
+    #K_fold_cross_validation(config)
 
     # # MAIN: DL running class with hyperparameter optimization
-    #hyperClass = HyperTuning_Handler(config)
-    #hyperClass.run_experiment(config)
-    #hyperClass.Stop()
+    expHandler = experimentHandler(config)
+    expHandler.run_experiment(config)
+    #####hyperClass.Stop()
 
 
 

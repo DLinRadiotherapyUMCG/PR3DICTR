@@ -20,7 +20,7 @@ def calculate_auc(outputs, targets):
 
 def calculate_auc_multi(output,targets,config):
     
-    labels = config['columns']['label']  
+    labels = config['columns']['labels']  
     predictions = output 
     out_dict = {}
     Sigmoid = np.vectorize(sigmoid)

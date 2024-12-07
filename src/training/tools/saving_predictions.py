@@ -15,7 +15,7 @@ def concatenate_predictions(config, list_of_pred_list_dicts: list[dict], list_of
         all_y_pred_list_dict (dict): a dict of lists with all of the predictions for each endpoint
         all_y_true_list_dict (dict): a dict of lists with all of the true labels for each endpoint
     """
-    endpoint_list = config['columns']['label']
+    endpoint_list = config['columns']['labels']
 
     all_y_pred_list_dict = {endpoint: [] for endpoint in endpoint_list}
     all_y_true_list_dict = {endpoint: [] for endpoint in endpoint_list}
@@ -45,7 +45,7 @@ def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dic
 
     """
 
-    endpoint_list = config['columns']['label']
+    endpoint_list = config['columns']['labels']
 
     # Initialize df
     df_patient_ids = pd.DataFrame(patient_ids, columns=['PatientID'])

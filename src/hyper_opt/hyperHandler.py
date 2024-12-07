@@ -41,6 +41,9 @@ class HyperTuning_Handler():
 
 
     def run_optimize_experiment(self):
+        """
+        Run the hyperparameter tuning experiment
+        """
         
         # if(self.config['general']['testMode']):
         #     logging.info("WARNING: ------------ TEST MODE IS ACTIVE -------------")
@@ -50,94 +53,81 @@ class HyperTuning_Handler():
         # )
         n_trials = self.config['hyperparam_tuning']['optuna']['n_trials']
 
-        self.Optuna_study.optimize(lambda trial: run_trial(self.config, trial), n_trials)
+        self.Optuna_study.optimize(lambda trial: self.run_trial(self.config, trial), n_trials)
 
 
 
-def results_handler(config, results):
-    """
-    reports the desired metric/loss values to optimise to Optuna
-    The K-fold cross validation results contain a lot of info, this function extracts the ones we want to optimise
-    """
+    def run_trial(self, config, trial):
+        """
+        Manages a single trial of the hyperparameter tuning experiment. 
+        Updates the config with the new hyperparameters, runs the K-fold cross validation and reports the results to Optuna.
+        Args:
+            config (dict): the configuration of the experiment
+            trial (optuna.trial.Trial): the trial object of the current trial
+        Returns:
+            list: the results of the trial
+        """
+        # set a new trial number (also used as the 'group' for WandB later)
+        config['general']['trialNumber'] = f"Trial_{trial.number}" 
 
-    objectives = config['hyperparam_tuning']['optuna']['objectives'] 
+        # update the config of this trial
+        config = self.update_trial_hyperparameters(config, trial)
 
-    results_keys = list(results.keys())
+        # K-fold cross validation here
+        all_results = K_fold_cross_validation(config, config_for_wandb=trial)
 
-    for metric in objectives:
-        if metric not in results_keys:
-            raise Exception(f"Metric {metric} is not in the results dictionary")
-        
+        # aggregate the results of the K-folds, report them to Optuna
+        optuna_results = self.results_handler(config, all_results)
 
-    trial_result = [results[metric] for metric in objectives]
+        return optuna_results
+        # end.
+        # 
 
-    return trial_result
+    def update_trial_hyperparameters(self, config, trial):
+        """
+        Updates the config with the new hyperparameters for the current trial
+        Args:
+            config (dict): the configuration of the experiment
+            trial (optuna.trial.Trial): the trial object of the current trial
+        Returns:
+            updated_config (dict): the updated configuration, with trial parameters overwriting the default ones
+        """
 
+        # Alter normal hyperparameters
+        updated_config = Optuna_hpt.normal_hyperparameters(config, trial)
 
+        # Alter any hyperparameters that are dependend on other parameters 
+        updated_config = Optuna_hpt.derived_hyperparameters(updated_config, trial)
 
-
-# def Optuna_initialise_study(config):
-#     study = None
-#     if (config['hyperparam_tuning']['optuna']['IsEnabled']):
-
-#         # Check where to keep study information
-#         studyName = config['general']['experiment_name']
-#         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
-#         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
-#         create_file(pathOptunaStudyTracker)
-#         print(storage_name)
-
-#         study = optuna.create_study(
-#                             study_name = studyName, 
-#                             storage = storage_name, 
-#                             load_if_exists=True,
-#                             directions= config['hyperparam_tuning']['optuna']['objective_direction']
-#                             )
-
-#         # check if an experiment has been run before
-#         config['general']['firstRun'] = (len(study.get_trials()) == 0)
-#         if (config['general']['firstRun']):
-#             print("First optuna run has been detected!")
-
-#     return study
+        return updated_config
 
 
+    def results_handler(self, config, results):
+        """
+        reports the desired metric/loss values to optimise to Optuna
+        The K-fold cross validation results contain a lot of info, this function extracts the ones we want to optimise.
+        Args:
+            config (dict): the configuration of the experiment
+            results (dict): the results of the K-fold cross validation
+        Returns:
+            trial_result (list): the results of the trial
+        """
 
+        objectives = config['hyperparam_tuning']['optuna']['objectives'] 
 
-def run_trial(config, trial):
-    # set a new trial number (also used as the 'group' for WandB later)
-    config['general']['trialNumber'] = f"Trial_{trial.number}" 
+        results_keys = list(results.keys())
 
-    # update the config of this trial
-    config = update_trial_hyperparameters(config, trial)
+        for metric in objectives:
+            if metric not in results_keys:
+                raise Exception(f"Metric {metric} is not in the results dictionary")
+            
 
+        trial_result = [results[metric] for metric in objectives]
 
-    # K-fold cross validation here
-    all_results = K_fold_cross_validation(config)
-
-    # aggregate the results of the K-folds, report them to Optuna
-    optuna_results = results_handler(config, all_results)
-
-    return optuna_results
-    # end.
-
-
-def update_trial_hyperparameters(config, trial):
-    # Alter normal hyperparameters
-    config = Optuna_hpt.normal_hyperparameters(config, trial)
-
-    # Alter any hyperparameters that are dependend on other parameters 
-    config = Optuna_hpt.derived_hyperparameters(config, trial)
-
-    return config
+        return trial_result
 
 
 
 
-# def update_config(dic, location, suggested_value):
-#     if len(location) == 1:
-#         dic[location[0]] = suggested_value
-#         return dic
-#     else:
-#         dic[location[0]] = update_config(dic[location[0]], location[1:], suggested_value)
-#         return dic
+    
+

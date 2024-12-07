@@ -12,7 +12,7 @@ class MultiTox_Loss(nn.Module):
         super(MultiTox_Loss, self).__init__()
 
         self.config = config
-        self.endpoints_list = config['columns']['label']
+        self.endpoints_list = config['columns']['labels']
         self.valid_endpoints_as_tensor = torch.tensor([0, 1])  # these are the possible labels, anything else (e.g. -1 for missing values) is masked out
 
         self.loss_function = loss_function

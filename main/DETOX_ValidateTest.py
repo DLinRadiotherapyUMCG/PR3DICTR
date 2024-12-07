@@ -14,7 +14,7 @@ print(path_src)
 
 
 from src.config_presets.tools.get_config import get_config, load_config
-from src.dataset.load_dataset import load_dataset, load_dataset_total, ValidateImageDataExists
+from src.dataset.load_dataset import load_dataset, load_dataset_total, check_image_data_exists
 from src.models.tools.save_model import save_model
 from src.training.train import train
 from src.utils.logging.logging import setup_logging

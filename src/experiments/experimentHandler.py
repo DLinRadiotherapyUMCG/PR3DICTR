@@ -34,7 +34,7 @@ class experimentHandler():
     
     def __init__(self, config) -> None:
         # set WandB logging
-        self.using_WandB = config['hyperparam_tuning']['WandB']['IsEnabled']
+        self.using_WandB = config['hyperparam_tuning']['WandB']['isEnabled']
         if (self.using_WandB):
             # Log into weights and biases
             WandB_hpt.login(config)

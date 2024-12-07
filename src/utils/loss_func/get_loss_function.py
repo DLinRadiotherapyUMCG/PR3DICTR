@@ -20,24 +20,24 @@ def get_loss_function(config):
     :param config:
     :return: Loss function
     """
-    weights = torch.as_tensor(config['training']['loss']['weight'], dtype=torch.float32, device=DEVICE)
-    #print("WEIGHTS", weights)
-    weights = None
+    
+    #weights = None
     reduction = config['training']['loss']['reduction']
     if(config['training']['loss']['name'] == 'BCE'):
-        loss_function = torch.nn.BCEWithLogitsLoss(reduction = reduction, pos_weight = weights)
-    elif(config['training']['loss']['name'] =='softmargin'):       
-        loss_function = torch.nn.MultiLabelSoftMarginLoss(reduction = reduction, weight = weights)  # BUG: does not work properly, the outputted dimensions are incorrect
+        pos_weights = torch.as_tensor(config['training']['loss']['BCE']['pos_weight'], dtype=torch.float32, device=DEVICE)
+        loss_function = torch.nn.BCEWithLogitsLoss(reduction = reduction, pos_weight = pos_weights)
+    # elif(config['training']['loss']['name'] =='softmargin'):       
+    #     loss_function = torch.nn.MultiLabelSoftMarginLoss(reduction = reduction, weight = weights)  # BUG: does not work properly, the outputted dimensions are incorrect
     elif(config['training']['loss']['name'] =='focal'):
-        alpha = -1
-        if(config['training']['loss']['compensate_imbalance']):
-            alpha = config['general']['classImbalance']
-
-        loss_function = FocalLoss(alpha = alpha, reduction=reduction)    #TODO: add gamma and alpha parameters to configs
+        alpha = config['training']['loss']['focal']['alpha']
+        gamma = config['training']['loss']['focal']['gamma']
+        loss_function = FocalLoss(alpha = alpha, gamma = gamma, reduction=reduction)    
     elif(config['training']['loss']['name'] == 'hill'):
         loss_function = Hill(reduction = reduction) # TODO: add gamma, margin, lamb parameters to configs
     elif(config['training']['loss']['name'] == "ASL"):
-        loss_function = AsymmetricLossOptimized(reduction = reduction) # TODO: add gamma_neg and gamma_pos parameters to configs
+        gamma_neg = config['training']['loss']['ASL']['gamma_neg']
+        gamma_pos = config['training']['loss']['ASL']['gamma_pos']
+        loss_function = AsymmetricLossOptimized(gamma_neg=gamma_neg, gamma_pos=gamma_pos, reduction = reduction)
     elif(config['training']['loss']['name'] == 'NLLL'):
         # Loss function for time event --> Requires 2 inputs (days, binaryCheckEvent)
         if(len(config['columns']['label']) != 2):

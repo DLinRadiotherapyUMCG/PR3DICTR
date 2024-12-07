@@ -167,36 +167,12 @@ def generate_value(trial, hyperinfo, firstRun = False):
         suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'])       
     return suggested_value
 
-# def save_trial(model, config, trial_num):
-#     out_path = config['hyperparam_tuning']['optuna']['trial_results']
-        
-#     if not os.path.exists(out_path):
-#         os.makedirs(out_path)
-    
-#     return
-
-
-
-
-# def Optuna_CreateStudy(config):
-#     study = None
-#     if(config['hyperparam_tuning']['optuna']['IsEnabled']):
-
-#         # Check where to keep study information
-#         studyName = config['general']['experiment_name']
-#         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
-#         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
-#         create_folder(pathOptunaStudyTracker)
-#         print(storage_name)
-
-#         study = optuna.create_study(study_name = studyName, storage = storage_name, load_if_exists=True, direction = config['hyperparam_tuning']['optuna']['direction'])
-#     return study
 
 
 
 def Optuna_initialise_study(config):
     study = None
-    if (config['hyperparam_tuning']['optuna']['IsEnabled']):
+    if (config['hyperparam_tuning']['optuna']['isEnabled']):
 
         # Check where to keep study information
         studyName = config['general']['experiment_name']

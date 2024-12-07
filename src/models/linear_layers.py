@@ -11,7 +11,7 @@ class MultiToxOutputHead(torch.nn.Module):
         super(MultiToxOutputHead, self).__init__()
 
         self.predict_CT_contrast = False
-        self.endpoint_list = [x for x in config['columns']['label'] if "CT+C" not in x]
+        self.endpoint_list = [x for x in config['columns']['labels'] if "CT+C" not in x]
         self.n_features = n_features
         self.dropout_p = config['model']['dropout_p'] 
         self.num_ohe_classes = config['model']['num_ohe_classes'] 

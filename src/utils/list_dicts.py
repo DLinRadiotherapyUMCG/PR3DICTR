@@ -7,7 +7,7 @@ def append_to_list_dicts(config, list_dicts = [], value_dicts = []):
     """
     assert len(list_dicts) == len(value_dicts)
 
-    endpoint_list = config['columns']['label']
+    endpoint_list = config['columns']['labels']
 
     for idx in range(len(list_dicts)):
         for endpoint in endpoint_list:

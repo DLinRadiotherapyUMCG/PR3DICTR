@@ -27,10 +27,7 @@ def removePtnsExcluded(df, config):
 
 
 
-
-
-
-def ValidateImageDataExists(config, df):
+def check_image_data_exists(config, df):
     imagePath = config['paths']['images']
     ptnDirectories = os.listdir(imagePath)
 
@@ -72,7 +69,7 @@ def load_dataset(config : dict, patient_ids=None):
     df_total[patientID_col] = df_total[patientID_col].apply(lambda x: x.rjust(patientID_length, '0'))  # ['%0.{}d'.format(patient_id_length) % int(x) for x in df[patient_id_col]]
     
     df_total = removePtnsExcluded(df_total, config)
-    df_total = ValidateImageDataExists(config, df_total) 
+    df_total = check_image_data_exists(config, df_total) 
 
     # TODO: Daniel: idk what the purpose of this was in the old code? was it ever used?
     # if patient_ids:
@@ -102,39 +99,57 @@ def generate_K_fold_cross_validation_splits(config, df_development_set):
     """
     # Check and validate if KFolds settings are active
     k_fold_dataframes_collection = []
-    
-    if config["data"]["kFolds"]["split_strategy"] == 'stratified':
-        # encode the labels (makes it possible to use StratifiedKFold for multi-label problems, as it only works on binary or multi-class)
-        labels = df_development_set[config['columns']['label']]
-        encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])   
-        kf_splitter = StratifiedKFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
-    elif config["data"]["kFolds"]["split_strategy"] == 'random':
-        kf_splitter = KFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
-    else:
-        raise Exception("Exception: K-fold split strategy not recognized. Please check the configuration file.")
 
-    
-    for i, (train_index, val_index) in enumerate(kf_splitter.split(df_development_set,encoded_labels)):
-        train_i_df = df_development_set.iloc[train_index]
-        #trainDf_sel = mergeDf.iloc[train_index]
-        if(config['data']['equalizer']['isEnabled']):
-            train_i_df = label_equalizer(train_i_df, config)
-        val_i_df = df_development_set.iloc[val_index]
-
-        assert not PtnID_SanityCheck(config, train_i_df, val_i_df)
-
+    # if the config dictates only 1 n_split, then just do a single train-val split (i.e. no K-fold cross-validation)
+    if config["data"]["kFolds"]["n_splits"] == 1:
+        logging.warning("WARNING: K-Fold cross-validation is set to 1 split. This is equivalent to a single train-val split.")
+        
+        train_i_df, val_i_df = generate_single_train_val_split(config, df_development_set)
         k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
+        #return [generate_single_train_val_split(config, df_development_set)]
+    
+    else:
+        if config["data"]["kFolds"]["split_strategy"] == 'stratified':
+            # encode the labels (makes it possible to use StratifiedKFold for multi-label problems, as it only works on binary or multi-class)
+            labels = df_development_set[config['columns']['labels']]
+            encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])   
+            kf_splitter = StratifiedKFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
 
+            k_fold_splits = kf_splitter.split(df_development_set, encoded_labels)
+        elif config["data"]["kFolds"]["split_strategy"] == 'random':
+            kf_splitter = KFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
+
+            k_fold_splits = kf_splitter.split(df_development_set)
+        else:
+            raise Exception("Exception: K-fold split strategy not recognized. Please check the configuration file.")
+
+
+        for i, (train_index, val_index) in enumerate(k_fold_splits):
+            train_i_df = df_development_set.iloc[train_index]
+            #trainDf_sel = mergeDf.iloc[train_index]
+            if(config['data']['equalizer']['isEnabled']):
+                train_i_df = label_equalizer(train_i_df, config)
+            val_i_df = df_development_set.iloc[val_index]
+
+            assert not PtnID_SanityCheck(config, train_i_df, val_i_df)
+
+            k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
+
+    
     return k_fold_dataframes_collection
 
 
 
+# TODO: an option for a single train-val split
 def generate_single_train_val_split(config, df_development_set):
     """
     A function to split the development set into 1 train and 1 validation set (in case you want to train just one model)
     # TODO: check that this works properly
     """
-    labels = df_development_set[config['columns']['label']]
+    if config["data"]["kFolds"]["split_strategy"] == 'stratified':
+        labels = df_development_set[config['columns']['labels']]
+    else:
+        labels = None
     train_df, val_df = train_test_split(df_development_set, test_size=config['data']['kFolds']['validation_size'], stratify=labels, random_state=config['general']['seed'])
     
     assert not PtnID_SanityCheck(config, train_df, val_df)
