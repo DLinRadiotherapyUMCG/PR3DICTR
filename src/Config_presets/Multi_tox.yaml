@@ -2,8 +2,8 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  experiment_name: 'MT_test_metrics_HP'
-  trialNumber: "Trial_2"
+  experiment_name: 'Results_0'
+  trialNumber: "Trial_3"
   resultsCurrentDirectory:  "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: False
@@ -135,7 +135,7 @@ data:
         std: 0.1
 
 training:
-  max_epochs: 2
+  max_epochs: 5
   batch_size: 16
   validation_interval: 1
   patience: 10
@@ -157,7 +157,7 @@ training:
 
 evaluation:
   main_metric: "accuracy"
-  metrics_list: ["AUC"] #  ["AUC", "accuracy"]
+  metrics_list: ["AUC", "accuracy", "F1_score", "ECE", "ACE"]
   metrics:
     threshold: 'YoudenJ'
     calibration_bins: 5
@@ -174,7 +174,7 @@ hyperparam_tuning:
     #MetricsMonitor: [ "train_AUC","train_loss","train_acc",
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    isEnabled: true
+    isEnabled: false
     objectives: ["val_mean_accuracy"]          
     objective_direction: ["maximize"]
     n_trials: 5

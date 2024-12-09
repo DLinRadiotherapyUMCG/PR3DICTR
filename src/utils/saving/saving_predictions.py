@@ -71,8 +71,9 @@ def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dic
 
     # Save to file
     if external_set:
+        print("EXTERNAL SET", external_set)
         #print(model_name)
-        output_filename = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions.csv")
+        output_filename = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions_external.csv")
     else:
         output_filename = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions.csv")
 

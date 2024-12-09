@@ -44,7 +44,3 @@ def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict
 
     return mean_metric_value, results_dict
 
-
-
-def check_is_list():
-    pass

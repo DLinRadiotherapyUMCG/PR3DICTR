@@ -53,12 +53,9 @@ def validate(config, model, loss_function, val_loader, metric_handler):
             patientIDs_list += list(batch['patient_id'])
 
     mean_metric_value, metric_dict = metric_handler.calculate_metric(preds_dict, labels_dict)
-    #auc_dict = calculate_auc_multi(preds_dict, labels_dict, config)
-    model.train()
 
     avg_loss = total_loss / num_batches
 
     logging.debug(f'Validation loss: {avg_loss}')
-    # logging.debug(f'Validation AUC: {avg_auc}')
 
     return avg_loss, mean_metric_value, metric_dict, preds_dict, labels_dict, patientIDs_list

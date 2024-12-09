@@ -20,7 +20,7 @@ from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file, create_textfile
 from src.dataset.ToxDataset import *
 
-from src.evaluation.get_total_evaluation import get_total_evaluation
+from src.evaluation.OLD_get_total_evaluation import get_total_evaluation
 from sklearn.metrics import accuracy_score, roc_auc_score
 
 if __name__ == '__main__':

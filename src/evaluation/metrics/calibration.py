@@ -14,7 +14,7 @@ def ECE(config, true, pred):
     """
     Compute the ECE for a set of predictions and labels.
     """
-    bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, config, bin_type="fixed")
+    bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, bin_type="fixed")
 
     ECE = 0
     for i in range(len(bins)):
@@ -26,7 +26,7 @@ def MCE(config, true, pred):
     """
     Compute the MCE for a set of predictions and labels.
     """
-    bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, config, bin_type="fixed")
+    bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, bin_type="fixed")
 
     MCE = 0
     for i in range(len(bins)):
@@ -40,7 +40,7 @@ def ACE(config, true, pred):
     """
     num_bins = config['evaluation']['metrics']['calibration_bins']
     
-    bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, config, bin_type="adaptive")
+    bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, bin_type="adaptive")
 
     ACE = 0
     for i in range(len(bins)):

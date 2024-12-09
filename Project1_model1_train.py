@@ -16,7 +16,7 @@ from src.utils.parse_args import parse_args
 # from src.utils.set_random_seed import set_random_seed
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
 # from src.utils.fileHandler import create_file
-from src.evaluation.get_total_evaluation import get_total_evaluation
+from src.evaluation.OLD_get_total_evaluation import get_total_evaluation
 
 
 from torch.utils.data import DataLoader

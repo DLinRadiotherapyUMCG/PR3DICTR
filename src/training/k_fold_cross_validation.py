@@ -19,7 +19,7 @@ from src.utils.list_dicts import append_to_list_dicts
 
 from src.hyper_opt.WandB_hpt import initialise_WandB_group, login, WandB_stop
 from src.evaluation.mainMetricHandler import mainMetricHandler
-
+from src.evaluation.total_evaluation import total_evaluation_current_fold
 
 def K_fold_cross_validation(config, config_for_wandb=None):
     """
@@ -130,7 +130,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         mode_list = ['train']*len(train_patientIDs_list) + ['val']*len(val_patientIDs_list) + ['test']*len(test_patientIDs_list)
 
         # save the predictions
-        save_predictions(config, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list, fold_idx)
+        save_predictions(config, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
 
 
         # concatenate all of the AUC dicts and loss dicts
@@ -138,7 +138,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
                                                                                                [train_metrics_list_dict, val_metrics_list_dict, test_metrics_list_dict], 
                                                                                                [train_metric_dict, val_metric_dict, test_metric_dict]
                                                                                                )
-        
+
         # [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict] = append_to_list_dicts(config,
         #                                                                                                 [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict],
         #                                                                                                 [train_loss, val_loss, test_loss]
@@ -150,6 +150,10 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
         # stop WandB for this fold (init a new one on the next fold)
         WandB_stop(config)
+
+
+        # collect all metrics for this fold
+        total_evaluation_current_fold(config, sets=['train', 'val'], external_set=False)
 
 
     
