@@ -12,7 +12,7 @@ from src.models.tools.get_classification_model import get_classification_model
 from src.dataset.get_dataloader import make_dataloader   
 from src.dataset.get_transforms import get_transforms
 from src.utils.loss_func.get_loss_function import get_loss_function
-from src.training.tools.saving_predictions import concatenate_predictions, save_predictions
+from src.utils.saving.saving_predictions import concatenate_predictions, save_predictions
 from src.utils.saving.create_results_directory import create_results_directory
 from src.utils.list_dicts import append_to_list_dicts
 
