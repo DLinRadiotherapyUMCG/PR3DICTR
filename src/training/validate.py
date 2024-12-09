@@ -3,7 +3,7 @@ import logging
 import numpy as np 
 
 from src.constants import DEVICE
-from src.training.tools.utils import move_batch_to_device
+from src.utils.move_batch_to_device import move_batch_to_device
 
 
 

@@ -16,7 +16,7 @@ from src.utils.set_random_seed import set_random_seed
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file
 from sklearn.metrics import roc_auc_score
-from src.training.tools.utils import move_batch_to_device
+from src.utils.move_batch_to_device import move_batch_to_device
 
 from src.models.tools.get_classification_model import get_classification_model
 

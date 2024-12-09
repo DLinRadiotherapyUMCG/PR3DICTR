@@ -13,7 +13,7 @@ from src.constants import DEVICE
 from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.optimizer.get_optimizer import get_optimizer
 from src.utils.scheduler.get_scheduler import get_scheduler
-from src.training.tools.utils import move_batch_to_device
+from src.utils.move_batch_to_device import move_batch_to_device
 from src.training.validate import validate
 from src.models.tools.save_model import save_model, load_model
 
