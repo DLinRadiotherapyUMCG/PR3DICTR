@@ -70,6 +70,9 @@ class HyperTuning_Handler():
         # set a new trial number (also used as the 'group' for WandB later)
         config['general']['trialNumber'] = f"Trial_{trial.number}" 
 
+        # set random seed
+        set_random_seed(config['general']['seed'])
+
         # update the config of this trial
         config = self.update_trial_hyperparameters(config, trial)
 

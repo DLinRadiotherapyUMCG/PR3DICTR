@@ -47,7 +47,7 @@ def create_textfile(pathGiven, pathName, text):
         pathDirectory = pathDirectory[:-1]
 
     if(pathName.endswith('.txt')):
-        pathName = pathName[:-3]
+        pathName = pathName[:-4]
     
     for i in range(1000):
         if(i == 0):

@@ -2,8 +2,8 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  experiment_name: 'MT_test_WandB_HP4'
-  trialNumber: "Trial_1"
+  experiment_name: 'MT_test_repro_3'
+  trialNumber: "Trial_2"
   resultsCurrentDirectory:  "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: False
@@ -105,8 +105,8 @@ data:
   kFolds:
     isEnabled: true
     n_iterations: 1
-    n_splits: 1
-    split_strategy: 'random'  # ['stratified', 'random']
+    n_splits: 5
+    split_strategy: 'stratified'  # ['stratified', 'random']
 
   equalizer:
     isEnabled: false
@@ -123,7 +123,7 @@ data:
         isEnabled: True
       affine:
         isEnabled: True
-        translate_max: 14   # pixels
+        translate_max: 6   # pixels
         scale_max: 0.02
         z_scale: -0.2
       rotate:
@@ -135,7 +135,7 @@ data:
         std: 0.1
 
 training:
-  max_epochs: 10
+  max_epochs: 5
   batch_size: 16
   validation_interval: 1
   patience: 10
@@ -168,7 +168,7 @@ hyperparam_tuning:
     #MetricsMonitor: [ "train_AUC","train_loss","train_acc",
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    isEnabled: true
+    isEnabled: false
     objectives: ["val_mean_AUC"]         
     objective_direction: ["maximize"]
     n_trials: 5
