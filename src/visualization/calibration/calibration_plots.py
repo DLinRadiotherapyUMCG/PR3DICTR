@@ -5,8 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from sklearn.calibration import calibration_curve
-from src.utils.metrics.misc import make_colorlist
-from src.utils.metrics.ECE import calc_bins, compute_ECE, compute_MCE
+#from src.utils.metrics.misc import make_colorlist
+#from src.eval.metrics.ECE import calc_bins, compute_ECE, compute_MCE
+from src.evaluation.metrics.utils import calc_bins
+from src.evaluation.metrics.calibration import ECE, MCE
 
 def adaptive_make_calibration_plots(config, row_dicts, column_names, title=None, mode='calibration', n_bins=10, filedir=None, return_fig=False):
     """
@@ -105,7 +107,7 @@ def adaptive_make_calibration_plots(config, row_dicts, column_names, title=None,
             axs[i][j].set_ylim(0, 1)
 
     if filedir is not None:
-        os.makedirs(Path(filedir).parent,exist_ok=True)
+        os.makedirs(Path(filedir).parent, exist_ok=True)
         fig.savefig(filedir, bbox_inches='tight')
 
     if return_fig:
@@ -121,7 +123,7 @@ def make_row_calibration_plots(config, row_ax, preds, labels, column_names, n_bi
         try:
     #    print(i)
     #for ax, i in enumerate(row_ax):
-            calibration_subplot(config, row_ax[i], preds[col_name].cpu().numpy(), labels[col_name].cpu().numpy(), colours[i], model_name, n_bins)
+            calibration_subplot(config, row_ax[i], preds[col_name], labels[col_name], colours[i], model_name, n_bins)
         except Exception as e:
             print(e)
             pass
@@ -129,10 +131,9 @@ def make_row_calibration_plots(config, row_ax, preds, labels, column_names, n_bi
 
 def make_row_reliability_plots(config, row_ax, preds, labels, column_names, n_bins, colours, model_name):
     for i, col_name in enumerate(column_names):
-        try:
-            reliability_subplot(config, row_ax[i], preds[col_name].cpu().numpy(), labels[col_name].cpu().numpy(), n_bins, colours[i], model_name)
-        except:
-            pass
+        
+            reliability_subplot(config, row_ax[i], preds[col_name], labels[col_name], n_bins, colours[i], model_name)
+       
     
 
 def reliability_subplot(config, ax, y_pred_all, y_true_all, n_bins, colour, model_name):
@@ -142,10 +143,10 @@ def reliability_subplot(config, ax, y_pred_all, y_true_all, n_bins, colour, mode
     y_true = y_true_all[mask]
     y_pred = y_pred_all[mask]
 
-    bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(y_true, y_pred, num_bins=n_bins)
+    bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, y_true, y_pred, bin_type="fixed")
 
-    ECE = compute_ECE(y_true, y_pred, n_bins)
-    MCE = compute_MCE(y_true, y_pred, n_bins)
+    ECE_score = ECE(config, y_true, y_pred)
+    MCE_score = MCE(config, y_true, y_pred)
 
     # set the width of the bins, and the centers of the bins (both are dependent on the number of bins)
     bin_width = 1 / n_bins
@@ -159,8 +160,8 @@ def reliability_subplot(config, ax, y_pred_all, y_true_all, n_bins, colour, mode
     ax.plot([0,1],[0,1], '--', color='gray', linewidth=2, zorder=3)
 
     # ECE and MCE legend
-    ECE_patch = mpatches.Patch(color='green', label='ECE = {:.2f}'.format(ECE))
-    MCE_patch = mpatches.Patch(color='red', label='MCE = {:.2f}'.format(MCE))
+    ECE_patch = mpatches.Patch(color='green', label='ECE = {:.2f}'.format(ECE_score))
+    MCE_patch = mpatches.Patch(color='red', label='MCE = {:.2f}'.format(MCE_score))
     ax.legend(handles=[ECE_patch, MCE_patch])
 
     # Create grid
@@ -196,7 +197,7 @@ def calibration_subplot(config, ax, y_pred_all, y_true_all, colour, model_name, 
 
     #fraction_of_positives, mean_predicted_value = calibration_curve(y_true, y_pred, pos_label=1, n_bins=n_bins, strategy="quantile")
 
-    bins, binned, bin_accs, bin_confs, bin_sizes = calc_bins(y_true, y_pred, num_bins = n_bins, bin_type="adaptive")
+    bins, binned, bin_accs, bin_confs, bin_sizes = calc_bins(config, y_true, y_pred, bin_type="adaptive")
     
     coef = np.polyfit(bin_confs, bin_accs, 1)
     linear_fit = np.poly1d(coef)

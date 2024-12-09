@@ -20,6 +20,8 @@ from src.utils.list_dicts import append_to_list_dicts
 from src.hyper_opt.WandB_hpt import initialise_WandB_group, login, WandB_stop
 from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.evaluation.total_evaluation import total_evaluation_current_fold
+from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
+from src.evaluation.get_visualisations import get_visualizations
 
 def K_fold_cross_validation(config, config_for_wandb=None):
     """
@@ -206,6 +208,11 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         results[f"val_{endpoint}_loss"] = val_mean_losses_dict[endpoint]
         results[f"test_{endpoint}_loss"] = test_mean_losses_dict[endpoint]
 
+    # aggregate all of the metric results for this trial
+    aggregate_cross_validation_metrics(config, sets=['train', 'val'])
+
+    # make the visualisations for this fold
+    get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
 
     return results
 

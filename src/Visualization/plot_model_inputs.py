@@ -13,6 +13,13 @@ def plot_model_inputs(config, plot_inputs, epoch):
         plot_inputs (list): list of model input images
         epoch (int): current epoch number
     """
+    # check that the directory exists
+
+
+    save_folder = os.path.join(config['general']['resultsCurrentDirectory'], config['Save']['plot_training_slices']['folder_name'])
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder, exist_ok=True)
+
     n_patients = config['Save']['plot_training_slices']['n_patients_per_epoch']
     for patient_idx in range(min(n_patients, len(plot_inputs))):
         
@@ -46,7 +53,7 @@ def plot_model_inputs(config, plot_inputs, epoch):
         #slices = [20, 30, 40, 50, 60, 70, 80, 90]
         fig, axes = plot_slices(plotting_rows_dicts, slices, RT_region=config['general']['region'])# , title=f"{patient_id} slices")
 
-        filename=os.path.join(config['general']['resultsCurrentDirectory'],'epoch_{}_idx_{}.png'.format(epoch, patient_idx))
+        filename=os.path.join(save_folder, 'epoch_{}_idx_{}.png'.format(epoch, patient_idx))
         #print(filename)
         fig.savefig(filename, bbox_inches='tight')
         plt.close(fig)

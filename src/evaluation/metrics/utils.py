@@ -3,7 +3,9 @@
 Helper functions for classification metrics
 """
 import numpy as np
-from sklearn.metrics import  roc_curve
+from sklearn.metrics import roc_curve
+
+
 
 def remove_missing(true, pred):
     """
@@ -12,6 +14,8 @@ def remove_missing(true, pred):
     pred = pred[np.where(true != -1)]
     true = true[np.where(true != -1)]
     return true, pred
+
+
 
 def threshold(config, true, pred):
     """
@@ -36,11 +40,14 @@ def threshold(config, true, pred):
     pred[pred < threshold] = 0
     return true, pred
 
+
+
 def calc_bins(config, y_true, y_pred, bin_type="fixed"):
     """
     Divides the predictions into bins and calculates the accuracy, confidence and size of each bin.
     Bins can be either `fixed` or `adaptive`, where `fixed` bins are equally spaced and `adaptive` bins are equally populated.
     """
+    #print(config['evaluation']['metrics'])
     num_bins = config['evaluation']['metrics']['calibration_bins']
     # Assign each prediction to a bin
     if bin_type == "fixed":              # uses fixed bin widths (e.g. 0.1-0.2, 0.2-0.3, ..., 0.9-1.0, for ECE)

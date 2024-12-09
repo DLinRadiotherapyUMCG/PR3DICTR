@@ -10,7 +10,7 @@ def check_names(path):
         os.makedirs(os.path.dirname(path))
 
 
-def create_results_directory(config, KFoldIndex = -1):
+def create_results_directory(config, KFoldIndex = -1, create_dir = True):
     """
     Function to create the results directory for the current run.
     """
@@ -20,9 +20,12 @@ def create_results_directory(config, KFoldIndex = -1):
     folderPath += "\\"
 
     # Create folder if does not exist
-    create_folder(folderPath)
-    check_names(folderPath)
+    if create_dir:
+        create_folder(folderPath)
+        check_names(folderPath)
 
     logging.info(f"Directory path updated: {folderPath}")
     config['general']['resultsCurrentDirectory'] = folderPath
-    
+
+
+

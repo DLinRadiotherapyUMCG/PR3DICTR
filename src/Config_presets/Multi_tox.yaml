@@ -3,7 +3,7 @@ general:
   device: "cuda"
   firstRun: false
   experiment_name: 'Results_0'
-  trialNumber: "Trial_3"
+  trialNumber: "Trial_5"
   resultsCurrentDirectory:  "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: False
@@ -160,8 +160,8 @@ evaluation:
   metrics_list: ["AUC", "accuracy", "F1_score", "ECE", "ACE"]
   metrics:
     threshold: 'YoudenJ'
-    calibration_bins: 5
-  # visualizations:
+    calibration_bins: 10
+  visualisations: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve']
   #   calibration:
   #     num_bins: 10
     #confusion_matrix:
@@ -226,4 +226,10 @@ Save:
   best_model: True
   fileNames:
     modelSummary: "modelSummary.txt"
+  plot_training_slices:
+    isEnabled: True
+    folder_name: 'figures'
+    every_n_epochs: 1
+    n_patients_per_epoch: 1
+    n_slices_per_patient: 8
       

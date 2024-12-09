@@ -198,7 +198,10 @@ evaluation:
   metrics:
     threshold: 'YoudenJ'
     calibration_bins: 5
-  # visualizations:
+  visualisations: 
+    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve']
+    bins: 10
+  # visualisations:
   #   calibration:
   #     num_bins: 10
     #confusion_matrix:
@@ -216,7 +219,7 @@ hyperparam_tuning:
     objective_direction: ["maximize"]          # must be the same length (and order) as objectives
     n_trials: 30
   # ----  Custom Params -------
-  # Location:= path variabele in config
+  # Location:= path of the variable in the config
   hyperparams:
     Weight_decay: 
       name: 'Weight_Decay'
@@ -231,6 +234,7 @@ Save:
   best_model: False
   plot_training_slices:
     isEnabled: True
+    folder_name: 'figures'
     every_n_epochs: 50
     n_patients_per_epoch: 1
     n_slices_per_patient: 8

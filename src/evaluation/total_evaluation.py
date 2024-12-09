@@ -5,9 +5,8 @@ import logging
 
 from src.evaluation.get_evaluation_metric import get_metric_function
 from src.constants import METRIC_TYPES
-from src.evaluation.metrics.utils import remove_missing
 from src.evaluation.per_endpoint_metrics import calculate_metric_for_multiple_endpoints
-
+from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe import get_predictions_and_labels_from_predictions_dataframe
 
 
 """
@@ -22,9 +21,18 @@ from src.evaluation.per_endpoint_metrics import calculate_metric_for_multiple_en
 
 
 
-def total_evaluation_current_fold(config, sets = ['train', 'val'], external_set = False, pred_csv_dir = None):
+def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], external_set: bool = False, pred_csv_dir: bool = None):
     """
     A function to calculate the evaluation metrics for the current fold. The current directory is assumed to be the fold directory in the config, but can be manually overwritten.
+    Metrics are calculated for each endpoint, and each set, and the results are stored in a csv file (one file per set).
+    
+    Args:
+        config (dict): config dictionary
+        sets (list): list of strings, containing the names of the sets to evaluate (e.g. ['train', 'val', 'test'])
+        external_set (bool): whether the set is an external set or not
+        pred_csv_dir (str): the directory of the predictions csv file
+    Returns
+        None
     """
     
     logging.info(f"Starting total evaluation for current fold. Sets: {sets}")
@@ -46,25 +54,8 @@ def total_evaluation_current_fold(config, sets = ['train', 'val'], external_set 
     for set_name in sets:
         combined_metrics_df = None
 
-        # ger predictions of this set
-        df_fold_preds = df_fold_all_preds[df_fold_all_preds["Mode"]==set_name]
-        
-        # collect all (valid) predictions and labels for each endpoint (i.e. mask missing values)
-        endpoint_list = config['columns']['labels']
-        predictions_per_endpoint_dict = {endpoint: None for endpoint in endpoint_list}
-        labels_per_endpoint_dict = {endpoint: None for endpoint in endpoint_list}
-
-        for endpoint in endpoint_list:
-            pred = df_fold_preds[[f"{endpoint}_pred"]].to_numpy()
-            true = df_fold_preds[[f"{endpoint}_true"]].to_numpy()
-
-            # mask out the missing values
-            true, pred = remove_missing(true, pred)
-
-            # store in dict
-            predictions_per_endpoint_dict[endpoint] = pred
-            labels_per_endpoint_dict[endpoint] = true
-        
+        # Replace the placeholder with a call to the new function
+        predictions_per_endpoint_dict, labels_per_endpoint_dict = get_predictions_and_labels_from_predictions_dataframe(config, df_fold_all_preds, set_name)
 
         metrics_to_calculate = config['evaluation']['metrics_list']
 
@@ -90,8 +81,11 @@ def total_evaluation_current_fold(config, sets = ['train', 'val'], external_set 
                         combined_metrics_df = pd.concat([combined_metrics_df, results_df])
 
         # save the combined results to a csv
+        combined_metrics_df = combined_metrics_df.sort_index()
         combined_metrics_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], f"all_{set_name}_metrics.csv")
         combined_metrics_df.to_csv(combined_metrics_csv_dir, sep=";")
+
+
 
 
 
