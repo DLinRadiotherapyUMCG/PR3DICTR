@@ -5,7 +5,7 @@ general:
   firstRun: false
   experiment_name: 'Base_Experiment'
   trialNumber: "Trial_?"
-  optimize: "loss"
+  optimize: "loss"   # ['loss', 'metric']
   resultsCurrentDirectory: ""
   testMode: False
   use_test_set: False
@@ -195,11 +195,14 @@ training:
 evaluation:
   main_metric: "AUC"
   metrics_list: ["AUC"] #  ["AUC", "accuracy"]
-  visualizations:
-    calibration:
-      num_bins: 10
-    confusion_matrix:
-      threshold: 'YoudenJ'
+  metrics:
+    threshold: 'YoudenJ'
+    calibration_bins: 5
+  # visualizations:
+  #   calibration:
+  #     num_bins: 10
+    #confusion_matrix:
+      #threshold: 'YoudenJ'
 
 hyperparam_tuning:
   WandB:
@@ -232,7 +235,6 @@ Save:
     n_patients_per_epoch: 1
     n_slices_per_patient: 8
   
-
   fileNames:
     modelSummary: "modelSummary.txt"
       

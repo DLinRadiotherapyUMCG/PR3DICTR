@@ -13,13 +13,13 @@ def remove_missing(true, pred):
     true = true[np.where(true != -1)]
     return true, pred
 
-def threshold(true, pred, config):
+def threshold(config, true, pred):
     """
     Sets the threshold to split the data, currently only compatable with binairy endpoints
     """
-    threshold = config['metrics']['threshold']
+    threshold = config['evaluation']['metrics']['threshold']
     
-    if threshold == 'youdenJ':
+    if threshold == 'YoudenJ':
         fpr, tpr, thresholds = roc_curve(true, pred)
         idx = np.argmax(tpr - fpr) # use the threshold at the biggest difference between true positive rate and false positive rate
         threshold = thresholds[idx]
@@ -36,12 +36,12 @@ def threshold(true, pred, config):
     pred[pred < threshold] = 0
     return true, pred
 
-def calc_bins(y_true, y_pred, config, bin_type="fixed"):
+def calc_bins(config, y_true, y_pred, bin_type="fixed"):
     """
     Divides the predictions into bins and calculates the accuracy, confidence and size of each bin.
     Bins can be either `fixed` or `adaptive`, where `fixed` bins are equally spaced and `adaptive` bins are equally populated.
     """
-    num_bins = config['metrics']['calibration_bins']
+    num_bins = config['evaluation']['metrics']['calibration_bins']
     # Assign each prediction to a bin
     if bin_type == "fixed":              # uses fixed bin widths (e.g. 0.1-0.2, 0.2-0.3, ..., 0.9-1.0, for ECE)
         bins = np.linspace(1/num_bins, 1, num_bins)

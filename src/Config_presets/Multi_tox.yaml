@@ -2,7 +2,7 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  experiment_name: 'MT_test_repro_3'
+  experiment_name: 'MT_test_metrics_HP'
   trialNumber: "Trial_2"
   resultsCurrentDirectory:  "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
@@ -104,7 +104,7 @@ data:
 
   kFolds:
     isEnabled: true
-    n_iterations: 1
+    n_iterations: 2
     n_splits: 5
     split_strategy: 'stratified'  # ['stratified', 'random']
 
@@ -135,7 +135,7 @@ data:
         std: 0.1
 
 training:
-  max_epochs: 5
+  max_epochs: 2
   batch_size: 16
   validation_interval: 1
   patience: 10
@@ -155,11 +155,17 @@ training:
     T_mult: 1
     eta_min: 0.00000001
 
-visualizations:
-  calibration:
-    num_bins: 10
-  confusion_matrix:
+evaluation:
+  main_metric: "accuracy"
+  metrics_list: ["AUC"] #  ["AUC", "accuracy"]
+  metrics:
     threshold: 'YoudenJ'
+    calibration_bins: 5
+  # visualizations:
+  #   calibration:
+  #     num_bins: 10
+    #confusion_matrix:
+      #threshold: 'YoudenJ'
 
 hyperparam_tuning:
   WandB:
@@ -168,8 +174,8 @@ hyperparam_tuning:
     #MetricsMonitor: [ "train_AUC","train_loss","train_acc",
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    isEnabled: false
-    objectives: ["val_mean_AUC"]         
+    isEnabled: true
+    objectives: ["val_mean_accuracy"]          
     objective_direction: ["maximize"]
     n_trials: 5
   # ----  Custom Params -------

@@ -4,7 +4,6 @@ import numpy as np
 
 from src.constants import DEVICE
 from src.training.tools.utils import move_batch_to_device
-from src.evaluation.calculate_auc import calculate_auc_multi
 
 
 

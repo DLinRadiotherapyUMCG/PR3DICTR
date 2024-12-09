@@ -3,39 +3,39 @@
 Classification metrics
 """
 import numpy as np
-from metric_utils import remove_missing, threshold
+from src.evaluation.metrics.utils import remove_missing, threshold
 from sklearn.metrics import  accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 
-def balanced_acc(true, pred, config):
+def balanced_acc(config, true, pred):
     true, pred = remove_missing(true,pred)
-    true, pred = threshold(true, pred, config)
+    true, pred = threshold(config, true, pred)
     return balanced_accuracy_score(true, pred)
 
-def acc(true, pred, config):
+def accuracy(config, true, pred):
     true, pred = remove_missing(true,pred)
-    true, pred = threshold(true, pred, config)
+    true, pred = threshold(config, true, pred)
     return accuracy_score(true, pred)
 
-def F1(true, pred, config):
+def F1_score(config, true, pred):
     true, pred = remove_missing(true,pred)
-    true, pred = threshold(true, pred, config)
+    true, pred = threshold(config, true, pred)
     return f1_score(true,pred)
 
-def precision(true, pred, config):
+def precision(config, true, pred):
     true, pred = remove_missing(true,pred)
-    true, pred = threshold(true, pred, config)
+    true, pred = threshold(config, true, pred)
     return precision_score(true,pred)
 
-def recall(true, pred, config):
+def recall(config, true, pred):
     true, pred = remove_missing(true,pred)
-    true, pred = threshold(true, pred, config)
+    true, pred = threshold(config, true, pred)
     return recall_score(true,pred)
 
-def auc(true, pred):
+def auc(config, true, pred):
     true, pred = remove_missing(true,pred)
     return roc_auc_score(true,pred)
 
-def auc_se(true, pred):
+def auc_se(config, true, pred):
     "from: https://real-statistics.com/descriptive-statistics/roc-curve-classification-table/auc-confidence-interval/"
     AUC = auc(true,pred)
     q0 = AUC*(1-AUC)

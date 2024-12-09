@@ -37,7 +37,7 @@ def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict
         labels_dict[endpoint] = np.array(y_true_list_dict[endpoint])[mask]
 
         # calculate the metric
-        m_val = metric_function(predictions_dict[endpoint], labels_dict[endpoint])
+        m_val = metric_function(config, labels_dict[endpoint], predictions_dict[endpoint])
         results_dict[endpoint] = round(m_val, 3)
     
     mean_metric_value = round(np.mean(list(results_dict.values())), 3)

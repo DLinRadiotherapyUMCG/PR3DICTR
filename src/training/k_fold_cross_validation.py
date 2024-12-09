@@ -33,13 +33,14 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         raise ValueError("The number of k-fold iterations must be greater than 0.")
 
     endpoint_list = config['columns']['labels']
+    metric_name = config['evaluation']['main_metric']
 
     train_aucs_list = []
     val_aucs_list = []
     test_aucs_list = []
-    train_aucs_list_dict = {endpoint: list() for endpoint in endpoint_list}
-    val_aucs_list_dict   = {endpoint: list() for endpoint in endpoint_list}
-    test_aucs_list_dict  = {endpoint: list() for endpoint in endpoint_list}
+    train_metrics_list_dict = {endpoint: list() for endpoint in endpoint_list}
+    val_metrics_list_dict   = {endpoint: list() for endpoint in endpoint_list}
+    test_metrics_list_dict  = {endpoint: list() for endpoint in endpoint_list}
 
     train_losses_list = []
     val_losses_list = []
@@ -133,11 +134,11 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
 
         # concatenate all of the AUC dicts and loss dicts
-        [train_aucs_list_dict, val_aucs_list_dict, test_aucs_list_dict] = append_to_list_dicts(config, 
-                                                                                               [train_aucs_list_dict, val_aucs_list_dict, test_aucs_list_dict], 
+        [train_metrics_list_dict, val_metrics_list_dict, test_metrics_list_dict] = append_to_list_dicts(config, 
+                                                                                               [train_metrics_list_dict, val_metrics_list_dict, test_metrics_list_dict], 
                                                                                                [train_metric_dict, val_metric_dict, test_metric_dict]
                                                                                                )
-       
+        
         # [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict] = append_to_list_dicts(config,
         #                                                                                                 [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict],
         #                                                                                                 [train_loss, val_loss, test_loss]
@@ -146,10 +147,6 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         train_losses_list.append(train_loss)
         val_losses_list.append(val_loss)
         test_losses_list.append(test_loss)
-        
-        
-        # save the results # NOTE: how do we want to do this?
-        # hyperhandler-like stuff here?
 
         # stop WandB for this fold (init a new one on the next fold)
         WandB_stop(config)
@@ -157,38 +154,37 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
     
     # compute mean AUC per endpoint
-    train_aucs_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in train_aucs_list_dict.items()}
-    val_aucs_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_aucs_list_dict.items()}
+    train_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in train_metrics_list_dict.items()}
+    val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
     # compute total mean AUC
-    mean_train_auc = np.mean(list(train_aucs_mean_dict.values()))
-    mean_val_auc = np.mean(list(val_aucs_mean_dict.values()))
+    mean_train_metric_value = np.mean(list(train_metrics_mean_dict.values()))
+    mean_val_metric_value = np.mean(list(val_metrics_mean_dict.values()))
 
     # compute mean loss per endpoint
-    train_losses_mean_dict = {endpoint: np.mean(losses) for endpoint, losses in train_losses_list_dict.items()}
-    val_losses_mean_dict = {endpoint: np.mean(losses) for endpoint, losses in val_losses_list_dict.items()}
+    train_mean_losses_dict = {endpoint: np.mean(losses) for endpoint, losses in train_losses_list_dict.items()}
+    val_mean_losses_dict = {endpoint: np.mean(losses) for endpoint, losses in val_losses_list_dict.items()}
     # compute total mean loss
     mean_train_loss = np.mean(train_losses_list)
     mean_val_loss = np.mean(val_losses_list)
 
     # do that for the test set
     if config['general']['use_test_set']:
-        test_aucs_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in test_aucs_list_dict.items()}
-        mean_test_auc = np.mean(list(test_aucs_mean_dict.values()))
-        test_losses_mean_dict = {endpoint: np.mean(losses) for endpoint, losses in test_losses_list_dict.items()}
+        mean_test_metric_dict = {endpoint: np.mean(aucs) for endpoint, aucs in test_metrics_list_dict.items()}
+        mean_test_metric_value = np.mean(list(mean_test_metric_dict.values()))
+        test_mean_losses_dict = {endpoint: np.mean(losses) for endpoint, losses in test_losses_list_dict.items()}
         mean_test_loss = np.mean(test_losses_list)
     else:
-        test_aucs_mean_dict = {endpoint: None for endpoint in endpoint_list}
-        mean_test_auc = None
-        test_losses_mean_dict = {endpoint: None for endpoint in endpoint_list}
+        mean_test_metric_dict = {endpoint: None for endpoint in endpoint_list}
+        mean_test_metric_value = None
+        test_mean_losses_dict = {endpoint: None for endpoint in endpoint_list}
         mean_test_loss = None
 
 
 
-
     results = { # mean AUC
-                "train_mean_AUC": mean_train_auc,
-                "val_mean_AUC": mean_val_auc,
-                "test_mean_AUC": mean_test_auc,
+                f"train_mean_{metric_name}": mean_train_metric_value,
+                f"val_mean_{metric_name}": mean_val_metric_value,
+                f"test_mean_{metric_name}": mean_test_metric_value,
                 # mean Loss
                 "train_mean_loss": mean_train_loss,
                 "val_mean_loss": mean_val_loss,
@@ -197,14 +193,14 @@ def K_fold_cross_validation(config, config_for_wandb=None):
     
     for endpoint in endpoint_list:
         # mean AUC per endpoint
-        results[f"train_{endpoint}_AUC"] = train_aucs_mean_dict[endpoint]
-        results[f"val_{endpoint}_AUC"] = val_aucs_mean_dict[endpoint]
-        results[f"test_{endpoint}_AUC"] = test_aucs_mean_dict[endpoint]
+        results[f"train_{endpoint}_{metric_name}"] = train_metrics_mean_dict[endpoint]
+        results[f"val_{endpoint}_{metric_name}"] = val_metrics_mean_dict[endpoint]
+        results[f"test_{endpoint}_{metric_name}"] = mean_test_metric_dict[endpoint]
 
         # mean loss per endpoint
-        results[f"train_{endpoint}_loss"] = train_losses_mean_dict[endpoint]
-        results[f"val_{endpoint}_loss"] = val_losses_mean_dict[endpoint]
-        results[f"test_{endpoint}_loss"] = test_losses_mean_dict[endpoint]
+        results[f"train_{endpoint}_loss"] = train_mean_losses_dict[endpoint]
+        results[f"val_{endpoint}_loss"] = val_mean_losses_dict[endpoint]
+        results[f"test_{endpoint}_loss"] = test_mean_losses_dict[endpoint]
 
 
     return results

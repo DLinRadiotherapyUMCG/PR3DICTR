@@ -42,7 +42,6 @@ from src.config_presets.tools.load_config import load_config
 from src.dataset.load_dataset import load_dataset
 from src.models.tools.get_classification_model import get_classification_model
 from src.visualization.get_visualization import get_visualization
-from src.evaluation.calculate_auc import calculate_auc_multi
 from src.training.tools.utils import move_batch_to_device
 
 from torch.utils.data import DataLoader

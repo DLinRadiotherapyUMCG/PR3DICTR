@@ -13,7 +13,6 @@ from src.constants import DEVICE
 from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.optimizer.get_optimizer import get_optimizer
 from src.utils.scheduler.get_scheduler import get_scheduler
-from src.evaluation.calculate_auc import calculate_auc_multi
 from src.training.tools.utils import move_batch_to_device
 from src.training.validate import validate
 from src.models.tools.save_model import save_model, load_model
@@ -86,7 +85,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
         start_epoch_time = time.time()
   
-        #it = tqdm(len(train_loader))
         if show_pbar:
             pbar = tqdm(total=len(train_loader), desc=f'Epoch {epoch_num}', position=0, leave=True)
 
@@ -130,17 +128,12 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
         if show_pbar: pbar.close()
 
-        # it.close()
         # Calculate evaluation metric
         train_mean_metric_value, train_metric_dict = metricHandler.calculate_metric(out_tot, targets_tot)
-        auc = calculate_auc_multi(out_tot, targets_tot, config)
-
-        print(f"Train AUC: {auc}")
-        print(f"Train AUC2: {train_metric_dict}")
             
         # Log epoch loss and AUC
         avg_loss = total_loss / num_batches_per_epoch
-        logging.info(f'  Training   Loss={avg_loss:.5f}, AUCs={train_metric_dict}')
+        logging.info(f'  Training   Loss={avg_loss:.5f}, {metric_name}s={train_metric_dict}')
 
         results_log.update({'train/loss':avg_loss})
         
@@ -154,7 +147,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         if epoch_num % config['training']['validation_interval'] == 0:
             val_loss, val_mean_metric_value, val_metric_dict, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
             # wandb.log({'train/loss': avg_loss, 'train/auc': avg_auc, 'val/loss': val_loss, 'val/auc': val_auc})
-            logging.info(f'  Validation Loss={val_loss:.5f}, AUCs={val_metric_dict}')
+            logging.info(f'  Validation Loss={val_loss:.5f}, {metric_name}s={val_metric_dict}')
             results_log.update({'val/loss':val_loss})
 
             for key, val in val_metric_dict.items():
@@ -162,7 +155,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             results_log.update({f"val/mean_{metric_name}" : val_mean_metric_value})
 
             # Check if this model has the lowest validation loss        # TODO: turn this into a function? it's basically the same code twice
-            if(config['general']['optimize'] == "AUC"):
+            if(config['general']['optimize'] == "metric"):
                 if val_mean_metric_value > lowest:
                     logging.info(f'New highest {metric_name}: {val_mean_metric_value}')
                     lowest = val_mean_metric_value[0]
