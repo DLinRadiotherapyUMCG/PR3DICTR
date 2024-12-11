@@ -157,6 +157,9 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         # collect all metrics for this fold
         total_evaluation_current_fold(config, sets=['train', 'val'], external_set=False)
 
+        # make the visualisations for this fold
+        get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
+
 
     
     # compute mean AUC per endpoint
@@ -211,8 +214,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
     # aggregate all of the metric results for this trial
     aggregate_cross_validation_metrics(config, sets=['train', 'val'])
 
-    # make the visualisations for this fold
-    get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
+    
 
     return results
 

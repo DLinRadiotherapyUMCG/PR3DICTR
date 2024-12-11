@@ -150,7 +150,7 @@ def make_row_colorbar(
     cbar_ax = fig.add_axes(
         [left_coord, bottom_coord, width, max_height * height_scalar]
     )
-
+    
     # make a colorbar for the layer that defines the colormap to be used
     cbar = None
     if colorbar_layer_name == "CT":
@@ -268,7 +268,7 @@ def plot_CT(axs, CT, slices, HNC_plotting_params):
     )
 
     for i, slice_n in enumerate(slices):
-        axs[i].imshow(CT[slice_n], cmap=cmap, norm=norm)
+        axs[i].imshow(CT[slice_n], cmap=cmap, norm=norm, interpolation='none')
 
 
 def plot_RTDOSE(axs, RTDOSE, slices, RTcmap, is_background=False):
@@ -349,7 +349,7 @@ def plot_RTSTRUCT(axs, RTSTRUCT, slices, HNC_plotting_params, is_background=Fals
 
         if is_background:
             # can just use imshow if the RTSTRUCT is the background (no contours needed for the RTSTRUCT)
-            axs[i].imshow(RTSTRUCT_slice, cmap=cmap, norm=norm)
+            axs[i].imshow(RTSTRUCT_slice, cmap=cmap, norm=norm, interpolation='none')
         else:
             # plots just the contours of the RTSTRUCT
             axs[i].contour(
@@ -396,7 +396,7 @@ def plot_Attention(axs, Attention, slices, HNC_plotting_params, global_att_max):
     )
     alpha = HNC_plotting_params["Attention"]["alpha"]
     for i, slice_n in enumerate(slices):
-        axs[i].imshow(Attention[slice_n], cmap=cmap, norm=norm, alpha=alpha)
+        axs[i].imshow(Attention[slice_n], cmap=cmap, norm=norm, alpha=alpha, interpolation='none')
 
 
 def plot_empty_img(axs, color="black"):

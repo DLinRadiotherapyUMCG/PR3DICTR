@@ -58,13 +58,15 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
             adaptive_make_calibration_plots(config, plotting_dict, column_names=endpoint_list, n_bins=n_bins, mode="reliability", title=f"Reliability Plot: {set_name} set", filedir=save_dir, return_fig=False)
 
         # confusion matrix
-        if 'confusion_matrix' in config['evaluation']['visualisations']:          # TODO
-            pass  
+        if 'confusion_matrix' in config['evaluation']['visualisations']:  
+            save_dir = os.path.join(config['general']['resultsCurrentDirectory'], f"confusion_matrix_plot_{set_name}.png")
+            adaptive_make_calibration_plots(config, plotting_dict, column_names=endpoint_list, n_bins=n_bins, mode="confusion_matrix", title=f"Confusion Matrices: {set_name} set", filedir=save_dir, return_fig=False)  
 
         # ROC curve
-        if 'ROC_curve' in config['evaluation']['visualisations']:                 # TODO
-            pass
-    
+        if 'roc_curve' in config['evaluation']['visualisations']:        
+            save_dir = os.path.join(config['general']['resultsCurrentDirectory'], f"ROC_curve_plot_{set_name}.png")
+            adaptive_make_calibration_plots(config, plotting_dict, column_names=endpoint_list, n_bins=n_bins, mode="roc_curve", title=f"ROC curves: {set_name} set", filedir=save_dir, return_fig=False)  
+
     
     return
 
@@ -72,15 +74,15 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
 
 # # # FOR TESTING THIS FUNCTION (DANIEL)
 
-# if __name__ == "__main__":
-#     from src.config_presets.tools.get_config import get_config
+if __name__ == "__main__":
+    from src.config_presets.tools.get_config import get_config
 
-#     # Load the configuration file
-#     config = get_config('Multi_tox')
+    # Load the configuration file
+    config = get_config('Multi_tox')
 
-#     config['general']['resultsCurrentDirectory'] = "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results/Results_0\Trial_2\KFold1"
-#     # Call the function
+    config['general']['resultsCurrentDirectory'] = "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results/Results_0\Trial_2\KFold1"
+    # Call the function
     
-#     get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
+    get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
     
 

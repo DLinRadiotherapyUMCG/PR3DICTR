@@ -3,7 +3,7 @@ general:
   device: "cuda"
   firstRun: false
   experiment_name: 'Results_0'
-  trialNumber: "Trial_5"
+  trialNumber: "Trial_10"
   resultsCurrentDirectory:  "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: False
@@ -104,7 +104,7 @@ data:
 
   kFolds:
     isEnabled: true
-    n_iterations: 2
+    n_iterations: 1
     n_splits: 5
     split_strategy: 'stratified'  # ['stratified', 'random']
 
