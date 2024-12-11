@@ -189,7 +189,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         mean_test_loss = None
 
 
-
+    
     results = { # mean AUC
                 f"train_mean_{metric_name}": mean_train_metric_value,
                 f"val_mean_{metric_name}": mean_val_metric_value,

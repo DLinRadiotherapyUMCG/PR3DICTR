@@ -13,6 +13,7 @@ def save_model(config, model, modelFile):
     :param model_path:
     :return:
     """
+    
     pathToSave = config['general']['resultsCurrentDirectory']
     fileLocation = os.path.join(pathToSave, modelFile)
 
