@@ -131,8 +131,8 @@ data:
 
   kFolds:
     isEnabled: true
-    n_splits: 1        # the number of data splits to make
-    n_iterations: 1    # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
+    n_splits: 5        # the number of data splits to make
+    n_iterations: 5    # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
     validation_size: 0.2  # if only 1 split
     split_strategy: 'stratified'  # ['stratified', 'random']
 
