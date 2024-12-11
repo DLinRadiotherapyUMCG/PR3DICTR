@@ -13,31 +13,28 @@ class MultiTox_Loss(nn.Module):
 
         self.config = config
         self.endpoints_list = config['columns']['labels']
-        self.valid_endpoints_as_tensor = torch.tensor([0, 1])  # these are the possible labels, anything else (e.g. -1 for missing values) is masked out
+        #self.valid_endpoints_as_tensor = torch.tensor([0, 1])  # these are the possible labels, anything else (e.g. -1 for missing values) is masked out
+
+        self.missing_endpoints_as_tensor = torch.tensor([config['data']['missing_data_value']])
 
         self.loss_function = loss_function
 
+
+
     def forward(self, outputs_dict, labels_dict):
+        # stack all of the predictions into a single tensor
         predictions = torch.stack(list(outputs_dict.values()), dim=1).type(torch.float32).squeeze(-1) # transposed! so that num columns = num toxicities
-    
         # targets = torch.stack(list(labels_dict.values()), dim=1).type(torch.float32)
 
-
-        #valid_endpoints_as_tensor = torch.tensor([0,1])
-        
-        # TODO: labels_dict should become an actual dictionary, now its just a tensor ?!?!?!?!
-        targets = labels_dict
-
-        targets = targets.squeeze(1)
+        targets = labels_dict.squeeze(1)
         
         predictions = torch.reshape(predictions, targets.shape).to(predictions.dtype)
        
-        # print(targets,predictions)
-
+        # calculate the loss
         batch_loss = self.loss_function(predictions, targets)
 
         # print(batch_loss)
-        mask = (targets >= self.valid_endpoints_as_tensor[0]) & (targets <= self.valid_endpoints_as_tensor[1])
+        mask = (targets != self.missing_endpoints_as_tensor[0]) # & (targets <= self.valid_endpoints_as_tensor[1])
 
         # print(mask)
         batch_loss = torch.nan_to_num(batch_loss, nan=0.0)

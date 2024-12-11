@@ -7,12 +7,15 @@ from sklearn.metrics import roc_curve
 
 
 
-def remove_missing(true, pred):
+def remove_missing(config, true, pred):
     """
     Removes the values that are indicated as missing with the missing indicator -1
     """
-    pred = pred[np.where(true != -1)]
-    true = true[np.where(true != -1)]
+    missing_val = config['data']['missing_data_value']
+
+    pred = pred[np.where(true != missing_val)]
+    true = true[np.where(true != missing_val)]
+
     return true, pred
 
 
@@ -38,6 +41,7 @@ def threshold(config, true, pred):
     # the actual thresholding    
     pred[pred >= threshold] = 1
     pred[pred < threshold] = 0
+
     return true, pred
 
 

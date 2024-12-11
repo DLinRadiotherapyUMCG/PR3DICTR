@@ -249,7 +249,7 @@ def make_row_confusion_matrix_plots(config, row_ax, preds, labels, column_names,
         #confusion_matrix_subplot(config, row_ax[i], preds[col_name], labels[col_name])
 
 
-        labels2, preds2 = remove_missing(labels[col_name], preds[col_name])
+        labels2, preds2 = remove_missing(config, labels[col_name], preds[col_name])
         labels_thresholded, preds_thresholded = threshold(config, labels2, preds2)
 
         confusion_matrix = metrics.confusion_matrix(labels_thresholded, preds_thresholded)

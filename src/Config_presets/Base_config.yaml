@@ -82,6 +82,7 @@ data:
   #trainfile: 'stratified_sampling_full_manual_94_edited.csv'          # NOTE: deprecated
   #valfile: 'stratified_sampling_full_manual_94_edited.csv'            # NOTE: deprecated
   splitvar: "Split"
+  missing_data_value: -1    # all missing data (i.e. endpoints) are given this value
   patientVar: 'PatientID'
   patientID_length: 7
   stratifyList: ["RP_OneYear", "SmokerActive", "SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy", "ChemoRad"]

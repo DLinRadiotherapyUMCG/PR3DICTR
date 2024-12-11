@@ -156,7 +156,7 @@ training:
     eta_min: 0.00000001
 
 evaluation:
-  main_metric: "accuracy"
+  main_metric: "AUC"
   metrics_list: ["AUC", "accuracy", "F1_score", "ECE", "ACE"]
   metrics:
     threshold: 'YoudenJ'
@@ -175,7 +175,7 @@ hyperparam_tuning:
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
     isEnabled: false
-    objectives: ["val_mean_accuracy"]          
+    objectives: ["val_mean_auc"]          
     objective_direction: ["maximize"]
     n_trials: 5
   # ----  Custom Params -------

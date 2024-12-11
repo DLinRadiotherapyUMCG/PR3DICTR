@@ -1,5 +1,8 @@
 import torch
 
+from src.visualization.attention_colormap import att_cmap, att_cmap_abs
+
+
 ENSEMBLE_MEMBERS = 5
 TOXICITIES = ['Xerostomia_M06', 'Xerostomia_M06_slim']
 
@@ -86,7 +89,7 @@ PLOT_SLICES_COLOURMAPS= {
 
 
 
-from src.visualization.attention_colormap import att_cmap, att_cmap_abs
+
 
 PLOTTING_PARAMS = {
     "HNC" : {
