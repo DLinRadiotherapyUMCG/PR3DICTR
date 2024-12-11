@@ -8,9 +8,6 @@ import os
 import pandas as pd
 
 from src.visualization.calibration_plot import calibration_plot
-from src.visualization.confusion_matrix import confusion_matrix_bin
-from src.visualization.ROC_curve import ROC_curve
-
 from src.evaluation.metrics.utils import remove_missing
 
 from src.visualization.calibration.calibration_plots import adaptive_make_calibration_plots
