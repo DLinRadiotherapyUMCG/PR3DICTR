@@ -232,7 +232,7 @@ class Basic_Output_Head(torch.nn.Module):
         super(Basic_Output_Head, self).__init__()
 
         #self.predict_CT_contrast = False
-        self.endpoint_list = [x for x in config['columns']['label'] if "CT+C" not in x]
+        self.endpoint_list = [x for x in config['columns']['labels'] if "CT+C" not in x]
         self.dropout_p = config['model']['dropout_p'] 
         self.num_ohe_classes = config['model']['num_ohe_classes'] 
         self.use_bias = config['model']['use_bias']

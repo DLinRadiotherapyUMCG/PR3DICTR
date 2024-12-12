@@ -1,15 +1,16 @@
 general:
-  region: 'LUNG'
   seed: 42
   device: "cuda"
   firstRun: false
-  experiment_name: 'DETOX-Lung_Project_resnet'
-  trialNumber: "Trial_?"
+  experiment_name: 'DETOX-Lung_Project_TransRP'
+  trialNumber: "Trial_X"
   patientGroup: 0
   optimize: "loss"
   resultsCurrentDirectory: ""
+  error_ignore: true
+  endpointRatios: []
   testMode: False
-  use_test_set: False
+  classImbalance: 0.25
 
 columns:
   labels: ["RP_OneYear"]
@@ -20,7 +21,8 @@ columns:
 
 paths:
   csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_11_01/"
-  images: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ImageData/"
+  #images: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ImageData/"
+  images: "Z:/Robert/DATA_groot/"
   output: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
   results: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
 
@@ -38,9 +40,9 @@ model:
   densenet: 
     model_depth: 121  # [121, 169, 201, 264]
   ViT:
-    vit_patch_size: 8
+    vit_patch_size: 16
     vit_dim: 128
-    vit_depth: 2
+    vit_depth: 4
     vit_heads: 8
     vit_mlp_dim: 128
     vit_dim_head: 128
@@ -49,9 +51,9 @@ model:
   TransRP:
     image_encoder: 'resnet' # 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
     clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
-    vit_patch_size: [1,1,1]
+    vit_patch_size: [2,2,2]
     vit_dim: 768
-    vit_depth: 12
+    vit_depth: 6
     vit_heads: 12
     vit_mlp_dim: 3072
     vit_dropout_p: 0.2  
@@ -80,6 +82,7 @@ model:
   linear_units_endpoint: [64]
 
 data:
+  filename_stratified_sampling_test_csv: 'stratified_sampling_full_manual_94_edited.csv'
   trainfile: 'stratified_sampling_full_manual_94_edited.csv'
   valfile: 'stratified_sampling_full_manual_94_edited.csv'
   splitvar: "Split"
@@ -116,8 +119,8 @@ data:
   kFolds:
     isEnabled: true
     skip_badtrial: false
-    Iterations: 4
-    Splits: 4
+    n_iterations: 1
+    n_splits: 5
 
   equalizer:
     isEnabled: True
@@ -186,14 +189,15 @@ visualization:
 
 hyperparam_tuning:
   WandB:
-    isEnabled: False
+    IsEnabled: True
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
     MetricsMonitor: [ "train_AUC","train_loss","train_acc",
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    isEnabled: False
-
-    n_trials: 1
+    IsEnabled: True
+    n_trials: 40
+    objectives: ["val_mean_AUC"]
+    objective_direction: ["maximize"]
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:
@@ -201,7 +205,7 @@ hyperparam_tuning:
       name: 'Model_Selected'
       type: 'categorical'
       location: ["model",'model_name']
-      options: ['resnet']
+      options: ['TransRP']
     #Model_Depth:
     #  name: "Model_Depth"
     #  location: ["model","resnet","model_depth"]
@@ -265,7 +269,7 @@ hyperparam_tuning:
       name: batch_size
       type: 'categorical'
       location: ["training","batch_size"]
-      options: [16]
+      options: [8]
 
     augmentation_noise_std:
       name: augmentation_strength
