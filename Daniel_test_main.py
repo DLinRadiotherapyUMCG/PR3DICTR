@@ -75,9 +75,21 @@ if __name__ == '__main__':
     #K_fold_cross_validation(config)
 
     # # MAIN: DL running class with hyperparameter optimization
-    expHandler = experimentHandler(config)
-    expHandler.run_experiment(config)
+    #expHandler = experimentHandler(config)
+    #expHandler.run_experiment(config)
     #####hyperClass.Stop()
+
+
+    # TEST ENSEMBLE CODE
+
+    from src.evaluation.test_evaluation import test_evaluation
+
+
+    trial_path = r"C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results/test_eval/Trial_1" # config['general']['resultsCurrentDirectory']
+    print("hi")
+    print(os.listdir(trial_path))
+    print(trial_path)
+    test_evaluation(trial_path)
 
 
 

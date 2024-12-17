@@ -15,7 +15,7 @@ from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe 
 
 
 
-def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False):
+def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False, test_set=False):
     # Load the predictions csv file
     if pred_csv_dir is not None:
         predictions_csv_dir = pred_csv_dir
@@ -23,6 +23,8 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
         if external_set:
             #print(model_name)
             predictions_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions_external.csv")
+        elif test_set:
+            predictions_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions_test.csv")
         else:
             predictions_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions.csv")
 

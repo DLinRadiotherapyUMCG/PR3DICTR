@@ -52,17 +52,24 @@ def get_config(name, name_base = 'Base_config', pathGiven = ""):
     return config
 
 
-def update_config(base, updates):
+def update_config(base, updates, allow_new_keys=False):
     """
     Recursively updates the base dictionary with values from the updates dictionary.
     Only non-dictionary values are overwritten. \
     (i.e. if only one thing in the 'model' key needs to be updated, the rest of the 'model' dict will remain the same)
     """
     for key, value in updates.items():
-        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+        if (key in base) and (isinstance(base[key], dict)) and (isinstance(value, dict)):
             update_config(base[key], value)
         else:
             base[key] = value
+            # if key in base:
+            #     base[key] = value
+            # else:    
+            #     if allow_new_keys:
+            #         base[key] = value 
+            #     else:                         # NOTE: all things in the update config must already exist in the base config
+            #         raise ValueError(f'Key `{key}` not found in base config. Please check the config files.')
 
     # Example usage:
     # base_config = {'a': 1, 'b': {'c': 2, 'd': 3}}

@@ -29,7 +29,7 @@ def concatenate_predictions(config, list_of_pred_list_dicts: list[dict], list_of
 
 
 
-def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dict, y_true_list_dict: dict, mode_list: list[str], external_set: bool = False):
+def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dict, y_true_list_dict: dict, mode_list: list[str], test_set:bool=False, external_set: bool = False):
 
     """
     Save prediction and corresponding true labels to csv.
@@ -70,7 +70,9 @@ def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dic
         df_y = pd.concat([df_y, df_y_pred, df_y_true], axis=1)
 
     # Save to file
-    if external_set:
+    if test_set:
+        output_filename = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions_test.csv")
+    elif external_set:
         print("EXTERNAL SET", external_set)
         #print(model_name)
         output_filename = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions_external.csv")

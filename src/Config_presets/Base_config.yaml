@@ -242,6 +242,7 @@ Save:
   
   fileNames:
     modelSummary: "modelSummary.txt"
+    config_yaml: "DlModel_Config.yaml"
       
 CITOR:
   dysphagia_late:

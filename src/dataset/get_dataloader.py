@@ -110,7 +110,7 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
         dataloader
     """
 
-    dataset_type = 'cache'
+    dataset_type = config['data']['dataloader']['dataset_type']
     dataloader_type = 'standard'
     batch_size = config['training']['batch_size']
     #cache_rate = 1

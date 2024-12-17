@@ -45,8 +45,7 @@ def get_encoder(config, channels, depth, height, width, n_features):
                     channels = channels, dim_head = config['model']['ViT']['vit_dim_head'], emb_dropout = config['model']['ViT']['vit_emb_dropout'],
                     dropout = config['model']['ViT']['vit_dropout_p']) 
     
-
-    elif model_name == 'HIPT':
+    elif model_name == 'HIPT': # this will never fit on a GPU, don't use it
         encoder = HIPT(channels, depth, height, width)
 
     elif model_name.lower() == 'transrp':
