@@ -3,7 +3,7 @@ general:
   device: "cuda"
   firstRun: false
   experiment_name: 'test_eval'
-  trialNumber: "Trial_1"
+  trialNumber: "Trial_2"
   resultsCurrentDirectory:  "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: False
