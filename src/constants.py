@@ -2,6 +2,7 @@ import torch
 
 from src.visualization.attention_colormap import att_cmap, att_cmap_abs
 
+MAIN_DATA_SOURCE = "UMCG"
 
 ENSEMBLE_MEMBERS = 5
 TOXICITIES = ['Xerostomia_M06', 'Xerostomia_M06_slim']

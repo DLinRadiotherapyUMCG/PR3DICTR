@@ -111,7 +111,7 @@ def generate_K_fold_cross_validation_splits(config, df_development_set):
     else:
         if config["data"]["kFolds"]["split_strategy"] == 'stratified':
             # encode the labels (makes it possible to use StratifiedKFold for multi-label problems, as it only works on binary or multi-class)
-            labels = df_development_set[config['columns']['labels']]
+            labels = df_development_set[config['data']['stratify_on']]  # the columns to stratify by
             encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])   
             kf_splitter = StratifiedKFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
 

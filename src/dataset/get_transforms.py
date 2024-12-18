@@ -250,7 +250,7 @@ def get_transforms(config: dict):
                                 ConvertMetaTensorToTensor(keys=[concat_key, 'label_list', 'features', 'patient_id'])
                             ])
 
-     # Flatten the transforms (removes nested Composes, turns it into one long set of transforms)
+    # Flatten the transforms (removes nested Composes, turns it into one long set of transforms)
     train_transforms = train_transforms.flatten()
     val_transforms = val_transforms.flatten()
     train_transforms.set_random_state(seed=config['general']['seed'])

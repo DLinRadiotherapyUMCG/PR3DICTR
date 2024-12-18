@@ -78,6 +78,7 @@ model:
   linear_units_endpoint: [64]
 
 data:
+  source: 'UMCG'
   filename_stratified_sampling_test_csv: 'stratified_sampling_test_542.csv'
   #trainfile: 'stratified_sampling_full_manual_94_edited.csv'          # NOTE: deprecated
   #valfile: 'stratified_sampling_full_manual_94_edited.csv'            # NOTE: deprecated
@@ -85,7 +86,7 @@ data:
   missing_data_value: -1    # all missing data (i.e. endpoints) are given this value
   patientVar: 'PatientID'
   patientID_length: 7
-  stratifyList: ["RP_OneYear", "SmokerActive", "SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy", "ChemoRad"]
+  stratify_on: [] # ["RP_OneYear", "SmokerActive", "SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy", "ChemoRad"]
   ExcludedVar: []
   ExcludedValue: []
   image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
@@ -240,9 +241,13 @@ Save:
     n_patients_per_epoch: 1
     n_slices_per_patient: 8
   
-  fileNames:
-    modelSummary: "modelSummary.txt"
+  filenames:
+    model_summary: "model_summary.txt"
     config_yaml: "DlModel_Config.yaml"
+    model_weights: "DlModel_Weights.pth"
+    predictions_csv: "model_predictions.csv"
+    test_set_predictions_csv: "test_set_predictions.csv"
+    ensemble_predictions_csv: "ensemble_predictions.csv"
       
 CITOR:
   dysphagia_late:

@@ -11,7 +11,7 @@ def save_config(config):
     """
     
     current_dir = config['general']['resultsCurrentDirectory']
-    out_name_config = config['Save']['fileNames']['config_yaml']
+    out_name_config = config['Save']['filenames']['config_yaml']
 
     out_dir = os.path.join(current_dir, out_name_config)
     

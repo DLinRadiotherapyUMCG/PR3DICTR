@@ -160,7 +160,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             if improved:
                 patience_counter = 0
                 if config['Save']['best_model']: 
-                    save_model(config, model, f"DlModel_Weights.pth")
+                    save_model(config, model)
                 else:
                     best_model_state_dict = copy.deepcopy(model.state_dict())
             else:
@@ -174,7 +174,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 break
         
         logging.info(f'  Epoch duration = {(time.time() - start_epoch_time):.2f} seconds')
-
+        
 
         if WandB_is_enabled(config):
             results_log.update({"epoch":epoch_num})
@@ -192,9 +192,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     # wandb.log({'train/highest_auc': highest_auc})
     # logging.info('Finished training')
 
-    #model = load_model(config, model, f"DlModel_Weights.pth")
+    # Save the best model
     if config['Save']['best_model']: 
-        model = load_model(config, model, f"DlModel_Weights.pth")
+        model = load_model(config, model)
     else:
         model.load_state_dict(best_model_state_dict)    
 

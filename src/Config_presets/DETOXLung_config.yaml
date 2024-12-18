@@ -376,6 +376,4 @@ Save:
   config: True
   output_values: True
   best_model: False
-  fileNames:
-    modelSummary: "modelSummary"
       
