@@ -28,4 +28,8 @@ class ConvertMetaTensorToTensor(MapTransform):
             d[key] = convert_to_tensor(d[key], track_meta=False)
             
         return d
-    
+
+
+
+
+

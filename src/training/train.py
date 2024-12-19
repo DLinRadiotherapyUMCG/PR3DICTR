@@ -21,7 +21,7 @@ from src.training.utils.check_improvement import check_improvement
 from src.hyper_opt.WandB_hpt import WandB_is_enabled, update_WandB_summary_table
 from src.visualization.plot_model_inputs import plot_model_inputs
 from src.evaluation.mainMetricHandler import mainMetricHandler
-
+from src.utils.loss_func.calc_mixup_loss import calc_mixup_loss
 
 
 def train(config, model, loss_function, train_loader, val_loader, metricHandler):
@@ -37,7 +37,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     config['run']['patienceExhausted'] = False
     config['run']['patienceExhaustedIndex'] = 0
     show_pbar = config['training']['show_progress_bar']
-    
+
+    mixup_is_enabled = config['data']['augmentation']['mixup']['isEnabled']
+
     # Get the names of the end-points being evaluated 
     labels = config['columns']['labels']
 
@@ -66,12 +68,14 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     # Training loop
     logging.info('Starting training loop')
     for epoch_num in range(1, config['training']['max_epochs'] + 1):
+        mixup_lambda_epoch = None
         #current_epoch_num = epoch+1
         improved = False # Flag to indicate if the model has improved on this epoch
         results_log = dict()
         best_log_dict = None
         out_tot = dict.fromkeys(labels)
         targets_tot = dict.fromkeys(labels)
+        
         
         for label in labels:
             out_tot[label] = []
@@ -95,12 +99,41 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
             optimizer.zero_grad(set_to_none=True)
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+            if mixup_is_enabled:
+                mixup_lambda = batch['lambda']
+                mixup_indices_batch = batch['indices']
+                
+                cur_batch_size = inputs.shape[0]
+                mixup_lambda_batch = [mixup_lambda] * cur_batch_size
+                mixup_adjusted_indices_batch = (batch_num-1) * cur_batch_size + mixup_indices_batch
+                #mixup_indices_batch = mixup_indices_batch.to(DEVICE)
+
+                if mixup_lambda_epoch == None:
+                    mixup_lambda_epoch = torch.tensor(mixup_lambda_batch, device=DEVICE)
+                    mixup_indices_epoch = mixup_adjusted_indices_batch
+                else:
+                    mixup_lambda_epoch = torch.cat([mixup_lambda_epoch, torch.tensor(mixup_lambda_batch, device=DEVICE)], dim=0)
+                    mixup_indices_epoch = torch.cat([mixup_indices_epoch, mixup_adjusted_indices_batch], dim=0)
+
+                # mask out missing values
+                targets[targets == config['data']['missing_data_value']] = 0
+
+            #print("hi")
+            # plot model inputs
+            if (config['Save']['plot_training_slices']['isEnabled']) and (epoch_num == 1 or epoch_num % config['Save']['plot_training_slices']['every_n_epochs'] == 0) and (batch_num == 1):
+                plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)
 
             # Make predictions
             outputs = model(x=inputs, features=clinical_features)
 
             # Calculate loss
-            loss = loss_function(outputs, targets) # for multi need different loss calculation
+            if mixup_is_enabled:
+                # the loss formula is different for mixup
+                loss = calc_mixup_loss(outputs, targets, loss_function, mixup_indices_batch, mixup_lambda)                
+            else:
+                # normal loss calculation
+                loss = loss_function(outputs, targets) 
+
             if loss.grad_fn:
                 loss.backward()
 
@@ -121,15 +154,14 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             elif config['training']['scheduler']['name'] in ['cyclic']:
                 scheduler.step()
 
-            # plot model inputs
-            if (config['Save']['plot_training_slices']['isEnabled']) and (epoch_num == 1 or epoch_num % config['Save']['plot_training_slices']['every_n_epochs'] == 0) and (batch_num == 1):
-                plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)
- 
 
         if show_pbar: pbar.close()
 
         # Calculate evaluation metric
-        train_mean_metric_value, train_metric_dict = metricHandler.calculate_metric(out_tot, targets_tot)
+        if mixup_is_enabled:
+            train_mean_metric_value, train_metric_dict = metricHandler.calculate_mixup_metric(out_tot, targets_tot, mixup_lambda_epoch, mixup_indices_epoch)
+        else:
+            train_mean_metric_value, train_metric_dict = metricHandler.calculate_metric(out_tot, targets_tot)
             
         # Log epoch loss and AUC
         avg_loss = total_loss / num_batches_per_epoch

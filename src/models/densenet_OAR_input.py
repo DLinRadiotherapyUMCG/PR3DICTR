@@ -165,9 +165,8 @@ class DenseNet(nn.Module):
         super().__init__()
 
         self.mask_channel_idx = mask_channel_idx
-        self.block_config = block_config
 
-        in_channels = in_channels-1 # NOTE
+        in_channels = in_channels - 1
         n_input_channels = in_channels
 
         conv_type = nn.Conv3d
@@ -177,7 +176,7 @@ class DenseNet(nn.Module):
         self.features = nn.Sequential(
             OrderedDict(
                 [
-                    ("conv0", nn.Conv3d(in_channels, init_features, kernel_size=5, stride=2, padding=2, bias=False)),
+                    ("conv0", nn.Conv3d(in_channels, init_features, kernel_size=7, stride=(2,4,4), padding=2, bias=False)),
                     ("norm0", nn.BatchNorm3d(init_features)),
                     ("relu0", nn.LeakyReLU(negative_slope=0)),
                     ("pool0", nn.MaxPool3d(kernel_size=3, stride=2, padding=1)),
@@ -185,15 +184,8 @@ class DenseNet(nn.Module):
             )
         )
 
-        self.spatial_attention_blocks = nn.Sequential()
-
         in_channels = init_features
-
-        
-
         for i, num_layers in enumerate(block_config):
-
-            # OLD
             block = _DenseBlock(
                 spatial_dims=n_input_channels,
                 layers=num_layers,
@@ -217,11 +209,7 @@ class DenseNet(nn.Module):
                 )
                 self.features.add_module(f"transition_{i + 1}", trans)
                 in_channels = _out_channels
-        
-        for i in range(len(block_config) + 1):
-            # NEW
-            SA_block = OARSpatialAttention(kernel_size=3)
-            self.spatial_attention_blocks.add_module(f"SA_block_{i + 1}", SA_block)
+       
 
         # pooling and chang to 64 features
         # self.class_layers = nn.Sequential(
@@ -231,7 +219,7 @@ class DenseNet(nn.Module):
         #             ("pool", avg_pool_type(1)),
         #         ]
         #     )
-        # ) 
+        # )
 
         for m in self.modules():
             if isinstance(m, conv_type):
@@ -250,74 +238,22 @@ class DenseNet(nn.Module):
         
 
     def forward(self, x: torch.Tensor, autoencoder=False) -> torch.Tensor:
-        
-
         # Get all channels except the mask_channel_idx
         mask = x[:, self.mask_channel_idx, ...].unsqueeze(1)
         x = torch.cat([x[:, :self.mask_channel_idx, ...], x[:, self.mask_channel_idx + 1:, ...]], dim=1)
 
-        #print(x.shape, mask.shape)
-        #x = x[:, :self.mask_channel_idx, ...]
+        x = x * mask
 
-        OAR_idx = 0
-        
-        for idx, layer in enumerate(self.features):
+        for layer in self.features:
             #print(layer)
             x = layer(x)
 
-            #print(layer._get_name())
-            if "Transition" in layer._get_name() or "MaxPool3d" in layer._get_name():
-                x = self.spatial_attention_blocks[OAR_idx](x, mask)
-
-                OAR_idx += 1
-
         if autoencoder == False:
             x = self.avgpool(x)
-        
+       
         return x
 
 
-
-
-class OARSpatialAttention(nn.Module):
-    def __init__(self, kernel_size = 7):
-        super(OARSpatialAttention, self).__init__()
-
-        self.conv1 = nn.Conv3d(3, 1, kernel_size, stride=1, padding=kernel_size//2, bias = False)
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x, mask):
-        # downsize the mask to match the size of x
-        #print('mask1', mask.shape)
-        mask = self.downsize_mask(x, mask)
-        #print('mask2', mask.shape)
-
-        avg_out = torch.mean(x, dim=1, keepdim=True)
-        max_out, _ = torch.max(x, dim=1, keepdim=True)
-
-        # combined
-        combined = torch.cat([avg_out, max_out, mask], dim=1)
-
-
-        # generate spatial attention map
-        attention_map = self.sigmoid(self.conv1(combined))
-
-        # apply spatial attention maps
-        out = x * attention_map
-
-        return out
-    
-    
-    def downsize_mask(self, x, mask):
-        # find the dimensions of x, then downsize mask to match
-        x_shape = x.shape
-        mask_shape = mask.shape
-
-        # downsize mask
-        mask = nn.functional.interpolate(mask, size=(x_shape[2], x_shape[3], x_shape[4]), mode='trilinear', align_corners=True)
-
-
-        return mask
 """
 
 in_channels: int = 3,
@@ -329,6 +265,7 @@ act: Union[str, tuple] = ("relu", {"inplace": True}),
 norm: Union[str, tuple] = "batch",
 dropout_prob: float = 0.0,
 """
+
 
 
 def get_desnsenet(config, model_depth, channels):

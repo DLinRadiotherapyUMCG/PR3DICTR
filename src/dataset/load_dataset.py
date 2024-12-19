@@ -77,8 +77,10 @@ def load_dataset(config : dict, patient_ids=None):
 
     # if in test mode, and we want to use a subset of the data, then subsample the total dataset
     if config['general']['testMode'] and "n_patients_total" in config['data']:
+        print("HELLO \nSubsampling the dataset for testing purposes.")
         num_patients_sample = config['data']['n_patients_total']
         df_total = subsample_dataset(num_patients_sample, df_total)
+        print(len(df_total))
     
     # split off the test set
     df_test = df_total[df_total[config['data']['splitvar']] == "test"]
@@ -203,8 +205,8 @@ def subsample_dataset(num_patients_sample, df_dataset):
     n_total_loaded = df_dataset.shape[0]
     df_dataset = df_dataset.sample(frac=1, random_state=42).reset_index(drop=True) # shuffles the rows of the dataframe
 
-    # Only use 100 patients for training dataset
-    df_dataset = df_dataset.iloc[:int(n_total_loaded * num_patients_sample)]
+    # Only use `num_patients_sample` patients for training dataset
+    df_dataset = df_dataset.iloc[:int(num_patients_sample)]
     
     return df_dataset
 

@@ -4,7 +4,7 @@ import numpy as np
 from src.evaluation.metrics.utils import remove_missing
 
 
-def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict, y_true_list_dict: dict, metric_function):
+def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict, y_true_list_dict: dict, metric_function, sample_weights=None):
     """
     Calculate a metric for each endpoint and return a dictionary with the results (as well as the mean metric value over all endpoints).
     
@@ -34,7 +34,10 @@ def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict
         labels_dict[endpoint] = labels
 
         # calculate the metric
-        m_val = metric_function(config, labels_dict[endpoint], predictions_dict[endpoint])
+        if sample_weights is not None:
+            m_val = metric_function(config, labels_dict[endpoint], predictions_dict[endpoint], sample_weights=sample_weights)
+        else:
+            m_val = metric_function(config, labels_dict[endpoint], predictions_dict[endpoint])
         results_dict[endpoint] = round(m_val, 3)
     
     mean_metric_value = round(np.mean(list(results_dict.values())), 3)

@@ -29,7 +29,7 @@ class MultiTox_Loss(nn.Module):
         targets = labels_dict.squeeze(1)
         
         predictions = torch.reshape(predictions, targets.shape).to(predictions.dtype)
-       
+        
         # calculate the loss
         batch_loss = self.loss_function(predictions, targets)
 

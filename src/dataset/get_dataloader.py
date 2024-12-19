@@ -116,7 +116,7 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
     #cache_rate = 1
     num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else 1
     persistent_workers = True if num_workers > 0 else False#  config['data']['dataloader']['persistent_workers']
-    drop_last = False
+    drop_last = True
     pin_memory = True if num_workers > 0 else False
     
     
@@ -184,9 +184,17 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
     #     logger.my_print('\tPersistent_workers: {}.'.format(config.persistent_workers))
     #     logger.my_print('\tPin_memory: {}.'.format(config.pin_memory))
     #     logger.my_print('\tTo_device: {}.'.format(config.to_device))
+    from src.dataset.transforms.MixUp import MixUp
     dl_args_dict = {'dataset': data_ds, 'batch_size': batch_size, 'shuffle': shuffle, 'sampler': None,
                           'num_workers': num_workers, 'drop_last': drop_last, 'persistent_workers': persistent_workers,
-                          'pin_memory': pin_memory}
+                          'pin_memory': pin_memory,
+                          
+                          #'collate_fn': MixUp(config),
+                          }
+    
+    if config['data']['augmentation']['mixup']['isEnabled'] and not validation_mode:
+        dl_args_dict['collate_fn'] = MixUp(config)
+    #dl_args_dict.update
     
     # Initialize DataLoader
     if dataset_size > 0:
@@ -215,3 +223,27 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
         dataloader, metadata = None, None
     
     return dataloader, metadata
+
+
+from monai.data.utils import list_data_collate
+
+def simple_collate_fn(batch):
+    batch = list_data_collate(batch)
+
+    return batch
+
+
+#from src.dataset.transforms.MixUp import MONAI_MixUpd
+
+def batch_augmentation_collate_fn(batch):
+    batch = list_data_collate(batch)
+
+    # Augment the batch
+    # MIXUP HERE
+    print(batch['input'].shape)
+
+
+    
+    return batch
+
+

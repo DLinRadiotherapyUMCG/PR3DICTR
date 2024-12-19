@@ -78,10 +78,8 @@ model:
   linear_units_endpoint: [64]
 
 data:
-  source: 'UMCG'
+  source: 'UMCG'   # the source of the dataset you are using (change this for external validation)
   filename_stratified_sampling_test_csv: 'stratified_sampling_test_542.csv'
-  #trainfile: 'stratified_sampling_full_manual_94_edited.csv'          # NOTE: deprecated
-  #valfile: 'stratified_sampling_full_manual_94_edited.csv'            # NOTE: deprecated
   splitvar: "Split"
   missing_data_value: -1    # all missing data (i.e. endpoints) are given this value
   patientVar: 'PatientID'
@@ -90,7 +88,7 @@ data:
   ExcludedVar: []
   ExcludedValue: []
   image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
-  image_num_dimensions: 3  # each image is 3D 
+  image_num_dimensions: 3  # each image is 3D, so this is 3
 
   # filenames:
   #   ct: 'ct.npy'
@@ -162,6 +160,10 @@ data:
         isEnabled: True
         mean: 0
         std: 0.1
+        
+    mixup:
+      isEnabled: False
+      alpha: 1.0
 
 training:
   max_epochs: 200
@@ -199,20 +201,16 @@ evaluation:
   metrics_list: ["AUC"] #  ["AUC", "accuracy"]
   metrics:
     threshold: 'YoudenJ'
-    calibration_bins: 5
+    calibration_bins: 10
   visualisations: 
     list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve']
-    bins: 10
-  # visualisations:
-  #   calibration:
-  #     num_bins: 10
-    #confusion_matrix:
-      #threshold: 'YoudenJ'
+    n_bins: 10
+
 
 hyperparam_tuning:
   WandB:
     isEnabled: false
-    API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
+    API_Key: "INSERT API KEY HERE"
     #MetricsMonitor: [ "train_AUC","train_loss","train_acc",     # NOTE: is not used?
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:

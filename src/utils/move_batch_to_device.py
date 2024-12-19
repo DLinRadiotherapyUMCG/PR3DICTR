@@ -15,9 +15,7 @@ def move_batch_to_device(batch : dict, device : torch.device) -> Tuple[torch.Ten
     
     Returns:
         inputs (torch.Tensor): the input data
-
         clinical_features (torch.Tensor): the clinical features
-        
         targets (torch.Tensor): the targets
     """
     # batch is a dictionary, retrieve the input, clinical features and targets

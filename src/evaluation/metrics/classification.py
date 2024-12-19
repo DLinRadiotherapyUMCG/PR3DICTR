@@ -31,9 +31,9 @@ def recall(config, true, pred):
     true, pred = threshold(config, true, pred)
     return recall_score(true,pred)
 
-def auc(config, true, pred):
+def auc(config, true, pred, sample_weights=None):
     #true, pred = remove_missing(true,pred)
-    return roc_auc_score(true,pred)
+    return roc_auc_score(true,pred, sample_weight=sample_weights)
 
 def auc_se(config, true, pred):
     "from: https://real-statistics.com/descriptive-statistics/roc-curve-classification-table/auc-confidence-interval/"

@@ -2,7 +2,8 @@
 
 from src.models.dcnn_pooling import DCNN_Pooling
 from src.models.resnet import get_resnet
-from src.models.densenet import get_desnsenet
+#from src.models.densenet import get_desnsenet
+from src.models.densenet_OAR_input import get_desnsenet
 from src.models.ViT import ViT
 from src.models.HIPT import HIPT
 

@@ -76,40 +76,17 @@ if __name__ == '__main__':
 
     # # MAIN: DL running class with hyperparameter optimization
     #
-    #expHandler = experimentHandler(config)
-    #expHandler.run_experiment(config)
+    expHandler = experimentHandler(config)
+    expHandler.run_experiment(config)
     #####hyperClass.Stop()
 
 
     # TEST ENSEMBLE CODE
 
-    from src.evaluation.validate_on_test_set import validate_models_on_test_set
+    # from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
 
-    trial_path = r"C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results/test_eval/Trial_3" # config['general']['resultsCurrentDirectory']
-    # run the models on the test set
-    validate_models_on_test_set(config, trial_path)
+    # trial_dir = r"C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results/test_eval/Trial_3" # config['general']['resultsCurrentDirectory']
+    # # run the models on the test set
+    # validate_models_on_test_set(config, trial_dir)
 
-
-
-
-
-    # # Set loss function
-    # loss_function = get_loss_function(config)
-
-    # # Create the dataset dataframes
-    # DFs_col = load_dataset_total(config)
-    # trainDF_col = DFs_col[0]
-    # valDF_col= DFs_col[1]
-    # testDF_col = DFs_col[2]
-
-    # # make the training and validation transforms
-    # train_transforms, val_transforms = get_transforms(config)
-
-
-    # train_loader, metadata = make_dataloader(config, trainDF_col[0], train_transforms, validation_mode=False)
-    # val_loader, _ = make_dataloader(config, valDF_col[0], val_transforms, validation_mode=True)
-
-   
-    # model = train(config, train_loader, val_loader, metadata)
-    

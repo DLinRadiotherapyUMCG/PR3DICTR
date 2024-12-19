@@ -241,8 +241,10 @@ def get_transforms(config: dict):
 
 
     """ Turn the MetaTensors into normal PyTorch Tensors """
+    
     train_transforms = Compose([
                                 train_transforms,
+                                #MONAI_MixUpd(keys=[concat_key], batch_size=config['training']['batch_size'], alpha=1.0),
                                 ConvertMetaTensorToTensor(keys=[concat_key, 'label_list', 'features', 'patient_id'])
                             ])
     val_transforms = Compose([

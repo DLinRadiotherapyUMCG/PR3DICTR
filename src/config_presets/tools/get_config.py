@@ -47,7 +47,8 @@ def get_config(name, name_base = 'Base_config', pathGiven = ""):
     # if testMode is active, overwrite the settings used in the testMode_config.yaml file
     if config['general']['testMode']:
         testMode_config = load_config('testMode_config', pathGiven)
-        update_config(config, testMode_config)
+        update_config(config, testMode_config, allow_new_keys=True)
+
     
     return config
 

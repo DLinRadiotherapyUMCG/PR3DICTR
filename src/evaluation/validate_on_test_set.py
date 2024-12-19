@@ -23,10 +23,11 @@ from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.evaluation.total_evaluation import total_evaluation_current_fold
 
 
-def validate_models_on_test_set(main_config, trial_path = r'\\zkh\appdata\RTDicom\Projectline_HNC_modelling\Users\Luuk vd Hoek\Projects collection\Mini projects\SIMS\hnc-ensemble-master\results\Resnet_optimization_modtype3_2a_depth_newlabels\Trial_19/'): 
+def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom\Projectline_HNC_modelling\Users\Luuk vd Hoek\Projects collection\Mini projects\SIMS\hnc-ensemble-master\results\Resnet_optimization_modtype3_2a_depth_newlabels\Trial_19/'): 
     test_dataset_source = main_config['data']['source']
+    print(f"Validating models on {test_dataset_source} test set")
     # Get paths to folds and config from the experiment
-    folds = [f.path for f in os.scandir(trial_path) if f.is_dir()] # This does asume all folders within a trial are folds
+    folds = [f.path for f in os.scandir(trial_dir) if f.is_dir()] # This does asume all folders within a trial are folds
     config_path = os.path.join(folds[0], main_config['Save']['filenames']['config_yaml']) 
     model_config = load_config(config_path) # Gets the config folder from the first fold
     
@@ -37,12 +38,11 @@ def validate_models_on_test_set(main_config, trial_path = r'\\zkh\appdata\RTDico
 
     # Load data and helper functions
     # the dataloader settings are taken from the model config
-    # the dataset itself is loaded from the main config (this allows for using the external test set)
     metricHandler = mainMetricHandler(model_config)
     loss_function = get_loss_function(model_config)
     train_transforms, val_transforms = get_transforms(model_config)
 
-
+    # the dataset itself is loaded from the main config (this allows for using the external test set)
     df_train_val, df_test = load_dataset(main_config)
     test_loader, metadata = make_dataloader(main_config, df_test, val_transforms, validation_mode=True)
 
@@ -55,7 +55,7 @@ def validate_models_on_test_set(main_config, trial_path = r'\\zkh\appdata\RTDico
     test_patientIDs_list_fold1 = None
     
     # Generate and save predictions for each fold
-    for path_fold in folds:
+    for fold_dir in folds:
         model = get_classification_model(model_config, metadata, save_summary=False)
         model.cuda()
         model = load_model(model_config, model) # load the saved weights
@@ -69,7 +69,7 @@ def validate_models_on_test_set(main_config, trial_path = r'\\zkh\appdata\RTDico
             assert test_patientIDs_list_fold1 == test_patientIDs_list, 'Patient IDs are not the same for all folds'
 
         mode_list = ['test'] * len(test_patientIDs_list)
-        main_config['general']['resultsCurrentDirectory'] = path_fold + r'/' # fold results saves to fold
+        main_config['general']['resultsCurrentDirectory'] = fold_dir + r'/' # fold results saves to fold
         prediction_paths.append(main_config['general']['resultsCurrentDirectory'])
         save_predictions(main_config, test_patientIDs_list, test_preds_dict, test_targets_dict, mode_list, is_test_set=True) 
         
@@ -97,7 +97,7 @@ def validate_models_on_test_set(main_config, trial_path = r'\\zkh\appdata\RTDico
 
     # Save the ensemble predictions
     mode_list = ['test'] * len(test_patientIDs_list)
-    main_config['general']['resultsCurrentDirectory'] = trial_path # combined results saves to the trial 
+    main_config['general']['resultsCurrentDirectory'] = trial_dir # combined results saves to the trial 
     prediction_paths.append(main_config['general']['resultsCurrentDirectory'])
     save_predictions(main_config, test_patientIDs_list, test_combined_preds, test_targets_dict, mode_list, is_test_set=True, ensemble_predictions=True) 
     

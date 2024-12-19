@@ -102,6 +102,11 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         # get the predictions of the trained model on the training and validation (and test) sets
         logging.info('Getting predictions of best model from this fold:')
         logging.info('   Training set')
+        if config['data']['augmentation']['mixup']['isEnabled']:  # have to disable mixup for the evaluation step
+            #train_loader, _ = make_dataloader(config, train_data, train_transforms, validation_mode=False)
+            from monai.data.utils import list_data_collate
+            train_loader.dataset.collate_fn = list_data_collate  # replace the mixup function with a simple collate function
+
         train_loss, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
         print("   ", train_loss, train_mean_metric_val, train_metric_dict)
         logging.info('   Validation set')

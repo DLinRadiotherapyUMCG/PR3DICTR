@@ -2,8 +2,9 @@ import os
 
 from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
+
+
 def get_predictions_csv_dir(config, test_set=False, ensemble_predictions=False, external_set=False):
-    
 
     if ensemble_predictions:
         output_filename = config['Save']['filenames']['ensemble_predictions_csv']
