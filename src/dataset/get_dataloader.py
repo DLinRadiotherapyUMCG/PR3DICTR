@@ -110,8 +110,8 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
         dataloader
     """
 
-    dataset_type = 'cache'
-    dataloader_type = 'standard'
+    dataset_type = config['data']['dataloader']['dataset_type']   #'cache'
+    dataloader_type = config['data']['dataloader']['dataloader_type']        #'standard'
     batch_size = config['training']['batch_size']
     #cache_rate = 1
     num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else 1

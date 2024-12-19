@@ -35,15 +35,19 @@ class experimentHandler():
     def __init__(self, config) -> None:
         # set WandB logging
         self.using_WandB = config['hyperparam_tuning']['WandB']['isEnabled']
+        print("starting up experiment handler")
         if (self.using_WandB):
+            print("logging in..........")
             # Log into weights and biases
             WandB_hpt.login(config)
+            print("Weights and Biases is active")
 
         # set hyperparameter tuning
         self.hyperparam_tuning_mode = config['hyperparam_tuning']['optuna']['isEnabled']
         if self.hyperparam_tuning_mode:
             # Set optuna
             self.hyperHandler = HyperTuning_Handler(config)
+            print("Turning optuna active")
             #self.Optuna_study = Optuna_hpt.Optuna_initialise_study(config) 
         else:
             # just do cross-validation
@@ -57,6 +61,7 @@ class experimentHandler():
             logging.info("WARNING: ------------ TEST MODE IS ACTIVE -------------")
 
         if self.hyperparam_tuning_mode:
+            print("Use optuna for run optimalization")
             self.hyperHandler.run_optimize_experiment()
 
         else:

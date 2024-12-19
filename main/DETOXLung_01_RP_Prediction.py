@@ -18,6 +18,7 @@ from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file, create_textfile
+from src.experiments.experimentHandler import experimentHandler 
 
 from sklearn.metrics import accuracy_score, roc_auc_score
 
@@ -34,8 +35,8 @@ if __name__ == '__main__':
     set_random_seed(config['general']['seed'])
 
     # MAIN: DL running class with hyperparameter optimization
-    hyperClass = HyperTuning_Handler(config)
-    hyperClass.run_optimize_experiment()
+    hyperClass = experimentHandler(config)
+    hyperClass.run_experiment(config)
     #hyperClass.Operate(config)
     #hyperClass.Stop()
 

@@ -2,7 +2,7 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  experiment_name: 'DETOX-Lung_Project_TransRP'
+  experiment_name: 'DETOX-Lung_Project_EfficientNet_s' #TransRP_v3'
   trialNumber: "Trial_X"
   patientGroup: 0
   optimize: "loss"
@@ -16,11 +16,11 @@ columns:
   labels: ["RP_OneYear"]
   clinical_features: ["SmokerActive","SmokerStopped", "Gender",
   "Age","ChemoRad", "ImmunoTherapy",
-  "OperationPerformed","SmokingUntilRecently","Pulmonary_Comorbidity", "RT_FractionDose"] #, "T_Stage","N_Stage","M_Stage"]
+  "OperationPerformed","SmokingUntilRecently","Pulmonary_Comorbidity","WHO_score","FEVScore"] #, "T_Stage","N_Stage","M_Stage"]
   logistic_regression_features: ['']
 
 paths:
-  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_11_01/"
+  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_12_17/"
   #images: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ImageData/"
   images: "Z:/Robert/DATA_groot/"
   output: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results/"
@@ -39,6 +39,8 @@ model:
     conv1_stride: 2
   densenet: 
     model_depth: 121  # [121, 169, 201, 264]
+  efficientnetv2:
+    use_bias: true
   ViT:
     vit_patch_size: 16
     vit_dim: 128
@@ -71,7 +73,7 @@ model:
   linear_units: [16]
   n_clinical_down_blocks: 2
   clinical_variables_position: 1
-  clinical_variables_linear_units: [32,16]
+  clinical_variables_linear_units: [64,8]
   clinical_variables_dropout_p: [0.3581947628028867]
   use_bias: True
   pooling: 'max'    # avg, max, nan
@@ -94,8 +96,13 @@ data:
 
 
   dataloader:
+    dataset_type: "cache"
+    dataloader_type: "standard"
     num_workers: 4           # number of workers (cores) to use for data loading in each training batch
     persistent_workers: true # recommend keep this as `true' for faster data loading
+    smartcache:
+      cache_rate: 0.5  # half of dataset is in RAM
+      num_replace_workers: 4 # number of workers to replace cache
 
   preprocessing:
     isEnabled: false
@@ -153,7 +160,7 @@ data:
 
 training:
   max_epochs: 60
-  batch_size: 16
+  batch_size: 8
   validation_interval: 1
   patience: 20
 
@@ -161,6 +168,7 @@ training:
     name: "Adam"
     learning_rate: 0.00040096753586928423
     weight_decay: 0.0000001178312895422
+    momentum: 0
 
   loss:
     name: "focal"
@@ -189,12 +197,12 @@ visualization:
 
 hyperparam_tuning:
   WandB:
-    IsEnabled: True
+    isEnabled: True
     API_Key: "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c"
     MetricsMonitor: [ "train_AUC","train_loss","train_acc",
       "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    IsEnabled: True
+    isEnabled: True
     n_trials: 40
     objectives: ["val_mean_AUC"]
     objective_direction: ["maximize"]
@@ -205,7 +213,7 @@ hyperparam_tuning:
       name: 'Model_Selected'
       type: 'categorical'
       location: ["model",'model_name']
-      options: ['TransRP']
+      options: ['efficientnetv2_s']
     #Model_Depth:
     #  name: "Model_Depth"
     #  location: ["model","resnet","model_depth"]
@@ -239,12 +247,19 @@ hyperparam_tuning:
       name: "Optimizer" 
       type: 'categorical'
       location: ["training",'optimizer','name']
-      options: ['Adam']
+      options: ['Adam','SGD','RMSprop']
+    momentum:
+      name: "Momentum"
+      type: 'float'
+      location: ['training','optimizer','momentum']
+      min: 0.000005
+      max: 0.01
+
     loss_function:
       name: loss_function
       type: 'categorical'
       location: ['training','loss','name']
-      options: ['BCE']
+      options: ['BCE','focal']
     
     loss_lamb:
       name: Loss_Lamb
@@ -269,14 +284,20 @@ hyperparam_tuning:
       name: batch_size
       type: 'categorical'
       location: ["training","batch_size"]
-      options: [8]
+      options: [2,4]
 
     augmentation_noise_std:
-      name: augmentation_strength
+      name: augmentation_noise_strength
       type: 'float'
       location: ['data','augmentation',"list","noise","std"]
       min: 0
       max: 0.6
+
+    augmentation_noise_active:
+      name: augmentation_noise_active
+      type: 'categorical'
+      location: ['data','augmentation',"list","noise","Isenabled"]
+      options: [False,True]
 
     #augmentation_strength:
     #  name: augmentation_strength

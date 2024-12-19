@@ -96,6 +96,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         model.to(device=DEVICE)
 
         # train the model
+        
         model = train(config, model, loss_function, train_loader, val_loader, metricHandler)
         model.eval()
 
