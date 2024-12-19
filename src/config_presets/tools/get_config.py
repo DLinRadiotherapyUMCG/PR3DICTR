@@ -51,21 +51,48 @@ def get_config(name, name_base = 'Base_config', pathGiven = ""):
     
     return config
 
+# NOTE: old version of update_config
+# def update_config(base, updates, allow_new_keys=False):
+#     """
+#     Recursively updates the base dictionary with values from the updates dictionary.
+#     Only non-dictionary values are overwritten. \
+#     (i.e. if only one thing in the 'model' key needs to be updated, the rest of the 'model' dict will remain the same)
+#     """
+#     for key, value in updates.items():
+#         if (key in base) and (isinstance(base[key], dict)) and (isinstance(value, dict)):
+#             update_config(base[key], value)
+#         else:
+#             base[key] = value
+#             # if key in base:
+#             #     base[key] = value
+#             # else:    
+#             #     if allow_new_keys:
+#             #         base[key] = value 
+#             #     else:                         # NOTE: all things in the update config must already exist in the base config
+#             #         raise ValueError(f'Key `{key}` not found in base config. Please check the config files.')
 
-def update_config(base, updates):
-    """
-    Recursively updates the base dictionary with values from the updates dictionary.
-    Only non-dictionary values are overwritten. \
-    (i.e. if only one thing in the 'model' key needs to be updated, the rest of the 'model' dict will remain the same)
-    """
-    for key, value in updates.items():
-        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
-            update_config(base[key], value)
-        else:
-            base[key] = value
 
     # Example usage:
     # base_config = {'a': 1, 'b': {'c': 2, 'd': 3}}
     # updates = {'b': {'c': 4}, 'e': 5}
     # update_config(base_config, updates)
     # print(base_config)  # Output: {'a': 1, 'b': {'c': 4, 'd': 3}, 'e': 5}
+
+
+def update_config(base, updates, allow_new_keys=False):
+    """
+    Recursively updates the base dictionary with values from the updates dictionary.
+    Only non-dictionary values are overwritten. \
+    (i.e. if only one thing in the 'model' key needs to be updated, the rest of the 'model' dict will remain the same)
+    """
+    for key, value in updates.items():
+        if key == 'hyperparam_tuning': #  override option to allow `hyperparam_tuning` key to be added to the config
+            allow_new_keys = True      #  often, this is not in the base config (because then it would need to contain every possible hyperparameter tuning variable)
+        
+        if (key in base) and (isinstance(base[key], dict)) and (isinstance(value, dict)):  # if we are dealing with nested dictionaries
+            update_config(base[key], value, allow_new_keys=allow_new_keys)
+        else:          
+            if (key not in base) and (not allow_new_keys):      # if the new config has entries that do not exist in the base config, raise an error
+                raise KeyError(f"Key '{key}' not found in base dictionary.")
+            else:
+                base[key] = value                              # update the base config with the new value for this entry

@@ -1,49 +1,9 @@
 import matplotlib as mpl
 import numpy as np
 
+import src.constants as constants
 
 
-""" The dictionary of colour mapping for HNC RTDOSE  """
-# keys: dose value thresholds
-# values: RGB colour tuples
-
-HNC_color_mapping_dict = {
-    8400: (64,0,0),
-    8050: (128,0,0),
-    7700: (128,0,0),
-    7490: (255,0,0),
-    7000: (255,128,0),
-    6650: (255,128,0),
-    6300: (255,255,0),
-    5805: (0,64,0),
-    5425: (0,255,0),
-    5154: (0,255,0),
-    5000: (0,255,255),
-    4883: (0,255,255),
-    4000: (0,128,192),
-    3000: (0,0,160),
-    2000: (0,0,160),
-    1000: (192,192,192),
-    500: (192,192,192),
-    200: (255,255,255),
-    0: (255,255,255),
-}
-
-LUNG_color_mapping_dict = {
-    6900: (248,0,33),
-    6700: (248,0,33),
-    6420: (255,118,74),
-    6000: (46,255,13),
-    5700: (46,255,13),
-    5400: (66,255,253),
-    5000: (251,255,35),
-    4000: (27,62,126),
-    3000: (5,0,253),
-    2000: (5,0,253),
-    1000: (245,245,245),
-    500: (255,255,255),
-    200: (255,255,255),
-}
 
 
 
@@ -81,11 +41,9 @@ def create_RTDOSE_cmap(name):
         norm <matplotlib.colors.BoundaryNorm>: Normalize the colorbar
         labels <list>: Labels for the colorbar
     """
-    if name == "HNC":
-        colormapping_dict = HNC_color_mapping_dict
-    elif name == "LUNG":
-        colormapping_dict = LUNG_color_mapping_dict
-    else:
+    try:
+        colormapping_dict = constants.PLOT_SLICES_COLOURMAPS[name]
+    except KeyError:
         raise ValueError(f"Unknown colormap name: {name}")
     
     assert(isinstance(colormapping_dict, dict))

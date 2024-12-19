@@ -2,20 +2,24 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  experiment_name: 'Results_0'
-  trialNumber: "Trial_5"
+  experiment_name: 'test_eval'
+  trialNumber: "Trial_4"
   resultsCurrentDirectory:  "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: False
 
 columns: # 
   labels:  ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]
-  clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
+  clinical_features: [] # ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
   logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
 
 paths:
-  csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
-  images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset/patients/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
+  #csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
+  #images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset/patients" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
+  
+  csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MDACC_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
+  images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MDACC_dataset/patients" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
+  
   output: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results"  # "C:/Users/d.c.macrae/Documents/pred_rt_results"
   results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results" # "C:/Users/d.c.macrae/Documents/pred_rt_results"
 
@@ -24,7 +28,7 @@ run:
   patienceExhaustedIndex: 0
 
 model:
-  model_name: "resnet"
+  model_name: "densenet"
   num_classes: 1
   n_down_blocks: 5
   resnet:
@@ -43,11 +47,11 @@ model:
     vit_emb_dropout: 0.2
     vit_dropout_p: 0.2  
   TransRP:
-    image_encoder: 'resnet'  # ['resnet', 'densenet'] (requires their respective configs)
+    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
     clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
     vit_patch_size: [1,1,1]
     vit_dim: 768
-    vit_depth: 12
+    vit_depth: 6
     vit_heads: 12
     vit_mlp_dim: 1024
     vit_dropout_p: 0.2  
@@ -59,10 +63,10 @@ model:
   dropout_p: 0.0
   perform_pooling: False
   n_linear_down_blocks: 1
-  linear_units: [16]
+  linear_units: [256]
   n_clinical_down_blocks: 2
   clinical_variables_position: 1
-  clinical_variables_linear_units: [32, 16]
+  clinical_variables_linear_units: []
   clinical_variables_dropout_p: [0.1]
   use_bias: True
   pooling: 'max'    # avg, max, nan
@@ -70,23 +74,23 @@ model:
   normalization: 'batch'
   conv_block_layers: 1
   num_ohe_classes: 1
-  linear_units_endpoint: []
+  linear_units_endpoint: [32]
 
 data:
-  filename_stratified_sampling_test_csv: 'stratified_sampling_test_542.csv'
+  source: 'MDACC'  # ['UMCG', 'MDACC']
+  filename_stratified_sampling_test_csv: 'MDACC_features_present.csv'  #  stratified_sampling_test_542
   splitvar: "Split"
   patientVar: 'PatientID'
-  patientID_length: 7
-  stratifyList: []
-  Excluded: "ExcludeVar"
+  patientID_length: 10 # 7   # 10
+  stratify_on: ["Loctum2"]
 
   dataloader:
-    num_workers: 8           # number of workers (cores) to use for data loading in each training batch
+    num_workers: 16           # number of workers (cores) to use for data loading in each training batch
   
   preprocessing:
     isEnabled: true
     crop: true
-    crop_shape: [96, 96, 96]
+    crop_shape: [96, 96, 96] # 192, 192] #  
     ct:
       a_min: -200
       a_max: 400
@@ -104,7 +108,7 @@ data:
 
   kFolds:
     isEnabled: true
-    n_iterations: 2
+    n_iterations: 3
     n_splits: 5
     split_strategy: 'stratified'  # ['stratified', 'random']
 
@@ -128,39 +132,40 @@ data:
         z_scale: -0.2
       rotate:
         isEnabled: True
-        max: 20 # degree
+        max: 15 # degree
       noise:
         isEnabled: False
         mean: 0
         std: 0.1
 
 training:
-  max_epochs: 5
+  max_epochs: 2
   batch_size: 16
   validation_interval: 1
   patience: 10
 
   optimizer:
     name: "SGD"
-    learning_rate: 0.001
+    learning_rate: 0.01
     weight_decay: 0.00
+    momentum: 0.00   # for SGD
 
   loss:
     name: "BCE"
     reduction: "none"
 
   scheduler:
-    name: "cosine"
+    name: False # "cosine"
     T_0: 40
     T_mult: 1
     eta_min: 0.00000001
 
 evaluation:
-  main_metric: "accuracy"
+  main_metric: "AUC"
   metrics_list: ["AUC", "accuracy", "F1_score", "ECE", "ACE"]
   metrics:
     threshold: 'YoudenJ'
-    calibration_bins: 10
+    calibration_bins: 5
   visualisations: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve']
   #   calibration:
   #     num_bins: 10
@@ -175,7 +180,7 @@ hyperparam_tuning:
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
     isEnabled: false
-    objectives: ["val_mean_accuracy"]          
+    objectives: ["val_mean_auc"]          
     objective_direction: ["maximize"]
     n_trials: 5
   # ----  Custom Params -------
@@ -224,12 +229,10 @@ Save:
   config: True
   output_values: True
   best_model: True
-  fileNames:
-    modelSummary: "modelSummary.txt"
   plot_training_slices:
     isEnabled: True
     folder_name: 'figures'
-    every_n_epochs: 1
+    every_n_epochs: 50
     n_patients_per_epoch: 1
     n_slices_per_patient: 8
       

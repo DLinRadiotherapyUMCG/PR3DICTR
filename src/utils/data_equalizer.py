@@ -53,7 +53,7 @@ def data_split(df, config, split = [.7,.15,.15], seed = 8):
     
     """        
     np.random.seed(seed)
-    tox = config['columns']['label']#'RP' 
+    tox = config['columns']['labels'] #'RP' 
 
     # Train and Test split
     stratifyItems = config['data']['stratifyList']

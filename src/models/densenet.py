@@ -172,7 +172,7 @@ class DenseNet(nn.Module):
         self.features = nn.Sequential(
             OrderedDict(
                 [
-                    ("conv0", nn.Conv3d(in_channels, init_features, kernel_size=5, stride=2, padding=2, bias=False)),
+                    ("conv0", nn.Conv3d(in_channels, init_features, kernel_size=7, stride=(2,4,4), padding=2, bias=False)),
                     ("norm0", nn.BatchNorm3d(init_features)),
                     ("relu0", nn.LeakyReLU(negative_slope=0)),
                     ("pool0", nn.MaxPool3d(kernel_size=3, stride=2, padding=1)),

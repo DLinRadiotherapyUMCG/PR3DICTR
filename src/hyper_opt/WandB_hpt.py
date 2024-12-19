@@ -4,16 +4,16 @@ from src.utils.fileHandler import create_file, create_folder, create_textfile
 def WandB_is_enabled(config: dict):
     return config['hyperparam_tuning']['WandB']['isEnabled']
 
-def WandB_create_study(config: dict, dict_params, groupName = None):
-    create_folder(config['general']['resultsCurrentDirectory'])
-    if (WandB_is_enabled(config) == True):
-        wandb.init(
-            project=config['general']['experiment_name'],
-            dir=config['general']['resultsCurrentDirectory'][:-1],
-            config = dict_params,
-            group = groupName,
-            reinit = True
-        ) 
+# def WandB_create_study(config: dict, dict_params, groupName = None):
+#     create_folder(config['general']['resultsCurrentDirectory'])
+#     if (WandB_is_enabled(config) == True):
+#         wandb.init(
+#             project=config['general']['experiment_name'],
+#             dir=config['general']['resultsCurrentDirectory'][:-1],
+#             config = dict_params,
+#             group = groupName,
+#             reinit = True
+#         ) 
 
 def WandB_log(config: dict, results, epoch):   # UpdateStudy
     if (WandB_is_enabled(config) == True):
@@ -52,7 +52,7 @@ def initialise_WandB_group(config: dict, project_name: str, groupName = None, co
     This is useful for grouping together K-folds of the same trial or model.
     """
     #wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])  
-    print(config_for_wandb)
+    #print(config_for_wandb)
     if (WandB_is_enabled(config) == True):
     #if config['hyperparam_tuning']['WandB']['IsEnabled']:
         wandb.init(

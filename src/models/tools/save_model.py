@@ -5,7 +5,7 @@ import pandas as pd
 import torch
 from src.utils.fileHandler import create_folder, create_file
 
-def save_model(config, model, modelFile):
+def save_model(config, model):
     """
     Save the model to the output directory.
     :param config:
@@ -13,8 +13,10 @@ def save_model(config, model, modelFile):
     :param model_path:
     :return:
     """
+    
     pathToSave = config['general']['resultsCurrentDirectory']
-    fileLocation = os.path.join(pathToSave, modelFile)
+    model_weights_filename = config['Save']['filenames']['model_weights']
+    fileLocation = os.path.join(pathToSave, model_weights_filename)
 
     # Create folder if does not exist
     create_folder(pathToSave)
@@ -25,7 +27,7 @@ def save_model(config, model, modelFile):
 
 
 
-def load_model(config, model, modelFile):
+def load_model(config, model):
     """
     Load the model from the output directory.
     :param config:
@@ -34,7 +36,8 @@ def load_model(config, model, modelFile):
     :return:
     """
     pathToSave = config['general']['resultsCurrentDirectory']
-    fileLocation = os.path.join(pathToSave, modelFile)
+    model_weights_filename = config['Save']['filenames']['model_weights']
+    fileLocation = os.path.join(pathToSave, model_weights_filename)
 
     # Log and Save
     logging.info(f'Loading model from {fileLocation}')

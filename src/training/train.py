@@ -16,7 +16,7 @@ from src.utils.scheduler.get_scheduler import get_scheduler
 from src.utils.move_batch_to_device import move_batch_to_device
 from src.training.validate import validate
 from src.models.tools.save_model import save_model, load_model
-
+from src.training.utils.check_improvement import check_improvement
 
 from src.hyper_opt.WandB_hpt import WandB_is_enabled, update_WandB_summary_table
 from src.visualization.plot_model_inputs import plot_model_inputs
@@ -55,9 +55,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     best_model_state_dict = None
     if(config['general']['optimize'] == "AUC"):
         print("Optimizing based on AUC")
-        lowest = 0
+        best_value = 0
     else:
-        lowest = np.inf
+        best_value = np.inf
     patience_counter = 0
     
 
@@ -154,36 +154,17 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 results_log.update({f"val/{metric_name}_{key}" : val})
             results_log.update({f"val/mean_{metric_name}" : val_mean_metric_value})
 
-            # Check if this model has the lowest validation loss        # TODO: turn this into a function? it's basically the same code twice
-            if(config['general']['optimize'] == "metric"):
-                if val_mean_metric_value > lowest:
-                    logging.info(f'New highest {metric_name}: {val_mean_metric_value}')
-                    lowest = val_mean_metric_value[0]
-                    improved = True
-
-                    #best_model_state_dict = copy.deepcopy(model.state_dict())
-                    if config['Save']['best_model']: 
-                        save_model(config, model, f"DlModel_Weights.pth")
-                    else:
-                        best_model_state_dict = copy.deepcopy(model.state_dict())  # must do a deepcopy of the state_dict to avoid the model being updated
-                    
+            # check if the model has improved on this epoch
+            best_value, improved = check_improvement(config, val_loss, val_mean_metric_value, best_value)
+            
+            if improved:
+                patience_counter = 0
+                if config['Save']['best_model']: 
+                    save_model(config, model)
                 else:
-                    patience_counter += 1 # Increment patience counter
+                    best_model_state_dict = copy.deepcopy(model.state_dict())
             else:
-                # Check if this model has the lowest validation loss
-                if val_loss < lowest:
-                    logging.info(f'New lowest loss: {val_loss}')
-                    lowest = val_loss
-                    patience_counter = 0 # Reset patience counter
-                    improved = True
-                    
-                    if config['Save']['best_model']: 
-                        save_model(config, model, f"DlModel_Weights.pth")
-                    else:
-                        best_model_state_dict = copy.deepcopy(model.state_dict())
-                    
-                else:
-                    patience_counter += 1 # Increment patience counter
+                patience_counter += 1
 
             # Check if patience has been exhausted
             if patience_counter >= config['training']['patience']:
@@ -193,7 +174,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 break
         
         logging.info(f'  Epoch duration = {(time.time() - start_epoch_time):.2f} seconds')
-
+        
 
         if WandB_is_enabled(config):
             results_log.update({"epoch":epoch_num})
@@ -211,12 +192,15 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     # wandb.log({'train/highest_auc': highest_auc})
     # logging.info('Finished training')
 
-    #model = load_model(config, model, f"DlModel_Weights.pth")
+    # Save the best model
     if config['Save']['best_model']: 
-        model = load_model(config, model, f"DlModel_Weights.pth")
+        model = load_model(config, model)
     else:
         model.load_state_dict(best_model_state_dict)    
 
     return model
+
+
+
 
 

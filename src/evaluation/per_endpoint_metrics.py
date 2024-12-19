@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-
+from src.evaluation.metrics.utils import remove_missing
 
 
 def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict, y_true_list_dict: dict, metric_function):
@@ -20,8 +20,6 @@ def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict
     """
     endpoint_list = config['columns']['labels']
 
-    valid_endpoints = [0, 1]
-    
     results_dict = {}
 
     # temp dicts to store the predictions and labels for each endpoint
@@ -30,11 +28,10 @@ def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict
     
     for endpoint in endpoint_list:
         # mask out missing values
-        mask = np.isin(y_true_list_dict[endpoint], valid_endpoints) # mask = the labels to keep
-        # print(y_pred_list_dict[endpoint])
-        # print(mask)
-        predictions_dict[endpoint] = np.array(y_pred_list_dict[endpoint])[mask]
-        labels_dict[endpoint] = np.array(y_true_list_dict[endpoint])[mask]
+        labels, preds  = remove_missing(config, np.array(y_true_list_dict[endpoint]), np.array(y_pred_list_dict[endpoint]))
+        
+        predictions_dict[endpoint] = preds
+        labels_dict[endpoint] = labels
 
         # calculate the metric
         m_val = metric_function(config, labels_dict[endpoint], predictions_dict[endpoint])

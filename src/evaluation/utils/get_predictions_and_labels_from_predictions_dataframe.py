@@ -31,7 +31,7 @@ def get_predictions_and_labels_from_predictions_dataframe(config : dict, df_fold
         true = df_fold_preds[[f"{endpoint}_true"]].to_numpy()
 
         # mask out the missing values
-        true, pred = remove_missing(true, pred)
+        true, pred = remove_missing(config, true, pred)
 
         # store in dict
         predictions_per_endpoint_dict[endpoint] = pred

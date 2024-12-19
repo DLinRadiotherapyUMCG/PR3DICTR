@@ -16,7 +16,7 @@ from src.utils.saving.saving_predictions import concatenate_predictions, save_pr
 from src.utils.saving.create_results_directory import create_results_directory
 from src.utils.list_dicts import append_to_list_dicts
 
-
+from src.config_presets.tools.save_config import save_config
 from src.hyper_opt.WandB_hpt import initialise_WandB_group, login, WandB_stop
 from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.evaluation.total_evaluation import total_evaluation_current_fold
@@ -154,9 +154,14 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         # stop WandB for this fold (init a new one on the next fold)
         WandB_stop(config)
 
+        # save the config file for this fold
+        save_config(config)
 
         # collect all metrics for this fold
         total_evaluation_current_fold(config, sets=['train', 'val'], external_set=False)
+
+        # make the visualisations for this fold
+        get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
 
 
     
@@ -187,7 +192,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         mean_test_loss = None
 
 
-
+    
     results = { # mean AUC
                 f"train_mean_{metric_name}": mean_train_metric_value,
                 f"val_mean_{metric_name}": mean_val_metric_value,
@@ -212,8 +217,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
     # aggregate all of the metric results for this trial
     aggregate_cross_validation_metrics(config, sets=['train', 'val'])
 
-    # make the visualisations for this fold
-    get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
+    
 
     return results
 

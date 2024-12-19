@@ -7,6 +7,7 @@ import matplotlib.gridspec as gridspec
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 from .rtdose_colormap import create_RTDOSE_cmap
+import src.constants as constants
 
 plt.style.use('default')
 
@@ -23,80 +24,6 @@ colormap_layers = [
 ]  # first has most priority, last has least priority
 
 
-def fade_colormap(cmap_name, fade_length):
-    cmap = [mcolors.hex2color(color) for color in cmap_name]
-    for i in range(len(cmap)):
-        r, g, b = cmap[i]
-        a = 0.6
-        if i < fade_length:
-            exp = pow(i / fade_length, 0.5)
-            r, g, b, a = (r * exp, g * exp, b * exp, exp)
-        cmap[i] = (r, g, b, a)
-    return cmap
-
-
-# Create a colormap for the negative side of the attention map
-neg_cmap = fade_colormap(cc.CET_R4, 0)
-neg_cmap = list(reversed(neg_cmap))
-
-# Create a colormap for the positive side of the attention map
-pos_cmap = fade_colormap(cc.CET_R4, 0)
-
-# Append positive and negative colormaps to create a single colormap
-att_cmap = np.concatenate((neg_cmap, pos_cmap))
-# Keep only the positive side for abosulte attention maps
-att_cmap_abs = pos_cmap
-
-
-HNC_plotting_params = {
-    "CT": {
-        "cmap": "gray",
-        "cmap_title": "HU",
-        "min_val": -200,
-        "max_val": 400,
-    },
-    "RTDOSE": {
-        "cmap": "dose",
-        "cmap_title": "Dose (Gy)",
-        "min_val": 0,
-        "max_val": 8000,
-    },
-    "RTSTRUCT": {"color": "deeppink", "linewidth": 2, "alpha": 0.8, "cmap": "gray"},
-    "Attention": {
-        "cmap": "Attention",
-        "cmap_abs": "AttentionAbs",
-        "cmap_colors": att_cmap,
-        "cmap_abs_colors": att_cmap_abs,
-        "cmap_title": None,
-        "alpha": 1,
-        "background_color": "black",
-    },
-}
-
-LUNG_plotting_params = {
-    "CT": {
-        "cmap": "gray",
-        "cmap_title": "HU",
-        "min_val": -1200,
-        "max_val": 400,
-    },
-    "RTDOSE": {
-        "cmap": "dose",
-        "cmap_title": "Dose (Gy)",
-        "min_val": 0,
-        "max_val": 8000,
-    },
-    "RTSTRUCT": {"color": "deeppink", "linewidth": 2, "alpha": 0.8, "cmap": "gray"},
-    "Attention": {
-        "cmap": "Attention",
-        "cmap_abs": "AttentionAbs",
-        "cmap_colors": att_cmap,
-        "cmap_abs_colors": att_cmap_abs,
-        "cmap_title": None,
-        "alpha": 1,
-        "background_color": "black",
-    },
-}
 
 
 
@@ -150,7 +77,7 @@ def make_row_colorbar(
     cbar_ax = fig.add_axes(
         [left_coord, bottom_coord, width, max_height * height_scalar]
     )
-
+    
     # make a colorbar for the layer that defines the colormap to be used
     cbar = None
     if colorbar_layer_name == "CT":
@@ -268,7 +195,7 @@ def plot_CT(axs, CT, slices, HNC_plotting_params):
     )
 
     for i, slice_n in enumerate(slices):
-        axs[i].imshow(CT[slice_n], cmap=cmap, norm=norm)
+        axs[i].imshow(CT[slice_n], cmap=cmap, norm=norm, interpolation='none')
 
 
 def plot_RTDOSE(axs, RTDOSE, slices, RTcmap, is_background=False):
@@ -282,7 +209,8 @@ def plot_RTDOSE(axs, RTDOSE, slices, RTcmap, is_background=False):
 
     for i, slice_n in enumerate(slices):
         RTDOSE_slice = RTDOSE[slice_n]
-
+        
+        # if the RTDOSE is the background
         if is_background:
             contourf = axs[i].contourf(
                 RTDOSE_slice,
@@ -302,13 +230,8 @@ def plot_RTDOSE(axs, RTDOSE, slices, RTcmap, is_background=False):
                 origin="upper",
             )
 
-            # # Display the image with imshow
-            # print(contourf.get_array())
-            # axs[i].imshow(contourf.get_array()
-            # axs[i].imshow(RTDOSE_slice, cmap=cmap, norm=norm, levels=levels, alpha=1, origin="lower")  # NOTE: see if its possible to stick the contour under the attention layer
-            # contourf.remove()
-            # axs[i].imshow(contour.get_array())
-            # contour.remove()
+        
+        # if the RTDOSE is not the background
         else:
             contourf = axs[i].contourf(
                 RTDOSE_slice,
@@ -327,13 +250,6 @@ def plot_RTDOSE(axs, RTDOSE, slices, RTcmap, is_background=False):
                 origin="lower",
             )
 
-            # # Display the image with imshow
-            # print(contourf.get_array())
-            # axs[i].imshow(contourf.get_array())
-            # contourf.remove()
-            # axs[i].imshow(contour.get_array())
-            # contour.remove()
-
 
 def plot_RTSTRUCT(axs, RTSTRUCT, slices, HNC_plotting_params, is_background=False):
     """
@@ -349,7 +265,7 @@ def plot_RTSTRUCT(axs, RTSTRUCT, slices, HNC_plotting_params, is_background=Fals
 
         if is_background:
             # can just use imshow if the RTSTRUCT is the background (no contours needed for the RTSTRUCT)
-            axs[i].imshow(RTSTRUCT_slice, cmap=cmap, norm=norm)
+            axs[i].imshow(RTSTRUCT_slice, cmap=cmap, norm=norm, interpolation='none')
         else:
             # plots just the contours of the RTSTRUCT
             axs[i].contour(
@@ -396,7 +312,7 @@ def plot_Attention(axs, Attention, slices, HNC_plotting_params, global_att_max):
     )
     alpha = HNC_plotting_params["Attention"]["alpha"]
     for i, slice_n in enumerate(slices):
-        axs[i].imshow(Attention[slice_n], cmap=cmap, norm=norm, alpha=alpha)
+        axs[i].imshow(Attention[slice_n], cmap=cmap, norm=norm, alpha=alpha, interpolation='none')
 
 
 def plot_empty_img(axs, color="black"):
@@ -408,22 +324,21 @@ def plot_empty_img(axs, color="black"):
     return axs
 
 
-"""  """
 
 
-"""  """
 
 
 """ MAIN """
 
-def get_plotting_params(RT_region, HNC_plotting_params=HNC_plotting_params, LUNG_plotting_params=LUNG_plotting_params):
-    if RT_region == "HNC":
-        HNC_plotting_params=HNC_plotting_params
-    elif RT_region == "LUNG":
-        HNC_plotting_params=LUNG_plotting_params
-    else:
-        raise ValueError("Invalid RTcmap")
-    return HNC_plotting_params
+def get_plotting_params(RT_region):
+    try:
+        plotting_params = constants.PLOTTING_PARAMS[RT_region]
+    except KeyError:
+        raise ValueError(f"Unknown RT region: {RT_region}")
+    
+    return plotting_params
+
+
 
 
 def plot_slices(
@@ -435,7 +350,7 @@ def plot_slices(
     verbose=False,
 ):
     
-    HNC_plotting_params = get_plotting_params(RT_region)
+    PLOTTING_PARAMS = get_plotting_params(RT_region)
 
     slice_count = len(slice_indexes)
     row_count = len(row_dicts)
@@ -507,14 +422,14 @@ def plot_slices(
                 #    max_val=HNC_plotting_params["CT"]["max_val"],
                 #)
 
-                plot_CT(axs[row_idx], CT, slice_indexes, HNC_plotting_params)
+                plot_CT(axs[row_idx], CT, slice_indexes, PLOTTING_PARAMS)
 
             elif layer_name == "RTDOSE":
                 RTDOSE = row_dict["RTDOSE"]
                 RTDOSE = rescale_data(
                     RTDOSE,
-                    min_val=HNC_plotting_params["RTDOSE"]["min_val"],
-                    max_val=HNC_plotting_params["RTDOSE"]["max_val"],
+                    min_val=PLOTTING_PARAMS["RTDOSE"]["min_val"],
+                    max_val=PLOTTING_PARAMS["RTDOSE"]["max_val"],
                 )
                 rtdose_is_background = (
                     True
@@ -534,26 +449,26 @@ def plot_slices(
                 if layer_idx == 0:
                     plot_empty_img(
                         axs[row_idx],
-                        color=HNC_plotting_params["Attention"]["background_color"],
+                        color=PLOTTING_PARAMS["Attention"]["background_color"],
                     )
 
                 ATTENTION = row_dict["Attention"]
 
                 plot_Attention(
-                    axs[row_idx], ATTENTION, slice_indexes, HNC_plotting_params, global_att_max
+                    axs[row_idx], ATTENTION, slice_indexes, PLOTTING_PARAMS, global_att_max
                 )
 
             elif layer_name == "RTSTRUCT":
                 RTSTRUCT = row_dict["RTSTRUCT"]
-                HNC_plotting_params["RTSTRUCT"]["min_val"] = 0
-                HNC_plotting_params["RTSTRUCT"]["max_val"] = RTSTRUCT.max()
+                PLOTTING_PARAMS["RTSTRUCT"]["min_val"] = 0
+                PLOTTING_PARAMS["RTSTRUCT"]["max_val"] = RTSTRUCT.max()
 
                 rtstruct_is_background = True if layer_idx == 0 else False
                 plot_RTSTRUCT(
                     axs[row_idx],
                     RTSTRUCT,
                     slice_indexes,
-                    HNC_plotting_params,
+                    PLOTTING_PARAMS,
                     is_background=rtstruct_is_background,
                 )
 
@@ -562,7 +477,7 @@ def plot_slices(
             row_ax=axs[row_idx],
             num_slices=slice_count,
             colorbar_layer_name=colorbar_layer_name,
-            HNC_plotting_params=HNC_plotting_params,
+            HNC_plotting_params=PLOTTING_PARAMS,
             RTcmap=RT_region,
             global_att_max=global_att_max,
         )
