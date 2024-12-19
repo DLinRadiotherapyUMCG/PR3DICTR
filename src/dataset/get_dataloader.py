@@ -10,35 +10,6 @@ import logging
 import numpy as np
 import pandas as pd
 from monai.data import Dataset, CacheDataset, PersistentDataset, GDSDataset, DataLoader, ThreadDataLoader, ThreadBuffer, SmartCacheDataset
-from monai.transforms import (
-    Compose,
-    ConcatItemsd,
-    CenterSpatialCropd,
-    DeleteItemsd,
-    LoadImaged,
-    EnsureChannelFirstd,
-    EnsureTyped,
-    NormalizeIntensityd,
-    Resized,
-    RandSpatialCropd,
-    Rand3DElasticd,
-    RandAdjustContrastd,
-    RandAffined,
-    RandFlipd,
-    RandGaussianNoised,
-    RandGridDistortiond,
-    RandRotated,
-    RandZoomd,
-    RandShiftIntensityd,
-    ScaleIntensityRanged,
-    MapLabelValued,
-    ToDeviced,
-    CopyItemsd,
-    ToTensor,
-    TorchVisiond,
-)
-#from monai.transforms.regularization.dictionary import MixUpd
-#from utils.img_transforms import AugMix, NormaliseInputs, ConvertMetaTensorToTensor
 from multiprocessing import Manager
 
 
@@ -187,14 +158,13 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
     from src.dataset.transforms.MixUp import MixUp
     dl_args_dict = {'dataset': data_ds, 'batch_size': batch_size, 'shuffle': shuffle, 'sampler': None,
                           'num_workers': num_workers, 'drop_last': drop_last, 'persistent_workers': persistent_workers,
-                          'pin_memory': pin_memory,
-                          
-                          #'collate_fn': MixUp(config),
-                          }
+                          'pin_memory': pin_memory}
     
+    # if we want to perform mixup augmentation, we need to change the collate function 
+    # (as mixup is a batch-level augmentation, it can't be done in the transforms)
     if config['data']['augmentation']['mixup']['isEnabled'] and not validation_mode:
         dl_args_dict['collate_fn'] = MixUp(config)
-    #dl_args_dict.update
+    
     
     # Initialize DataLoader
     if dataset_size > 0:
@@ -225,25 +195,5 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
     return dataloader, metadata
 
 
-from monai.data.utils import list_data_collate
-
-def simple_collate_fn(batch):
-    batch = list_data_collate(batch)
-
-    return batch
-
-
-#from src.dataset.transforms.MixUp import MONAI_MixUpd
-
-def batch_augmentation_collate_fn(batch):
-    batch = list_data_collate(batch)
-
-    # Augment the batch
-    # MIXUP HERE
-    print(batch['input'].shape)
-
-
-    
-    return batch
 
 

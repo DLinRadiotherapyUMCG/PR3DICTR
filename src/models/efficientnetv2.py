@@ -10,7 +10,6 @@ import from https://github.com/d-li14/mobilenetv2.pytorch
 import torch
 import torch.nn as nn
 import math
-from src.models.linear_layers import MultiToxOutputHead
 
 __all__ = ['efficientnetv2_xs', 'efficientnetv2_s', 'efficientnetv2_m', 'efficientnetv2_l', 'efficientnetv2_xl']
 
