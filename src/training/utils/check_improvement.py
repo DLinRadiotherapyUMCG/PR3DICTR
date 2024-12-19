@@ -8,7 +8,7 @@ from src.models.tools.save_model import save_model
 def check_improvement(config, val_loss, val_mean_metric_value, best_value):
     improved = False
     # if otpimising the mean loss
-    if config['general']['optimize'] == "loss":
+    if config['training']['stopping_criteria'] == "loss":
         if val_loss < best_value:
             logging.info(f'New lowest loss: {val_loss}')
             best_value = val_loss

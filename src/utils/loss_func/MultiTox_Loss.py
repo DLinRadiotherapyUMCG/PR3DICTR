@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-
+from src.constants import MISSING_DATA_VALUE
 
 class MultiTox_Loss(nn.Module):
     """
@@ -15,7 +15,7 @@ class MultiTox_Loss(nn.Module):
         self.endpoints_list = config['columns']['labels']
         #self.valid_endpoints_as_tensor = torch.tensor([0, 1])  # these are the possible labels, anything else (e.g. -1 for missing values) is masked out
 
-        self.missing_endpoints_as_tensor = torch.tensor([config['data']['missing_data_value']])
+        self.missing_endpoints_as_tensor = torch.tensor([MISSING_DATA_VALUE])
 
         self.loss_function = loss_function
 

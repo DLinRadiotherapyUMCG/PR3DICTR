@@ -28,14 +28,9 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
     print(f"Validating models on {test_dataset_source} test set")
     # Get paths to folds and config from the experiment
     folds = [f.path for f in os.scandir(trial_dir) if f.is_dir()] # This does asume all folders within a trial are folds
-    config_path = os.path.join(folds[0], main_config['Save']['filenames']['config_yaml']) 
+    config_path = os.path.join(folds[0], main_config['saving']['filenames']['config_yaml']) 
     model_config = load_config(config_path) # Gets the config folder from the first fold
     
-    # config['paths']['csv'] = "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MDACC_dataset"
-    # config['paths']['images'] = "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MDACC_dataset/patients"
-    # config['data']['filename_stratified_sampling_test_csv'] = 'MDACC_features_present.csv'
-    # config['data']['patientID_length'] = 10
-
     # Load data and helper functions
     # the dataloader settings are taken from the model config
     metricHandler = mainMetricHandler(model_config)

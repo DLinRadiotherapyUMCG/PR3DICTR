@@ -22,7 +22,7 @@ from src.hyper_opt.WandB_hpt import WandB_is_enabled, update_WandB_summary_table
 from src.visualization.plot_model_inputs import plot_model_inputs
 from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.utils.loss_func.calc_mixup_loss import calc_mixup_loss
-
+from src.constants import MISSING_DATA_VALUE
 
 def train(config, model, loss_function, train_loader, val_loader, metricHandler):
     """
@@ -34,8 +34,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     """
 
     # config run information
-    config['run']['patienceExhausted'] = False
-    config['run']['patienceExhaustedIndex'] = 0
     show_pbar = config['training']['show_progress_bar']
 
     mixup_is_enabled = config['data']['augmentation']['mixup']['isEnabled']
@@ -55,11 +53,12 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
     # Initialize the best model and lowest validation loss
     best_model_state_dict = None
-    if(config['general']['optimize'] == "AUC"):
-        print("Optimizing based on AUC")
-        best_value = 0
-    else:
+    if(config['training']['stopping_criteria'] == "loss"):
+        print("Optimizing based on loss")
         best_value = np.inf
+    else:
+        best_value = 0
+        
     patience_counter = 0
     
 
@@ -116,11 +115,11 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                     mixup_indices_epoch = torch.cat([mixup_indices_epoch, mixup_adjusted_indices_batch], dim=0)
 
                 # mask out missing values
-                targets[targets == config['data']['missing_data_value']] = 0
+                targets[targets == MISSING_DATA_VALUE] = 0
 
             #print("hi")
             # plot model inputs
-            if (config['Save']['plot_training_slices']['isEnabled']) and (epoch_num == 1 or epoch_num % config['Save']['plot_training_slices']['every_n_epochs'] == 0) and (batch_num == 1):
+            if (config['saving']['plot_training_slices']['isEnabled']) and (epoch_num == 1 or epoch_num % config['saving']['plot_training_slices']['every_n_epochs'] == 0) and (batch_num == 1):
                 plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)
 
             # Make predictions
@@ -191,7 +190,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             
             if improved:
                 patience_counter = 0
-                if config['Save']['best_model']: 
+                if config['saving']['best_model']: 
                     save_model(config, model)
                 else:
                     best_model_state_dict = copy.deepcopy(model.state_dict())
@@ -201,8 +200,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             # Check if patience has been exhausted
             if patience_counter >= config['training']['patience']:
                 logging.info('Patience exhausted, stopping training')
-                config['run']['patienceExhausted'] = True
-                config['run']['patienceExhaustedIndex'] = epoch_num
                 break
         
         logging.info(f'  Epoch duration = {(time.time() - start_epoch_time):.2f} seconds')
@@ -225,7 +222,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     # logging.info('Finished training')
 
     # Save the best model
-    if config['Save']['best_model']: 
+    if config['saving']['best_model']: 
         model = load_model(config, model)
     else:
         model.load_state_dict(best_model_state_dict)    

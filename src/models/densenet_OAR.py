@@ -331,7 +331,7 @@ dropout_prob: float = 0.0,
 """
 
 
-def get_desnsenet(config, model_depth, channels):
+def get_densenet(config, model_depth, channels):
     """
     DenseNet
 
@@ -339,9 +339,6 @@ def get_desnsenet(config, model_depth, channels):
         config:
         model_depth:
         channels:
-        n_features:
-        filters:
-        lrelu_alpha:
         **kwargs:
 
     Returns:

@@ -4,17 +4,19 @@ from src.visualization.attention_colormap import att_cmap, att_cmap_abs
 
 MAIN_DATA_SOURCE = "UMCG"
 
-ENSEMBLE_MEMBERS = 5
-TOXICITIES = ['Xerostomia_M06', 'Xerostomia_M06_slim']
+# Dataset column names
+SPLIT_COL_NAME = "Split"
+PATIENT_ID_COL_NAME = "PatientID"
 
-#TRAIN_SPLIT = 0.7
-#VALID_SPLIT = 0.15
-#TEST_SPLIT = 0.15
+PATIENT_ID_LENGTHS_DICT = {
+    "UMCG": 7,
+    "MDACC" : 10,
+}
+MISSING_DATA_VALUE = -1   # value for missing endpoints
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# DEVICE = torch.device('cpu')
 
-VERBOSE = True
+# VERBOSE = True
 
 
 METRIC_TYPES = {

@@ -145,26 +145,28 @@ class small_conv_block(torch.nn.Module):
         return x
 
 
-class DCNN_Pooling(torch.nn.Module):
+class CNN_Pooling(torch.nn.Module):
     """
     Deep CNN that used pooling (and not stride) to reduce the feature map size.
     """
 
     def __init__(self, config,
                  n_input_channels, filters,
-                 kernel_sizes, strides, pad_value, lrelu_alpha, 
-                 pooling,                 
+                 kernel_sizes, strides, lrelu_alpha,                  
                  use_bias=False):
-        super(DCNN_Pooling, self).__init__()
+        super(CNN_Pooling, self).__init__()
         
         # Initialize conv blocks
         in_channels = [n_input_channels] + list(filters[:-1])
         self.first_conv_blocks = torch.nn.ModuleList()
         self.conv_blocks = torch.nn.ModuleList()
-        pooling_size = config['model']['pooling_size']
-        normalization = config['model']['normalization']
 
-        if config['model']['conv_block_layers'] == 1:
+        pooling = config['model']['cnn_pooling']['pooling']
+        pooling_size = config['model']['cnn_pooling']['pooling_size']
+        normalization = config['model']['cnn_pooling']['normalization']
+        pad_value = config['model']['cnn_pooling']['pad_value']
+
+        if config['model']['cnn_pooling']['conv_block_layers'] == 1:
             for i in range(len(in_channels)):
                 use_activation = True
                 self.conv_blocks.add_module('conv_block%s' % i,

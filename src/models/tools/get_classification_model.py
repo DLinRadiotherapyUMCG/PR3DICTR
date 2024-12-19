@@ -3,7 +3,7 @@ import os
 from src.models.tools.get_encoder import get_encoder
 #from src.models.temp_ff_linear_layers import MultiToxOutputHead   # TODO: ask Luuk whats going on here
 from src.models.linear_layers import MultiToxOutputHead
-
+from src.constants import DEVICE
 
 import torch
 from torch import nn
@@ -91,7 +91,7 @@ def get_classification_model(config, metadata, save_summary=True):
 
 
     get_model_summary(config=config, model=model, input_size=[(config['training']['batch_size'], channels, depth, height, width), (config['training']['batch_size'], max(n_features, 1))], 
-                                                device=config['general']['device'], save_to_file=save_summary)
+                                                device=DEVICE, save_to_file=save_summary)
         
     return model
 

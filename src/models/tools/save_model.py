@@ -4,6 +4,8 @@ import yaml
 import pandas as pd
 import torch
 from src.utils.fileHandler import create_folder, create_file
+from src.constants import PATIENT_ID_COL_NAME
+
 
 def save_model(config, model):
     """
@@ -15,7 +17,7 @@ def save_model(config, model):
     """
     
     pathToSave = config['general']['resultsCurrentDirectory']
-    model_weights_filename = config['Save']['filenames']['model_weights']
+    model_weights_filename = config['saving']['filenames']['model_weights']
     fileLocation = os.path.join(pathToSave, model_weights_filename)
 
     # Create folder if does not exist
@@ -36,7 +38,7 @@ def load_model(config, model):
     :return:
     """
     pathToSave = config['general']['resultsCurrentDirectory']
-    model_weights_filename = config['Save']['filenames']['model_weights']
+    model_weights_filename = config['saving']['filenames']['model_weights']
     fileLocation = os.path.join(pathToSave, model_weights_filename)
 
     # Log and Save
@@ -77,12 +79,11 @@ def save_config(config, fileName):
 
 def save_dataset_summary(config, trainDataset, valDataset, testDataset):
     # Get the patientIds from the different datasets
-    ptnVar = config['data']['patientVar']
-    trainDataset_ptns = trainDataset[ptnVar].tolist()
-    valDataset_ptns = valDataset[ptnVar].tolist()
+    trainDataset_ptns = trainDataset[PATIENT_ID_COL_NAME].tolist()
+    valDataset_ptns = valDataset[PATIENT_ID_COL_NAME].tolist()
     testDataset_ptns = []
     if(trainDataset.shape[0] != 0):
-        testDataset_ptns = testDataset[ptnVar].tolist()
+        testDataset_ptns = testDataset[PATIENT_ID_COL_NAME].tolist()
     
     # Merge the dataframes to a single again
     dataframes = [trainDataset,valDataset,testDataset]
@@ -94,11 +95,11 @@ def save_dataset_summary(config, trainDataset, valDataset, testDataset):
     # Create column in which dataset it was found
     split = []
     for i in range(dfMerged.shape[0]):        
-        if(dfMerged.iloc[i][ptnVar] in trainDataset_ptns):
+        if(dfMerged.iloc[i][PATIENT_ID_COL_NAME] in trainDataset_ptns):
             split.append("Train")
-        elif(dfMerged.iloc[i][ptnVar] in valDataset_ptns):
+        elif(dfMerged.iloc[i][PATIENT_ID_COL_NAME] in valDataset_ptns):
             split.append("Val")
-        elif(dfMerged.iloc[i][ptnVar] in testDataset_ptns):
+        elif(dfMerged.iloc[i][PATIENT_ID_COL_NAME] in testDataset_ptns):
             split.append("Test")
         else:
             split.append("Unknown")

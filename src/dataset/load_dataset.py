@@ -1,21 +1,20 @@
 import os
 import logging
 from typing import Optional, List, Tuple
-
 from torch.utils.data import Dataset
-
 from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
 import pandas as pd
 import numpy as np
-
 from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
+from src.constants import PATIENT_ID_LENGTHS_DICT, PATIENT_ID_COL_NAME, SPLIT_COL_NAME
+
 
 def removePtnsExcluded(df, config):
-    excludedVariables = config['data']['ExcludedVar']
-    excludedValues = config['data']['ExcludedValue']
+    excludedVariables = config['data']['excluded_variable_name']
+    excludedValues = config['data']['excluded_values']
 
     if(len(excludedVariables) != len(excludedValues)):
         raise Exception("Exception: Exclusion parameters for patient removal need to have the same size. This contains the excluded variables and values.")
@@ -28,13 +27,15 @@ def removePtnsExcluded(df, config):
 
 
 def check_image_data_exists(config, df):
+    patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
+
     imagePath = config['paths']['images']
     ptnDirectories = os.listdir(imagePath)
 
     ptnClinList = df['PatientID'].tolist()
     removePtnIDS = []
     for i in range(len(ptnClinList)):
-        zerosPtnNmbr = str(ptnClinList[i]).rjust(config['data']['patientID_length'],'0')
+        zerosPtnNmbr = str(ptnClinList[i]).rjust(patientID_length,'0')
         if(ptnClinList[i] in ptnDirectories or zerosPtnNmbr in ptnDirectories):
             pass
         else:
@@ -58,14 +59,14 @@ def load_dataset(config : dict, patient_ids=None):
     
     """
 
-    patientID_col = config['data']['patientVar']
+    patientID_col = PATIENT_ID_COL_NAME
     # load the dataset (patients are split by 'train_val'/'test') --> one dataframe
-    dataset_csv_dir = os.path.join(config['paths']['csv'], config['data']['filename_stratified_sampling_test_csv'])
+    dataset_csv_dir = os.path.join(config['paths']['csv'], config['data']['dataset_csv'])
 
     delimiterFound = get_delimiter(dataset_csv_dir)
     df_total = pd.read_csv(dataset_csv_dir, delimiter=delimiterFound, dtype={'PatientID': str})
     # make sure the patientID strings are long enough
-    patientID_length = config['data']['patientID_length']
+    patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
     df_total[patientID_col] = df_total[patientID_col].apply(lambda x: x.rjust(patientID_length, '0'))  # ['%0.{}d'.format(patient_id_length) % int(x) for x in df[patient_id_col]]
     
     df_total = removePtnsExcluded(df_total, config)
@@ -83,9 +84,9 @@ def load_dataset(config : dict, patient_ids=None):
         print(len(df_total))
     
     # split off the test set
-    df_test = df_total[df_total[config['data']['splitvar']] == "test"]
-    df_train_val = df_total[df_total[config['data']['splitvar']] != "test"]
-
+    df_test = df_total[df_total[SPLIT_COL_NAME] == "test"]
+    df_train_val = df_total[df_total[SPLIT_COL_NAME] != "test"]
+    
     # Show dataset size
     train_size = df_train_val.shape[0]
     test_size = df_test.shape[0]
@@ -244,4 +245,4 @@ def Complete_SanityCheck(config,dfArray):
 
 
 def PtnID_SanityCheck(config,df1,df2):
-    return any(df1[config['data']['patientVar']].isin(df2[config['data']['patientVar']]))
+    return any(df1[PATIENT_ID_COL_NAME].isin(df2[PATIENT_ID_COL_NAME]))

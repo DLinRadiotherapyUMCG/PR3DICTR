@@ -54,24 +54,7 @@ def derived_hyperparameters(config, trial):
     hyperparameters are to be set.
     
     '''
-    # If the number of down blocks is specified there should be an equal amount of related parameters   
-    if 'n_down_blocks' in config['hyperparam_tuning']['hyperparams'].keys():
-        for key in config['hyperparam_tuning']['derived']['n_down_blocks']:
-            try:
-                temp_list = []
-                hyperinfo = config['hyperparam_tuning']['derived']['n_down_blocks'][key]  
-                location = hyperinfo['location']
-                base_name = hyperinfo['name']
-                for i in range(config['model']['n_down_blocks']):
-                    hyperinfo_new = hyperinfo.copy()
-                    hyperinfo_new['name'] = base_name + str(i)
-                    suggested_value = generate_value(trial, hyperinfo_new)
-                    temp_list.append(suggested_value)
-                config = update_config(config,location,temp_list)
-            except Exception as error:
-                print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
-                raise Exception("Stopped trials due to error.")
-            
+    # If the number of down blocks is specified there should be an equal amount of related parameters          
     if 'n_clinical_down_blocks' in config['hyperparam_tuning']['hyperparams'].keys():
         for key in config['hyperparam_tuning']['derived']['n_clinical_down_blocks']:
             try:
@@ -113,14 +96,14 @@ def derived_hyperparameters(config, trial):
                 print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
                 raise Exception("Stopped trials due to error.")
             
-    if 'n_linear_units_endpoint' in config['hyperparam_tuning']['hyperparams'].keys():
-        for key in config['hyperparam_tuning']['derived']['n_linear_units_endpoint']:
+    if 'n_linear_layers_endpoint' in config['hyperparam_tuning']['hyperparams'].keys():
+        for key in config['hyperparam_tuning']['derived']['n_linear_layers_endpoint']:
             try:
                 temp_list = []
-                hyperinfo = config['hyperparam_tuning']['derived']['n_linear_units_endpoint'][key]  
+                hyperinfo = config['hyperparam_tuning']['derived']['n_linear_layers_endpoint'][key]  
                 location = hyperinfo['location']
                 base_name = hyperinfo['name']
-                for i in range(config['model']['n_linear_units_endpoint']):
+                for i in range(config['model']['n_linear_layers_endpoint']):
                     hyperinfo_new = hyperinfo.copy()
                     hyperinfo_new['name'] = base_name + str(i)
                     suggested_value = generate_value(trial, hyperinfo_new)

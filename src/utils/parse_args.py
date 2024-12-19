@@ -10,7 +10,6 @@ def parse_args():
     :return:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--toxicity', type=str, default=TOXICITIES[0], nargs='?')
     parser.add_argument('--log', type=str, default='INFO', nargs='?')
     args = parser.parse_args()
 

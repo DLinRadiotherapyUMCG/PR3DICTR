@@ -5,13 +5,13 @@ Helper functions for classification metrics
 import numpy as np
 from sklearn.metrics import roc_curve
 
-
+from src.constants import MISSING_DATA_VALUE
 
 def remove_missing(config, true, pred):
     """
     Removes the values that are indicated as missing with the missing indicator -1
     """
-    missing_val = config['data']['missing_data_value']
+    missing_val = MISSING_DATA_VALUE
 
     pred = pred[np.where(true != missing_val)]
     true = true[np.where(true != missing_val)]

@@ -2,6 +2,9 @@ import pandas as pd
 import torch
 import os
 
+from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
+
+
 def concatenate_predictions(config, list_of_pred_list_dicts: list[dict], list_of_true_list_dicts: list[dict]):
     """
     Function to concatenate N list dicts of predictions and true labels into a single list dict of preds and true labels.
@@ -71,18 +74,6 @@ def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dic
         df_y = pd.concat([df_y, df_y_pred, df_y_true], axis=1)
 
     # Save to file
-    from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
-
-
-    # if is_test_set:
-    #     output_filename = config['Save']['filenames']['test_set_predictions_csv']
-    # elif ensemble_predictions:
-    #     #print("EXTERNAL SET", external_set)
-    #     #print(model_name)
-    #     output_filename = config['Save']['filenames']['ensemble_predictions_csv']
-    # else:
-    #     output_filename = config['Save']['filenames']['predictions_csv']
-
     output_file_dir = get_predictions_csv_dir(config, is_test_set, ensemble_predictions)
 
     df_y.to_csv(output_file_dir, sep=';', index=False)

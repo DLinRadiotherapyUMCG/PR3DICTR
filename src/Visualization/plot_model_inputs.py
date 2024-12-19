@@ -16,11 +16,11 @@ def plot_model_inputs(config, plot_inputs, epoch):
     # check that the directory exists
 
 
-    save_folder = os.path.join(config['general']['resultsCurrentDirectory'], config['Save']['plot_training_slices']['folder_name'])
+    save_folder = os.path.join(config['general']['resultsCurrentDirectory'], config['saving']['plot_training_slices']['folder_name'])
     if not os.path.exists(save_folder):
         os.makedirs(save_folder, exist_ok=True)
 
-    n_patients = config['Save']['plot_training_slices']['n_patients_per_epoch']
+    n_patients = config['saving']['plot_training_slices']['n_patients_per_epoch']
     for patient_idx in range(min(n_patients, len(plot_inputs))):
         
         ct_range = (config['data']['preprocessing']['ct']['a_max'] - config['data']['preprocessing']['ct']['a_min'])
@@ -46,7 +46,7 @@ def plot_model_inputs(config, plot_inputs, epoch):
         ]
 
         num_CT_slices = CT.shape[0]
-        num_plot_slices = config['Save']['plot_training_slices']['n_slices_per_patient']
+        num_plot_slices = config['saving']['plot_training_slices']['n_slices_per_patient']
 
         slices = list(range(0, num_CT_slices, num_CT_slices // (num_plot_slices + 1)))[1:-1]
 

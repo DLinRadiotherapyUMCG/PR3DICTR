@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from src.dataset.transforms.center_crop_3d import center_crop_3d
-
+from src.constants import PATIENT_ID_COL_NAME
 
 def get_delimiter(file_path: str) -> str:
     with open(file_path, 'r') as csvfile:
@@ -86,7 +86,7 @@ def data_split(df, config, split = [.7,.15,.15], seed = 8):
 # Artificial end-point equality
 def label_equalizer(df, config):
     
-    ptnVar = config['data']['patientVar']
+    ptnVar = PATIENT_ID_COL_NAME
     tox = config['columns']['labels']
 
     ratio = config['data']['equalizer']['ratio']
@@ -111,7 +111,7 @@ def label_equalizer(df, config):
     freq_max = np.max(instance_labels)    
     freq_min = np.min(instance_labels)
     
-    if method == 'up':
+    if method == 'over':
         #startPercentage = sum(y == uniqueValues[1])/sum(y == uniqueValues[0]
         for i in range(len(df)):
             rowsIncluded.append(df.iloc[i].values)
@@ -134,8 +134,7 @@ def label_equalizer(df, config):
         df_new = pd.DataFrame(rowsIncluded, columns=columnHeaders)        
         return df_new
     
-    
-    if method == 'down':
+    elif method == 'under':
         for i in range(len(instance_labels)):
             r_indx = np.where(y_c == np.unique(y_c)[i])[0]
             np.random.shuffle(r_indx)            
@@ -158,6 +157,4 @@ def label_equalizer(df, config):
         df_new = pd.DataFrame(rowsIncluded, columns=columnHeaders)
         return df_new
     
-    if method == "None":
-        return df
     
