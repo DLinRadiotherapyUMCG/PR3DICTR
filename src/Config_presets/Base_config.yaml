@@ -36,6 +36,8 @@ model:
     conv1_stride: 2
   densenet: 
     model_depth: 121  # [121, 169, 201, 264]
+  efficientnetv2:
+    use_bias: true
   ViT:
     vit_patch_size: 8
     vit_dim: 128
@@ -96,6 +98,8 @@ data:
   #   segmentation_map: 'segmentation_map.npy'
 
   dataloader: 
+    dataset_type: "cache"
+    dataloader_type: "standard"
     dataset_type: 'cache' # ['standard', 'cache', 'smartcache']  #TODO: 'persistent' is not implemented yet
     num_workers: 8           # number of workers (cores) to use for data loading in each training batch
     smartcache:

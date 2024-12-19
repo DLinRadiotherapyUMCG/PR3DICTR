@@ -2,8 +2,8 @@
 
 from src.models.dcnn_pooling import DCNN_Pooling
 from src.models.resnet import get_resnet
-#from src.models.densenet import get_desnsenet
-from src.models.densenet_OAR_input import get_desnsenet
+from src.models.densenet import get_desnsenet
+from src.models.efficientnetv2 import get_efficientnetv2
 from src.models.ViT import ViT
 from src.models.HIPT import HIPT
 
@@ -34,7 +34,9 @@ def get_encoder(config, channels, depth, height, width, n_features):
                                   use_bias=use_bias)  
     elif model_name == 'resnet':
         encoder = get_resnet(config=config, model_depth=config['model']['resnet']['model_depth'], channels=channels, lrelu_alpha=lrelu_alpha)
-    
+    elif('efficientnetv2' in model_name):
+        encoder = get_efficientnetv2(config=config, model_name = model_name, channels=channels)
+
     elif model_name == 'densenet':
         encoder = get_desnsenet(config, config['model']['densenet']['model_depth'], channels)
 

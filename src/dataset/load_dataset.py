@@ -86,7 +86,13 @@ def load_dataset(config : dict, patient_ids=None):
     df_test = df_total[df_total[config['data']['splitvar']] == "test"]
     df_train_val = df_total[df_total[config['data']['splitvar']] != "test"]
 
-    
+    # Show dataset size
+    train_size = df_train_val.shape[0]
+    test_size = df_test.shape[0]
+    total_size = df_total.shape[0]
+    print(f"Train/Val dataset {train_size} ({train_size/total_size*100}%), Test dataset {test_size} ({test_size/total_size*100}%)")
+
+    # check patients not in same dataset
     assert not PtnID_SanityCheck(config,df_train_val,df_test)
 
     return df_train_val, df_test

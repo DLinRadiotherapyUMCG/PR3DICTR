@@ -87,7 +87,7 @@ def data_split(df, config, split = [.7,.15,.15], seed = 8):
 def label_equalizer(df, config):
     
     ptnVar = config['data']['patientVar']
-    tox = config['columns']['label']
+    tox = config['columns']['labels']
 
     ratio = config['data']['equalizer']['ratio']
     method = config['data']['equalizer']['resamplingDirection']

@@ -8,6 +8,9 @@ import os
 import pandas as pd
 
 from src.visualization.calibration_plot import calibration_plot
+from src.visualization.confusion_matrix import confusion_matrix_bin
+from src.visualization.ROC_curve import ROC_curve
+
 from src.evaluation.metrics.utils import remove_missing
 
 from src.visualization.calibration.calibration_plots import adaptive_make_calibration_plots
@@ -85,7 +88,7 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
 
 
 
-# # # # FOR TESTING THIS FUNCTION (DANIEL)
+# # # FOR TESTING THIS FUNCTION (DANIEL)
 
 # if __name__ == "__main__":
 #     from src.config_presets.tools.get_config import get_config
