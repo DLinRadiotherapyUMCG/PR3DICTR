@@ -1,0 +1,262 @@
+general:
+  seed: 42
+  device: "cuda"
+  firstRun: false
+  experiment_name: 'Resnet_depth_optimization_modeltype3_2a_depth'
+  trialNumber: "Trial_?"
+  patientGroup: 0
+  resultsCurrentDirectory: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Project1/results/SIMS"
+  error_ignore: true
+  endpointRatios: []
+  testMode: False
+
+columns:
+  label: ['W2_Dysphagia','W3_Dysphagia','W4_Dysphagia','W5_Dysphagia','W6_Dysphagia','W7_Dysphagia','W12_Dysphagia','M6_Dysphagia','M12_Dysphagia','M18_Dysphagia','M24_Dysphagia','M36_Dysphagia','M48_Dysphagia','M60_Dysphagia']
+  clinical_features: ['Dysphagia_W01_Grade0_1','Dysphagia_W01_Grade2','Dysphagia_W01_Grade3_4',"Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg",'Loctum2_Larynx','Loctum2_Oral_Cavity','Loctum2_Overig','Loctum2_Pharynx','T0','T1','T2','T3','T4','Tis','Tx','N0','N1','N2','N3','Smoking_0','Smoking_1','P16_Negatief','P16_Niet_bepaald','P16_Positief','WHO_0','WHO_1','WHO_2','WHO_3','WHO_4', "Sex", "Age"]
+  logistic_regression_features: ['Submandibular_meandose', 'Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
+
+paths:
+  csv: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Project1/Data/"
+  images: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/dataset/patients/"
+  output: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/hnc-ensemble-master/results/"
+  results: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/hnc-ensemble-master/results/"
+
+run:
+  patienceExhausted: False
+  patienceExhaustedIndex: 0
+
+model:
+  model_name: "resnet" #"dcnn_pooling"
+
+  resnet:
+    model_depth: 10    # [10, 18, 34, 50, 101, 152, 200]
+    conv1_kernel_size: 7
+    conv1_stride: 2
+  densenet: 
+    model_depth: 121  # [121, 169, 201, 264]
+  ViT:
+    vit_patch_size: 8
+    vit_dim: 128
+    vit_depth: 4
+    vit_heads: 8
+    vit_mlp_dim: 128
+    vit_dim_head: 128
+    vit_emb_dropout: 0.2
+    vit_dropout_p: 0.2  
+  TransRP:
+    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
+    clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
+    vit_patch_size: [1,1,1]
+    vit_dim: 768
+    vit_depth: 12
+    vit_heads: 12
+    vit_mlp_dim: 3072
+    vit_dropout_p: 0.2  
+
+  n_down_blocks: 5
+  filters: [8, 8, 16, 16, 32]
+  kernel_sizes: [7, 5, 4, 3, 3]
+  strides: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+  pad_value: 0
+  lrelu_alpha: 0.1
+  dropout_p: 0.06087816611628816
+  perform_pooling: False
+
+  # --- Linear layers information ----
+  n_linear_down_blocks: 1
+  linear_units: [16]
+  n_clinical_down_blocks: 2
+  clinical_variables_position: 1
+  clinical_variables_linear_units: [32,16]
+  clinical_variables_dropout_p: [0.3581947628028867]
+  use_bias: True
+  pooling: 'max'    # avg, max, nan
+  pooling_size: 2
+  normalization: 'batch'
+  conv_block_layers: 1
+  num_ohe_classes: 1
+  n_linear_units_endpoint: 2
+  linear_units_endpoint: [64,64]
+  sequential: true # determines if the predictions are made sequentially (in order of given labels) 
+  time_position: 3
+  all_prev_timepoint: true
+  all_time_positions: true
+
+data:
+  trainfile: 'train_full_dys.csv'
+  valfile: 'train_full_dys.csv'
+  splitvar: "Split"
+  patientVar: 'PatientID'
+  stratifyList: ["RP_OneYear","SmokerActive","SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy","ChemoRad"]
+  Excluded: "ExcludeVar"
+  
+  dataloader:
+    num_workers: 4           # number of workers (cores) to use for data loading in each training batch
+    persistent_workers: true # recommend keep this as `true' for faster data loading
+  
+  preprocessing:
+    isEnabled: true
+    crop: true
+    crop_shape: [96, 96, 96]
+    ct:
+      a_min: -200
+      a_max: 400
+      b_min: 0
+      b_max: 1
+      clip: true
+    rtdose:
+      a_min: 0
+      a_max: 8000
+      b_min: 0
+      b_max: 1
+      clip: true
+    segmentation_map:
+      target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
+
+  kFolds:
+    isEnabled: true
+    Iterations: 5
+    Splits: 5
+
+  equalizer:
+    isEnabled: false
+    ratio: 0.5
+    resamplingDirection: 'up'
+
+  augmentation:
+    isEnabled: true
+    augmentation_list:  ['crop','flip','affine','rotate']
+    prob: 0.5
+    strength: 1
+
+training:
+  max_epochs: 200
+  batch_size: 8
+  validation_interval: 1
+  patience: 20
+
+  optimizer:
+    name: "Adam"
+    learning_rate: 0.0001
+    weight_decay: 0.00001
+
+  loss:
+    name: "BCE"
+    weight: [1]
+    reduction: "none"
+
+  scheduler:
+    name: "cosine"
+    T_0: 40
+    T_mult: 1
+    eta_min: 0.00000001
+  
+  validation:
+    num_auc_batches: 1
+
+visualizations:
+  calibration:
+    num_bins: 10
+  confusion_matrix:
+    threshold: 'YoudenJ'
+
+hyperparam_tuning:
+  WandB:
+    IsEnabled: true
+    API_Key: "7b92563a48d5645d853fe913d03674ec7337ff47"
+    MetricsMonitor: [ "train_AUC","train_loss","train_acc",
+      "eval_AUC","eval_loss","eval_acc"]
+  optuna:
+    IsEnabled: True
+    n_trials: 30
+
+  # ----  Custom Params -------
+  # Location:= path variabele in config
+  hyperparams:
+    learning_rate: 
+      name: 'Learning_rate'
+      type: 'float'
+      location: ['training','optimizer','learning_rate']
+      min: 0.00001
+      max: 0.001
+    optimizer:
+      name: "Optimizer" 
+      type: 'categorical'
+      location: ["training",'optimizer','name']
+      options: ['Adam'] #['AdaBound','Adam','SGD']
+    
+    batch_size:
+      name: batch_size
+      type: 'categorical'
+      location: ["training","batch_size"]
+      options: [4,8,16]
+
+    augmentation_strength:
+      name: augmentation_strength
+      type: 'float'
+      location: ['data','augmentation',"strength"]
+      min: 0.8
+      max: 5
+
+    augmentation_probability:
+      name: augmentation_probability
+      type: 'float'
+      location: ['data','augmentation',"prob"]
+      min: 0.6
+      max: 0.98
+        
+    resnet_depth:
+      name: resnet_depth
+      type: 'categorical'
+      location: ["model",'resnet',"model_depth"]
+      options: [10,18,34,50]
+      
+    n_linear_down_blocks:
+      type: 'int'
+      name: 'n_linear_down_blocks'
+      location: ['model','n_linear_down_blocks']
+      min: 1
+      max: 3
+      step: 1
+      log: False
+
+    n_linear_units_endpoint:
+      type: 'int'
+      name: 'n_linear_units_endpoint'
+      location: ['model','n_linear_units_endpoint']
+      min: 2
+      max: 2
+      step: 1
+      log: False
+         
+
+  derived:
+    n_linear_down_blocks:
+      filters:
+        type: 'int'
+        name: 'lin_shared_filter'
+        location: ['model','clinical_variables_linear_units']
+        min: 16
+        max: 64
+        step: 16
+        log: False
+
+    n_linear_units_endpoint:
+      filters:
+        type: 'int'
+        name: 'lin_out_filter'
+        location: ['model','linear_units_endpoint']
+        min: 16
+        max: 64
+        step: 16
+        log: False
+
+#n_linear_down_blocks, n_clinical_down_block,n_linear_units_endpoint
+
+Save:
+  config: True
+  output_values: True
+  best_model: False
+  fileNames:
+    modelSummary: "modelSummary.txt"
+      
