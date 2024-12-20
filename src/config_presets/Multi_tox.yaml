@@ -2,8 +2,8 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'TRP_losses'
-  trialNumber: "weighted_BCE"
+  experiment_name: 'TRP_OAR_2'
+  trialNumber: "early"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: false
@@ -49,7 +49,7 @@ model:
     vit_emb_dropout: 0.2
     vit_dropout_p: 0.2  
   TransRP:
-    image_encoder: 'resnet'  # ['resnet', 'densenet'] (requires their respective configs)
+    image_encoder: 'densenet_OAR'  # ['resnet', 'densenet'] (requires their respective configs)
     clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
     vit_patch_size: [1,1,1]
     vit_dim: 512   # 256, 512, 768
@@ -102,7 +102,7 @@ data:
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   kFolds:
-    n_iterations: 5
+    n_iterations: 1
     n_splits: 5
     split_strategy: 'stratified'  # ['stratified', 'random']
 
@@ -154,7 +154,7 @@ training:
     name: "BCE"
     reduction: "none"
     BCE:
-      pos_weight: [14.28, 4.24, 3.4, 4.3, 2.56]
+      pos_weight: [1, 1, 1, 1, 1]
 
   scheduler:
     name: False # "cosine"
