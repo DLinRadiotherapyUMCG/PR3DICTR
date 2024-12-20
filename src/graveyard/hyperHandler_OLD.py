@@ -370,7 +370,7 @@ def check_names(path):
 
 
 def CreateResultDir(config, KFoldIndex = -1):
-    folderPath = os.path.join(os.path.join(config["paths"]["output"],config['general']['experiment_name']),config["general"]["trialNumber"])
+    folderPath = os.path.join(os.path.join(config["paths"]["results"],config['general']['experiment_name']),config["general"]["trialNumber"])
     if(KFoldIndex != -1):
         folderPath = os.path.join(folderPath,f"KFold{KFoldIndex}")
 

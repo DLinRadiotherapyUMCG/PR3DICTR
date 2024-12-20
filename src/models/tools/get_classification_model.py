@@ -7,7 +7,6 @@ from src.constants import DEVICE
 
 import torch
 from torch import nn
-from src.utils.fileHandler import create_file, create_folder
 from src.models.tools.model_summary import get_model_summary
 from src.models.TransRP_ViT import get_transrp_vit
 
@@ -85,7 +84,7 @@ class MultiTox_Classifier(nn.Module):
 def get_classification_model(config, metadata, save_summary=True):
   
     channels,depth,height,width,n_features = metadata['channels'], metadata['depth'], metadata['height'], metadata['width'], metadata['n_features']
-    encoder = get_encoder(config, channels, depth, height, width, n_features)
+    encoder = get_encoder(config, channels, depth, height, width)
     # Put the image encoder into a model
     model = MultiTox_Classifier(encoder=encoder, config=config, n_features=n_features, metadata=metadata)
 

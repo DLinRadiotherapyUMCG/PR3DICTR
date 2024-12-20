@@ -162,15 +162,13 @@ def get_transrp_vit(config, n_features : int, feature_map_dim_after_encoder):
     # determine the input size of the ViT block
     in_channels = feature_map_dim_after_encoder[0]
     img_size = feature_map_dim_after_encoder[1:]
-
-    patch_size = config['model']['TransRP']['vit_patch_size']
     
     ViT_module = TransRP_ViT(
         config=config,
         n_features=n_features,
         in_channels=in_channels,
         img_size=img_size,
-        patch_size=patch_size,
+        patch_size= config['model']['TransRP']['vit_patch_size'],
         hidden_size = config['model']['TransRP']['vit_dim'],
         mlp_dim = config['model']['TransRP']['vit_mlp_dim'],  
         num_layers = config['model']['TransRP']['vit_depth'],

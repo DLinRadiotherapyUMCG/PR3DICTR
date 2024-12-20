@@ -14,7 +14,7 @@ def create_results_directory(config, KFoldIndex = -1, create_dir = True):
     """
     Function to create the results directory for the current run.
     """
-    folderPath = os.path.join(os.path.join(config["paths"]["output"], config['general']['experiment_name']), config["general"]["trialNumber"])
+    folderPath = os.path.join(os.path.join(config["paths"]["results"], config['general']['experiment_name']), config["general"]["trialNumber"])
     if(KFoldIndex != -1):
         folderPath = os.path.join(folderPath,f"KFold{KFoldIndex}")
     folderPath += "\\"

@@ -62,7 +62,7 @@ def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dic
         y_true = y_true_list_dict[endpoint]
 
         # Save to DataFrame
-        if config['model']['num_classes'] == 1:
+        if config['model']['num_ohe_classes'] == 1:
             df_y_pred = pd.DataFrame(y_pred, columns=['{}_pred'.format(endpoint)])
             df_y_true = pd.DataFrame(y_true, columns=['{}_true'.format(endpoint)])
         else:

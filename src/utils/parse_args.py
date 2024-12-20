@@ -1,9 +1,6 @@
 import argparse
 import logging
 
-from src.constants import TOXICITIES
-
-
 def parse_args():
     """
     Parse the command line arguments.
@@ -14,11 +11,7 @@ def parse_args():
     args = parser.parse_args()
 
     # Load the toxicity
-    tox = args.toxicity
     log_level = args.log
 
-    # Check if the toxicity exists
-    if args.toxicity not in TOXICITIES:
-        raise ValueError('Toxicity not found. Please choose from the following: ' + ', '.join(TOXICITIES))
 
-    return tox, log_level
+    return log_level

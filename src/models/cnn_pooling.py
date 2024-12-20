@@ -150,10 +150,7 @@ class CNN_Pooling(torch.nn.Module):
     Deep CNN that used pooling (and not stride) to reduce the feature map size.
     """
 
-    def __init__(self, config,
-                 n_input_channels, filters,
-                 kernel_sizes, strides, lrelu_alpha,                  
-                 use_bias=False):
+    def __init__(self, config, n_input_channels, lrelu_alpha, use_bias=False):
         super(CNN_Pooling, self).__init__()
         
         # Initialize conv blocks
@@ -161,6 +158,10 @@ class CNN_Pooling(torch.nn.Module):
         self.first_conv_blocks = torch.nn.ModuleList()
         self.conv_blocks = torch.nn.ModuleList()
 
+
+        filters = config['model']['cnn_pooling']['filters']
+        kernel_sizes = config['model']['cnn_pooling']['kernel_sizes']
+        strides = config['model']['cnn_pooling']['strides']
         pooling = config['model']['cnn_pooling']['pooling']
         pooling_size = config['model']['cnn_pooling']['pooling_size']
         normalization = config['model']['cnn_pooling']['normalization']

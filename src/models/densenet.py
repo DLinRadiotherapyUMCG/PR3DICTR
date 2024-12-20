@@ -169,10 +169,11 @@ class DenseNet(nn.Module):
         pool_type = nn.MaxPool3d
         avg_pool_type = nn.AdaptiveAvgPool3d
 
+        first_kernel_size = 5
         self.features = nn.Sequential(
             OrderedDict(
                 [
-                    ("conv0", nn.Conv3d(in_channels, init_features, kernel_size=7, stride=(2,4,4), padding=2, bias=False)),
+                    ("conv0", nn.Conv3d(in_channels, init_features, kernel_size=first_kernel_size, stride=(2,2,2), padding=first_kernel_size//2, bias=False)),
                     ("norm0", nn.BatchNorm3d(init_features)),
                     ("relu0", nn.LeakyReLU(negative_slope=0)),
                     ("pool0", nn.MaxPool3d(kernel_size=3, stride=2, padding=1)),
@@ -283,6 +284,37 @@ def get_densenet(config, model_depth, channels):
         model = DenseNet(in_channels=channels, init_features=64, growth_rate=32, block_config=(6, 12, 48, 32), bn_size=4)
     elif model_depth == 264:
         model = DenseNet(in_channels=channels, init_features=64, growth_rate=32, block_config=(6, 12, 64, 48), bn_size=4)
+    
+
+    return model
+
+
+def get_short_densenet(config, model_depth, channels):
+    """
+    DenseNet
+
+    Args:
+        config:
+        model_depth:
+        channels:
+        n_features:
+        filters:
+        lrelu_alpha:
+        **kwargs:
+
+    Returns:
+
+    """
+    assert model_depth in [121, 169, 201, 264]
+
+    if model_depth == 121:
+        model = DenseNet(in_channels=channels, init_features=64, growth_rate=32, block_config=(6, 12, 24), bn_size=4)
+    elif model_depth == 169:
+        model = DenseNet(in_channels=channels, init_features=64, growth_rate=32, block_config=(6, 12, 32), bn_size=4)
+    elif model_depth == 201:
+        model = DenseNet(in_channels=channels, init_features=64, growth_rate=32, block_config=(6, 12, 48), bn_size=4)
+    elif model_depth == 264:
+        model = DenseNet(in_channels=channels, init_features=64, growth_rate=32, block_config=(6, 12, 64), bn_size=4)
     
 
     return model

@@ -37,7 +37,7 @@ def aggregate_cross_validation_metrics(config: dict, sets: list =['train', 'val'
             dfs_list_dict[set_name].append(df_metrics.copy())
 
     # for each set, calculate the mean and std of the metrics
-    folderPath = os.path.join(os.path.join(config["paths"]["output"], config['general']['experiment_name']), config["general"]["trialNumber"])
+    folderPath = os.path.join(os.path.join(config["paths"]["results"], config['general']['experiment_name']), config["general"]["trialNumber"])
 
 
     endpoint_list = config['columns']['labels']

@@ -62,12 +62,11 @@ model:
   n_linear_layers: 1
   linear_units: [16] # shared layers for model head
   n_clinical_layers: 2
-  clinical_variables_position: 1
   clinical_variables_linear_units: [32,16]
-  clinical_variables_dropout_p: [0.2]
-  num_ohe_classes: 1
+  clinical_variables_position: 1
   n_linear_layers_endpoint: 1
   linear_units_endpoint: [64]
+  num_ohe_classes: 1
 
 data:
   source: 'UMCG'   # the source of the dataset you are using (change this for external validation)
@@ -199,6 +198,7 @@ hyperparam_tuning:
     objectives: ["val_mean_AUC"]
     objective_direction: ["maximize"]          # must be the same length (and order) as objectives
     n_trials: 100
+    kill_trial_threshold: 0.6
   # ----  Custom Params -------
   # Location:= path of the variable in the config
   # hyperparams:

@@ -168,8 +168,18 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         # make the visualisations for this fold
         get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
 
+        # to kill optuna trials early, check the mean metrics for this fold
+        if config['hyperparam_tuning']['optuna']['isEnabled']:
+            val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
+            mean_val_metric_value = np.mean(list(val_metrics_mean_dict.values()))
+            if (val_mean_metric_val < config['hyperparam_tuning']['optuna']['kill_trial_threshold']) and (fold_idx >= 3):
+                logging.info(f'Early stopping at fold {fold_idx}. Metric value is too low')
+                break
+       
 
-    
+
+
+
     # compute mean AUC per endpoint
     train_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in train_metrics_list_dict.items()}
     val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
@@ -195,8 +205,6 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         mean_test_metric_value = None
         test_mean_losses_dict = {endpoint: None for endpoint in endpoint_list}
         mean_test_loss = None
-
-
     
     results = { # mean AUC
                 f"train_mean_{metric_name}": mean_train_metric_value,

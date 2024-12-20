@@ -2,20 +2,17 @@
 
 from src.models.cnn_pooling import CNN_Pooling
 from src.models.resnet import get_resnet
-from src.models.densenet import get_densenet
+from src.models.densenet import get_densenet, get_short_densenet
 from src.models.efficientnetv2 import get_efficientnetv2
 from src.models.ViT import ViT
 from src.models.HIPT import HIPT
 
-def get_encoder(config, channels, depth, height, width, n_features):
+def get_encoder(config, channels, depth, height, width):
     """
     Initialize the image encoder.
     """
 
     model_name = config['model']['model_name']
-    filters = config['model']['filters']
-    kernel_sizes = config['model']['kernel_sizes']
-    strides = config['model']['strides']
     lrelu_alpha = config['model']['lrelu_alpha']
 
     #dropout_p_endpoint = config.dropout_p_endpoint
@@ -26,13 +23,12 @@ def get_encoder(config, channels, depth, height, width, n_features):
     #                  sum([x[2] == 2 for x in strides])]
 
     if model_name == 'cnn_pooling':
-        encoder = CNN_Pooling(config=config,
-                                n_input_channels=channels, 
-                                  filters=filters, kernel_sizes=kernel_sizes, strides=strides,
+        encoder = CNN_Pooling(config=config, n_input_channels=channels, 
                                   lrelu_alpha=lrelu_alpha, use_bias=use_bias)  
     elif model_name == 'resnet':
         encoder = get_resnet(config=config, model_depth=config['model']['resnet']['model_depth'], channels=channels, lrelu_alpha=lrelu_alpha)
-    elif('efficientnetv2' in model_name):
+
+    elif ('efficientnetv2' in model_name):
         encoder = get_efficientnetv2(config=config, model_name = model_name, channels=channels)
 
     elif model_name == 'densenet':
@@ -53,15 +49,30 @@ def get_encoder(config, channels, depth, height, width, n_features):
         if config['model']['TransRP']['image_encoder'] == 'resnet':
             encoder = get_resnet(config=config, model_depth=config['model']['resnet']['model_depth'], channels=channels, lrelu_alpha=lrelu_alpha)
             # these tweaks increase the size of the feature maps for the ViT block (e.g. we remove the downsampling in the last resnet block)
-            encoder.backbone.block3[0].conv1.stride = (1, 1, 1)
-            encoder.backbone.block3[0].downsample[0].stride = (1,1,1)
+            
+            # delete the last resnet block (now 3 blocks instead of the usual 4)
+            # this saves some computation and allows for larger feature maps to the ViT block
+            del encoder.backbone.block3
+            # if config['model']['resnet']['model_depth'] < 50:
+            #     #encoder.layer4[1].downsample[0].stride = (1, 1, 1)
+            #     # encoder.backbone.block3[0].conv1.stride = (1, 1, 1)
+            #     # encoder.backbone.block3[0].downsample[0].stride = (1,1,1)
+            #     pass
+            # else:
+            #     encoder.backbone.block3[0].conv2.stride = (1, 1, 1)
+            #     encoder.backbone.block3[0].downsample[0].stride = (1,1,1)
 
         elif config['model']['TransRP']['image_encoder'] == 'densenet':
-            encoder = get_desnsenet(config, config['model']['densenet']['model_depth'], channels)
+            # obtain a densenet model with only 3 blocks (instead of the normal 4)
+            encoder = get_short_densenet(config, config['model']['densenet']['model_depth'], channels)
             # these tweaks increase the size of the feature maps for the ViT block (e.g. we remove the downsampling in the last densenet block)
-            encoder.features.transition_3.pool.kernel_size = 1
-            encoder.features.transition_3.pool.stride = 1
-            encoder.features.transition_3.conv.stride = (1,1,1)
+            
+            # del encoder.features.transition_3
+
+            # encoder.features.transition_3.pool.kernel_size = 1
+            # encoder.features.transition_3.pool.stride = 1
+            # encoder.features.transition_3.conv.stride = (1,1,1)
+           
         else:
             raise ValueError('Invalid image_encoder for TransRP model: {}.'.format(config['model']['TransRP']['image_encoder']))
     

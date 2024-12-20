@@ -8,8 +8,77 @@ data:
     n_iterations: 2    # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
 
 training:
-  max_epochs: 3
-  batch_size: 16
+  max_epochs: 2
+  batch_size: 4
   validation_interval: 1
   patience: 5
 
+
+# model:
+#   model_name: "resnet"
+#   resnet:
+#     model_depth: 10    # [10, 18, 34, 50, 101, 152, 200]
+#     conv1_kernel_size: 7
+#     conv1_stride: 2
+
+
+# # AUG
+# noise:
+#   name: noise
+#   type: 'categorical'
+#   location: ['data']['augmentation']['list']['noise']['isEnabled']
+#   options: [True, False]
+
+# mixup_alpha:
+#   name: mixup_alpha
+#   type: 'float'
+#   location: ['data']['augmentation']['mixup']['alpha']
+#   min: 0
+#   max: 5
+
+
+# # TRAIN
+# learning_rate:
+#   name: learning_rate
+#   type: 'categorical'
+#   location: ['training']['optimizer']['learning_rate']
+#   options: [0.01, 0.001, 0.0001]
+
+
+# n_linear_layers:
+#   type: 'int'
+#   name: 'n_linear_layers'
+#   location: ['model','n_linear_layers']
+#   min: 1
+#   max: 3
+#   step: 1
+#   log: False
+
+# n_linear_layers_endpoint:
+#   type: 'int'
+#   name: 'n_linear_layers_endpoint'
+#   location: ['model','n_linear_layers_endpoint']
+#   min: 1
+#   max: 3
+#   step: 1
+#   log: False
+
+
+
+#   derived:
+    
+#     n_linear_layers:
+#       filters:
+#         type: 'categorical'
+#         name: 'LL_shared_'
+#         location: ['model','linear_units']
+#         options: [64,128,256,512]
+#         log: False
+
+#     n_linear_layers_endpoint:
+#       filters:
+#         type: 'categorical'
+#         name: 'LL_endpoint_'
+#         location: ['model','linear_units_endpoint']
+#         options: [16,32,64]
+#         log: False

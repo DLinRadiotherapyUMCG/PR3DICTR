@@ -46,7 +46,7 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
             "labels" : labels_per_endpoint_dict,
             "preds" : predictions_per_endpoint_dict
         }]
-
+        
 
         # LOOP THROUGH THE PLOTS
         # calibration plot
@@ -55,7 +55,7 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
             filename = alter_filename_if_external_dataset(config, filename)
             save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
             adaptive_make_calibration_plots(config, plotting_dict, column_names=endpoint_list, n_bins=n_bins, mode="calibration", title=f"Calibration Plot: {set_name} set", filedir=save_dir, return_fig=False)
-    
+
         # reliability plot
         if 'reliability' in visualisations_list:
             filename = f"reliability_plot_{set_name}.png"
