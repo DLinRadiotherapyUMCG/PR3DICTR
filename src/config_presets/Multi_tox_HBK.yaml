@@ -19,13 +19,17 @@ columns: #
                       #'Loctum2_Larynx', 'Loctum2_Oral_Cavity', 'Loctum2_Overig', 'Loctum2_Pharynx',] # ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]
                       ]
 paths:
-  csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
-  images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
+  #csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
+  #images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
   
   #csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MDACC_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
   #images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MDACC_dataset/patients" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
   
-  results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results" # "C:/Users/d.c.macrae/Documents/pred_rt_results"
+  #results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results" # "C:/Users/d.c.macrae/Documents/pred_rt_results"
+
+  csv: "/scratch/s3719332/DL_NTCP_Multitox/datasets/MT_dataset"
+  images: "/scratch/s3719332/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res"
+  results: "/scratch/s3719332/rt_pred_results"
 
 model:
   model_name: "TransRP"
@@ -177,7 +181,7 @@ hyperparam_tuning:
     isEnabled: true
     objectives: ["val_mean_AUC"]          
     objective_direction: ["maximize"]
-    n_trials: 5
+    n_trials: 200
   # ----  Custom Params -------
   # Location:= path variable in config
   hyperparams:
