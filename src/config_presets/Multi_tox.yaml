@@ -3,7 +3,7 @@ general:
   seed: 42
   firstRun: false
   experiment_name: 'TRP_GradNorm1'
-  trialNumber: "Trial_9"
+  trialNumber: "No_augmentation"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: false
@@ -112,7 +112,7 @@ data:
     resamplingDirection: 'up'
 
   augmentation:
-    isEnabled: true
+    isEnabled: false
     prob: 0.5   # probability of applying each augmentation (flip is always 0.5)
     list:
       flip:
