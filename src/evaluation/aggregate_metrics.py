@@ -10,7 +10,7 @@ from src.utils.saving.create_results_directory import create_results_directory
 
 
 
-def aggregate_cross_validation_metrics(config: dict, sets: list =['train', 'val']):
+def aggregate_cross_validation_metrics(config: dict,  k_folds_completed: int, sets: list =['train', 'val']):
     """
     Computes the mean train and validation results for each trial (one trial consists of multiple folds) and saves the results to a csv file.
     
@@ -24,7 +24,7 @@ def aggregate_cross_validation_metrics(config: dict, sets: list =['train', 'val'
     dfs_list_dict = {set_name: [] for set_name in sets}
 
     # Loop through the folds, to get the metrics csvs for each fold
-    for kFold_index in range(1, config['data']['kFolds']['n_iterations'] + 1):
+    for kFold_index in range(1, k_folds_completed + 1):
 
         # get the results directory for the current fold
         create_results_directory(config, kFold_index, create_dir = False)

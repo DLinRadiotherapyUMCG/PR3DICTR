@@ -228,7 +228,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         results[f"test_{endpoint}_loss"] = test_mean_losses_dict[endpoint]
 
     # aggregate all of the metric results for this trial
-    aggregate_cross_validation_metrics(config, sets=['train', 'val'])
+    aggregate_cross_validation_metrics(config, k_folds_completed=fold_idx, sets=['train', 'val'])
 
     
 
