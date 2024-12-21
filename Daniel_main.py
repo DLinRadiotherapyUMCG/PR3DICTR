@@ -47,6 +47,7 @@ if __name__ == '__main__':
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+    torch.autograd.set_detect_anomaly(True)
 
     from src.dataset.get_transforms import get_random_augmentation_names_from_config
 

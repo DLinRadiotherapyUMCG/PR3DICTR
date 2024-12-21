@@ -55,8 +55,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
     # load the data
     df_train_val, df_test = load_dataset(config)
-    if config['general']['use_test_set']:
-        test_loader, _ = make_dataloader(config, df_test, val_transforms, validation_mode=True)
+    
 
     # make K fold splits
     k_fold_dataframes_list = generate_K_fold_cross_validation_splits(config, df_train_val)
@@ -68,6 +67,9 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
     # get the data transforms
     train_transforms, val_transforms = get_transforms(config)
+    if config['general']['use_test_set']:
+        test_loader, _ = make_dataloader(config, df_test, val_transforms, validation_mode=True)
+        
     # get the loss function
     loss_function = get_loss_function(config)
 

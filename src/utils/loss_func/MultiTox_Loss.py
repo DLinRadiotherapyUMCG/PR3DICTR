@@ -21,7 +21,7 @@ class MultiTox_Loss(nn.Module):
 
 
 
-    def forward(self, outputs_dict, labels_dict):
+    def forward(self, outputs_dict, labels_dict, return_dict=False):
         # stack all of the predictions into a single tensor
         predictions = torch.stack(list(outputs_dict.values()), dim=1).type(torch.float32).squeeze(-1) # transposed! so that num columns = num toxicities
         # targets = torch.stack(list(labels_dict.values()), dim=1).type(torch.float32)
@@ -44,6 +44,13 @@ class MultiTox_Loss(nn.Module):
 
         if num_valid_labels == 0: # in case all labels are missing, the loss will be `nan`, so we return 0 instead
             return torch.tensor(0.0, device=predictions.device, dtype=predictions.dtype)
+        elif return_dict:
+            endpoint_list = self.config['columns']['labels']
+            batch_loss_dict = {}
+            for idx, endpoint in enumerate(endpoint_list):
+                batch_loss_dict[endpoint] = batch_loss[:, idx].sum() / mask[:, idx].sum()
+
+            return batch_loss_dict
         else:
             batch_loss_mean = batch_loss.sum() / mask.sum()
 

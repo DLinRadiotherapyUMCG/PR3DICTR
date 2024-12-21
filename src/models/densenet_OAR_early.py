@@ -350,13 +350,13 @@ def get_densenet(config, model_depth, channels):
     #mask_channel_idx = config['data']['mask_channel_idx']
 
     if model_depth == 121:
-        model = DenseNet(in_channels=channels, mask_channel_idx = mask_channel_idx, init_features=64, growth_rate=32, block_config=(6, 12, 24, 16), bn_size=4)
+        model = DenseNet(in_channels=channels, mask_channel_idx = mask_channel_idx, init_features=64, growth_rate=32, block_config=(6, 12, 24), bn_size=4)
     elif model_depth == 169:
-        model = DenseNet(in_channels=channels, mask_channel_idx = mask_channel_idx, init_features=64, growth_rate=32, block_config=(6, 12, 32, 32), bn_size=4)
+        model = DenseNet(in_channels=channels, mask_channel_idx = mask_channel_idx, init_features=64, growth_rate=32, block_config=(6, 12, 32), bn_size=4)
     elif model_depth == 201:
-        model = DenseNet(in_channels=channels, mask_channel_idx = mask_channel_idx, init_features=64, growth_rate=32, block_config=(6, 12, 48, 32), bn_size=4)
+        model = DenseNet(in_channels=channels, mask_channel_idx = mask_channel_idx, init_features=64, growth_rate=32, block_config=(6, 12, 48), bn_size=4)
     elif model_depth == 264:
-        model = DenseNet(in_channels=channels, mask_channel_idx = mask_channel_idx, init_features=64, growth_rate=32, block_config=(6, 12, 64, 48), bn_size=4)
+        model = DenseNet(in_channels=channels, mask_channel_idx = mask_channel_idx, init_features=64, growth_rate=32, block_config=(6, 12, 64), bn_size=4)
     
 
     return model

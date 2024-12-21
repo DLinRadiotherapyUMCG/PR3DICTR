@@ -79,7 +79,7 @@ class TransRP_ViT(nn.Module):
         if hidden_size % num_heads != 0:
             raise ValueError("hidden_size should be divisible by num_heads.")
         
-        assert clinical_features_method in ["m1", "m2", "m3"] 
+        assert clinical_features_method in ["m1", "m2", "m3", 'mcb'] 
 
         self.clinical_features_method = clinical_features_method
         self.n_features = n_features
@@ -118,6 +118,10 @@ class TransRP_ViT(nn.Module):
                 nn.Linear(1, hidden_size), # new
                 nn.ReLU(inplace=True)
             )
+
+
+        from src.models.mcb import CompactBilinearPooling
+        self.MCB_block = CompactBilinearPooling(patch_embedding_hidden_size, n_features, patch_embedding_hidden_size).cuda()
         
 
     def forward(self, x, x_clc, vectorize=False):  
@@ -135,6 +139,13 @@ class TransRP_ViT(nn.Module):
             x_clc = x_clc.repeat(1, self.patch_num, 1 )
             
             x = torch.cat((x_clc, x), dim=-1)
+        
+        elif self.clinical_features_method == "mcb":     # merge the clinical features to each patch using MCB
+            x2 = torch.zeros_like(x)
+            for i in range(self.patch_num):
+                x_patch = x[:, i, :]  # Flatten the patch to 1D
+                x2[:, i, :] = self.MCB_block(x_patch, x_clc)
+            x = x2
         
 
         x = self.transformer(x)

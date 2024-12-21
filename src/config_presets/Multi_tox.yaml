@@ -2,8 +2,8 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'TRP_OAR_2'
-  trialNumber: "early"
+  experiment_name: 'TRP_GradNorm1'
+  trialNumber: "Trial_9"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: false
@@ -20,7 +20,7 @@ columns: #
                       ]
 paths:
   csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
-  images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
+  images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset/patients" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
   
   #csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MDACC_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
   #images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MDACC_dataset/patients" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
@@ -49,8 +49,8 @@ model:
     vit_emb_dropout: 0.2
     vit_dropout_p: 0.2  
   TransRP:
-    image_encoder: 'densenet_OAR'  # ['resnet', 'densenet'] (requires their respective configs)
-    clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
+    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
+    clinical_features_method: 'm2' # 'm2'  # ["m1", "m2", "m3", "mcb"] 
     vit_patch_size: [1,1,1]
     vit_dim: 512   # 256, 512, 768
     vit_depth: 6    # 4, 6, 8
@@ -85,7 +85,7 @@ data:
   preprocessing:
     isEnabled: true
     crop: true
-    crop_shape: [96, 192, 192] # 96, 96] #  #  
+    crop_shape: [96, 96, 96] # 192, 192] #  #  #  
     ct:
       a_min: -200
       a_max: 400
@@ -133,22 +133,22 @@ data:
         std: 0.01
     
     mixup:
-      isEnabled: true
+      isEnabled: false
       alpha: 2.0
 
 training:
-  max_epochs: 100
-  batch_size: 8
+  max_epochs: 30
+  batch_size: 16
   validation_interval: 1
   stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
-  patience: 10                                        # early stopping patience
+  patience: 30                                        # early stopping patience
   show_progress_bar: True
 
   optimizer:
-    name: "AdamW"
+    name: "Adam" # "SGD"
     learning_rate: 0.001
-    weight_decay: 0.01
-    momentum: 0.09   # for SGD
+    weight_decay: 0.001
+    momentum: 0.00 # 9   # for SGD
 
   loss:
     name: "BCE"
