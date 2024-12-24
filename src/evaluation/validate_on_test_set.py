@@ -42,19 +42,21 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
     test_loader, metadata = make_dataloader(main_config, df_test, val_transforms, validation_mode=True)
 
 
-    
-    
     # used later, stores location of generated predictions
     prediction_paths = []
     test_combined_preds = None
     test_patientIDs_list_fold1 = None
     
+    """
+    TEST SET RESULTS PER FOLD
+    """
     # Generate and save predictions for each fold
     for fold_dir in folds:
         model = get_classification_model(model_config, metadata, save_summary=False)
         model.cuda()
         model = load_model(model_config, model) # load the saved weights
     
+        # get the model predictions on this set
         test_loss, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(model_config, model, loss_function, test_loader, metricHandler)
         
         # check to see if the patient IDs are the same order for all folds
@@ -63,11 +65,13 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
         else:
             assert test_patientIDs_list_fold1 == test_patientIDs_list, 'Patient IDs are not the same for all folds'
 
+        # save the predictions of this fold
         mode_list = ['test'] * len(test_patientIDs_list)
         main_config['general']['resultsCurrentDirectory'] = fold_dir + r'/' # fold results saves to fold
         prediction_paths.append(main_config['general']['resultsCurrentDirectory'])
         save_predictions(main_config, test_patientIDs_list, test_preds_dict, test_targets_dict, mode_list, is_test_set=True) 
         
+        # save the predictions, to use for the ensemble predictions later
         if test_combined_preds == None:
             test_combined_preds = test_preds_dict
         else:
@@ -82,14 +86,15 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
         # now create the visualisations
         get_visualizations(main_config, sets=['test'], pred_csv_dir=pred_csv_dir)
     
-
+    """
+    ENSEMBLE RESULTS
+    """
 
     # Combine the test set results 
     for key in test_combined_preds.keys():
         # Divide the combined predictions by the number of folds
         test_combined_preds[key] = [x / len(folds) for x in test_combined_preds[key]]
     
-
     # Save the ensemble predictions
     mode_list = ['test'] * len(test_patientIDs_list)
     main_config['general']['resultsCurrentDirectory'] = trial_dir # combined results saves to the trial 

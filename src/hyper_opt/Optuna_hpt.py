@@ -4,7 +4,7 @@ import optuna
 
 from src.utils.fileHandler import create_file, create_folder
 
-
+# TODO: comments and documentation for all of these function
 
 
 def update_config(dic, location, suggested_value):

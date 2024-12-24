@@ -33,31 +33,31 @@ class MultiTox_Loss(nn.Module):
         # calculate the loss
         batch_loss = self.loss_function(predictions, targets)
 
-        # print(batch_loss)
+        # mask out missing endpoints
         mask = (targets != self.missing_endpoints_as_tensor[0]) # & (targets <= self.valid_endpoints_as_tensor[1])
-
-        # print(mask)
         batch_loss = torch.nan_to_num(batch_loss, nan=0.0)
         batch_loss *= mask
         
-        num_valid_labels = mask.sum()
+        num_valid_labels = mask.sum() # the number of non-missing labels
 
         if num_valid_labels == 0: # in case all labels are missing, the loss will be `nan`, so we return 0 instead
-            return torch.tensor(0.0, device=predictions.device, dtype=predictions.dtype)
-        elif return_dict:
+            zero_tensor = torch.tensor(0.0, device=predictions.device, dtype=predictions.dtype)  
+            batch_loss_mean = zero_tensor
+            batch_loss_dict = {endpoint:zero_tensor for endpoint in batch_loss_dict[endpoint]}
+        
+        else:
+            # mean loss per endpoint
             endpoint_list = self.config['columns']['labels']
             batch_loss_dict = {}
             for idx, endpoint in enumerate(endpoint_list):
                 batch_loss_dict[endpoint] = batch_loss[:, idx].sum() / mask[:, idx].sum()
 
-            return batch_loss_dict
-        else:
+            # total mean loss
             batch_loss_mean = batch_loss.sum() / mask.sum()
-
-            #print(batch_loss_mean)
             batch_loss_mean = torch.clamp(batch_loss_mean, min=0, max=10000) 
 
-            return batch_loss_mean
+        
+        return batch_loss_mean, batch_loss_dict
 
 
 

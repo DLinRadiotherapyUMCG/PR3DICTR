@@ -2,7 +2,7 @@ import os
 import logging
 from typing import Optional, List, Tuple
 from torch.utils.data import Dataset
-from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
+from src.utils.data_equalizer import get_delimiter, label_equalizer
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, KFold
@@ -12,21 +12,40 @@ from sklearn.model_selection import train_test_split
 from src.constants import PATIENT_ID_LENGTHS_DICT, PATIENT_ID_COL_NAME, SPLIT_COL_NAME
 
 
-def removePtnsExcluded(df, config):
-    excludedVariables = config['data']['excluded_variable_name']
-    excludedValues = config['data']['excluded_values']
+def remove_excluded_patients(df : pd.DataFrame, config: dict) -> pd.DataFrame:
+    """
+    Function to remove patients that should be excluded. This filtering is performed on certain columns, within which patients with certain values are dropped.
+    (e.g. column='Chemotherapy' and value='True' to exclude patients who have recieved chemotherapy)
+    Args:
+        df (pd.DataFrame): dataset dataframe
+        config (dict): config parameters
+    Returns
+        df (pd.Dataframe): dataset dataframe with excluded patients removed
+    """
+    excludedVariables = config['data']['excluded_variable_name']  # column name
+    excludedValues = config['data']['excluded_values']           # values
 
     if(len(excludedVariables) != len(excludedValues)):
         raise Exception("Exception: Exclusion parameters for patient removal need to have the same size. This contains the excluded variables and values.")
     
+    # for each column name, remove patients with the excluded value
     for i in range(len(excludedVariables)):
         df = df.loc[df[excludedVariables[i]] != excludedValues[i]]
 
+    # return the filtered dataframe (i.e. the dataset without the excluded patients)
     return df
 
 
 
-def check_image_data_exists(config, df):
+def check_image_data_exists(config : dict, df : pd.DataFrame):
+    """
+    Checks whether the image files folder exists for each patient. Removes all patients what are missing image data files.
+    Args:
+        df (pd.DataFrame): dataset dataframe
+        config (dict): config parameters
+    Returns
+        df (pd.Dataframe): dataset dataframe without patients that are missing image data   
+    """
     patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
 
     imagePath = config['paths']['images']
@@ -36,27 +55,35 @@ def check_image_data_exists(config, df):
     removePtnIDS = []
     for i in range(len(ptnClinList)):
         zerosPtnNmbr = str(ptnClinList[i]).rjust(patientID_length,'0')
-        if(ptnClinList[i] in ptnDirectories or zerosPtnNmbr in ptnDirectories):
+        if (ptnClinList[i] in ptnDirectories or zerosPtnNmbr in ptnDirectories):
             pass
         else:
             # Not found --> remove
             removePtnIDS.append(ptnClinList[i])
     
-    print(f"Removed ptns = {len(removePtnIDS)}")
+    print(f"Removed patients (no image data) = {len(removePtnIDS)}")
     df = df[(df['PatientID'].isin(removePtnIDS)) == False]
+
     return df
 
-def load_dataset_single(csvPath, config, patient_ids = None):
-    delimiterFound = get_delimiter(csvPath)
-    dlDf = pd.read_csv(csvPath, delimiter=delimiterFound, dtype={'PatientID': str})
 
-    return dlDf
+# def load_dataset_single(csvPath, config, patient_ids = None):
+#     delimiterFound = get_delimiter(csvPath)
+#     dlDf = pd.read_csv(csvPath, delimiter=delimiterFound, dtype={'PatientID': str})
+
+#     return dlDf
 
 
 
-def load_dataset(config : dict, patient_ids=None):
+def load_dataset(config : dict):
     """
-    
+    Loads the entire dataset from one dataset_csv. Removes any patients that should be excluded or that are missing iamge data, subsamples the dataset (if needed),
+    and returns a dataframe containing the train_val patients and a dataframe with the test patients.
+    Args:
+        config (dict): the config params
+    Returns:
+        df_train_val (pd.DataFrame): dataframe with the training and validation set patients
+        df_test (pd.DataFrame): dataframe containing only the test set patients
     """
 
     patientID_col = PATIENT_ID_COL_NAME
@@ -69,12 +96,8 @@ def load_dataset(config : dict, patient_ids=None):
     patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
     df_total[patientID_col] = df_total[patientID_col].apply(lambda x: x.rjust(patientID_length, '0'))  # ['%0.{}d'.format(patient_id_length) % int(x) for x in df[patient_id_col]]
     
-    df_total = removePtnsExcluded(df_total, config)
+    df_total = remove_excluded_patients(df_total, config)
     df_total = check_image_data_exists(config, df_total) 
-
-    # TODO: Daniel: idk what the purpose of this was in the old code? was it ever used?
-    # if patient_ids:
-    #     totalDf = totalDf[totalDf[patientID_col].isin(patient_ids)]
 
     # if in test mode, and we want to use a subset of the data, then subsample the total dataset
     if config['general']['testMode'] and "n_patients_total" in config['data']:
@@ -101,10 +124,16 @@ def load_dataset(config : dict, patient_ids=None):
 
 
 
-def generate_K_fold_cross_validation_splits(config, df_development_set):
+def generate_K_fold_cross_validation_splits(config : dict, df_development_set : pd.DataFrame):
     """
     Generates K train-val splits of the develoment dataset, using stratified K-Fold cross-validation.
     Returns a list of dictionaries, where each dictionary contains a train and a validation dataframe: [{'train': df_t1, 'val': df_v1}, ...]
+    Args: 
+        config (dict): config params
+        df_development_set (pd.DataFrame): a dataframe of the development set (i.e. all patients in the train or validation sets) to use in K-fold cross validation
+    Returns:
+        k_fold_dataframes_collection (list): list of dictionaries. Each dictionary contains a 'train' and a 'val' dataframe
+
     """
     # Check and validate if KFolds settings are active
     k_fold_dataframes_collection = []
@@ -149,18 +178,26 @@ def generate_K_fold_cross_validation_splits(config, df_development_set):
 
 
 
-# TODO: an option for a single train-val split
 def generate_single_train_val_split(config, df_development_set):
     """
     A function to split the development set into 1 train and 1 validation set (in case you want to train just one model)
-    # TODO: check that this works properly
+    Args: 
+        config (dict): config params
+        df_development_set (pd.DataFrame): a dataframe of the development set (i.e. all patients in the train or validation sets) to use in K-fold cross validation
+    Returns:
+        train_df (pd.DataFrame): dataframe containing the training patients
+        val_df (pd.DataFrame): dataframe containing the validation patients
     """
+    # if the train-val split is stratified or random
     if config["data"]["kFolds"]["split_strategy"] == 'stratified':
         labels = df_development_set[config['columns']['labels']]
     else:
         labels = None
+
+    # perform the split
     train_df, val_df = train_test_split(df_development_set, test_size=config['data']['kFolds']['validation_size'], stratify=labels, random_state=config['general']['seed'])
     
+    # ensure theres no overlap between the sets
     assert not PtnID_SanityCheck(config, train_df, val_df)
     
     return train_df, val_df

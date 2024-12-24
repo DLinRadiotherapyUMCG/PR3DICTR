@@ -260,7 +260,16 @@ def efficientnetv2_xl(**kwargs):
     return EffNetV2(effnet_params, **kwargs)
 
 
-def get_efficientnetv2(config, model_name, channels):
+def get_efficientnetv2(config : dict, model_name : str, channels : int):
+    """
+    Loads an efficientnet model
+    Args:
+        config (dict): config parameters
+        model_name (str): name of the efficientnet variant
+        channels (int): number of input channels
+    Returns:
+        model: efficientnet backbone
+    """
 
     if model_name == 'efficientnetv2_xs':
         model = efficientnetv2_xs(config=config, channels=channels)

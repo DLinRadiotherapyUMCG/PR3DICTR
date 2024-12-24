@@ -51,7 +51,7 @@ class HyperTuning_Handler():
         WandB_hpt.WandB_log(self.config, results, epoch)
 
     def Stop(self):
-        WandB_hpt.WandB_stop(self.config)
+        WandB_hpt.stop_WandB_trial(self.config)
 
 
 

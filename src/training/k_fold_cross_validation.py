@@ -17,7 +17,7 @@ from src.utils.saving.create_results_directory import create_results_directory
 from src.utils.list_dicts import append_to_list_dicts
 
 from src.config_presets.tools.save_config import save_config
-from src.hyper_opt.WandB_hpt import initialise_WandB_group, login, WandB_stop
+from src.hyper_opt.WandB_hpt import initialise_WandB_group, login, stop_WandB_trial
 from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
@@ -25,8 +25,15 @@ from src.evaluation.get_visualisations import get_visualizations
 
 def K_fold_cross_validation(config, config_for_wandb=None):
     """
-    desc.
+    A function to perform K-folds cross-validation. Creates the dataset splits, trains and evaluates a model for N folds.
+    Args:
+        config (dict): the config params.
+        config_for_wandb (dict): a config to send to WandB (optional, usually only used during hyperparameter tuning).
+    Returns:
+        results (dict): the mean results over each fold.
+
     """
+
     n_splits = config['data']['kFolds']['n_splits']
     n_iterations = config['data']['kFolds']['n_iterations']
     if n_splits < n_iterations:
@@ -37,6 +44,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
     endpoint_list = config['columns']['labels']
     metric_name = config['evaluation']['main_metric']
 
+    # variables for results logging
     train_aucs_list = []
     val_aucs_list = []
     test_aucs_list = []
@@ -53,11 +61,8 @@ def K_fold_cross_validation(config, config_for_wandb=None):
     
 
 
-    # load the data
+    # load the data, and make K-fold splits
     df_train_val, df_test = load_dataset(config)
-    
-
-    # make K fold splits
     k_fold_dataframes_list = generate_K_fold_cross_validation_splits(config, df_train_val)
     
     # cap the number of iterations, if it is less than the number of k-splits to make
@@ -70,27 +75,26 @@ def K_fold_cross_validation(config, config_for_wandb=None):
     if config['general']['use_test_set']:
         test_loader, _ = make_dataloader(config, df_test, val_transforms, validation_mode=True)
         
-    # get the loss function
+    # get the loss function and metric handler
     loss_function = get_loss_function(config)
-
+    metricHandler = mainMetricHandler(config)  # deals with the main metric to print during training
 
     # iterate through the folds 
     for fold_idx, dataset_split_dict in enumerate(k_fold_dataframes_list, start=1):
-        
-        logging.info(f'Fold {fold_idx}/{len(k_fold_dataframes_list)}')
-        
-        initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=config_for_wandb)
 
+        # set up logging and create the results directory
+        logging.info(f'Fold {fold_idx}/{len(k_fold_dataframes_list)}')
+        initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=config_for_wandb)
         create_results_directory(config, fold_idx)
 
-        train_data, val_data = dataset_split_dict['train'], dataset_split_dict['val']
+        """
+        MODEL TRAINING
+        """
 
-        # make the dataloaders for this fold
+        # get the data split and make the dataloaders for this fold
+        train_data, val_data = dataset_split_dict['train'], dataset_split_dict['val']
         train_loader, metadata = make_dataloader(config, train_data, train_transforms, validation_mode=False)
         val_loader, _ = make_dataloader(config, val_data, val_transforms, validation_mode=True)
-
-        metricHandler = mainMetricHandler(config)
-
 
         # initialise a model
         logging.info('Getting model')
@@ -98,30 +102,31 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         model.to(device=DEVICE)
 
         # train the model
-        
         model = train(config, model, loss_function, train_loader, val_loader, metricHandler)
         model.eval()
 
         # get the predictions of the trained model on the training and validation (and test) sets
         logging.info('Getting predictions of best model from this fold:')
         logging.info('   Training set')
-        if config['data']['augmentation']['mixup']['isEnabled']:  # have to disable mixup for the evaluation step
-            #train_loader, _ = make_dataloader(config, train_data, train_transforms, validation_mode=False)
+        # if MixUp is enabled, then it has to be forcibly disabled before the training set is evaluated
+        if config['data']['augmentation']['mixup']['isEnabled']: 
             from monai.data.utils import list_data_collate
             train_loader.dataset.collate_fn = list_data_collate  # replace the mixup function with a simple collate function
 
-        train_loss, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
-        print("   ", train_loss, train_mean_metric_val, train_metric_dict)
+        train_loss_value, train_loss_dict, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
+        print("   ", train_loss_value, train_mean_metric_val, train_metric_dict)
         logging.info('   Validation set')
-        val_loss, val_mean_metric_val, val_metric_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
-        print("   ",val_loss, val_mean_metric_val, val_metric_dict)
+        val_loss_value, val_loss_dict, val_mean_metric_val, val_metric_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
+        print("   ",val_loss_value, val_mean_metric_val, val_metric_dict)
 
+        # if the test set is enabled, also collect the results on that set
         if config['general']['use_test_set']:
             logging.info('   Test set')
-            test_loss, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(config, model, loss_function, test_loader, metricHandler)
-            print("   ",test_loss, test_mean_metric_val, test_metric_dict)
+            test_loss_value, test_loss_dict, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(config, model, loss_function, test_loader, metricHandler)
+            print("   ",test_loss_value, test_mean_metric_val, test_metric_dict)
         else:
-            test_loss = None
+            test_loss_value = None
+            test_loss_dict = {endpoint: None for endpoint in endpoint_list}
             test_mean_metric_val = None
             test_metric_dict = {endpoint: None for endpoint in endpoint_list}
             test_patientIDs_list = []
@@ -130,16 +135,16 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         
 
         """    
-        Handling Results  
+        HANDLING RESULTS 
         """
 
         # concatenate all of the predictions
-        all_preds_dict, all_targets_dict = concatenate_predictions(config, [train_preds_dict, val_preds_dict, test_preds_dict], [train_targets_dict, val_targets_dict, test_targets_dict])
-        #all_targets_dict = concatenate_predictions(config, )
-        all_patientIDs_list = train_patientIDs_list + val_patientIDs_list + test_patientIDs_list
-        mode_list = ['train']*len(train_patientIDs_list) + ['val']*len(val_patientIDs_list) + ['test']*len(test_patientIDs_list)
+        all_patientIDs_list = train_patientIDs_list + val_patientIDs_list + test_patientIDs_list                 # IDs column
+        mode_list = ['train']*len(train_patientIDs_list) + ['val']*len(val_patientIDs_list) + ['test']*len(test_patientIDs_list)  # Mode column
+        all_preds_dict, all_targets_dict = concatenate_predictions(config, [train_preds_dict, val_preds_dict, test_preds_dict],  # concat the predictions and labels
+                                                                   [train_targets_dict, val_targets_dict, test_targets_dict])
 
-        # save the predictions
+        # save all the predictions into one csv file
         save_predictions(config, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
 
 
@@ -149,17 +154,17 @@ def K_fold_cross_validation(config, config_for_wandb=None):
                                                                                                [train_metric_dict, val_metric_dict, test_metric_dict]
                                                                                                )
 
-        # [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict] = append_to_list_dicts(config,
-        #                                                                                                 [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict],
-        #                                                                                                 [train_loss, val_loss, test_loss]
-        #                                                                                                 )
+        [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict] = append_to_list_dicts(config,
+                                                                                                         [train_losses_list_dict, val_losses_list_dict, test_losses_list_dict],
+                                                                                                         [train_loss_dict, val_loss_dict, test_loss_dict]
+                                                                                                         )
         
-        train_losses_list.append(train_loss)
-        val_losses_list.append(val_loss)
-        test_losses_list.append(test_loss)
+        train_losses_list.append(train_loss_value)
+        val_losses_list.append(val_loss_value)
+        test_losses_list.append(test_loss_value)
 
         # stop WandB for this fold (init a new one on the next fold)
-        WandB_stop(config)
+        stop_WandB_trial(config)
 
         # save the config file for this fold
         save_config(config)
@@ -167,21 +172,19 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         # collect all metrics for this fold
         total_evaluation_current_fold(config, sets=['train', 'val'], external_set=False)
 
-        # make the visualisations for this fold
+        # make the visualisations (plots) for this fold
         get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
 
         # to kill optuna trials early, check the mean metrics for this fold
         if config['hyperparam_tuning']['optuna']['isEnabled']:
             val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
             mean_val_metric_value = np.mean(list(val_metrics_mean_dict.values()))
+
             if (val_mean_metric_val < config['hyperparam_tuning']['optuna']['kill_trial_threshold']) and (fold_idx >= 3):
                 logging.info(f'Early stopping at fold {fold_idx}. Metric value is too low')
                 break
-       
-
-
-
-
+    
+    
     # compute mean AUC per endpoint
     train_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in train_metrics_list_dict.items()}
     val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
@@ -208,7 +211,8 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         test_mean_losses_dict = {endpoint: None for endpoint in endpoint_list}
         mean_test_loss = None
     
-    results = { # mean AUC
+    results = { 
+                # mean AUC
                 f"train_mean_{metric_name}": mean_train_metric_value,
                 f"val_mean_{metric_name}": mean_val_metric_value,
                 f"test_mean_{metric_name}": mean_test_metric_value,
@@ -216,7 +220,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
                 "train_mean_loss": mean_train_loss,
                 "val_mean_loss": mean_val_loss,
                 "test_mean_loss": mean_test_loss,
-               }
+              }
     
     for endpoint in endpoint_list:
         # mean AUC per endpoint
@@ -231,8 +235,6 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
     # aggregate all of the metric results for this trial
     aggregate_cross_validation_metrics(config, k_folds_completed=fold_idx, sets=['train', 'val'])
-
-    
 
     return results
 

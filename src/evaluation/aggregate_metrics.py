@@ -10,12 +10,13 @@ from src.utils.saving.create_results_directory import create_results_directory
 
 
 
-def aggregate_cross_validation_metrics(config: dict,  k_folds_completed: int, sets: list =['train', 'val']):
+def aggregate_cross_validation_metrics(config: dict,  k_folds_completed: int, sets: list = ['train', 'val']):
     """
     Computes the mean train and validation results for each trial (one trial consists of multiple folds) and saves the results to a csv file.
     
     Args:
         config (dict): config dictionary
+        k_folds_completed (int): the number of k-folds that have been completed (useful if n_iterations is less than n_splits in the config)
         sets (list): list of strings, containing the names of the sets to aggregate (e.g. ['train', 'val', 'test'])
     Returns:
         None

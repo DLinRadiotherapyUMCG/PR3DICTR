@@ -4,10 +4,18 @@ from src.evaluation.metrics.calibration import brier, ECE, MCE, ACE
 
 
 
-def get_metric_function(metric_name):
+def get_metric_function(metric_name : str):
+    """
+    Helper function that retrieves the function used to calculate a certain metric
+    Args:
+        metric_name (str): name of the metric 
+    Returns:
+        metric_function: the function that accepts the labels and predictions (and other args) and returns a metric value
+    """
+
     # Classification metrics
     if metric_name == 'AUC':
-        return auc # compute_auc(predictions, labels)
+        return auc 
     elif metric_name == 'AUC_SE':
         return auc_se
     elif metric_name == 'accuracy':

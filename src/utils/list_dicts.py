@@ -1,9 +1,15 @@
 
 
 
-def append_to_list_dicts(config, list_dicts = [], value_dicts = []):
+def append_to_list_dicts(config : dict, list_dicts : list = [], value_dicts : list = []):
     """
     Takes a list of list_dicts and a list of value_dicts and appends the values of the value_dicts to the list_dicts.
+    Args:
+        config (dict): the configuration dict
+        list_dicts (list): a list of dictionaries
+        value_dicts (list): a list of dictionaries
+    Returns:
+        list_dicts (list): a list of dictionaries
     """
     assert len(list_dicts) == len(value_dicts)
 
