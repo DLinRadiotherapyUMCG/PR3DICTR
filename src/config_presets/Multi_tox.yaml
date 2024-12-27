@@ -2,10 +2,10 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'TRP_GradNorm1'
-  trialNumber: "No_augmentation"
+  experiment_name: 'test_outputHead'
+  trialNumber: "Trial_2"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
-  testMode: false
+  testMode: true
   use_test_set: false
 
 columns: # 
@@ -27,12 +27,14 @@ paths:
   
   results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results" # "C:/Users/d.c.macrae/Documents/pred_rt_results"
 
-  # csv: "/scratch/s3719332/DL_NTCP_Multitox/datasets/MT_dataset"
-  # images: "/scratch/s3719332/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res"
-  # results: "/scratch/s3719332/rt_pred_results"
+  csv: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset"
+  images: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset/patients"  # patients_high_res
+  results: "/scratch/p306883/rt_pred_results"
 
 model:
   model_name: "TransRP"
+  output_head:
+    name: "multitox"
   resnet:
     model_depth: 10    # [10, 18, 34, 50, 101, 152, 200]
     conv1_kernel_size: 5

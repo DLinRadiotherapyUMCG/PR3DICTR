@@ -8,7 +8,7 @@ from monai.networks.blocks.transformerblock import TransformerBlock
 
 import monai
 
-from src.models.linear_layers_OLD import Basic_Output_Head, MultiToxOutputHead
+#from src.models.linear_layers_OLD import Basic_Output_Head, MultiToxOutputHead
 from src.models.ViT import  Transformer
 from src.models.tools.get_output_head import get_output_head
 
@@ -114,10 +114,10 @@ class TransRP_ViT(nn.Module):
         # else: # clinical features are added to the input of the transformer (m1 or m2), and so we do not need linear layers for this
         #     self.linear_layers = Basic_Output_Head(config)
         
-        if self.clinical_features_method == "m3": 
-            n_features_linear_layers = 0
-        else:
+        if self.clinical_features_method == "m3" and self.n_features > 0: 
             n_features_linear_layers = n_features
+        else:
+            n_features_linear_layers = 0
 
         self.linear_layers = get_output_head(config, n_features_linear_layers)
 

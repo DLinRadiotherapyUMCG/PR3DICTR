@@ -72,8 +72,8 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         improved = False # Flag to indicate if the model has improved on this epoch
         results_log = dict()  # results log for the current epoch (for WandB)
         best_log_dict = None  # results dict of the best epoch thus far
-        out_tot = dict.fromkeys(labels, value=[])
-        targets_tot = dict.fromkeys(labels, value=[])
+        out_tot = dict.fromkeys(labels, [])
+        targets_tot = dict.fromkeys(labels, [])
         
         
         # for label in labels: # TODO: check that this can be deleted, and that the lines above work

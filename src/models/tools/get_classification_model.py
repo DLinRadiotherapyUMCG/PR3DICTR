@@ -8,6 +8,7 @@ from src.models.tools.get_encoder import get_encoder
 #from src.models.temp_ff_linear_layers import MultiToxOutputHead   # TODO: ask Luuk whats going on here
 from src.models.tools.model_summary import get_model_summary
 from src.models.tools.get_output_head import get_output_head
+from src.models.TransRP_ViT import get_transrp_vit
 
 
 class MultiTox_Classifier(nn.Module):
@@ -20,10 +21,16 @@ class MultiTox_Classifier(nn.Module):
         
         # get the output head module (e.g. linear layers)
         if "transrp" in self.model_name:
+            self.flatten = None
+
             feature_map_dim_after_encoder = self.determine_image_encoder_output_dim(metadata) # find the feature map dimensions of the image encoder's output
-            self.output_head = get_output_head(config, n_features, feature_map_dim_after_encoder, make_TransRP = True)
+            self.output_head = get_transrp_vit(config, n_features, feature_map_dim_after_encoder)
+            
         else:
+            self.flatten = nn.Flatten()
+
             self.output_head = get_output_head(config, n_features)
+            
             
         
     
@@ -49,6 +56,7 @@ class MultiTox_Classifier(nn.Module):
         else: 
             avg_pool=False
         x = self.encoder(x, autoencoder=avg_pool)
+        
         if self.flatten is not None:
             x = self.flatten(x)
 
@@ -59,6 +67,7 @@ class MultiTox_Classifier(nn.Module):
         Does a forward pass of only the linear layers (the decision layers)
         Includes the entire output head (clinical, shared and non-shared layers)
         """
+        
         x_dict = self.output_head(x, features, vectorize=vectorize)
 
         return x_dict

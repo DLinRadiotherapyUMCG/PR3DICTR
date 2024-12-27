@@ -33,28 +33,7 @@ if __name__ == '__main__':
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
-    seed = config['general']['seed']
-    # Set seed
-    np.random.seed(seed)
-    random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    #torch.cuda.manual_seed_all(seed)
-    set_determinism(seed=seed)
-
-
-    # Make deterministic
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
-    torch.autograd.set_detect_anomaly(True)
-
-    from src.dataset.get_transforms import get_random_augmentation_names_from_config
-
-    #transforms = get_random_augmentations_from_config(config)
-
-
-
+    
 
     #K_fold_cross_validation(config)
 

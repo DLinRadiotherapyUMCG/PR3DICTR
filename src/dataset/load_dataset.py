@@ -101,7 +101,7 @@ def load_dataset(config : dict):
 
     # if in test mode, and we want to use a subset of the data, then subsample the total dataset
     if config['general']['testMode'] and "n_patients_total" in config['data']:
-        print("HELLO \nSubsampling the dataset for testing purposes.")
+        print("Subsampling the dataset for testing purposes.")
         num_patients_sample = config['data']['n_patients_total']
         df_total = subsample_dataset(num_patients_sample, df_total)
         print(len(df_total))

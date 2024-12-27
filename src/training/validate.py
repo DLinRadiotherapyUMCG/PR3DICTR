@@ -37,8 +37,8 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
     sigmoid_act = torch.nn.Sigmoid()
     
     patientIDs_list = []
-    preds_dict = dict.fromkeys(labels, value = [])
-    labels_dict = dict.fromkeys(labels, value = [])
+    preds_dict = dict.fromkeys(labels, [])
+    labels_dict = dict.fromkeys(labels, [])
     
     for label in labels:
         preds_dict[label] = []

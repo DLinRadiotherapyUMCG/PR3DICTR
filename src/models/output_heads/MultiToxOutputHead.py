@@ -34,7 +34,7 @@ class MultiToxOutputHead(torch.nn.Module):
             raise ValueError('clinical_variables_position is higher than the number of linear layers + 1! \n'
                              f'clinical_variables_position = {self.clinical_variables_position}, linear layers = {len(self.linear_units)}')
         
-        self.flatten = nn.Flatten()
+        #self.flatten = nn.Flatten()
 
         if n_features > 0:
             self._make_clinical_fc_layers(n_features)
@@ -60,7 +60,7 @@ class MultiToxOutputHead(torch.nn.Module):
     def forward(self, x, features, vectorize=False):
 
         # Flatten the input tensor
-        x = self.flatten(x)
+        #x = self.flatten(x)
 
         x_dict = dict()
 
@@ -156,7 +156,7 @@ class MultiToxOutputHead(torch.nn.Module):
         
         for i in range(0, len(self.linear_units)):
             # `- 1` because the input of the very first fully-connected layer is from the flatten layer (instead of a linear layer).
-            if i == self.clinical_variables_position - 1:
+            if i == self.clinical_variables_position - 1 and self.n_features > 0:
                 additional_units = self.clinical_variables_linear_units[-1]
             else:
                 additional_units = 0
