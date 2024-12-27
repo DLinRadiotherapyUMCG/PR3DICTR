@@ -14,24 +14,24 @@ def get_delimiter(file_path: str) -> str:
         return delimiter
 
 
-def unique(list1):
-    unique_list = []
-    # traverse for all elements
-    for i in range(len(list1)):
-        if(list1[i] not in unique_list):
-            unique_list.append(list1[i])
-    return unique_list
+# def unique(list1):
+#     unique_list = []
+#     # traverse for all elements
+#     for i in range(len(list1)):
+#         if(list1[i] not in unique_list):
+#             unique_list.append(list1[i])
+#     return unique_list
 
-def numberGroup(list1):
-    uniqueValues = unique(list1)
-    groupList = []
+# def numberGroup(list1):
+#     uniqueValues = unique(list1)
+#     groupList = []
     
-    for i in range(len(list1)):
-        for j in range(len(uniqueValues)):
-            if(list1[i] == uniqueValues[j]):
-                groupList.append([j])
-                break
-    return groupList
+#     for i in range(len(list1)):
+#         for j in range(len(uniqueValues)):
+#             if(list1[i] == uniqueValues[j]):
+#                 groupList.append([j])
+#                 break
+#     return groupList
 
 
 # Splitter

@@ -103,9 +103,9 @@ def derived_hyperparameters(config, trial):
         
     return config
 
-def set_minValue(hyperinfo, firstRun):
+def set_min_value(hyperinfo, firstRun):
     minValue = hyperinfo['min']
-    if(firstRun):
+    if firstRun:
         minValue = hyperinfo['max']
     return minValue
 
@@ -117,25 +117,25 @@ def generate_value(trial, hyperinfo, firstRun = False):
     keys = hyperinfo.keys()
     step = None
     log = False
-    if('step' in keys):
+    if 'step' in keys:
         step = hyperinfo['step']
-    if('log' in keys):
+    if 'log' in keys:
         log = hyperinfo['log']
 
     if hyperinfo['type'] == 'int':
-        if(step == None):
+        if step == None:
             step = 1
-        suggested_value = trial.suggest_int(hyperinfo['name'], set_minValue(hyperinfo,firstRun), hyperinfo['max'],step=step,log=log)
+        suggested_value = trial.suggest_int(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'], step=step, log=log)
     if hyperinfo['type'] == 'float':
-        suggested_value = trial.suggest_float(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'],step=step,log=log)
+        suggested_value = trial.suggest_float(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'], step=step, log=log)
     if hyperinfo['type'] == 'categorical':
-        suggested_value = trial.suggest_categorical(hyperinfo['name'],hyperinfo['options'])       
+        suggested_value = trial.suggest_categorical(hyperinfo['name'], hyperinfo['options'])       
     if hyperinfo['type'] == 'dis_un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'],hyperinfo['q'])       
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'], hyperinfo['q'])       
     if hyperinfo['type'] == 'log_un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'])
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'])
     if hyperinfo['type'] == 'un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'])       
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'])       
     return suggested_value
 
 

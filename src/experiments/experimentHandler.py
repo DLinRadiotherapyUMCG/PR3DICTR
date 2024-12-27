@@ -21,7 +21,7 @@ import numpy as np
 from functools import partial
 
 import src.hyper_opt.Optuna_hpt as Optuna_hpt
-import src.hyper_opt.WandB_hpt as WandB_hpt
+import src.hyper_opt.WandB_functions as WandB_functions
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
 
 
@@ -43,7 +43,7 @@ class experimentHandler():
         if (self.using_WandB):
             print("logging in..........")
             # Log into weights and biases
-            WandB_hpt.login(config)
+            WandB_functions.login(config)
             print("Weights and Biases is active")
 
         # set hyperparameter tuning

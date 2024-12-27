@@ -19,8 +19,10 @@ paths:
 
 model:
   model_name: "resnet"            # model architecture ['cnn', 'resnet', 'densenet', 'ViT', 'TransRP', etc.]
+  output_head:
+    name: "multitox"        # output module name (i.e. linear layers type)   ['multitox', ]
   resnet:
-    model_depth: 10    # ResNet model size [10, 18, 34, 50, 101, 152, 200]
+    model_depth: 10      # ResNet model size [10, 18, 34, 50, 101, 152, 200]
     conv1_kernel_size: 7 # size of the kernel in the first layer of resnet
     conv1_stride: 2      # stride of that layer
   densenet:  

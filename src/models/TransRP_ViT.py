@@ -8,8 +8,9 @@ from monai.networks.blocks.transformerblock import TransformerBlock
 
 import monai
 
-from src.models.linear_layers import Basic_Output_Head, MultiToxOutputHead
+from src.models.linear_layers_OLD import Basic_Output_Head, MultiToxOutputHead
 from src.models.ViT import  Transformer
+from src.models.tools.get_output_head import get_output_head
 
 
 class TransRP_ViT(nn.Module):
@@ -108,10 +109,17 @@ class TransRP_ViT(nn.Module):
         self.patch_num  = int((img_size[0] / patch_size[0] )* (img_size[1] / patch_size[1]) * (img_size[2] / patch_size[2]))
 
 
-        if self.clinical_features_method == "m3" and self.n_features > 0:   # join the clinical features only in the linear layers at the very end
-            self.linear_layers = MultiToxOutputHead(config, n_features)
-        else: # clinical features are added to the input of the transformer (m1 or m2), and so we do not need linear layers for this
-            self.linear_layers = Basic_Output_Head(config)
+        # if self.clinical_features_method == "m3" and self.n_features > 0:   # join the clinical features only in the linear layers at the very end
+        #     self.linear_layers = MultiToxOutputHead(config, n_features)
+        # else: # clinical features are added to the input of the transformer (m1 or m2), and so we do not need linear layers for this
+        #     self.linear_layers = Basic_Output_Head(config)
+        
+        if self.clinical_features_method == "m3": 
+            n_features_linear_layers = 0
+        else:
+            n_features_linear_layers = n_features
+
+        self.linear_layers = get_output_head(config, n_features_linear_layers)
 
         if self.clinical_features_method ==  "m1": # add clinical features as an additional patch to the input of the transformer
             self.to_label_embedding = nn.Sequential(
@@ -119,9 +127,9 @@ class TransRP_ViT(nn.Module):
                 nn.ReLU(inplace=True)
             )
 
-
-        from src.models.mcb import CompactBilinearPooling
-        self.MCB_block = CompactBilinearPooling(patch_embedding_hidden_size, n_features, patch_embedding_hidden_size).cuda()
+        if self.clinical_features_method == "mcb":
+            from src.models.mcb import CompactBilinearPooling
+            self.MCB_block = CompactBilinearPooling(patch_embedding_hidden_size, n_features, patch_embedding_hidden_size).cuda()
         
 
     def forward(self, x, x_clc, vectorize=False):  

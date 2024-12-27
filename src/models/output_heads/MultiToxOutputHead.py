@@ -34,10 +34,13 @@ class MultiToxOutputHead(torch.nn.Module):
             raise ValueError('clinical_variables_position is higher than the number of linear layers + 1! \n'
                              f'clinical_variables_position = {self.clinical_variables_position}, linear layers = {len(self.linear_units)}')
         
-        self._make_clinical_fc_layers(n_features)
-        # makes:
-        #   self.clinical_variables_fc_layer
-        #   self.clinical_variables_linear_units
+        self.flatten = nn.Flatten()
+
+        if n_features > 0:
+            self._make_clinical_fc_layers(n_features)
+            # makes:
+            #   self.clinical_variables_fc_layer
+            #   self.clinical_variables_linear_units
 
         self._make_shared_fc_layers()
         # makes:
@@ -55,6 +58,10 @@ class MultiToxOutputHead(torch.nn.Module):
 
 
     def forward(self, x, features, vectorize=False):
+
+        # Flatten the input tensor
+        x = self.flatten(x)
+
         x_dict = dict()
 
         if self.predict_CT_contrast:
@@ -221,120 +228,4 @@ class MultiToxOutputHead(torch.nn.Module):
                                                 torch.nn.Linear(in_features=16,
                                                                 out_features=1, bias=self.use_bias))
 
-
-#%% Old and deletable?
-class Basic_Output_Head(torch.nn.Module):
-    """
-    A class to define the linear layers and output head(s) of the TransRP model.
-    This class is specifically made to not include any clinical variables.
-    """
-    def __init__(self, config):
-        super(Basic_Output_Head, self).__init__()
-
-        #self.predict_CT_contrast = False
-        self.endpoint_list = [x for x in config['columns']['labels'] if "CT+C" not in x]
-        self.dropout_p = config['model']['dropout_p'] 
-        self.num_ohe_classes = config['model']['num_ohe_classes'] 
-        self.use_bias = config['model']['use_bias']
-        self.lrelu_alpha = config['model']['lrelu_alpha']
-        self.linear_units = config['model']['linear_units']
-        self.linear_units_endpoint = config['model']['linear_units_endpoint']
-
-
-        self._make_shared_fc_layers()
-        # makes:
-        #   self.shared_fc_layers
-        #   self.n_sublayers_per_linear_layer
-
-        self._make_non_shared_endpoint_fc_layers()
-        # makes:
-        #   self.non_shared_endpoint_fc_layers    
-
-
-
-    def forward(self, x, features, vectorize=False):
-        x_dict = dict()
-
-        # ----- SHARED LAYERS ----- #
-       
-        # Linear layers (SHARED)
-        for i, layer in enumerate(self.shared_fc_layers):
-            x = layer(x)
-
-        # ----- NON-SHARED LAYERS, ENDPOINT SPECIFIC ----- #
-        # Clone tensor (preserving the gradient)
-        
-        for endpoint in self.endpoint_list:
-            x_dict[endpoint] = x.clone()
-        assert len(x_dict) == len(self.endpoint_heads) or len(x_dict) - 1 == len(self.endpoint_heads)
-
-        # Linear layers (NON-SHARED, endpoint specific)
-        for endpoint in self.endpoint_list:
-
-            for layer in self.endpoint_heads[endpoint]:
-                x_dict[endpoint] = layer(x_dict[endpoint])
-
-        if vectorize:
-            # to stack the inputs into a single tensor (for [Captum's] attention maps)
-            output_tensor = torch.cat([x_dict[endpoint] for endpoint in self.endpoint_list], dim=1)
-            return output_tensor
-        else:
-            return x_dict
-
-
-    def _make_shared_fc_layers(self):
-        self.shared_fc_layers = torch.nn.ModuleList()
-        self.linear_units = self.linear_units
-
-        for i in range(0, len(self.linear_units)):
-            
-            additional_units = 0 # NOTE: not clinical variables used in this class
-
-            #print(self.clinical_variables_position)
-            #print(i, additional_units, self.linear_units[i])
-            if self.dropout_p > 0:
-                self.shared_fc_layers.add_module(f'Dropout_shared_{i+1}', torch.nn.Dropout(self.dropout_p))
-            
-            if i == 0:
-                self.shared_fc_layers.add_module(f'Linear_shared_{i+1}',
-                                                 torch.nn.LazyLinear(out_features=self.linear_units[i], bias=self.use_bias)
-                                          #torch.nn.Linear(in_features=self.linear_units[i],
-                                          #                ,
-                                                          )
-            else:
-                self.shared_fc_layers.add_module(f'Linear_shared_{i+1}',
-                                            torch.nn.Linear(in_features=self.linear_units[i-1] + additional_units,
-                                                            out_features=self.linear_units[i],
-                                                            bias=self.use_bias))
-            self.shared_fc_layers.add_module(f'LReLU_shared_{i+1}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
-
-    
-    def _make_non_shared_endpoint_fc_layers(self):
-        # Initialize linear layers (NON-SHARED, endpoint specific)
-        linear_layers_endpoint_dict_i = dict()
-        for endpoint in self.endpoint_list:
-            linear_layers_endpoint_dict_i[endpoint] = torch.nn.ModuleList()
-        self.endpoint_heads = torch.nn.ModuleDict(linear_layers_endpoint_dict_i)
-
-        self.linear_units_endpoint = self.linear_units_endpoint
-
-        for endpoint in self.endpoint_list:
-            # loop through the non-shared linear layers
-            for i in range(len(self.linear_units_endpoint)):
-                if self.dropout_p > 0:
-                    self.endpoint_heads[endpoint].add_module(f'Endpoint_Dropout_{i+1}', torch.nn.Dropout(self.dropout_p))
-                
-                if i == 0:
-                    self.endpoint_heads[endpoint].add_module(f'Endpoint_Linear_{i+1}',
-                                                    torch.nn.LazyLinear(out_features=self.linear_units_endpoint[i], bias=self.use_bias))
-                else:
-
-                    self.endpoint_heads[endpoint].add_module(f'Endpoint_Linear_{i+1}',
-                                            torch.nn.Linear(in_features=self.linear_units_endpoint[i-1],
-                                                            out_features=self.linear_units_endpoint[i], bias=self.use_bias))
-                self.endpoint_heads[endpoint].add_module(f'Endpoint_LReLU_{i+1}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
-            # output layer/head for this toxicity endpoint
-            self.endpoint_heads[endpoint].add_module('Output_{}'.format(endpoint),
-                                torch.nn.LazyLinear(out_features=self.num_ohe_classes, bias=self.use_bias))
-            
 

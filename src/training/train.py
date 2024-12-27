@@ -18,7 +18,7 @@ from src.training.validate import validate
 from src.models.tools.save_model import save_model, load_model
 from src.training.utils.check_improvement import check_improvement
 
-from src.hyper_opt.WandB_hpt import is_WandB_enabled, update_WandB_summary_table, WandB_log
+from src.hyper_opt.WandB_functions import is_WandB_enabled, update_WandB_summary_table, WandB_log
 from src.visualization.plot_model_inputs import plot_model_inputs
 from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.utils.loss_func.calc_mixup_loss import calc_mixup_loss

@@ -17,7 +17,7 @@ from src.utils.saving.create_results_directory import create_results_directory
 from src.utils.list_dicts import append_to_list_dicts
 
 from src.config_presets.tools.save_config import save_config
-from src.hyper_opt.WandB_hpt import initialise_WandB_group, login, stop_WandB_trial
+from src.hyper_opt.WandB_functions import initialise_WandB_group, login, stop_WandB_trial
 from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
