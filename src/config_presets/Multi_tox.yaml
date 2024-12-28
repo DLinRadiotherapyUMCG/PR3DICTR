@@ -2,10 +2,10 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'test_outputHead'
-  trialNumber: "Trial_2"
+  experiment_name: 'Test_GradNorm'
+  trialNumber: "Trial_1"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
-  testMode: true
+  testMode: false
   use_test_set: false
 
 columns: # 
@@ -28,8 +28,14 @@ paths:
   results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results" # "C:/Users/d.c.macrae/Documents/pred_rt_results"
 
   csv: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset"
-  images: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset/patients"  # patients_high_res
+  images: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res"  # patients_high_res
   results: "/scratch/p306883/rt_pred_results"
+
+  # csv: "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
+  # images: "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients"  # patients_high_res
+  # results: "C:/Users/d.c.macrae/Documents/datasets/rt_pred_results"
+
+
 
 model:
   model_name: "TransRP"
@@ -135,16 +141,17 @@ data:
         std: 0.01
     
     mixup:
-      isEnabled: false
+      isEnabled: true
       alpha: 2.0
 
 training:
-  max_epochs: 30
-  batch_size: 16
+  max_epochs: 100
+  batch_size: 8
   validation_interval: 1
   stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
   patience: 30                                        # early stopping patience
-  show_progress_bar: True
+  show_progress_bar: False
+  GradNorm: True
 
   optimizer:
     name: "Adam" # "SGD"

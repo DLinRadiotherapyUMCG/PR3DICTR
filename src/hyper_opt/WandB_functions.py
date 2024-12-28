@@ -4,7 +4,7 @@ def is_WandB_enabled(config: dict):
     return config['hyperparam_tuning']['WandB']['isEnabled']
 
 
-def WandB_log(config: dict, results : dict, epoch: int):   # UpdateStudy
+def WandB_log(config: dict, results : dict, epoch: int = None):   # UpdateStudy
     """
     Logs an epoch to WandB
     """

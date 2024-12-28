@@ -9,6 +9,8 @@ class GradNorm(torch.nn.Module):
         super(GradNorm, self).__init__()
         self.layer = layer
         self.alpha = alpha
+        self.lr = lr
+        self.iters = 0
 
         self.WandB_is_enabled = WandB_is_enabled
 
@@ -23,8 +25,8 @@ class GradNorm(torch.nn.Module):
         self.weights = torch.nn.Parameter(self.weights)
         self.T = self.weights.sum().detach()
         self.optimizer = torch.optim.Adam([self.weights], lr=self.lr)
-        self.l0 = self.loss.detach()
-        self.iters = 0
+        self.l0 = loss.detach()
+        
 
     def log_to_WandB(self, data):
         if self.WandB_is_enabled:
@@ -33,9 +35,11 @@ class GradNorm(torch.nn.Module):
     def step(self, loss):
         if self.iters == 0:
             self.setup(loss)
+
+        weights = self.weights
         
         # compute the weighted loss
-        weighted_loss = self.weights @ loss
+        weighted_loss = weights @ loss
         # clear gradients of network
         self.optimizer.zero_grad()
         # backward pass for weigthted task loss
@@ -43,7 +47,7 @@ class GradNorm(torch.nn.Module):
         # compute the L2 norm of the gradients for each task
         gw = []
         for i in range(len(loss)):
-            dl = torch.autograd.grad(self.weights[i]*loss[i], self.layer.parameters(), retain_graph=True, create_graph=True)[0]
+            dl = torch.autograd.grad(weights[i]*loss[i], self.layer.parameters(), retain_graph=True, create_graph=True)[0]
             gw.append(torch.norm(dl))
 
         gw = torch.stack(gw)
@@ -61,13 +65,13 @@ class GradNorm(torch.nn.Module):
         # backward pass for GradNorm
         gradnorm_loss.backward()
         # log weights and loss
-        self.log_weights.append(self.weights.detach().cpu().numpy().copy())
+        self.log_weights.append(weights.detach().cpu().numpy().copy())
         self.log_loss.append(loss_ratio.detach().cpu().numpy().copy())
         # update gradNorm weights
         self.optimizer.step()
         # renormalize weights
-        self.weights = (self.weights / self.weights.sum() * self.T).detach()
-        self.weights = torch.nn.Parameter(self.weights)
+        weights = (weights / weights.sum() * self.T).detach()
+        self.weights = torch.nn.Parameter(weights)
         self.optimizer = torch.optim.Adam([self.weights], lr=self.lr)
         self.iters += 1 
 

@@ -52,7 +52,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     #metricHandler = mainMetricHandler(config)
     metric_name = metricHandler.metric_name
     if config['training']['GradNorm']:
-        gradNorm = GradNorm(layer=model.output_head.linear_layers.shared_fc_layers, alpha=1, lr2=0.001, WandB_is_enabled = config['hyperparam_tuning']['WandB']['IsEnabled'])
+        gradNorm = GradNorm(layer=model.output_head.shared_fc_layers, alpha=1, lr=0.001, WandB_is_enabled = config['hyperparam_tuning']['WandB']['isEnabled'])
 
 
 
@@ -140,6 +140,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
             if config['training']['GradNorm']:
                 # reweight the losses using GradNorm (the loss is backpropagated in the GradNorm class)
+                loss = torch.stack([loss_dict[label] for label in labels])
                 loss = gradNorm.step(loss)
             else:
                 # backpropagate the loss normally
