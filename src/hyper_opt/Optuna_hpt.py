@@ -67,14 +67,14 @@ def derived_hyperparameters(config, trial):
                 print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
                 raise Exception("Stopped trials due to error.")
             
-    if 'n_linear_down_blocks' in config['hyperparam_tuning']['hyperparams'].keys():
-        for key in config['hyperparam_tuning']['derived']['n_linear_down_blocks']:
+    if 'n_linear_layers' in config['hyperparam_tuning']['hyperparams'].keys():
+        for key in config['hyperparam_tuning']['derived']['n_linear_layers']:
             try:
                 temp_list = []
-                hyperinfo = config['hyperparam_tuning']['derived']['n_linear_down_blocks'][key]  
+                hyperinfo = config['hyperparam_tuning']['derived']['n_linear_layers'][key]  
                 location = hyperinfo['location']
                 base_name = hyperinfo['name']
-                for i in range(config['model']['n_linear_down_blocks']):
+                for i in range(config['model']['n_linear_layers']):
                     hyperinfo_new = hyperinfo.copy()
                     hyperinfo_new['name'] = base_name + str(i)
                     suggested_value = generate_value(trial, hyperinfo_new)

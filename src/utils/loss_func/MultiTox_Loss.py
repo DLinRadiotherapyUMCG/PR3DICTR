@@ -21,7 +21,7 @@ class MultiTox_Loss(nn.Module):
 
 
 
-    def forward(self, outputs_dict, labels_dict, return_dict=False):
+    def forward(self, outputs_dict, labels_dict):
         # stack all of the predictions into a single tensor
         predictions = torch.stack(list(outputs_dict.values()), dim=1).type(torch.float32).squeeze(-1) # transposed! so that num columns = num toxicities
         # targets = torch.stack(list(labels_dict.values()), dim=1).type(torch.float32)

@@ -22,6 +22,7 @@ from src.hyper_opt.WandB_functions import is_WandB_enabled, update_WandB_summary
 from src.visualization.plot_model_inputs import plot_model_inputs
 from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.utils.loss_func.calc_mixup_loss import calc_mixup_loss
+from src.training.utils.gradNorm import GradNorm
 from src.constants import MISSING_DATA_VALUE
 
 def train(config, model, loss_function, train_loader, val_loader, metricHandler):
@@ -50,6 +51,10 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     # get the main metric with which to evaluate the training loop (e.g. AUC)
     #metricHandler = mainMetricHandler(config)
     metric_name = metricHandler.metric_name
+    if config['training']['GradNorm']:
+        gradNorm = GradNorm(layer=model.output_head.linear_layers.shared_fc_layers, alpha=1, lr2=0.001, WandB_is_enabled = config['hyperparam_tuning']['WandB']['IsEnabled'])
+
+
 
     # Initialize the best model and lowest validation loss
     best_model_state_dict = None
@@ -133,9 +138,13 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 # normal loss calculation
                 loss, loss_dict = loss_function(outputs, targets) 
 
-            # backpropagate the loss
-            if loss.grad_fn:
-                loss.backward()
+            if config['training']['GradNorm']:
+                # reweight the losses using GradNorm (the loss is backpropagated in the GradNorm class)
+                loss = gradNorm.step(loss)
+            else:
+                # backpropagate the loss normally
+                if loss.grad_fn:
+                    loss.backward()
 
             # Calculate AUC            
             for idx, label in enumerate(labels):

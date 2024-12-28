@@ -157,6 +157,7 @@ training:
   stopping_criteria: "loss"  # What criteria to use for early stopping ['loss', 'metric']
   patience: 20               # early stopping patience
   show_progress_bar: True    # whether to show the progress bar on each training epoch (recommend=False for Habrok)
+  GradNorm: false            # whether to use GradNorm to balance the gradients of the labels' losses
 
   optimizer:
     name: "Adam"             # which optimiser to use ['Adan', 'AdamW', 'SGD', 'RMSProp']

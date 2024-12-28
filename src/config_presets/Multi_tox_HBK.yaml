@@ -142,7 +142,7 @@ training:
   validation_interval: 1
   stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
   patience: 10                                        # early stopping patience
-  show_progress_bar: True
+  show_progress_bar: False
 
   optimizer:
     name: "Adam"
@@ -154,7 +154,7 @@ training:
     name: "BCE"
     reduction: "none"
     BCE:
-      pos_weight: [14.28, 4.24, 3.4, 4.3, 2.56]
+      pos_weight: [1]
 
   scheduler:
     name: False # "cosine"
@@ -300,7 +300,7 @@ Save:
   output_values: True
   best_model: True
   plot_training_slices:
-    isEnabled: True
+    isEnabled: False
     folder_name: 'figures'
     every_n_epochs: 50
     n_patients_per_epoch: 1
