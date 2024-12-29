@@ -259,7 +259,7 @@ hyperparam_tuning:
     
     GradNorm_alpha:
       name: GradNorm_alpha
-      type: 'categorical'
+      type: 'float'
       location: ['training','GradNorm','alpha']
       min: 0
       max: 2
