@@ -2,7 +2,7 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'HP_TRP_HighRes'
+  experiment_name: 'HP_TRP_GradNorm'
   trialNumber: "Trial_1"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
@@ -210,12 +210,12 @@ hyperparam_tuning:
       name: vit_dim
       type: 'categorical'
       location: ['model','TransRP','vit_dim']
-      options: [256, 512, 768]
+      options: [128, 256, 512, 768]
     vit_depth:
       name: vit_depth
       type: 'categorical'
       location: ['model','TransRP','vit_depth']
-      options: [4, 6, 8]
+      options: [2, 4, 6, 8]
     vit_heads:
       name: vit_heads
       type: 'categorical'
@@ -256,8 +256,21 @@ hyperparam_tuning:
       type: 'categorical'
       location: ['training','optimizer','learning_rate']
       options: [0.01, 0.001, 0.0001]
+    
+    GradNorm_alpha:
+      name: GradNorm_alpha
+      type: 'categorical'
+      location: ['training','GradNorm','alpha']
+      min: 0
+      max: 2
 
+    GradNorm_learning_rate:
+      name: learning_rate
+      type: 'categorical'
+      location: ['training','GradNorm','learning_rate']
+      options: [0.01, 0.001, 0.0001]
 
+    # MODEL
     n_linear_layers:
       type: 'int'
       name: 'n_linear_layers'
@@ -298,7 +311,7 @@ hyperparam_tuning:
 Save:
   config: True
   output_values: True
-  best_model: True
+  best_model: False
   plot_training_slices:
     isEnabled: False
     folder_name: 'figures'

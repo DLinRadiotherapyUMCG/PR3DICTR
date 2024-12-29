@@ -51,8 +51,11 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     # get the main metric with which to evaluate the training loop (e.g. AUC)
     #metricHandler = mainMetricHandler(config)
     metric_name = metricHandler.metric_name
-    if config['training']['GradNorm']:
-        gradNorm = GradNorm(layer=model.output_head.shared_fc_layers, alpha=1, lr=0.001, WandB_is_enabled = config['hyperparam_tuning']['WandB']['isEnabled'])
+    if config['training']['GradNorm']['isEnabled']:
+        gradNorm = GradNorm(layer=model.output_head.linear_layers.shared_fc_layers, 
+                            alpha=config['training']['GradNorm']['alpha'], 
+                            lr=config['training']['GradNorm']['learning_rate'], 
+                            WandB_is_enabled = config['hyperparam_tuning']['WandB']['isEnabled'])
 
 
 
@@ -138,8 +141,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 # normal loss calculation
                 loss, loss_dict = loss_function(outputs, targets) 
 
-            if config['training']['GradNorm']:
+            if config['training']['GradNorm']['isEnabled']:
                 # reweight the losses using GradNorm (the loss is backpropagated in the GradNorm class)
+                optimizer.zero_grad()
                 loss = torch.stack([loss_dict[label] for label in labels])
                 loss = gradNorm.step(loss)
             else:
@@ -178,7 +182,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         # Log epoch loss and AUC
         avg_loss = total_loss / num_batches_per_epoch
         for label in labels:
-                train_loss_dict[label] += train_loss_dict[label] / num_batches_per_epoch
+            train_loss_dict[label] = train_loss_dict[label] / num_batches_per_epoch
                 
         logging.info(f'  Training   Loss={avg_loss:.5f}, {metric_name}s={train_metric_dict}')
 

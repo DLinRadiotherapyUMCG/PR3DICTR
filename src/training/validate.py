@@ -68,7 +68,7 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
 
     avg_loss = total_loss / num_batches
     for label in labels:
-        total_loss_dict[label] += total_loss_dict[label] / num_batches
+        total_loss_dict[label] = total_loss_dict[label] / num_batches
 
     logging.debug(f'Validation loss: {avg_loss}')
 

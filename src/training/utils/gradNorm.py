@@ -40,8 +40,6 @@ class GradNorm(torch.nn.Module):
         
         # compute the weighted loss
         weighted_loss = weights @ loss
-        # clear gradients of network
-        self.optimizer.zero_grad()
         # backward pass for weigthted task loss
         weighted_loss.backward(retain_graph=True)
         # compute the L2 norm of the gradients for each task

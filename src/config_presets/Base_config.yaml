@@ -157,7 +157,6 @@ training:
   stopping_criteria: "loss"  # What criteria to use for early stopping ['loss', 'metric']
   patience: 20               # early stopping patience
   show_progress_bar: True    # whether to show the progress bar on each training epoch (recommend=False for Habrok)
-  GradNorm: false            # whether to use GradNorm to balance the gradients of the labels' losses
 
   optimizer:
     name: "Adam"             # which optimiser to use ['Adan', 'AdamW', 'SGD', 'RMSProp']
@@ -182,6 +181,11 @@ training:
     T_0: 40             # (cosine) number of epochs until  restart
     T_mult: 1           # (coseine) a factor increases after a restart (default: 1)
     eta_min: 0.00000001 # (cosine)  Minimum learning rate. Default: 0.
+
+  GradNorm:                  
+    isEnabled: False         # whether to use GradNorm to balance the gradients of the labels' losses
+    alpha: 0.5               # alpha value for GradNorm (higher -> more imbalance. 0=equal. recommended: less than 2)
+    learning_rate: 0.001     # learning rate for the GradNorm optimiser
 
 evaluation:
   main_metric: "AUC"    # the metric shown during training
