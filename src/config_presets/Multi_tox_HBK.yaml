@@ -2,7 +2,7 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'HP_TRP_GradNorm'
+  experiment_name: 'HP_TRP_GradNorm1'
   trialNumber: "Trial_1"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
@@ -128,7 +128,7 @@ data:
         isEnabled: True
         max: 15 # degree
       noise:
-        isEnabled: False
+        isEnabled: True
         mean: 0
         std: 0.01
     
@@ -161,6 +161,11 @@ training:
     T_0: 40
     T_mult: 1
     eta_min: 0.00000001
+
+  GradNorm:                  
+    isEnabled: True
+    alpha: 0.5              
+    learning_rate: 0.001     
 
 evaluation:
   main_metric: "AUC"
@@ -235,13 +240,6 @@ hyperparam_tuning:
 
 
     # AUG
-    noise:
-      name: noise
-      type: 'categorical'
-      location: ['data','augmentation','list','noise','isEnabled']
-      options: [True, False]
-        
-
     mixup_alpha:
       name: mixup_alpha
       type: 'float'
@@ -265,7 +263,7 @@ hyperparam_tuning:
       max: 2
 
     GradNorm_learning_rate:
-      name: learning_rate
+      name: GradNorm_learning_rate
       type: 'categorical'
       location: ['training','GradNorm','learning_rate']
       options: [0.01, 0.001, 0.0001]

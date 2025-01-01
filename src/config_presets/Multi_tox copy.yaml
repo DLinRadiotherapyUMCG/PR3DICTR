@@ -2,11 +2,11 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'Test_GradNorm'
+  experiment_name: 'HP_TRP_HR2_Best'
   trialNumber: "Trial_1"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
-  use_test_set: false
+  use_test_set: true
 
 columns: # 
   labels:  ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]
@@ -60,14 +60,14 @@ model:
     image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
     clinical_features_method: 'm2' # 'm2'  # ["m1", "m2", "m3", "mcb"] 
     vit_patch_size: [1,1,1]
-    vit_dim: 512   # 256, 512, 768
-    vit_depth: 6    # 4, 6, 8
-    vit_heads: 32   # 12, 16, 32, 64, 128
-    vit_mlp_dim: 512  # 256, 512, 1024
-    vit_dropout_p: 0.2    # 0, 0.1, 0.2
+    vit_dim: 256   # 256, 512, 768
+    vit_depth: 4    # 4, 6, 8
+    vit_heads: 64   # 12, 16, 32, 64, 128
+    vit_mlp_dim: 1024  # 256, 512, 1024
+    vit_dropout_p: 0    # 0, 0.1, 0.2
   
   # general model params
-  lrelu_alpha: 0.1
+  lrelu_alpha: 0.07
   dropout_p: 0.1
   use_bias: True
   # Linear layer params (output head)
@@ -76,8 +76,8 @@ model:
   n_clinical_layers: 0
   clinical_variables_linear_units: []
   clinical_variables_position: 1
-  n_linear_layers_endpoint: 1
-  linear_units_endpoint: [64]
+  n_linear_layers_endpoint: 2
+  linear_units_endpoint: [32, 32]
   num_ohe_classes: 1
 
 data:
@@ -151,11 +151,11 @@ training:
   stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
   patience: 10                                        # early stopping patience
   show_progress_bar: False
-  GradNorm: false
+  GradNorm: True
 
   optimizer:
     name: "Adam" # "SGD"
-    learning_rate: 0.0001
+    learning_rate: 0.001
     weight_decay: 0.001
     momentum: 0.00 # 9   # for SGD
 
@@ -197,7 +197,112 @@ hyperparam_tuning:
   # Location:= path variable in config
   hyperparams:
     # MODEL
-    
+    LRELU_alpha:
+      name: LRELU_alpha
+      type: 'float'
+      location: ['model','lrelu_alpha']
+      min: 0
+      max: 0.1
+    dropout_p:
+      name: dropout_p
+      type: 'float'
+      location: ['model','dropout_p']
+      min: 0
+      max: 0.3
+    # ViT block of TransRP
+    clinical_features_method:
+      name: clinical_features_method
+      type: 'categorical'
+      location: ['model','TransRP','clinical_features_method']
+      options: ['m1', 'm2']
+    vit_dim:
+      name: vit_dim
+      type: 'categorical'
+      location: ['model','TransRP','vit_dim']
+      options: [256, 512, 768]
+    vit_depth:
+      name: vit_depth
+      type: 'categorical'
+      location: ['model','TransRP','vit_depth']
+      options: [4, 6, 8]
+    vit_heads:
+      name: vit_heads
+      type: 'categorical'
+      location: ['model','TransRP','vit_heads']
+      options: [16, 32, 64, 128]
+    vit_mlp_dim:
+      name: vit_mlp_dim
+      type: 'categorical'
+      location: ['model','TransRP','vit_mlp_dim']
+      options: [256, 512, 1024]
+    vit_dropout_p:
+      name: vit_dropout_p
+      type: 'categorical'
+      location: ['model','TransRP','vit_dropout_p']
+      options: [0, 0.1, 0.2]
+
+
+
+    # AUG
+    noise:
+      name: noise
+      type: 'categorical'
+      location: ['data','augmentation','list','noise','isEnabled']
+      options: [True, False]
+        
+
+    mixup_alpha:
+      name: mixup_alpha
+      type: 'float'
+      location: ['data','augmentation','mixup','alpha']
+      min: 0
+      max: 5
+
+
+    # TRAIN
+    learning_rate:
+      name: learning_rate
+      type: 'categorical'
+      location: ['training','optimizer','learning_rate']
+      options: [0.01, 0.001, 0.0001]
+
+
+    n_linear_layers:
+      type: 'int'
+      name: 'n_linear_layers'
+      location: ['model','n_linear_layers']
+      min: 1
+      max: 3
+      step: 1
+      log: False
+
+    n_linear_layers_endpoint:
+      type: 'int'
+      name: 'n_linear_layers_endpoint'
+      location: ['model','n_linear_layers_endpoint']
+      min: 1
+      max: 3
+      step: 1
+      log: False
+
+
+  derived:
+    n_linear_layers:
+      filters:
+        type: 'categorical'
+        name: 'LL_shared_'
+        location: ['model','linear_units']
+        options: [64,128,256,512]
+        log: False
+
+    n_linear_layers_endpoint:
+      filters:
+        type: 'categorical'
+        name: 'LL_endpoint_'
+        location: ['model','linear_units_endpoint']
+        options: [16,32,64]
+        log: False
+
 
 Save:
   config: True
