@@ -110,7 +110,7 @@ data:
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   kFolds:
-    n_iterations: 1
+    n_iterations: 5
     n_splits: 5
     split_strategy: 'stratified'  # ['stratified', 'random']
 
@@ -120,7 +120,7 @@ data:
     resamplingDirection: 'up'
 
   augmentation:
-    isEnabled: false
+    isEnabled: true
     prob: 0.5   # probability of applying each augmentation (flip is always 0.5)
     list:
       flip:
@@ -151,7 +151,6 @@ training:
   stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
   patience: 10                                        # early stopping patience
   show_progress_bar: False
-  GradNorm: false
 
   optimizer:
     name: "Adam" # "SGD"
@@ -170,6 +169,11 @@ training:
     T_0: 40
     T_mult: 1
     eta_min: 0.00000001
+
+  GradNorm:                  
+    isEnabled: False         # whether to use GradNorm to balance the gradients of the labels' losses
+    alpha: 0.5               # alpha value for GradNorm (higher -> more imbalance. 0=equal. recommended: less than 2)
+    learning_rate: 0.001     # learning rate for the GradNorm optimiser
 
 evaluation:
   main_metric: "AUC"
