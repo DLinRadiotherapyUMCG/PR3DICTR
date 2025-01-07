@@ -219,7 +219,7 @@ hyperparam_tuning:
           
 saving:
   config: True               # whether to save the config as a .yaml fule
-  best_model: False          # whether to save the model weights on each fold
+  best_model: True           # whether to save the model weights on each fold
   plot_training_slices:      # plotting the model inputs on certain batches
     isEnabled: True          # enable/disable these plots
     folder_name: 'figures'   # folder name to save the .png files into

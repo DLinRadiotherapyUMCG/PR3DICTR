@@ -13,7 +13,7 @@ def WandB_log(config: dict, results : dict, epoch: int = None):   # UpdateStudy
         keys = list(results.keys())
         for i in range(len(keys)):
             infoSend[keys[i]] = results[keys[i]]
-        print(infoSend)
+        #print(infoSend)
         wandb.log(data = infoSend, step = epoch)
 
 

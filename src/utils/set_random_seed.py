@@ -8,11 +8,11 @@ from monai.utils import set_determinism
 def set_random_seed(seed):
     """
     Set the random seed.
-    :param seed:
-    :return:
+    Args:
+        seed (int): the seed to set
+    Returns:
+        None
     """
-
-    
 
     # Set seed
     np.random.seed(seed)
@@ -26,3 +26,12 @@ def set_random_seed(seed):
     # Make deterministic
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+
+def generate_random_seed():
+    """
+    Generate a random seed.
+    Returns:
+        int: the random seed
+    """
+    return random.randint(0, 1000000)

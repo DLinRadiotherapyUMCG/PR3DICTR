@@ -1,4 +1,4 @@
-from src.utils.set_random_seed import set_random_seed
+from src.utils.set_random_seed import set_random_seed, generate_random_seed
 from src.training.k_fold_cross_validation import K_fold_cross_validation
 import src.hyper_opt.Optuna_hpt as Optuna_hpt
 
@@ -39,6 +39,7 @@ class HyperTuning_Handler():
         config['general']['trialNumber'] = f"Trial_{trial.number}" 
 
         # set random seed
+        config['general']['seed'] = generate_random_seed()
         set_random_seed(config['general']['seed'])
 
         # update the config of this trial

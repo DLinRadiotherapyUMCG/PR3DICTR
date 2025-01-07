@@ -29,6 +29,7 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
     # Get paths to folds and config from the experiment
     folds = [f.path for f in os.scandir(trial_dir) if f.is_dir()] # This does asume all folders within a trial are folds
     config_path = os.path.join(folds[0], main_config['saving']['filenames']['config_yaml']) 
+    print(config_path)
     model_config = load_config(config_path) # Gets the config folder from the first fold
     
     # Load data and helper functions
@@ -51,13 +52,19 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
     TEST SET RESULTS PER FOLD
     """
     # Generate and save predictions for each fold
+
+    print(folds)
     for fold_dir in folds:
+
+        config_path = os.path.join(fold_dir, main_config['saving']['filenames']['config_yaml']) 
+        model_config = load_config(config_path)
+
         model = get_classification_model(model_config, metadata, save_summary=False)
         model.cuda()
         model = load_model(model_config, model) # load the saved weights
     
         # get the model predictions on this set
-        test_loss, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(model_config, model, loss_function, test_loader, metricHandler)
+        test_loss, test_loss_dict, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(model_config, model, loss_function, test_loader, metricHandler)
         
         # check to see if the patient IDs are the same order for all folds
         if test_patientIDs_list_fold1 == None:

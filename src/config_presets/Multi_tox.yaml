@@ -2,8 +2,8 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'Test_GradNorm'
-  trialNumber: "Trial_1"
+  experiment_name: 'CLC_method2'
+  trialNumber: "M2_CLS"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: false
@@ -27,9 +27,9 @@ paths:
   
   results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results" # "C:/Users/d.c.macrae/Documents/pred_rt_results"
 
-  csv: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset"
-  images: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res"  # patients_high_res
-  results: "/scratch/p306883/rt_pred_results"
+  # csv: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset"
+  # images: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res"  # patients_high_res
+  # results: "/scratch/p306883/rt_pred_results"
 
   # csv: "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
   # images: "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients"  # patients_high_res
@@ -58,10 +58,10 @@ model:
     vit_dropout_p: 0.2  
   TransRP:
     image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
-    clinical_features_method: 'm2' # 'm2'  # ["m1", "m2", "m3", "mcb"] 
+    clinical_features_method: 'm2_cls' # 'm2'  # ["m1", "m2", "m3", "mcb", 'cls', ''m2_v2] 
     vit_patch_size: [1,1,1]
-    vit_dim: 512   # 256, 512, 768
-    vit_depth: 6    # 4, 6, 8
+    vit_dim: 256   # 256, 512, 768
+    vit_depth: 4    # 4, 6, 8
     vit_heads: 32   # 12, 16, 32, 64, 128
     vit_mlp_dim: 512  # 256, 512, 1024
     vit_dropout_p: 0.2    # 0, 0.1, 0.2
@@ -138,31 +138,31 @@ data:
       noise:
         isEnabled: False
         mean: 0
-        std: 0.01
+        std: 0.05
     
     mixup:
-      isEnabled: true
+      isEnabled: false
       alpha: 2.0
 
 training:
-  max_epochs: 100
-  batch_size: 8
+  max_epochs: 200
+  batch_size: 16
   validation_interval: 1
   stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
-  patience: 10                                        # early stopping patience
+  patience: 30                                        # early stopping patience
   show_progress_bar: False
 
   optimizer:
-    name: "Adam" # "SGD"
-    learning_rate: 0.0001
-    weight_decay: 0.001
+    name: "SGD" # "SGD"
+    learning_rate: 0.001
+    weight_decay: 0.00
     momentum: 0.00 # 9   # for SGD
 
   loss:
     name: "BCE"
     reduction: "none"
     BCE:
-      pos_weight: [1, 1, 1, 1, 1]
+      pos_weight: [1, 1, 1, 1, 1]  # either a list, or a single value for all labels, or "auto" to calculate automatically
 
   scheduler:
     name: False # "cosine"
@@ -200,12 +200,12 @@ hyperparam_tuning:
   # ----  Custom Params -------
   # Location:= path variable in config
   hyperparams:
+    none
     # MODEL
     
 
-Save:
+saving:
   config: True
-  output_values: True
   best_model: True
   plot_training_slices:
     isEnabled: True
@@ -213,4 +213,5 @@ Save:
     every_n_epochs: 50
     n_patients_per_epoch: 1
     n_slices_per_patient: 8
-      
+
+

@@ -96,6 +96,15 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         train_loader, metadata = make_dataloader(config, train_data, train_transforms, validation_mode=False)
         val_loader, _ = make_dataloader(config, val_data, val_transforms, validation_mode=True)
 
+        # if using pos_weight in BCE, then calculate the pos_weight for each class
+        """
+        if config['training']['loss']['name'] == 'BCE' and config['training']['loss']['BCE']['pos_weight'] == 'auto':
+            pos_weight = torch.tensor([(len(train_data) - train_data[endpoint].sum()) / len(train_data) for endpoint in endpoint_list])
+            config['loss']['BCE']['pos_weight'] = pos_weight
+        """
+            #pos_weight = pos_weight.to(DEVICE)
+            #loss_function = get_loss_function(config, pos_weight=pos_weight)
+
         # initialise a model
         logging.info('Getting model')
         model = get_classification_model(config, metadata=metadata, save_summary=True)
