@@ -49,8 +49,11 @@ class MultiTox_Loss(nn.Module):
             # mean loss per endpoint
             endpoint_list = self.config['columns']['labels']
             batch_loss_dict = {}
-            for idx, endpoint in enumerate(endpoint_list):
-                batch_loss_dict[endpoint] = batch_loss[:, idx].sum() / mask[:, idx].sum()
+            if len(endpoint_list) > 1:  # if there are multiple endpoints
+                for idx, endpoint in enumerate(endpoint_list):
+                    batch_loss_dict[endpoint] = batch_loss[:, idx].sum() / mask[:, idx].sum()
+            else:            # if there is only one endpoint
+                batch_loss_dict[endpoint_list[0]] = batch_loss[:].sum() / mask[:].sum()            
 
             # total mean loss
             batch_loss_mean = batch_loss.sum() / mask.sum()

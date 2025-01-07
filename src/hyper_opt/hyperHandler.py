@@ -46,18 +46,18 @@ class HyperTuning_Handler():
         config = self.update_trial_hyperparameters(config, trial)
 
         # K-fold cross validation here
-        try: # it is possible that the trial fails, likely due to bad hyperparameters leading to a model that is too large
-            trial_hyper_param_dict = trial.params
-            all_results = K_fold_cross_validation(config, config_for_wandb=trial_hyper_param_dict)
+        #try: # it is possible that the trial fails, likely due to bad hyperparameters leading to a model that is too large
+        trial_hyper_param_dict = trial.params
+        all_results = K_fold_cross_validation(config, config_for_wandb=trial_hyper_param_dict)
 
-            # aggregate the results of the K-folds, report them to Optuna
-            optuna_results = self.results_handler(config, all_results)
+        # aggregate the results of the K-folds, report them to Optuna
+        optuna_results = self.results_handler(config, all_results)
         
-        except Exception as e:
-            logging.error(f"Error in trial {config['general']['trialNumber']}")
-            logging.error(e)
+        # except Exception as e:
+        #     logging.error(f"Error in trial {config['general']['trialNumber']}")
+        #     logging.error(e)
 
-            optuna_results = [0.0 for _ in config['hyperparam_tuning']['optuna']['objectives']]
+        #     optuna_results = [0.0 for _ in config['hyperparam_tuning']['optuna']['objectives']]
 
         return optuna_results
 

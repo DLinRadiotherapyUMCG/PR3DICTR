@@ -157,7 +157,7 @@ training:
     learning_rate: 0.001
     weight_decay: 0.00
     momentum: 0.00 # 9   # for SGD
-
+  
   loss:
     name: "BCE"
     reduction: "none"
