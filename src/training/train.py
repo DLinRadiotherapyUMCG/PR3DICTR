@@ -186,11 +186,11 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 
         logging.info(f'  Training   Loss={avg_loss:.5f}, {metric_name}s={train_metric_dict}')
 
-        results_log.update({'train_loss/mean_loss':avg_loss})
+        results_log.update({'loss_train/mean_loss':avg_loss})
         
         for key, val in train_metric_dict.items():
             results_log.update({f"train/{key}_{metric_name}" : val})
-            results_log.update({f"train_loss/{key}" : train_loss_dict[key]})
+            results_log.update({f"loss_train/{key}" : train_loss_dict[key]})
         
         results_log.update({f"train/mean_{metric_name}" : train_mean_metric_value})
         
@@ -202,10 +202,10 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
             for key, val in val_metric_dict.items():
                 results_log.update({f"val/{key}_{metric_name}" : val})
-                results_log.update({f"val_loss/{key}" : val_loss_dict[key]})
+                results_log.update({f"loss_val/{key}" : val_loss_dict[key]})
 
             results_log.update({f"val/mean_{metric_name}" : val_mean_metric_value})
-            results_log.update({f"val_loss/mean_loss" : val_loss_value})
+            results_log.update({f"loss_val/mean_loss" : val_loss_value})
 
             # check if the model has improved on this epoch
             best_value, improved = check_improvement(config, val_loss_value, val_mean_metric_value, best_value)
