@@ -1,2 +1,6 @@
 private/**
 wandb/**
+
+
+__pycache__/
+*.pyc

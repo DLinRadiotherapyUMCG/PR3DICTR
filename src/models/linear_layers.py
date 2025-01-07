@@ -11,7 +11,7 @@ class MultiToxOutputHead(torch.nn.Module):
         super(MultiToxOutputHead, self).__init__()
 
         self.predict_CT_contrast = False
-        self.endpoint_list = [x for x in config['columns']['label'] if "CT+C" not in x]
+        self.endpoint_list = [x for x in config['columns']['labels'] if "CT+C" not in x]
         self.n_features = n_features
         self.dropout_p = config['model']['dropout_p'] 
         self.num_ohe_classes = config['model']['num_ohe_classes'] 
@@ -222,14 +222,7 @@ class MultiToxOutputHead(torch.nn.Module):
                                                                 out_features=1, bias=self.use_bias))
 
 
-
-
-
-
-
-
-
-
+#%% Old and deletable?
 class Basic_Output_Head(torch.nn.Module):
     """
     A class to define the linear layers and output head(s) of the TransRP model.
@@ -239,7 +232,7 @@ class Basic_Output_Head(torch.nn.Module):
         super(Basic_Output_Head, self).__init__()
 
         #self.predict_CT_contrast = False
-        self.endpoint_list = [x for x in config['columns']['label'] if "CT+C" not in x]
+        self.endpoint_list = [x for x in config['columns']['labels'] if "CT+C" not in x]
         self.dropout_p = config['model']['dropout_p'] 
         self.num_ohe_classes = config['model']['num_ohe_classes'] 
         self.use_bias = config['model']['use_bias']

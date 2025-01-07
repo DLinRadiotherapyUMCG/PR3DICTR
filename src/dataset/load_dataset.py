@@ -1,198 +1,240 @@
 import os
 import logging
 from typing import Optional, List, Tuple
-
 from torch.utils.data import Dataset
-
-from src.dataset.ToxDataset import HNCDataset, ToxDataset
 from src.utils.data_equalizer import get_delimiter, get_umcg_n, data_split, label_equalizer
 import pandas as pd
+import numpy as np
+from sklearn.model_selection import StratifiedKFold, KFold
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
 
-from sklearn.model_selection import StratifiedKFold
+from src.constants import PATIENT_ID_LENGTHS_DICT, PATIENT_ID_COL_NAME, SPLIT_COL_NAME
 
-def load_dataset(config, csv_path, patient_ids = None, augment= False, split = False, train = True, splitVar = "Split"):
-    """
-    Loads data for a single csv file.
-    :param csv_path:
-    :param config:
-    :param patient_ids:
-    :return: PyTorch Dataset and metadata
-    """    
-    # Create an instance of the HNCDataset
-    dataset = HNCDataset(csv_path, config, patient_ids, augment=augment, 
-                         split = split, train = train, splitVar = splitVar)
 
-    # Get an example input to determine the metadata
-    example_input, _, _ = dataset[0]
-    channels, depth, height, width = example_input.shape
+def removePtnsExcluded(df, config):
+    excludedVariables = config['data']['excluded_variable_name']
+    excludedValues = config['data']['excluded_values']
 
-    n_features = len(config['columns']['clinical_features'])
+    if(len(excludedVariables) != len(excludedValues)):
+        raise Exception("Exception: Exclusion parameters for patient removal need to have the same size. This contains the excluded variables and values.")
+    
+    for i in range(len(excludedVariables)):
+        df = df.loc[df[excludedVariables[i]] != excludedValues[i]]
 
-    metadata = {
-        "channels": channels,
-        "depth": depth,
-        "height": height,
-        "width": width,
-        "n_features": n_features,
-    }
+    return df
 
-    # Return the dataset and the metadata
-    return dataset, metadata
 
-def ValidateImageDataExists(config, df):
+
+def check_image_data_exists(config, df):
+    patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
+
     imagePath = config['paths']['images']
     ptnDirectories = os.listdir(imagePath)
 
     ptnClinList = df['PatientID'].tolist()
     removePtnIDS = []
     for i in range(len(ptnClinList)):
-        zerosPtnNmbr = str(ptnClinList[i]).rjust(7,'0')
+        zerosPtnNmbr = str(ptnClinList[i]).rjust(patientID_length,'0')
         if(ptnClinList[i] in ptnDirectories or zerosPtnNmbr in ptnDirectories):
             pass
         else:
             # Not found --> remove
             removePtnIDS.append(ptnClinList[i])
     
-    #print(f"Removed ptns = {len(removePtnIDS)}")
+    print(f"Removed ptns = {len(removePtnIDS)}")
     df = df[(df['PatientID'].isin(removePtnIDS)) == False]
     return df
 
 def load_dataset_single(csvPath, config, patient_ids = None):
     delimiterFound = get_delimiter(csvPath)
     dlDf = pd.read_csv(csvPath, delimiter=delimiterFound, dtype={'PatientID': str})
-    toxDataset = ToxDataset(config,dlDf)
 
-    # Get example patient to get data info
-    example_input, _, _ = toxDataset[0]
-    channels, depth, height, width = example_input.shape
-    n_features = len(config['columns']['clinical_features'])
+    return dlDf
 
-    metadata = {
-        "channels": channels,
-        "depth": depth,
-        "height": height,
-        "width": width,
-        "n_features": n_features,
-    }
-    return (toxDataset,metadata)
 
-def load_dataset_total(config, patient_ids = None):
+
+def load_dataset(config : dict, patient_ids=None):
     """
-    Load the all datasets with handling the options in
-    the config file. This includes the csvFile
+    
     """
-    # Get paths of the files
-    trainfile = os.path.join(config['paths']['csv'], config['data']['trainfile'])
-    valfile = os.path.join(config['paths']['csv'], config['data']['valfile'])
 
-    # There are 3 options to get the train, validation data
-    #   1) There are 2 seperate files
-    #   2) Single file that contains splitVar
-    #   3) Single file with no splitVar will custom be split in --> train,var,test (warning: test need to be unique by seed --> need to check)
+    patientID_col = PATIENT_ID_COL_NAME
+    # load the dataset (patients are split by 'train_val'/'test') --> one dataframe
+    dataset_csv_dir = os.path.join(config['paths']['csv'], config['data']['dataset_csv'])
 
-    # Check if 1 single file is given (testData is not always available)
-    testDf = pd.DataFrame()
-    if(trainfile == valfile):
-        # Single file to split
-        delimiterFound = get_delimiter(trainfile)
-        totalDf = pd.read_csv(trainfile, delimiter=delimiterFound, dtype={'PatientID': str})
+    delimiterFound = get_delimiter(dataset_csv_dir)
+    df_total = pd.read_csv(dataset_csv_dir, delimiter=delimiterFound, dtype={'PatientID': str})
+    # make sure the patientID strings are long enough
+    patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
+    df_total[patientID_col] = df_total[patientID_col].apply(lambda x: x.rjust(patientID_length, '0'))  # ['%0.{}d'.format(patient_id_length) % int(x) for x in df[patient_id_col]]
+    
+    df_total = removePtnsExcluded(df_total, config)
+    df_total = check_image_data_exists(config, df_total) 
 
-        totalDf = ValidateImageDataExists(config, totalDf)
-        
-        if patient_ids:
-            totalDf = totalDf[totalDf['PatientID'].isin(patient_ids)]
+    # TODO: Daniel: idk what the purpose of this was in the old code? was it ever used?
+    # if patient_ids:
+    #     totalDf = totalDf[totalDf[patientID_col].isin(patient_ids)]
 
-        if(config['data']['splitvar'] != ""):
-            splitVar = config['data']['splitvar']
-            trainDf = totalDf[totalDf[splitVar] == "Train"]
-            valDf = totalDf[totalDf[splitVar] == "Val"] 
-            testDf = totalDf[totalDf[splitVar] == "Test"] 
+    # if in test mode, and we want to use a subset of the data, then subsample the total dataset
+    if config['general']['testMode'] and "n_patients_total" in config['data']:
+        print("HELLO \nSubsampling the dataset for testing purposes.")
+        num_patients_sample = config['data']['n_patients_total']
+        df_total = subsample_dataset(num_patients_sample, df_total)
+        print(len(df_total))
+    
+    # split off the test set
+    df_test = df_total[df_total[SPLIT_COL_NAME] == "test"]
+    df_train_val = df_total[df_total[SPLIT_COL_NAME] != "test"]
+    
+    # Show dataset size
+    train_size = df_train_val.shape[0]
+    test_size = df_test.shape[0]
+    total_size = df_total.shape[0]
+    print(f"Train/Val dataset {train_size} ({train_size/total_size*100}%), Test dataset {test_size} ({test_size/total_size*100}%)")
 
-            # BUG: This is how Daniel defined the splits
-            if len(trainDf) == 0 and len(valDf) == 0:
-                trainDf = totalDf[totalDf[splitVar] == "train_val"]
-            # trainDf = totalDf[totalDf[splitVar] == "train_val"]
-            # testDf = totalDf[totalDf[splitVar] == "test"] 
+    # check patients not in same dataset
+    assert not PtnID_SanityCheck(config,df_train_val,df_test)
 
-            #if(config['data']['equalizer']['isEnabled']):
-            #    trainDf = label_equalizer(trainDf, config)
-        else:    
-            # Need to split manual
-            trainDf,valDf,testDf = data_split(totalDf, config, split=[0.7,0.15,0.15])
+    return df_train_val, df_test
 
-    else:
-        # Two seperate files that are allready split
-        delimiterFound = get_delimiter(trainfile)
-        trainDf = pd.read_csv(trainfile, delimiter=delimiterFound, dtype={'PatientID': str})
-        delimiterFound = get_delimiter(valfile)
-        valDf = pd.read_csv(valfile, delimiter=delimiterFound, dtype={'PatientID': str})
 
-    # Write information about data
-    #print(f"Patient collection --> Train: {trainDf.shape[0]}, Validation: {valDf.shape[0]}")
-    #if(testDf.shape[0] != 0):
-    #    print(f"Patient collection --> Test: {testDf.shape[0]}")
 
+
+def generate_K_fold_cross_validation_splits(config, df_development_set):
+    """
+    Generates K train-val splits of the develoment dataset, using stratified K-Fold cross-validation.
+    Returns a list of dictionaries, where each dictionary contains a train and a validation dataframe: [{'train': df_t1, 'val': df_v1}, ...]
+    """
     # Check and validate if KFolds settings are active
-    trainDataset_Collection = []
-    valDataset_Collection = []
-    testDataset_Collection = []
-    if(config["data"]["kFolds"]["isEnabled"] and config["data"]["kFolds"]["Iterations"] < config["data"]["kFolds"]["Splits"]):
-        # Multiple training and val datasets
-        mergeDf = pd.concat([trainDf,valDf])
-        label = mergeDf[config['columns']['label']]
-        skf = StratifiedKFold(n_splits=config["data"]["kFolds"]["Splits"], shuffle=True, random_state=config["general"]["seed"])
-        for i, (train_index, val_index) in enumerate(skf.split(mergeDf,label)):
-            trainDf_sel = mergeDf.iloc[train_index]
-            if(config['data']['equalizer']['isEnabled']):
-                trainDf_sel = label_equalizer(trainDf_sel, config)
-            valDf_sel = mergeDf.iloc[val_index]
+    k_fold_dataframes_collection = []
 
-            # Check sanity is correct
-            if(Complete_SanityCheck(config,[trainDf_sel,valDf_sel,testDf])):
-                raise Exception("ABORT: Datasets contain identical patients! NOT ALLOWED!")
-
-
-            if(config['general']['testMode'] and trainDf.shape[0] > 100):
-                # Only use 100 patients for training dataset
-                trainDf_sel = trainDf_sel.iloc[:100]
-            trainDataset_Collection.append(ToxDataset(config,trainDf_sel))
-            valDataset_Collection.append(ToxDataset(config,valDf_sel))
-            testDataset_Collection.append(ToxDataset(config,testDf))
-
-
-            if(i == config["data"]["kFolds"]["Iterations"] - 1):
-                break
-    else:   
-        # Single train and val dataset
-        if(config['data']['equalizer']['isEnabled']):
-                trainDf = label_equalizer(trainDf, config)
-        if(Complete_SanityCheck(config,[trainDf,valDf,testDf])):
-                raise Exception("ABORT: Datasets contain identical patients! NOT ALLOWED!")
+    # if the config dictates only 1 n_split, then just do a single train-val split (i.e. no K-fold cross-validation)
+    if config["data"]["kFolds"]["n_splits"] == 1:
+        logging.warning("WARNING: K-Fold cross-validation is set to 1 split. This is equivalent to a single train-val split.")
         
-        if(config['general']['testMode'] and trainDf.shape[0] > 100):
-            # Only use 100 patients for training dataset
-            trainDf = trainDf.iloc[:100]
+        train_i_df, val_i_df = generate_single_train_val_split(config, df_development_set)
+        k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
+        #return [generate_single_train_val_split(config, df_development_set)]
+    
+    else:
+        if config["data"]["kFolds"]["split_strategy"] == 'stratified':
+            # encode the labels (makes it possible to use StratifiedKFold for multi-label problems, as it only works on binary or multi-class)
+            labels = df_development_set[config['data']['stratify_on']]  # the columns to stratify by
+            encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])   
+            kf_splitter = StratifiedKFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
 
-        trainDataset_Collection.append(ToxDataset(config,trainDf))
-        valDataset_Collection.append(ToxDataset(config,valDf))
-        testDataset_Collection.append(ToxDataset(config,testDf))
+            k_fold_splits = kf_splitter.split(df_development_set, encoded_labels)
+        elif config["data"]["kFolds"]["split_strategy"] == 'random':
+            kf_splitter = KFold(n_splits=config["data"]["kFolds"]["n_splits"], shuffle=True, random_state=config["general"]["seed"])
 
-    # Get example patient to get data info
-    example_input, _, _ = trainDataset_Collection[0][0]
-    channels, depth, height, width = example_input.shape
-    n_features = len(config['columns']['clinical_features'])
+            k_fold_splits = kf_splitter.split(df_development_set)
+        else:
+            raise Exception("Exception: K-fold split strategy not recognized. Please check the configuration file.")
 
-    metadata = {
-        "channels": channels,
-        "depth": depth,
-        "height": height,
-        "width": width,
-        "n_features": n_features,
-    }
 
-    logging.info(f"Patient amount in datasets: Train = {trainDataset_Collection[0].df.shape[0]}, Validation = {valDataset_Collection[0].df.shape[0]}, Test = {testDataset_Collection[0].df.shape[0]}")
+        for i, (train_index, val_index) in enumerate(k_fold_splits):
+            train_i_df = df_development_set.iloc[train_index]
+            #trainDf_sel = mergeDf.iloc[train_index]
+            if(config['data']['equalizer']['isEnabled']):
+                train_i_df = label_equalizer(train_i_df, config)
+            val_i_df = df_development_set.iloc[val_index]
 
-    return [trainDataset_Collection, valDataset_Collection, testDataset_Collection], metadata
+            assert not PtnID_SanityCheck(config, train_i_df, val_i_df)
+
+            k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
+
+    
+    return k_fold_dataframes_collection
+
+
+
+# TODO: an option for a single train-val split
+def generate_single_train_val_split(config, df_development_set):
+    """
+    A function to split the development set into 1 train and 1 validation set (in case you want to train just one model)
+    # TODO: check that this works properly
+    """
+    if config["data"]["kFolds"]["split_strategy"] == 'stratified':
+        labels = df_development_set[config['columns']['labels']]
+    else:
+        labels = None
+    train_df, val_df = train_test_split(df_development_set, test_size=config['data']['kFolds']['validation_size'], stratify=labels, random_state=config['general']['seed'])
+    
+    assert not PtnID_SanityCheck(config, train_df, val_df)
+    
+    return train_df, val_df
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def subsample_dataset(num_patients_sample, df_dataset):
+    """
+    Subsample the datasets to that `num_patients_sample` are used in total.
+    This is used for code-testing mode.
+    """
+    # find the number of patients in each dataset, so that we can preserve the ratio of patients in each dataset (train, val, test)
+    n_total_loaded = df_dataset.shape[0]
+    df_dataset = df_dataset.sample(frac=1, random_state=42).reset_index(drop=True) # shuffles the rows of the dataframe
+
+    # Only use `num_patients_sample` patients for training dataset
+    df_dataset = df_dataset.iloc[:int(num_patients_sample)]
+    
+    return df_dataset
+
+
+def subsample_datasets(num_patients_sample, trainDf, valDf, testDf):
+    """
+    Subsample the datasets to that `num_patients_sample` are used in total (across all three datasets).
+    This is used for test mode.
+    """
+    # find the number of patients in each dataset, so that we can preserve the ratio of patients in each dataset (train, val, test)
+    n_train_loaded, n_val_loaded, n_test_loaded = trainDf.shape[0], valDf.shape[0], testDf.shape[0]
+    n_total_loaded = n_train_loaded + n_val_loaded + n_test_loaded
+
+    # Only use 100 patients for training dataset
+    trainDf = trainDf.iloc[:int(n_train_loaded/n_total_loaded * num_patients_sample)]
+    valDf = valDf.iloc[:int(n_val_loaded/n_total_loaded * num_patients_sample)]
+    testDf = testDf.iloc[:int(n_test_loaded/n_total_loaded * num_patients_sample)]
+
+    return trainDf, valDf, testDf
+
+
 
 def Complete_SanityCheck(config,dfArray):
     for i in range(len(dfArray) - 1):
@@ -203,4 +245,4 @@ def Complete_SanityCheck(config,dfArray):
 
 
 def PtnID_SanityCheck(config,df1,df2):
-    return any(df1[config['data']['patientVar']].isin(df2[config['data']['patientVar']]))
+    return any(df1[PATIENT_ID_COL_NAME].isin(df2[PATIENT_ID_COL_NAME]))

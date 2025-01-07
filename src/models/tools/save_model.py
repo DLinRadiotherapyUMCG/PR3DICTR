@@ -4,8 +4,10 @@ import yaml
 import pandas as pd
 import torch
 from src.utils.fileHandler import create_folder, create_file
+from src.constants import PATIENT_ID_COL_NAME
 
-def save_model(config, model, modelFile):
+
+def save_model(config, model):
     """
     Save the model to the output directory.
     :param config:
@@ -13,8 +15,10 @@ def save_model(config, model, modelFile):
     :param model_path:
     :return:
     """
+    
     pathToSave = config['general']['resultsCurrentDirectory']
-    fileLocation = os.path.join(pathToSave, modelFile)
+    model_weights_filename = config['saving']['filenames']['model_weights']
+    fileLocation = os.path.join(pathToSave, model_weights_filename)
 
     # Create folder if does not exist
     create_folder(pathToSave)
@@ -25,13 +29,31 @@ def save_model(config, model, modelFile):
 
 
 
+def load_model(config, model):
+    """
+    Load the model from the output directory.
+    :param config:
+    :param model:
+    :param model_path:
+    :return:
+    """
+    pathToSave = config['general']['resultsCurrentDirectory']
+    model_weights_filename = config['saving']['filenames']['model_weights']
+    fileLocation = os.path.join(pathToSave, model_weights_filename)
+
+    # Log and Save
+    logging.info(f'Loading model from {fileLocation}')
+    model.load_state_dict(torch.load(fileLocation))
+    return model
+
+
 def save_dataset(config, dataset, fileName):
     """
     Save the dataset to the output directory
     - dataset --> Pytorch dataset object
     """
     #print("Dataset")
-    df = dataset.df
+    df = dataset
     #print(df)
     if(df.shape[0] == 0):
         return
@@ -57,15 +79,14 @@ def save_config(config, fileName):
 
 def save_dataset_summary(config, trainDataset, valDataset, testDataset):
     # Get the patientIds from the different datasets
-    ptnVar = config['data']['patientVar']
-    trainDataset_ptns = trainDataset.df[ptnVar].tolist()
-    valDataset_ptns = valDataset.df[ptnVar].tolist()
+    trainDataset_ptns = trainDataset[PATIENT_ID_COL_NAME].tolist()
+    valDataset_ptns = valDataset[PATIENT_ID_COL_NAME].tolist()
     testDataset_ptns = []
-    if(trainDataset.df.shape[0] != 0):
-        testDataset_ptns = testDataset.df[ptnVar].tolist()
+    if(trainDataset.shape[0] != 0):
+        testDataset_ptns = testDataset[PATIENT_ID_COL_NAME].tolist()
     
     # Merge the dataframes to a single again
-    dataframes = [trainDataset.df,valDataset.df,testDataset.df]
+    dataframes = [trainDataset,valDataset,testDataset]
     dfMerged = pd.concat(dataframes)
 
     # Select the columns used during the analysis
@@ -74,11 +95,11 @@ def save_dataset_summary(config, trainDataset, valDataset, testDataset):
     # Create column in which dataset it was found
     split = []
     for i in range(dfMerged.shape[0]):        
-        if(dfMerged.iloc[i][ptnVar] in trainDataset_ptns):
+        if(dfMerged.iloc[i][PATIENT_ID_COL_NAME] in trainDataset_ptns):
             split.append("Train")
-        elif(dfMerged.iloc[i][ptnVar] in valDataset_ptns):
+        elif(dfMerged.iloc[i][PATIENT_ID_COL_NAME] in valDataset_ptns):
             split.append("Val")
-        elif(dfMerged.iloc[i][ptnVar] in testDataset_ptns):
+        elif(dfMerged.iloc[i][PATIENT_ID_COL_NAME] in testDataset_ptns):
             split.append("Test")
         else:
             split.append("Unknown")
