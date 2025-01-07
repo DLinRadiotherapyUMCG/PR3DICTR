@@ -214,7 +214,7 @@ def get_transrp_vit(config, n_features : int, feature_map_dim_after_encoder):
         num_heads = config['model']['TransRP']['vit_heads'],
         proj_type = 'conv',
         dropout_rate = config['model']['TransRP']['vit_dropout_p'],
-        spatial_dims=3,
+        spatial_dims = 3,
         clinical_features_method = config['model']['TransRP']['clinical_features_method'],
     )
 
