@@ -30,13 +30,13 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
     folds = [f.path for f in os.scandir(trial_dir) if f.is_dir()] # This does asume all folders within a trial are folds
     config_path = os.path.join(folds[0], main_config['saving']['filenames']['config_yaml']) 
     print(config_path)
-    model_config = load_config(config_path) # Gets the config folder from the first fold
+    fold_config = load_config(config_path) # Gets the config folder from the first fold
     
     # Load data and helper functions
     # the dataloader settings are taken from the model config
-    metricHandler = mainMetricHandler(model_config)
-    loss_function = get_loss_function(model_config)
-    train_transforms, val_transforms = get_transforms(model_config)
+    metricHandler = mainMetricHandler(fold_config)
+    loss_function = get_loss_function(fold_config)
+    train_transforms, val_transforms = get_transforms(fold_config)
 
     # the dataset itself is loaded from the main config (this allows for using the external test set)
     df_train_val, df_test = load_dataset(main_config)
@@ -55,16 +55,18 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
 
     print(folds)
     for fold_dir in folds:
+        #print(config_path)
+        print("Evaluating fold at: ", fold_dir)
 
         config_path = os.path.join(fold_dir, main_config['saving']['filenames']['config_yaml']) 
-        model_config = load_config(config_path)
+        fold_config = load_config(config_path)
 
-        model = get_classification_model(model_config, metadata, save_summary=False)
+        model = get_classification_model(fold_config, metadata, save_summary=False)
         model.cuda()
-        model = load_model(model_config, model) # load the saved weights
+        model = load_model(fold_config, model) # load the saved weights
     
         # get the model predictions on this set
-        test_loss, test_loss_dict, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(model_config, model, loss_function, test_loader, metricHandler)
+        test_loss, test_loss_dict, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(fold_config, model, loss_function, test_loader, metricHandler)
         
         # check to see if the patient IDs are the same order for all folds
         if test_patientIDs_list_fold1 == None:

@@ -206,7 +206,9 @@ hyperparam_tuning:
     objectives: ["val_mean_AUC"]       # which metrics to optimise on (can be multi-objective)
     objective_direction: ["maximize"]  # direction to optimise each metric in. must be the same length (and order) as objectives
     n_trials: 100                      # number of trials to perform
+    n_startup_trials: 30               # number of random trials to perform at the start of the optuna experiment
     kill_trial_threshold: 0.6          # kill a trial (after 3 folds) if the mean metric value is below this threshold
+    set_new_seeds: True                # whether to set new seeds for each trial
   # ----  Custom Params -------
   # Location:= path of the variable in the config
   # hyperparams:

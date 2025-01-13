@@ -39,8 +39,9 @@ class HyperTuning_Handler():
         config['general']['trialNumber'] = f"Trial_{trial.number}" 
 
         # set random seed
-        config['general']['seed'] = generate_random_seed()
-        set_random_seed(config['general']['seed'])
+        if config['hyperparam_tuning']['optuna']['set_new_seeds']:
+            config['general']['seed'] = generate_random_seed()
+            set_random_seed(config['general']['seed'])
 
         # update the config of this trial
         config = self.update_trial_hyperparameters(config, trial)

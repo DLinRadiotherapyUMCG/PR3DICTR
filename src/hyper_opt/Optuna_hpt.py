@@ -43,15 +43,15 @@ def derived_hyperparameters(config, trial):
     
     '''
     # If the number of down blocks is specified there should be an equal amount of related parameters          
-    if 'n_clinical_down_blocks' in config['hyperparam_tuning']['hyperparams'].keys():
-        for key in config['hyperparam_tuning']['derived']['n_clinical_down_blocks']:
+    if 'n_clinical_layers' in config['hyperparam_tuning']['hyperparams'].keys():
+        for key in config['hyperparam_tuning']['derived']['n_clinical_layers']:
             try:
                 temp_list = []
-                hyperinfo = config['hyperparam_tuning']['derived']['n_clinical_down_blocks'][key]  
+                hyperinfo = config['hyperparam_tuning']['derived']['n_clinical_layers'][key]  
                 location = hyperinfo['location']
                 base_name = hyperinfo['name']
 
-                if(base_name == "clin_pos"):
+                if (base_name == "clin_pos"):
                     hyperinfo['max'] = config['model']['n_clinical_down_blocks']
                     suggested_value = generate_value(trial, hyperinfo)
                     config = update_config(config,location,suggested_value)
@@ -103,11 +103,11 @@ def derived_hyperparameters(config, trial):
         
     return config
 
-def set_min_value(hyperinfo, firstRun):
-    minValue = hyperinfo['min']
-    if firstRun:
-        minValue = hyperinfo['max']
-    return minValue
+# def set_min_value(hyperinfo, firstRun):
+#     minValue = hyperinfo['min']
+#     if firstRun:
+#         minValue = hyperinfo['max']
+#     return minValue
 
 
 def generate_value(trial, hyperinfo, firstRun = False):
@@ -125,17 +125,17 @@ def generate_value(trial, hyperinfo, firstRun = False):
     if hyperinfo['type'] == 'int':
         if step == None:
             step = 1
-        suggested_value = trial.suggest_int(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'], step=step, log=log)
+        suggested_value = trial.suggest_int(hyperinfo['name'], hyperinfo['min'], hyperinfo['max'], step=step, log=log)
     if hyperinfo['type'] == 'float':
-        suggested_value = trial.suggest_float(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'], step=step, log=log)
+        suggested_value = trial.suggest_float(hyperinfo['name'], hyperinfo['min'], hyperinfo['max'], step=step, log=log)
     if hyperinfo['type'] == 'categorical':
         suggested_value = trial.suggest_categorical(hyperinfo['name'], hyperinfo['options'])       
     if hyperinfo['type'] == 'dis_un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'], hyperinfo['q'])       
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], hyperinfo['min'], hyperinfo['max'], hyperinfo['q'])       
     if hyperinfo['type'] == 'log_un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'])
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], hyperinfo['min'], hyperinfo['max'])
     if hyperinfo['type'] == 'un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'])       
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], hyperinfo['min'], hyperinfo['max'])       
     return suggested_value
 
 
@@ -143,7 +143,7 @@ def generate_value(trial, hyperinfo, firstRun = False):
 
 def Optuna_initialise_study(config):
     study = None
-    if (config['hyperparam_tuning']['optuna']['isEnabled']):
+    if config['hyperparam_tuning']['optuna']['isEnabled']:
 
         # Check where to keep study information
         studyName = config['general']['experiment_name']
@@ -152,16 +152,23 @@ def Optuna_initialise_study(config):
         create_file(pathOptunaStudyTracker)
         print(storage_name)
 
+        sampler = optuna.samplers.TPESampler(
+                              n_startup_trials = config['hyperparam_tuning']['optuna']['n_startup_trials'],  # how many random trials to run before starting the bayesian optimization
+                              seed = config['general']['seed'],                
+                              multivariate = True,
+                            )
+
         study = optuna.create_study(
                             study_name = studyName, 
                             storage = storage_name, 
-                            load_if_exists=True,
-                            directions= config['hyperparam_tuning']['optuna']['objective_direction']
+                            sampler = sampler,
+                            load_if_exists = True,
+                            directions = config['hyperparam_tuning']['optuna']['objective_direction'],
                             )
 
         # check if an experiment has been run before
         config['general']['firstRun'] = (len(study.get_trials()) == 0)
-        if (config['general']['firstRun']):
+        if config['general']['firstRun']:
             print("First optuna run has been detected!")
 
     return study
