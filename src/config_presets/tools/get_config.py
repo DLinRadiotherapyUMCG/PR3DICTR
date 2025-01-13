@@ -12,10 +12,12 @@ def load_config(name, pathGiven = ""):
     :return: Config
     """
     
-    if(pathGiven == ""):
-        config_path = 'src/config_presets/' + name + '.yaml'
+    if pathGiven == "":
+        #config_path = 'src/config_presets/' + name + '.yaml'
+        config_path = os.path.join("src", "config_presets", name + ".yaml")
     else:
-        config_path = pathGiven + '\\' + 'src\\config_presets\\' + name + '.yaml'
+        #config_path = pathGiven + '\\' + 'src\\config_presets\\' + name + '.yaml'
+        config_path = os.path.join(pathGiven, "src", "config_presets", name + ".yaml")
 
     print(config_path)
 

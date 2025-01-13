@@ -11,17 +11,6 @@ from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
 
-"""
-1. List of metrics in config
-2. List of metric_types in constants.py
-3. loop over predictions.csv files in the trial's fold folders
-4. compute metric per endpoint
-5. mean metric value across all endpoints
-6. store results in a dataframe
-
-"""
-
-
 
 def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], is_test_set : bool = False, external_set: bool = False, pred_csv_dir: bool = None):
     """
@@ -43,13 +32,6 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
     if pred_csv_dir is not None:
         predictions_csv_dir = pred_csv_dir
     else:
-        # if external_set:
-        #     #print(model_name)
-        #     predictions_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions_external.csv")
-        # elif is_test_set:
-        #     predictions_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions_test.csv")
-        # else:
-        #     predictions_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions.csv")
         predictions_csv_dir = get_predictions_csv_dir(config, test_set=is_test_set, ensemble_predictions=external_set)
 
     df_fold_all_preds = pd.read_csv(predictions_csv_dir, sep=";")

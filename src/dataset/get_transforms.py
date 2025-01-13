@@ -134,9 +134,9 @@ def get_random_augmentation_names_from_config(config: dict) -> list:
     """
     Function that returns a list of random augmentations from the config file.
     Args:
-        config: 
+        config (dict): 
     Returns:
-        random_transforms: a list of strings with the names of the augmentations
+        random_transforms (list): a list of strings with the names of the augmentations
     """
     
     augmentations_list_config = config['data']['augmentation']['list']

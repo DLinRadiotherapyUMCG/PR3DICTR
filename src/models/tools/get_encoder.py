@@ -3,6 +3,7 @@
 from src.models.cnn_pooling import CNN_Pooling
 from src.models.resnet import get_resnet
 from src.models.densenet import get_densenet, get_short_densenet
+from src.models.densenet_OAR_early import get_densenet as get_densenet_OAR
 from src.models.efficientnetv2 import get_efficientnetv2
 from src.models.ViT import ViT
 from src.models.HIPT import HIPT
@@ -34,6 +35,8 @@ def get_encoder(config, channels, depth, height, width):
     elif model_name == 'densenet':
         encoder = get_densenet(config, config['model']['densenet']['model_depth'], channels)
 
+    
+
     elif model_name == "ViT":
         ps = config['model']['ViT']['vit_patch_size']
         encoder = ViT(image_size=(depth, height, width), patch_size=(ps,ps,ps),
@@ -46,6 +49,8 @@ def get_encoder(config, channels, depth, height, width):
         encoder = HIPT(channels, depth, height, width)
 
     elif model_name.lower() == 'transrp':
+        
+
         if config['model']['TransRP']['image_encoder'] == 'resnet':
             encoder = get_resnet(config=config, model_depth=config['model']['resnet']['model_depth'], channels=channels, lrelu_alpha=lrelu_alpha)
             # these tweaks increase the size of the feature maps for the ViT block (e.g. we remove the downsampling in the last resnet block)
@@ -72,7 +77,9 @@ def get_encoder(config, channels, depth, height, width):
             # encoder.features.transition_3.pool.kernel_size = 1
             # encoder.features.transition_3.pool.stride = 1
             # encoder.features.transition_3.conv.stride = (1,1,1)
-           
+        elif config['model']['TransRP']['image_encoder'] == 'densenet_OAR':
+            encoder = get_densenet_OAR(config, config['model']['densenet']['model_depth'], channels)
+            
         else:
             raise ValueError('Invalid image_encoder for TransRP model: {}.'.format(config['model']['TransRP']['image_encoder']))
     

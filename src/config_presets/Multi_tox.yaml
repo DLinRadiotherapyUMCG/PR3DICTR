@@ -2,10 +2,10 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'HP_TRP_HighRes'
-  trialNumber: "Trial_1"
+  experiment_name: 'CLC_method2'
+  trialNumber: "M2_CLS"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
-  testMode: true
+  testMode: false
   use_test_set: false
 
 columns: # 
@@ -20,15 +20,27 @@ columns: #
                       ]
 paths:
   csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
-  images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
+  images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset/patients" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
   
   #csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MDACC_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
   #images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MDACC_dataset/patients" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"
   
   results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results" # "C:/Users/d.c.macrae/Documents/pred_rt_results"
 
+  # csv: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset"
+  # images: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res"  # patients_high_res
+  # results: "/scratch/p306883/rt_pred_results"
+
+  # csv: "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
+  # images: "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients"  # patients_high_res
+  # results: "C:/Users/d.c.macrae/Documents/datasets/rt_pred_results"
+
+
+
 model:
   model_name: "TransRP"
+  output_head:
+    name: "multitox"
   resnet:
     model_depth: 10    # [10, 18, 34, 50, 101, 152, 200]
     conv1_kernel_size: 5
@@ -46,10 +58,10 @@ model:
     vit_dropout_p: 0.2  
   TransRP:
     image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
-    clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
+    clinical_features_method: 'm2_cls' # 'm2'  # ["m1", "m2", "m3", "mcb", 'cls', ''m2_v2] 
     vit_patch_size: [1,1,1]
-    vit_dim: 768   # 256, 512, 768
-    vit_depth: 6    # 4, 6, 8
+    vit_dim: 256   # 256, 512, 768
+    vit_depth: 4    # 4, 6, 8
     vit_heads: 32   # 12, 16, 32, 64, 128
     vit_mlp_dim: 512  # 256, 512, 1024
     vit_dropout_p: 0.2    # 0, 0.1, 0.2
@@ -81,7 +93,7 @@ data:
   preprocessing:
     isEnabled: true
     crop: true
-    crop_shape: [96, 192, 192] # 96, 96] #  #  
+    crop_shape: [96, 96, 96] # 192, 192] #  #  #  
     ct:
       a_min: -200
       a_max: 400
@@ -126,35 +138,42 @@ data:
       noise:
         isEnabled: False
         mean: 0
-        std: 0.01
+        std: 0.05
     
     mixup:
-      isEnabled: true
+      isEnabled: false
       alpha: 2.0
 
 training:
-  max_epochs: 100
-  batch_size: 8
+  max_epochs: 200
+  batch_size: 16
   validation_interval: 1
   stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
-  patience: 10                                        # early stopping patience
-  show_progress_bar: True
+  patience: 30                                        # early stopping patience
+  show_progress_bar: False
 
   optimizer:
-    name: "Adam"
-    learning_rate: 0.01
+    name: "SGD" # "SGD"
+    learning_rate: 0.001
     weight_decay: 0.00
-    momentum: 0.8   # for SGD
-
+    momentum: 0.00 # 9   # for SGD
+  
   loss:
     name: "BCE"
     reduction: "none"
+    BCE:
+      pos_weight: [1, 1, 1, 1, 1]  # either a list, or a single value for all labels, or "auto" to calculate automatically
 
   scheduler:
     name: False # "cosine"
     T_0: 40
     T_mult: 1
     eta_min: 0.00000001
+
+  GradNorm:                  
+    isEnabled: False         # whether to use GradNorm to balance the gradients of the labels' losses
+    alpha: 0.5               # alpha value for GradNorm (higher -> more imbalance. 0=equal. recommended: less than 2)
+    learning_rate: 0.001     # learning rate for the GradNorm optimiser
 
 evaluation:
   main_metric: "AUC"
@@ -174,124 +193,19 @@ hyperparam_tuning:
     #MetricsMonitor: [ "train_AUC","train_loss","train_acc",
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    isEnabled: true
+    isEnabled: false
     objectives: ["val_mean_AUC"]          
     objective_direction: ["maximize"]
-    n_trials: 5
+    n_trials: 200
   # ----  Custom Params -------
   # Location:= path variable in config
   hyperparams:
+    none
     # MODEL
-    LRELU_alpha:
-      name: LRELU_alpha
-      type: 'float'
-      location: ['model','lrelu_alpha']
-      min: 0
-      max: 0.1
-    dropout_p:
-      name: dropout_p
-      type: 'float'
-      location: ['model','dropout_p']
-      min: 0
-      max: 0.3
-    # ViT block of TransRP
-    clinical_features_method:
-      name: clinical_features_method
-      type: 'categorical'
-      location: ['model','TransRP','clinical_features_method']
-      options: ['m1', 'm2']
-    vit_dim:
-      name: vit_dim
-      type: 'categorical'
-      location: ['model','TransRP','vit_dim']
-      options: [256, 512, 768]
-    vit_depth:
-      name: vit_depth
-      type: 'categorical'
-      location: ['model','TransRP','vit_depth']
-      options: [4, 6, 8]
-    vit_heads:
-      name: vit_heads
-      type: 'categorical'
-      location: ['model','TransRP','vit_heads']
-      options: [16, 32, 64, 128]
-    vit_mlp_dim:
-      name: vit_mlp_dim
-      type: 'categorical'
-      location: ['model','TransRP','vit_mlp_dim']
-      options: [256, 512, 1024]
-    vit_dropout_p:
-      name: vit_dropout_p
-      type: 'categorical'
-      location: ['model','TransRP','vit_dropout_p']
-      options: [0, 0.1, 0.2]
+    
 
-
-
-    # AUG
-    noise:
-      name: noise
-      type: 'categorical'
-      location: ['data','augmentation','list','noise','isEnabled']
-      options: [True, False]
-        
-
-    mixup_alpha:
-      name: mixup_alpha
-      type: 'float'
-      location: ['data','augmentation','mixup','alpha']
-      min: 0
-      max: 5
-
-
-    # TRAIN
-    learning_rate:
-      name: learning_rate
-      type: 'categorical'
-      location: ['training','optimizer','learning_rate']
-      options: [0.01, 0.001, 0.0001]
-
-
-    n_linear_layers:
-      type: 'int'
-      name: 'n_linear_layers'
-      location: ['model','n_linear_layers']
-      min: 1
-      max: 3
-      step: 1
-      log: False
-
-    n_linear_layers_endpoint:
-      type: 'int'
-      name: 'n_linear_layers_endpoint'
-      location: ['model','n_linear_layers_endpoint']
-      min: 1
-      max: 3
-      step: 1
-      log: False
-
-
-  derived:
-    n_linear_layers:
-      filters:
-        type: 'categorical'
-        name: 'LL_shared_'
-        location: ['model','linear_units']
-        options: [64,128,256,512]
-        log: False
-
-    n_linear_layers_endpoint:
-      filters:
-        type: 'categorical'
-        name: 'LL_endpoint_'
-        location: ['model','linear_units_endpoint']
-        options: [16,32,64]
-        log: False
-
-
-Save:
+saving:
   config: True
-  output_values: True
   best_model: True
   plot_training_slices:
     isEnabled: True
@@ -299,4 +213,5 @@ Save:
     every_n_epochs: 50
     n_patients_per_epoch: 1
     n_slices_per_patient: 8
-      
+
+

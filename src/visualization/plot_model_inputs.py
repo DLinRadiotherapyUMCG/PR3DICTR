@@ -9,9 +9,11 @@ def plot_model_inputs(config, plot_inputs, epoch):
     """
     Plots the model inputs (CT, RTDOSE, Segmentation) used during training, and saves the figure as a png.
     Args:
-        config (ConfigObject): configuration object
+        config (dict): configuration object
         plot_inputs (list): list of model input images
         epoch (int): current epoch number
+    Returns:
+        None
     """
     # check that the directory exists
 

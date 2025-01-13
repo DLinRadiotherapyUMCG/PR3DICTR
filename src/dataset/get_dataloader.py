@@ -16,20 +16,23 @@ from multiprocessing import Manager
 
 
 
-def prepare_data_dictionaries(config, df):
+def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
     """
-    Takes in a dataframe, and reformats it as a list of dictionaries
-    The dictionaries contain the patient's data, including the paths to the images and the clinical features. The dictionaries are used in the Monai Datasets.
+    Hehlper function that takes in a dataframe, and reformats it as a list of dictionaries
+    The dictionaries contain the patient's data, including the paths to the images and the clinical features. The dictionaries are used in the Dataset classes.
+    Args:
+        config (dict): configuration object
+        df (pd.DataFrame): dataframe for this dataloader's (train, val or test) dataset
+    Returns:
+        data_dicts (list of dicts): a list of dictionaries, where each dictionary is one patient
+        patient_ids_list (list): list of patientIDs in this dataset
     """
     patients_data_dir = config['paths']['images']
     image_keys = config['data']['image_keys']
-
     clinical_features_columns = config['columns']['clinical_features']
     label_columns = config['columns']['labels']
     
-
     patient_ids_list = [str(patient_id) for patient_id in df['PatientID']]
-
 
     features_list = [np.array([df[df['PatientID'] == patient_id][feature].values[0] for feature in
                              clinical_features_columns]).astype(np.float32) \
@@ -59,7 +62,7 @@ def prepare_data_dictionaries(config, df):
 
 
 
-def make_dataloader(config, df_data, transforms, validation_mode=True):
+def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation_mode : bool = True):
     """
     Construct PyTorch Dataset object, and then DataLoader.
 
@@ -69,16 +72,14 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
     Source: https://docs.monai.io/en/stable/data.html
 
     Args:
-        config: 
-        data_dict:
-        transforms:
-        batch_size:
-        drop_last:
-        logger: logger
-        print_info: whether to print information about the dataloader settings (i.e. just do it on the first time this is used, otherwise its very repetitive)
+        config (dict): config parameters
+        df_data (pd.Dataframe): dataset to insert into this dataloader
+        transforms: sequence of MONAI transforms to apply to each patient (mostly image-based)
+        validation_mode (bool): 
 
     Returns:
-        dataloader
+        dataloader (): dataloader containing df_data's patients
+        metadata (dict): dictioanry containing metadata about the input data (e.g. batch size or dimensions of the images)
     """
 
     dataset_type = config['data']['dataloader']['dataset_type']   #'cache'
@@ -178,7 +179,7 @@ def make_dataloader(config, df_data, transforms, validation_mode=True):
         #print("features", example_data['features'].shape)
         #print("label_list", example_data['label_list'].shape)
         batch_size3, n_labels = example_data['label_list'].shape
-
+        
         assert batch_size1 == batch_size2 == batch_size3
 
         metadata = {

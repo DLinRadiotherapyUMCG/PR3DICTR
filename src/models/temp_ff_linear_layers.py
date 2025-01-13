@@ -33,7 +33,6 @@ class MultiToxOutputHead(torch.nn.Module):
         self.time_position = config['model']['time_position']
         self.all_prev_timepoint = config['model']['all_prev_timepoint']
         self.all_time_positions = config['model']['all_time_positions']
-        # self.seq_freeze = config['model']['freeze_seq']
         self.num_ohe_classes = config['model']['num_ohe_classes'] 
         self.variance_logit_head = False
         self.end_point_lin_layer_pos = [1,4,6]

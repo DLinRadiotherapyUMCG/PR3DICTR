@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Aug 14 13:25:03 2024
-
-@author: HoekL02
-"""
 import os
 import pandas as pd
 
@@ -14,33 +8,39 @@ from src.utils.saving.alter_filename_for_external_dataset import alter_filename_
 
 
 def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False, is_test_set=False):
+    """
+    A function that creates all of the desired plots, using the predictions csv.
+    Args:
+        config (dict): 
+        sets (list): names of the sets to make plots for
+        pred_csv_dir: override for the directory to use to load the predictions csv
+        external_set (bool) : if this is a external set
+        is_test_set (bool): if this is a test set
+    Returns:
+        None
+
+    """
+
     # Load the predictions csv file
     if pred_csv_dir is not None:
-        predictions_csv_dir = pred_csv_dir
+        predictions_csv_dir = pred_csv_dir # override the directory in the config
     else:
-        # if external_set:
-        #     #print(model_name)
-        #     predictions_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions_external.csv")
-        # elif is_test_set:
-        #     predictions_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions_test.csv")
-        # else:
-        #     predictions_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions.csv")
+        # gets the directory from the config
         predictions_csv_dir = get_predictions_csv_dir(config, test_set=is_test_set, ensemble_predictions=external_set)
-        #os.path.join(config['general']['resultsCurrentDirectory'], "model_predictions.csv")
 
     df_fold_all_preds = pd.read_csv(predictions_csv_dir, sep=";")
 
 
     endpoint_list = config['columns']['labels']
     n_bins = config['evaluation']['visualisations']['n_bins']
-
     visualisations_list = config['evaluation']['visualisations']['list']
 
+    # loops over each dataset
     for set_name in sets:
-        
+        # load (and drop missing) predictions and labels for each endpoint on this set
         predictions_per_endpoint_dict, labels_per_endpoint_dict = get_predictions_and_labels_from_predictions_dataframe(config, df_fold_all_preds, set_name)
 
-
+        # init a plotting dict
         plotting_dict = [{
             "name" : set_name,
             "labels" : labels_per_endpoint_dict,
@@ -79,20 +79,4 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
 
     
     return
-
-
-
-# # # FOR TESTING THIS FUNCTION (DANIEL)
-
-# if __name__ == "__main__":
-#     from src.config_presets.tools.get_config import get_config
-
-#     # Load the configuration file
-#     config = get_config('Multi_tox')
-
-#     config['general']['resultsCurrentDirectory'] = "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results/Results_0\Trial_2\KFold1"
-#     # Call the function
-    
-#     get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
-    
 

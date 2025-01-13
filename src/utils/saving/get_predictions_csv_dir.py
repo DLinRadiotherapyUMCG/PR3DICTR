@@ -20,21 +20,3 @@ def get_predictions_csv_dir(config, test_set=False, ensemble_predictions=False, 
 
     return output_file_dir
 
-
-# predictions_csv_{}.csv
-
-
-
-"""
-
- filenames:
-    model_summary: "model_summary.txt"
-    config_yaml: "DlModel_Config.yaml"
-    model_weights: "DlModel_Weights.pth"
-    predictions_csv: "model_predictions.csv"
-    test_set_predictions_csv: "test_set_predictions.csv"
-    ensemble_predictions_csv: "ensemble_predictions.csv"
-      
-    
-
-"""

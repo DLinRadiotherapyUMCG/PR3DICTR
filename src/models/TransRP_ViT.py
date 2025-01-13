@@ -8,8 +8,9 @@ from monai.networks.blocks.transformerblock import TransformerBlock
 
 import monai
 
-from src.models.linear_layers import Basic_Output_Head, MultiToxOutputHead
+#from src.models.linear_layers_OLD import Basic_Output_Head, MultiToxOutputHead
 from src.models.ViT import  Transformer
+from src.models.tools.get_output_head import get_output_head
 
 
 class TransRP_ViT(nn.Module):
@@ -79,7 +80,7 @@ class TransRP_ViT(nn.Module):
         if hidden_size % num_heads != 0:
             raise ValueError("hidden_size should be divisible by num_heads.")
         
-        assert clinical_features_method in ["m1", "m2", "m3"] 
+        #assert clinical_features_method in ["m1", "m2", "m3", 'mcb'] 
 
         self.clinical_features_method = clinical_features_method
         self.n_features = n_features
@@ -108,17 +109,31 @@ class TransRP_ViT(nn.Module):
         self.patch_num  = int((img_size[0] / patch_size[0] )* (img_size[1] / patch_size[1]) * (img_size[2] / patch_size[2]))
 
 
-        if self.clinical_features_method == "m3" and self.n_features > 0:   # join the clinical features only in the linear layers at the very end
-            self.linear_layers = MultiToxOutputHead(config, n_features)
-        else: # clinical features are added to the input of the transformer (m1 or m2), and so we do not need linear layers for this
-            self.linear_layers = Basic_Output_Head(config)
+        # if self.clinical_features_method == "m3" and self.n_features > 0:   # join the clinical features only in the linear layers at the very end
+        #     self.linear_layers = MultiToxOutputHead(config, n_features)
+        # else: # clinical features are added to the input of the transformer (m1 or m2), and so we do not need linear layers for this
+        #     self.linear_layers = Basic_Output_Head(config)
+        
+        if self.clinical_features_method == "m3" and self.n_features > 0: 
+            n_features_linear_layers = n_features
+        else:
+            n_features_linear_layers = 0
+
+        self.linear_layers = get_output_head(config, n_features_linear_layers)
 
         if self.clinical_features_method ==  "m1": # add clinical features as an additional patch to the input of the transformer
             self.to_label_embedding = nn.Sequential(
                 nn.Linear(1, hidden_size), # new
                 nn.ReLU(inplace=True)
             )
+
+        if self.clinical_features_method == "mcb":
+            from src.models.mcb import CompactBilinearPooling
+            self.MCB_block = CompactBilinearPooling(patch_embedding_hidden_size, n_features, patch_embedding_hidden_size).cuda()
         
+        if self.clinical_features_method == "cls":
+            #self.cls_token = nn.Parameter(torch.randn(1, 1, hidden_size))
+            self.clc_embed = nn.Linear(n_features, hidden_size)
 
     def forward(self, x, x_clc, vectorize=False):  
         #print("X", x.shape, "x_clc", x_clc.shape)
@@ -135,12 +150,36 @@ class TransRP_ViT(nn.Module):
             x_clc = x_clc.repeat(1, self.patch_num, 1 )
             
             x = torch.cat((x_clc, x), dim=-1)
+
+        elif self.clinical_features_method == "m2_v2":     # same as m2, but do not make the features vectors longer
+            x_clc = x_clc[:, None, :]
+
+            x_clc = x_clc.repeat(1, self.patch_num, 1 )
+
+            x[:, :, :x_clc.shape[-1]] = x_clc
+
+        elif self.clinical_features_method == "cls":     # use the clinical features as the CLS token
+            cls_token = self.clc_embed(x_clc).unsqueeze(1)
+            #cls_tokens = torch.repeat_interleave(self.cls_token, x.size(0), dim=0)
+
+            x = torch.cat((cls_token, x), dim=1)
+        
+        elif self.clinical_features_method == "mcb":     # merge the clinical features to each patch using MCB
+            x2 = torch.zeros_like(x)
+            for i in range(self.patch_num):
+                x_patch = x[:, i, :]  # Flatten the patch to 1D
+                x2[:, i, :] = self.MCB_block(x_patch, x_clc)
+            x = x2
         
 
         x = self.transformer(x)
-        x = self.norm(x)
+        
 
-        x = torch.mean(x, 1)       
+        if "cls" in self.clinical_features_method:
+            x = x[:, 0, :]
+        else:
+            x = self.norm(x)
+            x = torch.mean(x, 1)       
 
         x = self.linear_layers(x, x_clc, vectorize=vectorize)
         
@@ -175,7 +214,7 @@ def get_transrp_vit(config, n_features : int, feature_map_dim_after_encoder):
         num_heads = config['model']['TransRP']['vit_heads'],
         proj_type = 'conv',
         dropout_rate = config['model']['TransRP']['vit_dropout_p'],
-        spatial_dims=3,
+        spatial_dims = 3,
         clinical_features_method = config['model']['TransRP']['clinical_features_method'],
     )
 

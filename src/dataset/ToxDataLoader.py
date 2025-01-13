@@ -25,6 +25,10 @@ __all__ = ["DataLoader"]
 
 class ToxDataLoader(_TorchDataLoader):
     """
+    An enhanced Normal PyTorch DataLoader, inherits the Normal DataLoader and adds a 'get_patient' function that allows to to retrive the 
+    inputs and labels of a specific patient by using only their PatientID
+
+    Normal Monai dataloader:
     Provides an iterable over the given `dataset`.  It inherits the PyTorch
     DataLoader and adds enhanced `collate_fn` and `worker_fn` by default.
 

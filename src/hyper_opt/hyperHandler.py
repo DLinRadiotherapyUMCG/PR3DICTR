@@ -1,24 +1,13 @@
-from src.config_presets.tools.get_config import get_config
-from src.dataset.load_dataset import load_dataset
-from src.models.tools.save_model import save_model, save_config, save_dataset, save_dataset_summary
-from src.training.train import train, validate
-from src.utils.logging.logging import setup_logging
-from src.utils.parse_args import parse_args
-from src.utils.set_random_seed import set_random_seed
-from src.utils.loss_func.get_loss_function import get_loss_function
-from src.utils.fileHandler import create_file, create_folder, create_textfile
-from src.dataset.get_dataloader import make_dataloader   
-from src.dataset.get_transforms import get_transforms
+from src.utils.set_random_seed import set_random_seed, generate_random_seed
 from src.training.k_fold_cross_validation import K_fold_cross_validation
 import src.hyper_opt.Optuna_hpt as Optuna_hpt
-import src.hyper_opt.WandB_hpt as WandB_hpt
 
-
-
-
-
+import logging
 
 class HyperTuning_Handler():
+    """
+    An object to run and manage hyperparameter tuning experiments.
+    """
     def __init__(self,config):
         # Set optuna
         self.Optuna_study = Optuna_hpt.Optuna_initialise_study(config) 
@@ -50,23 +39,30 @@ class HyperTuning_Handler():
         config['general']['trialNumber'] = f"Trial_{trial.number}" 
 
         # set random seed
+        config['general']['seed'] = generate_random_seed()
         set_random_seed(config['general']['seed'])
 
         # update the config of this trial
         config = self.update_trial_hyperparameters(config, trial)
 
         # K-fold cross validation here
+        #try: # it is possible that the trial fails, likely due to bad hyperparameters leading to a model that is too large
         trial_hyper_param_dict = trial.params
         all_results = K_fold_cross_validation(config, config_for_wandb=trial_hyper_param_dict)
 
         # aggregate the results of the K-folds, report them to Optuna
         optuna_results = self.results_handler(config, all_results)
+        
+        # except Exception as e:
+        #     logging.error(f"Error in trial {config['general']['trialNumber']}")
+        #     logging.error(e)
+
+        #     optuna_results = [0.0 for _ in config['hyperparam_tuning']['optuna']['objectives']]
 
         return optuna_results
-        # end.
-        # 
 
-    def update_trial_hyperparameters(self, config, trial):
+
+    def update_trial_hyperparameters(self, config : dict, trial) -> dict:
         """
         Updates the config with the new hyperparameters for the current trial
         Args:
@@ -85,7 +81,7 @@ class HyperTuning_Handler():
         return updated_config
 
 
-    def results_handler(self, config, results):
+    def results_handler(self, config : dict, results : dict) -> list:
         """
         reports the desired metric/loss values to optimise to Optuna
         The K-fold cross validation results contain a lot of info, this function extracts the ones we want to optimise.
@@ -96,15 +92,17 @@ class HyperTuning_Handler():
             trial_result (list): the results of the trial
         """
 
+        # which obkectives we want to optimise
         objectives = config['hyperparam_tuning']['optuna']['objectives'] 
-
+        # the keys in the resuls dict (which comes from the K-fold cross validation function)
         results_keys = list(results.keys())
 
+        # check to see that all optuna objectives exist in the results dict
         for metric in objectives:
             if metric not in results_keys:
                 raise Exception(f"Metric {metric} is not in the results dictionary")
             
-
+        # return a list of result values
         trial_result = [results[metric] for metric in objectives]
 
         return trial_result

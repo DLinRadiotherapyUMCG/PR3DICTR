@@ -16,8 +16,8 @@ def create_results_directory(config, KFoldIndex = -1, create_dir = True):
     """
     folderPath = os.path.join(os.path.join(config["paths"]["results"], config['general']['experiment_name']), config["general"]["trialNumber"])
     if(KFoldIndex != -1):
-        folderPath = os.path.join(folderPath,f"KFold{KFoldIndex}")
-    folderPath += "\\"
+        folderPath = os.path.join(folderPath, f"KFold{KFoldIndex}")
+    #folderPath += "\\"
 
     # Create folder if does not exist
     if create_dir:

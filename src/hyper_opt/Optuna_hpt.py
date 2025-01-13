@@ -4,7 +4,7 @@ import optuna
 
 from src.utils.fileHandler import create_file, create_folder
 
-
+# TODO: comments and documentation for all of these function
 
 
 def update_config(dic, location, suggested_value):
@@ -67,14 +67,14 @@ def derived_hyperparameters(config, trial):
                 print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
                 raise Exception("Stopped trials due to error.")
             
-    if 'n_linear_down_blocks' in config['hyperparam_tuning']['hyperparams'].keys():
-        for key in config['hyperparam_tuning']['derived']['n_linear_down_blocks']:
+    if 'n_linear_layers' in config['hyperparam_tuning']['hyperparams'].keys():
+        for key in config['hyperparam_tuning']['derived']['n_linear_layers']:
             try:
                 temp_list = []
-                hyperinfo = config['hyperparam_tuning']['derived']['n_linear_down_blocks'][key]  
+                hyperinfo = config['hyperparam_tuning']['derived']['n_linear_layers'][key]  
                 location = hyperinfo['location']
                 base_name = hyperinfo['name']
-                for i in range(config['model']['n_linear_down_blocks']):
+                for i in range(config['model']['n_linear_layers']):
                     hyperinfo_new = hyperinfo.copy()
                     hyperinfo_new['name'] = base_name + str(i)
                     suggested_value = generate_value(trial, hyperinfo_new)
@@ -103,9 +103,9 @@ def derived_hyperparameters(config, trial):
         
     return config
 
-def set_minValue(hyperinfo, firstRun):
+def set_min_value(hyperinfo, firstRun):
     minValue = hyperinfo['min']
-    if(firstRun):
+    if firstRun:
         minValue = hyperinfo['max']
     return minValue
 
@@ -117,25 +117,25 @@ def generate_value(trial, hyperinfo, firstRun = False):
     keys = hyperinfo.keys()
     step = None
     log = False
-    if('step' in keys):
+    if 'step' in keys:
         step = hyperinfo['step']
-    if('log' in keys):
+    if 'log' in keys:
         log = hyperinfo['log']
 
     if hyperinfo['type'] == 'int':
-        if(step == None):
+        if step == None:
             step = 1
-        suggested_value = trial.suggest_int(hyperinfo['name'], set_minValue(hyperinfo,firstRun), hyperinfo['max'],step=step,log=log)
+        suggested_value = trial.suggest_int(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'], step=step, log=log)
     if hyperinfo['type'] == 'float':
-        suggested_value = trial.suggest_float(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'],step=step,log=log)
+        suggested_value = trial.suggest_float(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'], step=step, log=log)
     if hyperinfo['type'] == 'categorical':
-        suggested_value = trial.suggest_categorical(hyperinfo['name'],hyperinfo['options'])       
+        suggested_value = trial.suggest_categorical(hyperinfo['name'], hyperinfo['options'])       
     if hyperinfo['type'] == 'dis_un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'],hyperinfo['q'])       
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'], hyperinfo['q'])       
     if hyperinfo['type'] == 'log_un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'])
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'])
     if hyperinfo['type'] == 'un':
-        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'],set_minValue(hyperinfo,firstRun),hyperinfo['max'])       
+        suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], set_min_value(hyperinfo,firstRun), hyperinfo['max'])       
     return suggested_value
 
 

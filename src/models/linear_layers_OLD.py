@@ -222,7 +222,9 @@ class MultiToxOutputHead(torch.nn.Module):
                                                                 out_features=1, bias=self.use_bias))
 
 
-#%% Old and deletable?
+
+
+
 class Basic_Output_Head(torch.nn.Module):
     """
     A class to define the linear layers and output head(s) of the TransRP model.

@@ -214,19 +214,19 @@ class ResNet_LReLU(nn.Module):
     
 
 
-def get_resnet(config, model_depth, channels, lrelu_alpha, **kwargs):
+def get_resnet(config : dict, model_depth : int, channels : int, lrelu_alpha : float, **kwargs):
     """
     ResNet
 
     Args:
-        config:
-        model_depth:
-        channels:
-        n_features:
-        lrelu_alpha:
+        config (dict): config params
+        model_depth (int): ResNet model depth
+        channels (int): number of input channels
+        lrelu_alpha (float): leaky ReLU value
         **kwargs:
 
     Returns:
+        model: a ResNet model
 
     """
     assert model_depth in [10, 18, 34, 50, 101, 152, 200]

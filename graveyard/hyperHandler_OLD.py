@@ -21,7 +21,7 @@ import numpy as np
 from functools import partial
 
 import src.hyper_opt.Optuna_hpt as Optuna_hpt
-import src.hyper_opt.WandB_hpt as WandB_hpt
+import src.hyper_opt.WandB_functions as WandB_functions
 
 class HyperTuning_Handler():
     def __init__(self,config):
@@ -30,7 +30,7 @@ class HyperTuning_Handler():
         self.config = config
 
         # Set weight and biases
-        WandB_hpt.login(config)
+        WandB_functions.login(config)
 
     def Operate(self, config):
         if(config['general']['testMode']):
@@ -48,10 +48,10 @@ class HyperTuning_Handler():
             UpdateBinaryTrial(self, None, config)
 
     def UpdateWandB(self,results,epoch):
-        WandB_hpt.WandB_log(self.config, results, epoch)
+        WandB_functions.WandB_log(self.config, results, epoch)
 
     def Stop(self):
-        WandB_hpt.WandB_stop(self.config)
+        WandB_functions.stop_WandB_trial(self.config)
 
 
 
@@ -127,7 +127,7 @@ def UpdateBinaryTrial(hyperClass, trial, config):
             CreateResultDir(config,i)
 
         if(trial != None and config['hyperparam_tuning']['WandB']['IsEnabled']):
-            WandB_hpt.WandB_create_study(config,configWandB,groupVar)
+            WandB_functions.WandB_create_study(config,configWandB,groupVar)
 
          # Get the data loaders
         train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 
@@ -267,7 +267,7 @@ def UpdateEventTrial(hyperClass, trial, config):
             CreateResultDir(config,i)
 
         if(trial != None and config['hyperparam_tuning']['WandB']['IsEnabled']):
-            WandB_hpt.WandB_create_study(config,configWandB,groupVar)
+            WandB_functions.WandB_create_study(config,configWandB,groupVar)
 
          # Get the data loaders
         train_loader = DataLoader(trainDataset_col[i], batch_size=config['training']['batch_size'], shuffle=True, 

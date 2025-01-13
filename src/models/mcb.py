@@ -141,7 +141,7 @@ class ComplexMultiply(torch.autograd.Function):
 
 class CompactBilinearPoolingFn(Function):
 
-    @staticmethod
+    #@staticmethod
     def forward(ctx, h1, s1, h2, s2, output_size, x, y, force_cpu_scatter_add=False):
         ctx.save_for_backward(h1,s1,h2,s2,x,y)
         ctx.x_size = tuple(x.size())
@@ -174,7 +174,7 @@ class CompactBilinearPoolingFn(Function):
 
         return re
 
-    @staticmethod
+    #@staticmethod
     def backward(ctx,grad_output):
         h1,s1,h2,s2,x,y = ctx.saved_tensors
 
@@ -185,7 +185,7 @@ class CompactBilinearPoolingFn(Function):
 
         # Then convert the output to Fourier domain
         grad_output = grad_output.contiguous()
-        grad_prod = torch.fft.rfft(grad_output, 1)
+        grad_prod = torch.fft.rfft(grad_output, dim=1)
         grad_re_prod = grad_prod.select(-1, 0)
         grad_im_prod = grad_prod.select(-1, 1)
 
@@ -193,7 +193,7 @@ class CompactBilinearPoolingFn(Function):
         
         # Gradient of x
         # Recompute fy
-        fy = torch.fft.rfft(py,1)
+        fy = torch.fft.rfft(py, dim=1)
         re_fy = fy.select(-1,0)
         im_fy = fy.select(-1,1)
         del py
@@ -207,7 +207,7 @@ class CompactBilinearPoolingFn(Function):
 
         # Gradient of y
         # Recompute fx
-        fx = torch.fft.rfft(px,1)
+        fx = torch.fft.rfft(px, dim=1)
         re_fx = fx.select(-1, 0)
         im_fx = fx.select(-1, 1)
         del px

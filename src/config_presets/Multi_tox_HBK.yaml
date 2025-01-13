@@ -2,10 +2,10 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'HP_TRP_HighRes'
+  experiment_name: 'HP_TRP_GradNorm1'
   trialNumber: "Trial_1"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
-  testMode: true
+  testMode: false
   use_test_set: false
 
 columns: # 
@@ -128,7 +128,7 @@ data:
         isEnabled: True
         max: 15 # degree
       noise:
-        isEnabled: False
+        isEnabled: True
         mean: 0
         std: 0.01
     
@@ -142,7 +142,7 @@ training:
   validation_interval: 1
   stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
   patience: 10                                        # early stopping patience
-  show_progress_bar: True
+  show_progress_bar: False
 
   optimizer:
     name: "Adam"
@@ -153,12 +153,19 @@ training:
   loss:
     name: "BCE"
     reduction: "none"
+    BCE:
+      pos_weight: [1]
 
   scheduler:
     name: False # "cosine"
     T_0: 40
     T_mult: 1
     eta_min: 0.00000001
+
+  GradNorm:                  
+    isEnabled: True
+    alpha: 0.5              
+    learning_rate: 0.001     
 
 evaluation:
   main_metric: "AUC"
@@ -208,12 +215,12 @@ hyperparam_tuning:
       name: vit_dim
       type: 'categorical'
       location: ['model','TransRP','vit_dim']
-      options: [256, 512, 768]
+      options: [128, 256, 512, 768]
     vit_depth:
       name: vit_depth
       type: 'categorical'
       location: ['model','TransRP','vit_depth']
-      options: [4, 6, 8]
+      options: [2, 4, 6, 8]
     vit_heads:
       name: vit_heads
       type: 'categorical'
@@ -233,13 +240,6 @@ hyperparam_tuning:
 
 
     # AUG
-    noise:
-      name: noise
-      type: 'categorical'
-      location: ['data','augmentation','list','noise','isEnabled']
-      options: [True, False]
-        
-
     mixup_alpha:
       name: mixup_alpha
       type: 'float'
@@ -254,8 +254,21 @@ hyperparam_tuning:
       type: 'categorical'
       location: ['training','optimizer','learning_rate']
       options: [0.01, 0.001, 0.0001]
+    
+    GradNorm_alpha:
+      name: GradNorm_alpha
+      type: 'float'
+      location: ['training','GradNorm','alpha']
+      min: 0
+      max: 2
 
+    GradNorm_learning_rate:
+      name: GradNorm_learning_rate
+      type: 'categorical'
+      location: ['training','GradNorm','learning_rate']
+      options: [0.01, 0.001, 0.0001]
 
+    # MODEL
     n_linear_layers:
       type: 'int'
       name: 'n_linear_layers'
@@ -296,9 +309,9 @@ hyperparam_tuning:
 Save:
   config: True
   output_values: True
-  best_model: True
+  best_model: False
   plot_training_slices:
-    isEnabled: True
+    isEnabled: False
     folder_name: 'figures'
     every_n_epochs: 50
     n_patients_per_epoch: 1

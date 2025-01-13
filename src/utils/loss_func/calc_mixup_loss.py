@@ -11,11 +11,18 @@ def calc_mixup_loss(output_dict, targets, loss_function, mixup_indexes, mixup_la
         mixup_lambda (float): the mixup lambda value
     Returns:
         loss (torch.Tensor): the loss value
+        loss_dict (dict): a dictionary with the loss per endpoint
     """
 
-    y_a_loss = loss_function(output_dict, targets)
-    y_b_loss = loss_function(output_dict, targets[mixup_indexes])
+    A_loss_val, A_loss_dict = loss_function(output_dict, targets)
+    B_loss_val, B_loss_dict = loss_function(output_dict, targets[mixup_indexes])
 
-    loss = (mixup_lambda * y_a_loss) + ((1 - mixup_lambda) * y_b_loss)
+    # loss value
+    loss = (mixup_lambda * A_loss_val) + ((1 - mixup_lambda) * B_loss_val)
 
-    return loss
+    # loss dictionary (loss per endpoint)
+    loss_dict = {}
+    for key in A_loss_dict.keys():
+        loss_dict[key] = (mixup_lambda * A_loss_dict[key]) + ((1 - mixup_lambda) * B_loss_dict[key])
+
+    return loss, loss_dict

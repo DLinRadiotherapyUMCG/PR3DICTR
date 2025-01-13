@@ -15,11 +15,9 @@ from typing import Callable, Sequence, Type, Union
 
 import torch
 import torch.nn as nn
-from torch.hub import load_state_dict_from_url
 
 from monai.networks.layers.factories import Conv, Dropout, Pool
-from monai.networks.layers.utils import get_act_layer, get_norm_layer
-from monai.utils.module import look_up_option
+
 
 
 class _DenseLayer(nn.Module):
@@ -258,22 +256,19 @@ dropout_prob: float = 0.0,
 """
 
 
-def get_densenet(config, model_depth, channels):
+def get_densenet(config : dict, model_depth : int, channels: int):
     """
-    DenseNet
+    Loads a DenseNet model.
 
     Args:
         config:
         model_depth:
         channels:
-        n_features:
-        filters:
-        lrelu_alpha:
-        **kwargs:
 
     Returns:
-
+        model: a DenseNet backbone
     """
+    
     assert model_depth in [121, 169, 201, 264]
 
     if model_depth == 121:
@@ -289,22 +284,20 @@ def get_densenet(config, model_depth, channels):
     return model
 
 
-def get_short_densenet(config, model_depth, channels):
+def get_short_densenet(config : dict, model_depth : int, channels: int):
     """
-    DenseNet
+    Loads a shorter DenseNet model. It is identical to the regular densenet, but is missing the fourth block. This is useful
+    for models such as TransRP, which may want to retain a higher resoultion feature map at the end of the DenseNet block
 
     Args:
         config:
         model_depth:
         channels:
-        n_features:
-        filters:
-        lrelu_alpha:
-        **kwargs:
 
     Returns:
-
+        model: a DenseNet backbone
     """
+
     assert model_depth in [121, 169, 201, 264]
 
     if model_depth == 121:
