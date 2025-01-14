@@ -109,14 +109,14 @@ def get_random_transforms(config: dict, keys: list) -> list:
             tr_max = np.random.randint(0, config['data']['augmentation']['list']['affine']['translate_max'], 3)
             sc_max = np.random.random(3)*config['data']['augmentation']['list']['affine']['scale_max']
             sc_max[2] = sc_max[2]+config['data']['augmentation']['list']['affine']['z_scale']
-            random_transforms.append(RandAffined(keys=keys, prob=data_aug_p, translate_range=tr_max, scale_range=sc_max, padding_mode='border', mode='bilinear'))
+            random_transforms.append(RandAffined(keys=keys, prob=data_aug_p, translate_range=tr_max, scale_range=sc_max, padding_mode='zeros', mode='bilinear'))
             
             # NOTE: this was the old method
             #random_transforms.append(RandAffined(keys=keys, prob=data_aug_p, translate_range=(7 * data_aug_strength,) * 3, scale_range=(0.07 * data_aug_strength,) * 3, padding_mode='border', mode='bilinear'))
 
         elif aug_name == 'rotate':
             rot_max = config['data']['augmentation']['list']['rotate']['max'] / 180 * 3.14  # convert degrees to radians
-            random_transforms.append(RandRotated(keys=keys, prob=data_aug_p, range_x=rot_max, align_corners=True, padding_mode='border', mode='bilinear'))
+            random_transforms.append(RandRotated(keys=keys, prob=data_aug_p, range_x=rot_max, align_corners=True, padding_mode='zeros', mode='bilinear'))
         
         elif aug_name == 'noise':
             mean = config['data']['augmentation']['list']['noise']['mean']
