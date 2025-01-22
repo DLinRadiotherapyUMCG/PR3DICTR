@@ -3,7 +3,30 @@ import matplotlib.pyplot as plt
 
 from src.visualization.plot_slices import plot_slices
 
-
+def SelectModality(config, ptn, index):
+        dictFound = None
+        modalityKeys = config['data']['image_keys']
+        imageKey = modalityKeys[index]
+        if("ct" in imageKey):
+            ct_range = (config['data']['preprocessing']['ct']['a_max'] - config['data']['preprocessing']['ct']['a_min'])
+            dictFound = {"Label": "CT",
+                         "Name": "CT",
+                         "CT": ((ptn[index].cpu()* ct_range) + config['data']['preprocessing']['ct']['a_min'])}
+        elif("rtdose"):
+            rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
+            dictFound = {"Label": "RTDOSE",
+                         "Name": "RTDOSE",
+                         "RTDOSE": (ptn[index].cpu()* rtdose_range + config['data']['preprocessing']['rtdose']['a_min'])}
+        elif("mri"):
+            #TODO handle MRI images
+             dictFound = {"Label": "MRI",
+                         "Name": "MRI",
+                         "MRI": ptn[index].cpu()}
+        else:
+            dictFound = {"Label": "RTSTRUCT",
+                         "Name": imageKey,
+                         "RTSTRUCT": ptn[index].cpu()}
+        return dictFound
 
 def plot_model_inputs(config, plot_inputs, epoch):
     """
@@ -25,29 +48,16 @@ def plot_model_inputs(config, plot_inputs, epoch):
     n_patients = config['saving']['plot_training_slices']['n_patients_per_epoch']
     for patient_idx in range(min(n_patients, len(plot_inputs))):
         
-        ct_range = (config['data']['preprocessing']['ct']['a_max'] - config['data']['preprocessing']['ct']['a_min'])
-        rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
-        
-        CT = (plot_inputs[patient_idx][0].cpu() * ct_range) + config['data']['preprocessing']['ct']['a_min']
-        RTDOSE = plot_inputs[patient_idx][1].cpu() * rtdose_range + config['data']['preprocessing']['rtdose']['a_min']
-        RTSTRUCT = plot_inputs[patient_idx][2].cpu()
+        # Check the image modalities used from config
+        modalityKeys = config['data']['image_keys']
+        plotting_rows_dicts = []
+        ptn = plot_inputs[patient_idx]
+        for i in range(len(modalityKeys)):
+            dictImage = SelectModality(config, ptn, i)
+            plotting_rows_dicts.append(dictImage)
 
-        plotting_rows_dicts = [
-            {
-                "Label": "CT",
-                "CT": CT
-            },
-            {
-                "Label": "RTDOSE",
-                "RTDOSE": RTDOSE
-            },
-            {
-                "Label": "RTSTRUCT",
-                "RTSTRUCT": RTSTRUCT
-            }
-        ]
-
-        num_CT_slices = CT.shape[0]
+        # Expect always 1 image modality available and get the amount of slices
+        num_CT_slices = ptn[0].shape[0]
         num_plot_slices = config['saving']['plot_training_slices']['n_slices_per_patient']
 
         slices = list(range(0, num_CT_slices, num_CT_slices // (num_plot_slices + 1)))[1:-1]
@@ -59,3 +69,7 @@ def plot_model_inputs(config, plot_inputs, epoch):
         #print(filename)
         fig.savefig(filename, bbox_inches='tight')
         plt.close(fig)
+            
+
+
+
