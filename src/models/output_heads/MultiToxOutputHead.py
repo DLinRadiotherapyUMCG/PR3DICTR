@@ -57,7 +57,7 @@ class MultiToxOutputHead(torch.nn.Module):
             #   self.CT_contrast_output_head
 
 
-    def forward(self, x, features, vectorize=False):
+    def forward(self, x, features=None, vectorize=False):
 
         # Flatten the input tensor
         #x = self.flatten(x)
@@ -180,6 +180,8 @@ class MultiToxOutputHead(torch.nn.Module):
 
         if self.n_features > 0:
             self.n_sublayers_per_linear_layer = len(self.shared_fc_layers) / (len(self.linear_units))
+        else:
+            self.n_sublayers_per_linear_layer = 3
 
     
     def _make_non_shared_endpoint_fc_layers(self):
