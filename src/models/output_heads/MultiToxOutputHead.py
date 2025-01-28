@@ -178,10 +178,10 @@ class MultiToxOutputHead(torch.nn.Module):
                                                             bias=self.use_bias))
             self.shared_fc_layers.add_module(f'LReLU_shared_{i+1}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
 
-        if self.n_features > 0:
+        if self.n_features > 0 and len(self.linear_units) > 0:
             self.n_sublayers_per_linear_layer = len(self.shared_fc_layers) / (len(self.linear_units))
-        else:
-            self.n_sublayers_per_linear_layer = 3
+        #else:
+        #    self.n_sublayers_per_linear_layer = 0
 
     
     def _make_non_shared_endpoint_fc_layers(self):
