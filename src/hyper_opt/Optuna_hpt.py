@@ -154,8 +154,9 @@ def Optuna_initialise_study(config):
 
         sampler = optuna.samplers.TPESampler(
                               n_startup_trials = config['hyperparam_tuning']['optuna']['n_startup_trials'],  # how many random trials to run before starting the bayesian optimization
-                              seed = config['general']['seed'],                
+                              #seed = config['general']['seed'],             # NOTE: this seed is not used for the random state of the sampler, prevents multiple processes from suggesting the same values       
                               multivariate = True,
+                              constant_liar = True,                # NOTE: this parameter helps to prevent the sampler from suggesting very similar values each time. This is beneficial if model training is very costly/takes long
                             )
 
         study = optuna.create_study(
@@ -170,6 +171,8 @@ def Optuna_initialise_study(config):
         config['general']['firstRun'] = (len(study.get_trials()) == 0)
         if config['general']['firstRun']:
             print("First optuna run has been detected!")
+        else:
+            print("Continuing existing optuna run!")
 
     return study
 

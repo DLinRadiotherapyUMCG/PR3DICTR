@@ -91,16 +91,19 @@ class MultiToxOutputHead(torch.nn.Module):
             if (self.n_features > 0) and (
                      (i + 1) / self.n_sublayers_per_linear_layer == self.clinical_variables_position - 1) \
                      and not ( self.clinical_variables_position == 1):
+                # Add features to this linear layer
                 
-                 x = torch.cat([x, features], dim=1)
-                 #print("CONCAT 2", x.shape)
-
-        if len(self.shared_fc_layers) == self.clinical_variables_position + 1 and (self.n_features > 0):
-                # Add features to flattened layer
                 x = torch.cat([x, features], dim=1)
+                #print("CONCAT 2", x.shape)
 
-            # Add features to a linear layer
-            # 
+        if len(self.shared_fc_layers) == self.clinical_variables_position + 1 and (self.n_features > 0): # if the clinical variables are concatenated to the last linear layer
+            # Add features just before the non-shared layers
+            x = torch.cat([x, features], dim=1)
+
+        elif len(self.shared_fc_layers) == 0 and (self.n_features > 0):  # if there are no shared layers
+            # Add features to the flattening layer
+            x = torch.cat([x, features], dim=1)
+
 
         # ----- NON-SHARED LAYERS, ENDPOINT SPECIFIC ----- #
         # Clone tensor (preserving the gradient)
@@ -211,7 +214,9 @@ class MultiToxOutputHead(torch.nn.Module):
                                                          out_features=self.linear_units_endpoint[i], bias=self.use_bias))
                 self.endpoint_heads[endpoint].add_module(f'Endpoint_LReLU_{i+1}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
             # output layer/head for this toxicity endpoint
-            self.endpoint_heads[endpoint].add_module('Output_{}'.format(endpoint),
+            if self.dropout_p > 0:
+                    self.endpoint_heads[endpoint].add_module(f'Output_{endpoint}_Dropout', torch.nn.Dropout(self.dropout_p))
+            self.endpoint_heads[endpoint].add_module(f'Output_{endpoint}',
                                 torch.nn.LazyLinear(out_features=self.num_ohe_classes, bias=self.use_bias))
 
     def _make_CT_contrast_output_head(self):
