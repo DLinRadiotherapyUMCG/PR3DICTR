@@ -7,6 +7,7 @@ import matplotlib.gridspec as gridspec
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 from .rtdose_colormap import create_RTDOSE_cmap
+from .utils.rotate_image_dimensions import rotate_arrs_in_plotting_row_dicts
 import src.constants as constants
 
 plt.style.use('default')
@@ -347,6 +348,7 @@ def plot_slices(
     title=None,
     #HNC_plotting_params=HNC_plotting_params,
     RT_region="HNC",
+    plotting_axis="axial",
     verbose=False,
 ):
     
@@ -399,6 +401,10 @@ def plot_slices(
     axs = [
         [plt.subplot(gs[i, j]) for j in range(slice_count)] for i in range(row_count)
     ]
+
+    # rotate the axes of the plots, if not plotting in the axial plane
+    if plotting_axis.lower() != "axial":
+        row_dicts = rotate_arrs_in_plotting_row_dicts(row_dicts, layer_plotting_order, plotting_axis)
 
     # loop over the plot rows
     for row_idx in range(row_count):
