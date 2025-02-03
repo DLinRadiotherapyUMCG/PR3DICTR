@@ -156,7 +156,12 @@ class MultiToxOutputHead(torch.nn.Module):
     def _make_shared_fc_layers(self):
         self.shared_fc_layers = torch.nn.ModuleList()
         #self.linear_units = self.linear_units
+
+        # if len(self.linear_units) == 0:
+        #     self.shared_fc_layers.add_module(f'Identity', torch.nn.Identity())
+        #     self.shared_fc_layers.add_module(f'LReLU_shared_{0}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
         
+        # else:
         for i in range(0, len(self.linear_units)):
             # `- 1` because the input of the very first fully-connected layer is from the flatten layer (instead of a linear layer).
             if i == self.clinical_variables_position - 1 and self.n_features > 0:

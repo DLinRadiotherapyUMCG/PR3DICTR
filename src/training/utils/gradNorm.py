@@ -30,7 +30,8 @@ class GradNorm(torch.nn.Module):
 
     def log_to_WandB(self, data):
         if self.WandB_is_enabled:
-            wandb.log(data = data)
+            #wandb.log(data = data)
+            pass
 
     def step(self, loss):
         if self.iters == 0:

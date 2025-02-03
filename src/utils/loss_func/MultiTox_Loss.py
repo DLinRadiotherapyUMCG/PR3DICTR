@@ -43,7 +43,7 @@ class MultiTox_Loss(nn.Module):
         if num_valid_labels == 0: # in case all labels are missing, the loss will be `nan`, so we return 0 instead
             zero_tensor = torch.tensor(0.0, device=predictions.device, dtype=predictions.dtype)  
             batch_loss_mean = zero_tensor
-            batch_loss_dict = {endpoint:zero_tensor for endpoint in batch_loss_dict[endpoint]}
+            batch_loss_dict = {endpoint:zero_tensor for endpoint in self.config['columns']['labels']}
         
         else:
             # mean loss per endpoint

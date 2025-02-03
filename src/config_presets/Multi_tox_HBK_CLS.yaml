@@ -2,7 +2,7 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'HP_TRP_CLS'
+  experiment_name: 'HP_TRP_CLS5'
   trialNumber: "Trial_1"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
