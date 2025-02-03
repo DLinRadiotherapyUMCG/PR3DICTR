@@ -25,36 +25,12 @@ class MultiTox_Classifier(nn.Module):
 
             feature_map_dim_after_encoder = self.determine_image_encoder_output_dim(metadata) # find the feature map dimensions of the image encoder's output
             self.output_head = get_transrp_vit(config, n_features, feature_map_dim_after_encoder)
-
-            # identify the layer for GradNorm
-            if len(config['model']['linear_units']) > 0:
-                #self.gradNorm_layer = self.output_head.linear_layers.shared_fc_layers
-                for layer in self.output_head.linear_layers.shared_fc_layers:
-                    if isinstance(layer, (torch.nn.Linear, torch.nn.LazyLinear)):
-                        last_linear_layer = layer
-                        #last_name = name
-                self.gradNorm_layer = last_linear_layer
-                
-            else:
-                last_attention_layer_name = f"Attention Block {config['model']['TransRP']['vit_depth'] - 1}"
-                self.gradNorm_layer = getattr(self.output_head.transformer.layers, last_attention_layer_name)[1] # get the last attention block
             
         else:
             self.flatten = nn.Flatten()
 
             self.output_head = get_output_head(config, n_features)
 
-            # identify the layer for GradNorm
-            if len(config['model']['linear_units']) > 0:
-                for layer in self.output_head.shared_fc_layers:
-                    if isinstance(layer, (torch.nn.Linear, torch.nn.LazyLinear)):
-                        last_linear_layer = layer
-                        #last_name = name
-                self.gradNorm_layer = last_linear_layer
-            else:
-                self.gradNorm_layer = self.encoder   # if no linear layers are present, use the whole image encoder as the layer for GradNorm (hard to define the last layer)
-
-            #print(f"GradNorm layer: {self.gradNorm_layer}")
             
             
         
