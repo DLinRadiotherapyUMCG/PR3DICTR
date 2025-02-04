@@ -2,8 +2,8 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'LL_test'
-  trialNumber: "M2_CLS"
+  experiment_name: 'CV_layers_test'
+  trialNumber: "1"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: false
@@ -110,7 +110,7 @@ data:
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
   kFolds:
-    n_iterations: 5
+    n_iterations: 1
     n_splits: 5
     split_strategy: 'stratified'  # ['stratified', 'random']
 
@@ -145,7 +145,7 @@ data:
       alpha: 2.0
 
 training:
-  max_epochs: 200
+  max_epochs: 1
   batch_size: 16
   validation_interval: 1
   stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
@@ -193,14 +193,57 @@ hyperparam_tuning:
     #MetricsMonitor: [ "train_AUC","train_loss","train_acc",
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    isEnabled: false
+    isEnabled: true
     objectives: ["val_mean_AUC"]          
     objective_direction: ["maximize"]
     n_trials: 200
   # ----  Custom Params -------
   # Location:= path variable in config
   hyperparams:
-    none
+    n_clinical_layers:
+      type: 'int'
+      name: 'n_clinical_layers'
+      location: ['model','n_clinical_layers']
+      min: 0
+      max: 2
+      step: 1
+      log: False
+    n_linear_layers:
+      type: 'int'
+      name: 'n_linear_layers'
+      location: ['model','n_linear_layers']
+      min: 1
+      max: 3
+      step: 1
+      log: False
+
+
+  derived:
+    n_linear_layers:
+      linear_units:
+        type: 'categorical'
+        name: 'LL_shared_'
+        location: ['model','linear_units']
+        options: [64,128,256,512]
+        log: False
+      clinical_variables_position:
+        type: 'int'
+        name: 'clinical_variables_position'
+        location: ['model','clinical_variables_position']
+        min: 1
+        max: 2
+        step: 1
+        log: False
+
+    n_clinical_layers:
+      clinical_variables_linear_units:
+        type: 'categorical'
+        name: 'CLC_shared_'
+        location: ['model','clinical_variables_linear_units']
+        options: [16,32,64]
+        log: False
+    
+      #log: False
     # MODEL
     
 

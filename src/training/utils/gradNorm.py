@@ -7,7 +7,7 @@ from src.hyper_opt.WandB_functions import WandB_log
 class GradNorm(torch.nn.Module):
     def __init__(self, config, model, alpha=1, lr=0.001, WandB_is_enabled=False):
         super(GradNorm, self).__init__()
-        self.layer = self.determine_gradnorm_layer(self, config, model)
+        self.layer = self.determine_gradnorm_layer(config, model)
         self.alpha = alpha
         self.lr = lr
         self.iters = 0
@@ -31,9 +31,14 @@ class GradNorm(torch.nn.Module):
         # if there are shared linear layers, use the last one of those as the gradnorm layer
         if len(config['model']['linear_units']) > 0:
             #self.gradNorm_layer = self.output_head.linear_layers.shared_fc_layers
-            for layer in model.output_head.linear_layers.shared_fc_layers:
-                if isinstance(layer, (torch.nn.Linear, torch.nn.LazyLinear)):
-                    last_linear_layer = layer
+            if "transrp" in config['model']['model_name'].lower():
+                for layer in model.output_head.linear_layers.shared_fc_layers:
+                    if isinstance(layer, (torch.nn.Linear, torch.nn.LazyLinear)):
+                        last_linear_layer = layer
+            else:
+                for layer in model.output_head.shared_fc_layers:
+                    if isinstance(layer, (torch.nn.Linear, torch.nn.LazyLinear)):
+                        last_linear_layer = layer
                     #last_name = name
             gradNorm_layer = last_linear_layer
                 

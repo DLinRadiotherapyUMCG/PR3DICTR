@@ -52,9 +52,10 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     #metricHandler = mainMetricHandler(config)
     metric_name = metricHandler.metric_name
     if config['training']['GradNorm']['isEnabled']:
-        gradNorm = GradNorm(layer=model.gradNorm_layer, # model.output_head.linear_layers.shared_fc_layers, 
-                            alpha=config['training']['GradNorm']['alpha'], 
-                            lr=config['training']['GradNorm']['learning_rate'], 
+        gradNorm = GradNorm(config = config,
+                            model = model, # model.output_head.linear_layers.shared_fc_layers, 
+                            alpha = config['training']['GradNorm']['alpha'], 
+                            lr = config['training']['GradNorm']['learning_rate'], 
                             WandB_is_enabled = config['hyperparam_tuning']['WandB']['isEnabled'])
 
 

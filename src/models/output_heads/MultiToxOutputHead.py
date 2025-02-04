@@ -18,17 +18,23 @@ class MultiToxOutputHead(torch.nn.Module):
         self.use_bias = config['model']['use_bias']
         self.lrelu_alpha = config['model']['lrelu_alpha']
         self.linear_units = config['model']['linear_units']
+        self.linear_units = None if self.linear_units == 0 else self.linear_units
         self.clinical_variables_linear_units = config['model']['clinical_variables_linear_units']
         self.linear_units_endpoint = config['model']['linear_units_endpoint']
         self.clinical_variables_position = config['model']['clinical_variables_position']
 
         self.variance_logit_head = False
 
+        print("linear_units", self.linear_units)
+        print("clinical_variables_linear_units", self.clinical_variables_linear_units)
+        print("linear_units_endpoint", self.linear_units_endpoint)
+        print("clinical_variables_position", self.clinical_variables_position)
+
         if self.clinical_variables_position >= 0 and self.clinical_variables_linear_units is not None and self.linear_units is None:
             raise ValueError('clinical_variables_position >= 0, clinical_variables_linear_units is None, and '
                              'linear_units is None is not allowed, because clinical_variables_position >= 0 implies '
                              'that the clinical variables will be concatenated linear_units[clinical_variables_position].')
-        if self.clinical_variables_position <= 0 and  self.clinical_variables_linear_units is not None:
+        if self.clinical_variables_position <= 0 and  self.linear_units is not None:
             raise ValueError('clinical_variables_position 0 (or lower)! It\'s indexing must start at 1 (for the first linear layer)!')
         if self.clinical_variables_position > len(self.linear_units)+1:
             raise ValueError('clinical_variables_position is higher than the number of linear layers + 1! \n'
