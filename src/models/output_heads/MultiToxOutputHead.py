@@ -25,11 +25,6 @@ class MultiToxOutputHead(torch.nn.Module):
 
         self.variance_logit_head = False
 
-        print("linear_units", self.linear_units)
-        print("clinical_variables_linear_units", self.clinical_variables_linear_units)
-        print("linear_units_endpoint", self.linear_units_endpoint)
-        print("clinical_variables_position", self.clinical_variables_position)
-
         if self.clinical_variables_position >= 0 and self.clinical_variables_linear_units is not None and self.linear_units is None:
             raise ValueError('clinical_variables_position >= 0, clinical_variables_linear_units is None, and '
                              'linear_units is None is not allowed, because clinical_variables_position >= 0 implies '
