@@ -87,7 +87,7 @@ data:
 
   preprocessing:
     isEnabled: false
-    crop: true
+    crop: false
     crop_shape: [96, 96, 96]
     needs_scaling: ["ct", "rtdose", 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
     needs_label_mapping: ["segmentation_map"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
@@ -242,10 +242,15 @@ hyperparam_tuning:
       type: 'categorical'
       location: ['training','loss','name']
       options: ['BCE']
+    BCE_pos_weight:
+      name: BCE_pos_weight
+      type: 'categorical'
+      location: ['training','loss','BCE','pos_weight']
+      options: [1,2,3]
     scheduler_T0:
       name: 'scheduler_T0'
       type: 'int'
-      location: ['training','scheduler','T0']
+      location: ['training','scheduler','T_0']
       min: 10
       max: 30
 
@@ -304,13 +309,20 @@ hyperparam_tuning:
       min: 2
       max: 30
 
+    augmentation_mixup_alpha:
+      name: 'augmentation_mixup_alpha'
+      type: 'float'
+      location: ['data','augmentation',"mixup","alpha"]
+      min: 0
+      max: 3
+
     # ----  NN Layer Params -------
     # Indicate amount of layers for different parts of Neural Network
     n_linear_layers:
       type: 'int'
       name: 'n_linear_layers'
       location: ['model','n_linear_layers']
-      min: 0
+      min: 1
       max: 3
       step: 1
       log: False

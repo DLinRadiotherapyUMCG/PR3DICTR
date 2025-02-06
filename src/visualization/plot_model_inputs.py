@@ -22,7 +22,12 @@ def SelectModality(config, ptn, index):
              dictFound = {"Label": "MRI",
                          "Name": "MRI",
                          "MRI": ptn[index].cpu()}
+        elif("segmentation_map"):
+            dictFound = {"Label": "RTSTRUCT",
+                         "Name": "segmentation_map",
+                         "RTSTRUCT": ptn[index].cpu()}
         else:
+            # Otherwise also a structure
             dictFound = {"Label": "RTSTRUCT",
                          "Name": imageKey,
                          "RTSTRUCT": ptn[index].cpu()}

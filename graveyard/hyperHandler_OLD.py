@@ -64,10 +64,13 @@ def Optuna_CreateStudy(config):
         studyName = config['general']['experiment_name']
         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
+        storage = optuna.storages.RDBStorage(url = storage_name,
+        engine_kwargs = {'pool_size' : 20,
+        'max_overflow' : 0})
         create_file(pathOptunaStudyTracker)
         print(storage_name)
 
-        study = optuna.create_study(study_name = studyName, storage = storage_name, load_if_exists=True)
+        study = optuna.create_study(study_name = studyName, storage = storage, load_if_exists=True)
         config['general']['firstRun'] = (len(study.get_trials()) == 0)
         if(config['general']['firstRun']):
             print("First optuna run has been detected!")
