@@ -29,7 +29,7 @@ if __name__ == '__main__':
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
-    config = get_config('LL_test')
+    config = get_config('optuna_test')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])

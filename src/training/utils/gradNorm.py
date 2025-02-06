@@ -5,9 +5,9 @@ from src.hyper_opt.WandB_functions import WandB_log
 
 
 class GradNorm(torch.nn.Module):
-    def __init__(self, layer, alpha=1, lr=0.001, WandB_is_enabled=False):
+    def __init__(self, config, model, alpha=1, lr=0.001, WandB_is_enabled=False):
         super(GradNorm, self).__init__()
-        self.layer = layer
+        self.layer = self.determine_gradnorm_layer(config, model)
         self.alpha = alpha
         self.lr = lr
         self.iters = 0
@@ -27,10 +27,36 @@ class GradNorm(torch.nn.Module):
         self.optimizer = torch.optim.Adam([self.weights], lr=self.lr)
         self.l0 = loss.detach()
         
+    def determine_gradnorm_layer(self, config, model):
+        # if there are shared linear layers, use the last one of those as the gradnorm layer
+        if len(config['model']['linear_units']) > 0:
+            #self.gradNorm_layer = self.output_head.linear_layers.shared_fc_layers
+            if "transrp" in config['model']['model_name'].lower():
+                for layer in model.output_head.linear_layers.shared_fc_layers:
+                    if isinstance(layer, (torch.nn.Linear, torch.nn.LazyLinear)):
+                        last_linear_layer = layer
+            else:
+                for layer in model.output_head.shared_fc_layers:
+                    if isinstance(layer, (torch.nn.Linear, torch.nn.LazyLinear)):
+                        last_linear_layer = layer
+                    #last_name = name
+            gradNorm_layer = last_linear_layer
+                
+        else:
+            if "transrp" in config['model']['model_name'].lower():
+                last_attention_layer_name = f"Attention Block {config['model']['TransRP']['vit_depth'] - 1}"
+                gradNorm_layer = getattr(model.output_head.transformer.layers, last_attention_layer_name)[1] # get the last attention block
+            else:
+                # TODO: a better method for determining the last layer in a normal CNN without any shared linear layers?
+                gradNorm_layer = model.encoder   # if no linear layers are present, use the whole image encoder as the layer for GradNorm (hard to define the last layer)
+
+        return gradNorm_layer
+            
 
     def log_to_WandB(self, data):
         if self.WandB_is_enabled:
-            wandb.log(data = data)
+            #wandb.log(data = data)
+            pass
 
     def step(self, loss):
         if self.iters == 0:

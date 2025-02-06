@@ -51,17 +51,12 @@ def derived_hyperparameters(config, trial):
                 location = hyperinfo['location']
                 base_name = hyperinfo['name']
 
-                if (base_name == "clin_pos"):
-                    hyperinfo['max'] = config['model']['n_clinical_down_blocks']
-                    suggested_value = generate_value(trial, hyperinfo)
-                    config = update_config(config,location,suggested_value)
-                else:
-                    for i in range(config['model']['n_clinical_down_blocks']):
-                        hyperinfo_new = hyperinfo.copy()
-                        hyperinfo_new['name'] = base_name + str(i)
-                        suggested_value = generate_value(trial, hyperinfo_new)
-                        temp_list.append(suggested_value)
-                    config = update_config(config,location,temp_list)
+                for i in range(config['model']['n_clinical_layers']):
+                    hyperinfo_new = hyperinfo.copy()
+                    hyperinfo_new['name'] = base_name + str(i)
+                    suggested_value = generate_value(trial, hyperinfo_new)
+                    temp_list.append(suggested_value)
+                config = update_config(config,location,temp_list)
 
             except Exception as error:
                 print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
@@ -74,12 +69,18 @@ def derived_hyperparameters(config, trial):
                 hyperinfo = config['hyperparam_tuning']['derived']['n_linear_layers'][key]  
                 location = hyperinfo['location']
                 base_name = hyperinfo['name']
-                for i in range(config['model']['n_linear_layers']):
-                    hyperinfo_new = hyperinfo.copy()
-                    hyperinfo_new['name'] = base_name + str(i)
-                    suggested_value = generate_value(trial, hyperinfo_new)
-                    temp_list.append(suggested_value)
-                config = update_config(config,location,temp_list)
+                if "clinical_variables_position" in base_name.lower():  # which layer to add the clinical variables (is dependent on the number of shared linear layers)
+                    hyperinfo['max'] = config['model']['n_linear_layers'] + 1 # the max should be the index of the last shared linear layer + 1
+                    #hyperinfo['min'] = 0 if config['model']['n_linear_layers'] == 0 else 1
+                    suggested_value = generate_value(trial, hyperinfo)
+                    config = update_config(config,location,suggested_value)
+                else:
+                    for i in range(config['model']['n_linear_layers']):
+                        hyperinfo_new = hyperinfo.copy()
+                        hyperinfo_new['name'] = base_name + str(i)
+                        suggested_value = generate_value(trial, hyperinfo_new)
+                        temp_list.append(suggested_value)
+                    config = update_config(config,location,temp_list)
             except Exception as error:
                 print(f"Could not generate hyperparams [Derived] with the name '{key}' with following error:\n {error}")
                 raise Exception("Stopped trials due to error.")
@@ -157,8 +158,9 @@ def Optuna_initialise_study(config):
 
         sampler = optuna.samplers.TPESampler(
                               n_startup_trials = config['hyperparam_tuning']['optuna']['n_startup_trials'],  # how many random trials to run before starting the bayesian optimization
-                              seed = config['general']['seed'],                
+                              #seed = config['general']['seed'],             # NOTE: this seed is not used for the random state of the sampler, prevents multiple processes from suggesting the same values       
                               multivariate = True,
+                              constant_liar = True,                # NOTE: this parameter helps to prevent the sampler from suggesting very similar values each time. This is beneficial if model training is very costly/takes long
                             )
 
         study = optuna.create_study(
@@ -173,6 +175,8 @@ def Optuna_initialise_study(config):
         config['general']['firstRun'] = (len(study.get_trials()) == 0)
         if config['general']['firstRun']:
             print("First optuna run has been detected!")
+        else:
+            print("Continuing existing optuna run!")
 
     return study
 

@@ -30,11 +30,12 @@ class MultiTox_Classifier(nn.Module):
             self.flatten = nn.Flatten()
 
             self.output_head = get_output_head(config, n_features)
+
             
             
         
     
-    def forward(self, x, features, vectorize=False):
+    def forward(self, x, features=None, vectorize=False):
         """
         Forward pass of the full model
         """

@@ -2,7 +2,11 @@ from src.utils.set_random_seed import set_random_seed, generate_random_seed
 from src.training.k_fold_cross_validation import K_fold_cross_validation
 import src.hyper_opt.Optuna_hpt as Optuna_hpt
 
+import optuna
 import logging
+import traceback
+import os
+
 
 class HyperTuning_Handler():
     """
@@ -55,10 +59,28 @@ class HyperTuning_Handler():
             optuna_results = self.results_handler(config, all_results)
         
         except Exception as e:
-            logging.error(f"Error in trial {config['general']['trialNumber']}")
+            # print the trial's error to the logger (i.e. the print statements)
+            logging.error(f"Error in trial {config['general']['trialNumber']}. See error log .txt file for details.")
             logging.error(e)
 
             optuna_results = [0.0 for _ in config['hyperparam_tuning']['optuna']['objectives']]
+
+            # also save the error to a text file (mostly for debugging later)
+            trial_dir = os.path.join(config["paths"]["results"], config['general']['experiment_name'], config["general"]["trialNumber"])
+            with open(os.path.join(trial_dir, 'error_log.txt'), 'a') as f:
+                f.write(str(e) + "\n")
+                f.write(traceback.format_exc())
+
+            # tell optuna to ignore this failed trial
+            trial.set_user_attr("failed", True)
+
+            raise optuna.exceptions.TrialPruned()  # NOTE: this will set the trial to pruned
+
+            # self.Optuna_study.tell(trial.number, None, state=optuna.trial.TrialState.FAIL)  # NOTE: set the trial to 'failed'
+
+            # return None
+
+            
 
         return optuna_results
 
@@ -111,5 +133,12 @@ class HyperTuning_Handler():
 
 
 
-    
+# def check_if_trial_params_are_repeated(trial):
+#     for t in trial.study.trials:
+#         if t.params == trial.params and t.number != trial.number:
+#             print(t.number, trial.number)
+#             print("DUPLICATE!!!")
+#             return True
+
+#     return False
 
