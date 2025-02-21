@@ -8,6 +8,7 @@ import numpy as np
 from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedShuffleSplit, ShuffleSplit
 
 from src.constants import PATIENT_ID_LENGTHS_DICT, PATIENT_ID_COL_NAME, SPLIT_COL_NAME
 
@@ -133,7 +134,6 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
         df_development_set (pd.DataFrame): a dataframe of the development set (i.e. all patients in the train or validation sets) to use in K-fold cross validation
     Returns:
         k_fold_dataframes_collection (list): list of dictionaries. Each dictionary contains a 'train' and a 'val' dataframe
-
     """
     # Check and validate if KFolds settings are active
     k_fold_dataframes_collection = []
@@ -163,11 +163,15 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
 
 
         for i, (train_index, val_index) in enumerate(k_fold_splits):
+            # select the training and validation patients
             train_i_df = df_development_set.iloc[train_index]
+            val_i_df   = df_development_set.iloc[val_index]
+
             #trainDf_sel = mergeDf.iloc[train_index]
             if(config['data']['equalizer']['isEnabled']):
                 train_i_df = label_equalizer(train_i_df, config)
-            val_i_df = df_development_set.iloc[val_index]
+            
+            # TODO: subsampling here !! 
 
             assert not PtnID_SanityCheck(config, train_i_df, val_i_df)
 
@@ -175,6 +179,10 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
 
     
     return k_fold_dataframes_collection
+
+
+
+
 
 
 
@@ -207,7 +215,34 @@ def generate_single_train_val_split(config, df_development_set):
 
 
 
+def stratified_cumulative_sampling(X, y, sample_sizes, random_state=42):
+    """
+    Perform stratified cumulative sampling.
+    
+    Parameters:
+        X (array-like): Feature matrix.
+        y (array-like): Target labels for stratification.
+        sample_sizes (list): List of cumulative sample sizes (e.g., [100, 200, 300, ...]).
+        random_state (int): Random seed for reproducibility.
+    
+    Returns:
+        dict: Dictionary containing subsets with keys as sample sizes.
+    """
+    sampled_indices = set()
+    subsets = {}
 
+    for size in sample_sizes:
+        print(size)
+        remaining_indices = list(sampled_indices)
+        
+        strat_split = ShuffleSplit(n_splits=1, train_size=size - len(sampled_indices), random_state=random_state)
+        new_indices, _ = next(strat_split.split(X[remaining_indices], y[remaining_indices]))
+        new_indices = np.array(remaining_indices)[new_indices]  # Convert to original index space
+        
+        sampled_indices.update(new_indices)
+        subsets[size] = (X[list(sampled_indices)], y[list(sampled_indices)])
+    
+    return subsets
 
 
 

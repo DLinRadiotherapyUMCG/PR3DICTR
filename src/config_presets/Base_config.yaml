@@ -7,6 +7,7 @@ general:
   resultsCurrentDirectory: ""          # current working directory
   testMode: False                      # if testing the code (e.g. less patients, or less epochs, etc.)
   use_test_set: False                  # if the test dataset should be loaded
+  dataset_amounts_experiment: False    # whether the dataset_amounts_experiment is being performed using bootstrapping
 
 columns:
   labels: ["Xerostomia_M06"]           # the endpoints the model is (going to be) trained on (list)
@@ -79,6 +80,7 @@ data:
   excluded_values: [] # ExcludedValue                # values of ^this^  variable to exclude patients by
   image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
   image_num_dimensions: 3                            # dimension of each image (each image is 3D, so this is = 3)
+  n_training_patients_list: []                       # list of number of patients to use for training (only used if 'dataset_amounts_experiment'=True)
 
   dataloader:
     dataloader_type: "standard"        # type of dataloader ['standard', 'thread']
@@ -119,6 +121,7 @@ data:
     n_iterations: 5       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
     validation_size: 0.2  # if only 1 split; this is the size of the validation set, the rest goes to training set
     split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
+    
 
   equalizer:
     isEnabled: false     # whether or not to over/under-sampling the training dataset
