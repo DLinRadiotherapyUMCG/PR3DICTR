@@ -39,14 +39,14 @@ if __name__ == '__main__':
 
     # # MAIN: DL running class with hyperparameter optimization
     #
-    expHandler = experimentHandler(config)
-    expHandler.run_experiment(config)
+    #expHandler = experimentHandler(config)
+    #expHandler.run_experiment(config)
     #####hyperClass.Stop()
 
 
     # TEST ENSEMBLE CODE
 
-    # from src.evaluation.validate_on_test_set import validate_models_on_test_set
+    from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
     # trial_dir = r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
     # # # # run the models on the test set

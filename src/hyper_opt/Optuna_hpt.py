@@ -126,6 +126,7 @@ def generate_value(trial, hyperinfo, firstRun = False):
     if hyperinfo['type'] == 'int':
         if step == None:
             step = 1
+        print("Log: ", log)
         suggested_value = trial.suggest_int(hyperinfo['name'], hyperinfo['min'], hyperinfo['max'], step=step, log=log)
     if hyperinfo['type'] == 'float':
         suggested_value = trial.suggest_float(hyperinfo['name'], hyperinfo['min'], hyperinfo['max'], step=step, log=log)

@@ -2,8 +2,8 @@ general:
   region: "HNC"
   seed: 42
   firstRun: false
-  experiment_name: 'CLC_method2'
-  trialNumber: "M2_CLS"
+  experiment_name: 'MixUp_figures2'
+  trialNumber: ""
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: false
   use_test_set: false
@@ -92,11 +92,11 @@ data:
   image_num_dimensions: 3
 
   dataloader:
-    num_workers: 8           # number of workers (cores) to use for data loading in each training batch
+    num_workers: 4           # number of workers (cores) to use for data loading in each training batch
   
   preprocessing:
     isEnabled: true
-    crop: true
+    crop: false
     crop_shape: [96, 96, 96] # 192, 192] #  #  #  
     ct:
       a_min: -200
@@ -124,7 +124,7 @@ data:
     resamplingDirection: 'up'
 
   augmentation:
-    isEnabled: true
+    isEnabled: False
     prob: 0.5   # probability of applying each augmentation (flip is always 0.5)
     list:
       flip:
@@ -145,7 +145,7 @@ data:
         std: 0.05
     
     mixup:
-      isEnabled: false
+      isEnabled: true
       alpha: 2.0
 
 training:

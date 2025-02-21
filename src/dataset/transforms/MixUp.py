@@ -124,7 +124,7 @@ class MixUp():
     """
     def __init__(self, config):
         self.config = config
-        self.alpha = 3.0
+        self.alpha = config['data']['augmentation']['mixup']['alpha']
 
     def __call__(self, batch):
 
@@ -153,6 +153,8 @@ class MixUp():
         # return the lambda value and mixing indicies with the batch
         mixed_data['lambda'] = lam
         mixed_data['indices'] = index
+
+        print(batch['patient_id'], index)
 
         return mixed_data
 
