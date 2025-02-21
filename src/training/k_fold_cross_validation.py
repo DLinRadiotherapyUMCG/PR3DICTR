@@ -150,9 +150,10 @@ def K_fold_cross_validation(config, config_for_wandb=None):
     for fold_idx, dataset_split_dict in enumerate(k_fold_dataframes_list, start=1):
 
         # set up logging and create the results directory
+        create_results_directory(config, fold_idx)
         logging.info(f'Fold {fold_idx}/{len(k_fold_dataframes_list)}')
         initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=config_for_wandb)
-        create_results_directory(config, fold_idx)
+        
 
         """
         MODEL TRAINING
