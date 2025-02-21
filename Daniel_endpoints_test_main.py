@@ -29,7 +29,7 @@ if __name__ == '__main__':
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
-    config = get_config('Multi_tox_best')
+    config = get_config('Trial32_Config')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
@@ -38,10 +38,7 @@ if __name__ == '__main__':
     from src.experiments.endpoint_combinations import run_toxicity_combinations_experiment
 
 
-    # force a test run
-    config['general']['test_run'] = True
-
-    experiment_name = "test_endpoints_experiment_code_0"
+    experiment_name = "Trial32_endpoint_combinations"
     run_toxicity_combinations_experiment(config, experiment_name)
     
 

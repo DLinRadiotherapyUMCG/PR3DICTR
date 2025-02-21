@@ -50,7 +50,7 @@ if __name__ == '__main__':
     seeds = args.seeds
     
     dataset_amounts=[100, 200, 300, 400, 500, 600]
-    disable_data_augmentation = True
+    disable_data_augmentation = False
 
     
     run_dataset_amounts_experiment(config, experiment_name, trial_seeds=seeds, dataset_amounts=dataset_amounts, disable_data_augmentation=disable_data_augmentation)

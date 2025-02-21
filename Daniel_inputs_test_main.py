@@ -36,10 +36,7 @@ if __name__ == '__main__':
 
     from src.experiments.input_removal import run_input_removal_experiment
 
-    # force a test run
-    config['general']['test_run'] = True
-
-    experiment_name = "test_inputs_experiment_code_0"
+    experiment_name = "Trial32_input_combinations"
     run_input_removal_experiment(config, experiment_name)
     
 
