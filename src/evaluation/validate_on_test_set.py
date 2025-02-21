@@ -60,6 +60,7 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
 
         config_path = os.path.join(fold_dir, main_config['saving']['filenames']['config_yaml']) 
         fold_config = load_config(config_path)
+        fold_config['general']['resultsCurrentDirectory'] = fold_dir
 
         model = get_classification_model(fold_config, metadata, save_summary=False)
         model.cuda()

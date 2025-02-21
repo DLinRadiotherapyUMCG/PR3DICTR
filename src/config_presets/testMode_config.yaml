@@ -1,11 +1,11 @@
 
 data:
-  n_patients_total: 400
+#   n_patients_total: 400
 
   kFolds:
     isEnabled: true
-    n_splits: 1        # the number of data splits to make
-    n_iterations: 1    # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
+    n_splits: 5        # the number of data splits to make
+    n_iterations: 2    # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
 
 training:
   max_epochs: 2
@@ -14,12 +14,12 @@ training:
   patience: 5
 
 
-# model:
-#   model_name: "resnet"
-#   resnet:
-#     model_depth: 10    # [10, 18, 34, 50, 101, 152, 200]
-#     conv1_kernel_size: 7
-#     conv1_stride: 2
+model:
+  model_name: "resnet"
+  resnet:
+    model_depth: 10    # [10, 18, 34, 50, 101, 152, 200]
+    conv1_kernel_size: 7
+    conv1_stride: 2
 
 
 # # AUG

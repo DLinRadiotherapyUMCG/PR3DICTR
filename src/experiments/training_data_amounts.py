@@ -13,7 +13,7 @@ from src.utils.set_random_seed import set_random_seed, generate_random_seed
 
 
 
-def run_dataset_amounts_experiment(config, experiment_name, n_trials, dataset_amounts):
+def run_dataset_amounts_experiment(config, experiment_name, trial_seeds, dataset_amounts, disable_data_augmentation=True):
     """
     This function runs the an experiment using different combinations of endpoints removal experiment. It will retrain the model on the dataset with one of the inputs (CT, dose, segmentations, clinical features) removed.
     Usage: It can be called from a main.py file, as long as you give it a config. It will then use the experimentHandler class to run the experiment.
@@ -25,29 +25,36 @@ def run_dataset_amounts_experiment(config, experiment_name, n_trials, dataset_am
     config['general']['experiment_name'] = experiment_name
 
     # we are doing this experiment by bootstrapping, so we need to set this to True
-    config['general']['bootstrapping_experiment'] = True
+    config['general']['dataset_amounts_experiment'] = True
+    config['data']['n_training_patients_list'] = dataset_amounts
+
     # and force the N iterations to be 1
     config['data']['kFolds']['n_iterations'] = 1
     config['general']['use_test_set'] = True
 
+    if disable_data_augmentation:
+        config['data']['augmentation']['isEnabled'] = False
+        config['data']['augmentation']['mixup']['isEnabled'] = False
 
 
-    for trial_idx in range(n_trials):
+    for trial_idx, trial_seed in enumerate(trial_seeds):
         
         experiment_config = copy.deepcopy(config)
-        experiment_config['general']['seed'] = generate_random_seed()  # set a new random seed
+        experiment_config['general']['seed'] = trial_seed #generate_random_seed()  # set a new random seed
         
-        for dataset_amount in dataset_amounts:
-            set_random_seed(experiment_config['general']['seed'])           # make sure that the seed is set for each dataset amount !!!
+        #for dataset_amount in dataset_amounts:
+        set_random_seed(experiment_config['general']['seed'])           # make sure that the seed is set for each dataset amount !!!
+
+        #experiment_config['general']['trialNumber'] = experiment_config['general']['seed'] 
             
 
-            experiment_config['general']['trialNumber'] = f"{dataset_amount}_training_patients"
+            #experiment_config['general']['trialNumber'] = f"{dataset_amount}_training_patients"
 
-            experiment_config['data']['subsample_train_set_size'] = dataset_amount  # set in the config how many training patients we want to use
+            #experiment_config['data']['subsample_train_set_size'] = dataset_amount  # set in the config how many training patients we want to use
 
-            # train model for 1 fold
-            expHandler = experimentHandler(experiment_config)
-            expHandler.run_experiment(experiment_config)
+        # train model for 1 fold
+        expHandler = experimentHandler(experiment_config)
+        expHandler.run_experiment(experiment_config)
 
 
         """

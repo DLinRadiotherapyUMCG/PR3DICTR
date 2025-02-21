@@ -1,0 +1,220 @@
+general:
+  seed: 5
+  experiment_name: "daniel_transrp_check"
+  trialNumber: "Trial_1"
+  resultsCurrentDirectory: "/home4/p311267/taste/"
+  firstRun: True
+  testMode: False
+
+columns:
+  labels: ["Taste_M06"]
+  clinical_features: ["Age","Sex", "Taste_W01_Helemaal_niet","Taste_W01_Een_beetje","Taste_W01_Nogal_Heel_erg"]
+
+paths:
+  csv: "/home4/p311267/taste/dataset/"
+  images: "/scratch/p311267/dataset_full_highr/"
+  results: "/scratch/p311267/taste/results/"
+ 
+
+model:
+  model_name: "TransRP"
+  resnet:
+    model_depth: 10    # [10, 18, 34, 50, 101, 152, 200]
+    conv1_kernel_size: 7
+    conv1_stride: 2
+  densenet:  
+    model_depth: 121  # [121, 169, 201, 264]
+  efficientnetv2:
+    use_bias: true
+  ViT:
+    vit_patch_size: 8
+    vit_dim: 128
+    vit_depth: 4
+    vit_heads: 8
+    vit_mlp_dim: 128
+    vit_dim_head: 128
+    vit_emb_dropout: 0.2
+    vit_dropout_p: 0.2  
+  TransRP:
+    image_encoder: 'densenet'  # ['resnet', 'densenet'] (requires their respective configs)
+    clinical_features_method: 'm2'  # ["m1", "m2", "m3", "m4", "m5"] 
+    vit_patch_size: [1,1,1]
+    vit_dim: 256
+    vit_depth: 4
+    vit_heads: 64
+    vit_mlp_dim: 1024
+    vit_dropout_p: 0  
+  cnn_pooling:
+    filters: [8, 8, 16, 16, 32]
+    kernel_sizes: [7, 5, 4, 3, 3]
+    strides: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+    pad_value: 0
+    pooling: 'max'    # avg, max, nan
+    pooling_size: 2
+    normalization: 'batch' 
+    conv_block_layers: 1
+  # general model params
+  lrelu_alpha: 0.0731576958075853
+  dropout_p: 0.02595495832717444
+  use_bias: True
+  # Linear layer params (output head)
+  n_linear_layers: 2
+  linear_units: [256] # shared layers for model head
+  n_clinical_layers: 0
+  clinical_variables_linear_units: []
+  clinical_variables_position: 1
+  n_linear_layers_endpoint: 2
+  linear_units_endpoint: [16,32]
+  num_ohe_classes: 1
+
+
+
+data:
+  source: 'UMCG'   # the source of the dataset you are using (change this for external validation)
+  dataset_csv: 'features.csv'
+  stratify_on: ["Taste_M06","Artefact"] # ["RP_OneYear", "SmokerActive", "SmokerStopped", "Age_LargeEqual63", "ImmunoTherapy", "ChemoRad"]
+  excluded_variable_name: [] # ExcludedVar           # column name of variable to exlude patients by
+  excluded_values: [] # ExcludedValue                # values of ^this^  variable to exclude patients by
+  image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
+  image_num_dimensions: 3  # each image is 3D, so this is 3
+
+  preprocessing:
+    isEnabled: true
+    crop: true
+    crop_shape: [96, 192, 192]
+    needs_scaling: ["ct", "rtdose", 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
+    needs_label_mapping: ["segmentation_map"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
+    ct:
+      a_min: -200
+      a_max: 400
+      b_min: 0
+      b_max: 1
+      clip: true
+    rtdose:
+      a_min: 0
+      a_max: 8000
+      b_min: 0
+      b_max: 1
+      clip: true
+    mri:              # example of how to scale an MRI image
+      a_min: 0
+      a_max: 12345
+      b_min: 0
+      b_max: 1
+    segmentation_map:
+      target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
+  kFolds:
+    n_splits: 5           # the number of data splits to make
+    n_iterations: 5       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
+    validation_size: 0.2  # if only 1 split
+    split_strategy: 'stratified'  # ['stratified', 'random']
+
+  equalizer:
+    isEnabled: false
+    ratio: 0.5
+    resamplingDirection: 'over'   # ['over', 'under']
+
+  augmentation:
+    isEnabled: true
+    prob: 0.5   # probability of applying each augmentation (flip is always 0.5)
+    list:
+      flip:
+        isEnabled: True
+      random_crop:    # uses the crop_shape defined in preprocessing
+        isEnabled: True
+      affine:
+        isEnabled: True
+        translate_max: 6   # pixels
+        scale_max: 0.02
+        z_scale: -0.2
+      rotate:
+        isEnabled: True
+        max: 15 # degree
+      noise:
+        isEnabled: False
+        mean: 0
+        std: 0.01
+        
+    mixup:
+      isEnabled: true
+      alpha: 1.7244367682922501
+
+training:
+  max_epochs: 200
+  batch_size: 8
+  validation_interval: 1
+  stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
+  patience: 20                                        # early stopping patience
+  show_progress_bar: True
+  
+  optimizer:
+    name: "Adam"
+    learning_rate: 0.0001
+    weight_decay: 0.0
+    momentum: 0.8   # for SGD
+  loss:
+    name: "BCE"    # ['BCE', 'focal', 'hill', 'ASL', 'NLLL']
+    reduction: "none"
+    BCE:
+      pos_weight: [1]
+    focal:
+      gamma: 2
+      alpha: 0.25
+    ASL:
+      gamma_neg: 4
+      gamma_pos: 1
+  scheduler:
+    name: False # ["cosine"]
+    T_0: 40
+    T_mult: 1
+    eta_min: 0.00000001
+
+evaluation:
+  main_metric: "AUC"    # the metric shown during training
+  metrics_list: ["AUC"] #  ["AUC", "accuracy"]   # the metrics to calculate at the end
+  metrics:
+    threshold: 'YoudenJ'
+    calibration_bins: 10
+  visualisations: 
+    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve']
+    n_bins: 10
+
+hyperparam_tuning:
+  WandB:
+    isEnabled: true
+    API_Key: "cd46d3f634136232488530ab99e3401a15710cc9"
+    MetricsMonitor: [ "train_AUC","train_loss","train_acc","eval_AUC","eval_loss","eval_acc"]
+  optuna:
+    isEnabled: false
+    objectives: ["val_mean_AUC"]
+    objective_direction: ["maximize"]          # must be the same length (and order) as objectives
+    n_trials: 100
+    kill_trial_threshold: 0.6
+  # ----  Custom Params -------
+  # Location:= path variabele in config
+  hyperparams:
+    augmentation_strength:
+      name: 'augmentation_strength'
+      type: 'float'
+      location: ['data','augmentation',"strength"]
+      min: 0.8
+      max: 5
+    augmentation_probability:
+      name: 'augmentation_probability'
+      type: 'float'
+      location: ['data','augmentation',"prob"]
+      min: 0.8
+      max: 0.98   
+
+    Learning_Rate:
+      name: 'Learning_Rate'
+      type: 'float'
+      location: ["training",'optimizer','learning_rate']
+      min: 0.0001
+      max: 0.002     
+    Resnet_depth:
+      name: 'Resnet_depth'
+      type: 'categorical'
+      location: ['model','resnet','model_depth']
+      options: [10, 18]      

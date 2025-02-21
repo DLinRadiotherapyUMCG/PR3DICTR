@@ -27,7 +27,7 @@ from src.evaluation.get_visualisations import get_visualizations
 from sklearn.model_selection import StratifiedShuffleSplit, ShuffleSplit
 
 
-def perform_cumulative_sampling2(config, df, sampled_indices, target_sample_size):
+def perform_cumulative_sampling(config, df, sampled_indices, target_sample_size):
     """
     """
     
@@ -57,7 +57,22 @@ def perform_cumulative_sampling2(config, df, sampled_indices, target_sample_size
 
 
 
+def generate_training_data_subsamples(config, k_fold_dataframes_list):
+    dataset_split_dict = k_fold_dataframes_list[0]
+    df_all_train_patients, df_val = dataset_split_dict['train'], dataset_split_dict['val']
 
+    k_fold_dataframes_list = []
+    sampled_indices = []
+        
+    for n_training_patients in config['data']['n_training_patients_list']:
+            #config["data"]['n_training_patients'] = n_training_patients
+        df_train_sample, sampled_indices = perform_cumulative_sampling(config, df_all_train_patients, sampled_indices, n_training_patients)
+
+        k_fold_dataframes_list.append({'train': df_train_sample, 'val': df_val})
+        print(f"Sampled {len(df_train_sample)} patients")
+
+    print(len(k_fold_dataframes_list), len(config['data']['n_training_patients_list']))
+    return k_fold_dataframes_list
 
 
 
@@ -118,22 +133,9 @@ def K_fold_cross_validation(config, config_for_wandb=None):
     if n_iterations < len(k_fold_dataframes_list):
         k_fold_dataframes_list = k_fold_dataframes_list[:n_iterations]
 
+    # if we're doing the dataset amounts experiment, then make each fold be a different number of training patients (using just the first iteration of the K-fold split)
     if config['general']['dataset_amounts_experiment']:
-        dataset_split_dict = k_fold_dataframes_list[0]
-        df_all_train_patients, df_val = dataset_split_dict['train'], dataset_split_dict['val']
-
-        k_fold_dataframes_list = []
-        sampled_indices = []
-        
-        for n_training_patients in config['data']['n_training_patients_list']:
-            print(f"Sampling {n_training_patients} patients")
-            #config["data"]['n_training_patients'] = n_training_patients
-            df_train_sample, sampled_indices = perform_cumulative_sampling2(config, df_all_train_patients, sampled_indices, n_training_patients)
-
-            k_fold_dataframes_list.append({'train': df_train_sample, 'val': df_val})
-            print(f"Sampled {len(df_train_sample)} patients")
-
-        print(len(k_fold_dataframes_list), len(config['data']['n_training_patients_list']))
+        k_fold_dataframes_list = generate_training_data_subsamples(config, k_fold_dataframes_list)
 
     # get the data transforms
     train_transforms, val_transforms = get_transforms(config)
@@ -186,7 +188,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         if config['data']['augmentation']['mixup']['isEnabled']: 
             from monai.data.utils import list_data_collate
             train_loader.dataset.collate_fn = list_data_collate  # replace the mixup function with a simple collate function
-
+        
         train_loss_value, train_loss_dict, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
         print("   ", train_loss_value, train_mean_metric_val, train_metric_dict)
         logging.info('   Validation set')
@@ -243,11 +245,15 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         # save the config file for this fold
         save_config(config)
 
+        sets_to_evaluate = ['train', 'val']
+        if config['general']['use_test_set']:
+            sets_to_evaluate.append('test')
+
         # collect all metrics for this fold
-        total_evaluation_current_fold(config, sets=['train', 'val'], external_set=False)
+        total_evaluation_current_fold(config, sets=sets_to_evaluate, external_set=False)
 
         # make the visualisations (plots) for this fold
-        get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False)
+        get_visualizations(config, sets=sets_to_evaluate, pred_csv_dir=None, external_set=False)
 
         # to kill optuna trials early, check the mean metrics for this fold
         if config['hyperparam_tuning']['optuna']['isEnabled']:
@@ -258,7 +264,11 @@ def K_fold_cross_validation(config, config_for_wandb=None):
                 logging.info(f'Early stopping at fold {fold_idx}. Metric value is too low')
                 break
     
+    # if we're doing the dataset amounts experiment, then we don't need to aggregate the results. Just return here
+    if config['general']['dataset_amounts_experiment'] == True:
+        return 
     
+
     # compute mean AUC per endpoint
     train_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in train_metrics_list_dict.items()}
     val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}

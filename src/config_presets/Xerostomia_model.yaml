@@ -9,8 +9,8 @@ general:
   use_test_set: false
 
 columns: # 
-  labels:  ["Xerostomia_M06", "Taste_M06"]
-  clinical_features: ['Sex', 'Age', 'Xerostomia_W01_Helemaal_niet', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']
+  labels:  ["Xerostomia_M06"]
+  clinical_features: []
 paths:
   csv: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset" # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset"
   images: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Documents/DL_NTCP_Multitox/datasets/MT_dataset/patients" # patients_high_res/"  # "C:/Users/d.c.macrae/Documents/datasets/MT_dataset/patients/"

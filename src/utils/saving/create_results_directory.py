@@ -20,8 +20,10 @@ def create_results_directory(config, KFoldIndex = -1, create_dir = True):
     if config['general']['dataset_amounts_experiment']:
         experimentPath = os.path.join(config["paths"]["results"], config['general']['experiment_name'])
         index = KFoldIndex - 1
-        current_N_patients = config["data"]['n_training_patients_sets'][index]
-        folderPath = os.path.join(experimentPath, f"n_patients_{current_N_patients}", f"seed_{config["general"]["seed"]}")
+        current_N_patients = config["data"]['n_training_patients_list'][index]
+        config["general"]["trialNumber"] = f"n_patients_{current_N_patients}"   # set the trial folder to be the number of patients
+        seed = config["general"]["seed"]
+        folderPath = os.path.join(experimentPath, f"n_patients_{current_N_patients}", f"seed_{seed}")
 
     elif (KFoldIndex != -1):
         folderPath = os.path.join(os.path.join(config["paths"]["results"], config['general']['experiment_name']), config["general"]["trialNumber"])

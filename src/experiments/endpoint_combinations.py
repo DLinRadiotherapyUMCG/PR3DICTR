@@ -58,7 +58,7 @@ def run_toxicity_combinations_experiment(config, experiment_name, endpoint_combi
         
 
         experiment_config['columns']['labels'] = endpoints
-        config['data']['stratify_on'] = endpoints
+        experiment_config['data']['stratify_on'] = endpoints
 
         # include the clinical features for these toxicities (i.e. not the baselines for toxicities which are not included)
         toxicity_clinical_features_set = main_features
@@ -71,7 +71,7 @@ def run_toxicity_combinations_experiment(config, experiment_name, endpoint_combi
         experiment_config["general"]["trialNumber"] = key
 
         # set the weights of BCE loss (otherwise it will crash because the number of classes is different)
-        config['training']['loss']['BCE']['pos_weight'] = [1.0] * len(endpoints)
+        experiment_config['training']['loss']['BCE']['pos_weight'] = [1.0] * len(endpoints)
 
         # train the model (using 5 fold cross-validation)
         expHandler = experimentHandler(experiment_config)
@@ -80,6 +80,6 @@ def run_toxicity_combinations_experiment(config, experiment_name, endpoint_combi
         # TEST ENSEMBLE CODE
 
         #trial_dir = r"/scratch/s3719332/rt_pred_results/HP_TRP_HigherRes2_BEST/Trial_32_SGD1_GN_101/" # config['general']['resultsCurrentDirectory']
-        trial_dir = os.path.join(config["paths"]["results"], config['general']['experiment_name'], config['general']['trialNumber'])
+        trial_dir = os.path.join(experiment_config["paths"]["results"], experiment_config['general']['experiment_name'], key)
         # # run the models on the test set
-        validate_models_on_test_set(config, trial_dir)
+        validate_models_on_test_set(experiment_config, trial_dir)

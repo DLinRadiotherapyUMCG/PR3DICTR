@@ -88,7 +88,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     #cache_rate = 1
     num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else 1
     persistent_workers = True if num_workers > 0 else False#  config['data']['dataloader']['persistent_workers']
-    drop_last = True
+    drop_last = False
     pin_memory = True if num_workers > 0 else False
     
     

@@ -5,7 +5,7 @@ general:
   experiment_name: 'HP_TRP_HighRes_Best'
   trialNumber: "Trial_1"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
-  testMode: false
+  testMode: true
   use_test_set: true
 
 columns: # 

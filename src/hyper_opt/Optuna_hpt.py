@@ -71,7 +71,6 @@ def derived_hyperparameters(config, trial):
                 base_name = hyperinfo['name']
                 if "clinical_variables_position" in base_name.lower():  # which layer to add the clinical variables (is dependent on the number of shared linear layers)
                     hyperinfo['max'] = config['model']['n_linear_layers'] + 1 # the max should be the index of the last shared linear layer + 1
-                    #hyperinfo['min'] = 0 if config['model']['n_linear_layers'] == 0 else 1
                     suggested_value = generate_value(trial, hyperinfo)
                     config = update_config(config,location,suggested_value)
                 else:
