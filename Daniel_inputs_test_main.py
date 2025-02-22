@@ -29,7 +29,7 @@ if __name__ == '__main__':
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
-    config = get_config('Multi_tox_best')
+    config = get_config('Trial32_Config')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])

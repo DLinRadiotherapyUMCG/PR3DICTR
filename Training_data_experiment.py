@@ -29,7 +29,7 @@ if __name__ == '__main__':
     #log_level, args = parse_args()
     parser = argparse.ArgumentParser()
     parser.add_argument('--log', type=str, default='INFO', nargs='?')
-    parser.add_argument('--seeds', type=int, nargs='+', default='INFO')   # NOTE: PASS THE TRIAL SEEDS IN AS AN ARGUMENT !! 
+    parser.add_argument('--seeds', type=int, nargs='+', default=[0])   # NOTE: PASS THE TRIAL SEEDS IN AS AN ARGUMENT !! 
     args = parser.parse_args()
 
     # Load the toxicity
