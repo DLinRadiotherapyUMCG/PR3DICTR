@@ -3,6 +3,8 @@ import logging
 import pandas as pd
 import numpy as np
 import torch
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import StratifiedShuffleSplit, ShuffleSplit
 
 from src.constants import DEVICE
 from src.training.train import train
@@ -24,7 +26,7 @@ from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
 from src.evaluation.get_visualisations import get_visualizations
 
 
-from sklearn.model_selection import StratifiedShuffleSplit, ShuffleSplit
+
 
 
 def perform_cumulative_sampling(config, df, sampled_indices, target_sample_size):
@@ -42,10 +44,22 @@ def perform_cumulative_sampling(config, df, sampled_indices, target_sample_size)
         # i.e. there is not enough training data to sample the target number of patients
         raise ValueError(f"Number of required samples is less than 0. There is not enough training data to sample {target_sample_size} patients.")
     else:
-        # shuffle the indicies of the remaining patients and select the required number of samples
-        shuffle_split = ShuffleSplit(n_splits=1, train_size=n_required_samples) # , random_state=config['general']['seed'])
-        new_indices, _ = next(shuffle_split.split(remaining_indices))
-        new_indices = np.array(remaining_indices)[new_indices]  # Convert back to the original index space
+        if config["data"]["kFolds"]["split_strategy"] == 'stratified':
+            labels = df.iloc[remaining_indices][config["data"]["kFolds"]["split_strategy"] == 'stratified'] 
+            encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])
+            shuffle_split = StratifiedShuffleSplit(n_splits=1, train_size=n_required_samples)
+            new_indices, _ = next(shuffle_split.split(df[remaining_indices], encoded_labels[remaining_indices]))
+            new_indices = np.array(remaining_indices)[new_indices]
+
+            # strat_split = StratifiedShuffleSplit(n_splits=1, train_size=required_samples, random_state=random_state)
+            # new_indices, _ = next(strat_split.split(X[remaining_indices], y[remaining_indices]))
+            # new_indices = np.array(remaining_indices)[new_indices]
+
+        else:
+            # shuffle the indicies of the remaining patients and select the required number of samples
+            shuffle_split = ShuffleSplit(n_splits=1, train_size=n_required_samples) # , random_state=config['general']['seed'])
+            new_indices, _ = next(shuffle_split.split(remaining_indices))
+            new_indices = np.array(remaining_indices)[new_indices]  # Convert back to the original index space
 
     # update the list of sampled indices with the new_indices
     sampled_indices += list(new_indices)

@@ -171,8 +171,7 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
             if(config['data']['equalizer']['isEnabled']):
                 train_i_df = label_equalizer(train_i_df, config)
             
-            # TODO: subsampling here !! 
-
+            # TODO: subsampling here !!
             assert not PtnID_SanityCheck(config, train_i_df, val_i_df)
 
             k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
