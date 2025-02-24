@@ -36,7 +36,6 @@ def perform_cumulative_sampling(config, df, sampled_indices, target_sample_size)
     remaining_indices = list(set(range(len(df))) - set(sampled_indices))  # determine which patients have not already been sampled
     n_required_samples = target_sample_size - len(sampled_indices)  # how many more patients  we need to sample
     
-    print(n_required_samples)
     if n_required_samples == len(remaining_indices):
         new_indices = remaining_indices
     elif n_required_samples < 0:
