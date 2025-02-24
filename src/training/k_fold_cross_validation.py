@@ -36,7 +36,7 @@ def perform_cumulative_sampling(config, df, sampled_indices, target_sample_size)
     remaining_indices = list(set(range(len(df))) - set(sampled_indices))  # determine which patients have not already been sampled
     n_required_samples = target_sample_size - len(sampled_indices)  # how many more patients  we need to sample
     
-
+    print(n_required_samples)
     if n_required_samples == len(remaining_indices):
         new_indices = remaining_indices
     elif n_required_samples < 0:
@@ -44,22 +44,27 @@ def perform_cumulative_sampling(config, df, sampled_indices, target_sample_size)
         # i.e. there is not enough training data to sample the target number of patients
         raise ValueError(f"Number of required samples is less than 0. There is not enough training data to sample {target_sample_size} patients.")
     else:
-        if config["data"]["kFolds"]["split_strategy"] == 'stratified':
-            labels = df.iloc[remaining_indices][config["data"]["kFolds"]["split_strategy"] == 'stratified'] 
-            encoded_labels = LabelEncoder().fit_transform([''.join(str(l)) for l in labels.values])
-            shuffle_split = StratifiedShuffleSplit(n_splits=1, train_size=n_required_samples)
-            new_indices, _ = next(shuffle_split.split(df[remaining_indices], encoded_labels[remaining_indices]))
-            new_indices = np.array(remaining_indices)[new_indices]
+        # NOTE: it is not always possible to do stratified sampling. Often there is just one patient with a certain combination of feature values, which makes splitting impossible
+        # NOTE: so, we have only implemented random splitting for this experiment
+        # if config["data"]["kFolds"]["split_strategy"] == 'stratified':
+        #     labels = df[config['data']['stratify_on']]
+        #     labels_string = [''.join(str(l)) for l in labels.values]
+        #     labels_string = [''.join(str(l).replace(' ', '').replace('-', '')) for l in labels.values]
+        #     encoded_labels = LabelEncoder().fit_transform(labels_string)
+        #     shuffle_split = StratifiedShuffleSplit(n_splits=1, train_size=n_required_samples)
+        #     new_indices, _ = next(shuffle_split.split(df.iloc[remaining_indices], encoded_labels[remaining_indices]))
+        #     new_indices = np.array(remaining_indices)[new_indices]
 
             # strat_split = StratifiedShuffleSplit(n_splits=1, train_size=required_samples, random_state=random_state)
             # new_indices, _ = next(strat_split.split(X[remaining_indices], y[remaining_indices]))
             # new_indices = np.array(remaining_indices)[new_indices]
 
-        else:
-            # shuffle the indicies of the remaining patients and select the required number of samples
-            shuffle_split = ShuffleSplit(n_splits=1, train_size=n_required_samples) # , random_state=config['general']['seed'])
-            new_indices, _ = next(shuffle_split.split(remaining_indices))
-            new_indices = np.array(remaining_indices)[new_indices]  # Convert back to the original index space
+        #else:
+
+        # shuffle the indicies of the remaining patients and select the required number of samples
+        shuffle_split = ShuffleSplit(n_splits=1, train_size=n_required_samples) # , random_state=config['general']['seed'])
+        new_indices, _ = next(shuffle_split.split(remaining_indices))
+        new_indices = np.array(remaining_indices)[new_indices]  # Convert back to the original index space
 
     # update the list of sampled indices with the new_indices
     sampled_indices += list(new_indices)

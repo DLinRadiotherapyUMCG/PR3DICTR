@@ -51,7 +51,11 @@ class MultiTox_Loss(nn.Module):
             batch_loss_dict = {}
             if len(endpoint_list) > 1:  # if there are multiple endpoints
                 for idx, endpoint in enumerate(endpoint_list):
-                    batch_loss_dict[endpoint] = batch_loss[:, idx].sum() / mask[:, idx].sum()
+                    n_non_missing = mask[:, idx].sum()  
+                    if n_non_missing == 0:  # if there are no non-missing labels, just set the loss to 0 (this is mostly for the validation set)
+                        batch_loss_dict[endpoint] = torch.tensor(0.0, device=predictions.device, dtype=predictions.dtype)
+                    else:
+                        batch_loss_dict[endpoint] = batch_loss[:, idx].sum() / mask[:, idx].sum()
             else:            # if there is only one endpoint
                 batch_loss_dict[endpoint_list[0]] = batch_loss[:].sum() / mask[:].sum()            
 
