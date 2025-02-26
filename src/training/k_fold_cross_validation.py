@@ -22,7 +22,7 @@ from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
 from src.evaluation.get_visualisations import get_visualizations
-from src.experiments.training_data_amounts import generate_training_data_subsamples
+from src.dataset.cumulative_sampling import generate_training_data_subsamples
 
 
 
