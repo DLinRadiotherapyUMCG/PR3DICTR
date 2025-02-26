@@ -127,13 +127,15 @@ class TransRP_ViT(nn.Module):
                 nn.ReLU(inplace=True)
             )
 
-        if self.clinical_features_method == "mcb":
-            from src.models.mcb import CompactBilinearPooling
-            self.MCB_block = CompactBilinearPooling(patch_embedding_hidden_size, n_features, patch_embedding_hidden_size).cuda()
-        
         if self.clinical_features_method == "cls":
             #self.cls_token = nn.Parameter(torch.randn(1, 1, hidden_size))
-            self.clc_embed = nn.Linear(n_features, hidden_size)
+            #self.clc_embed = nn.Linear(n_features, hidden_size)
+            cls_hidden_dim = config["model"]["TransRP"]["cls_hidden_dim"]
+            if config["model"]["TransRP"]["cls_gating"]:
+                self.clc_embed = GatedTabularEmbedding(n_features, hidden_size, hidden_dim=cls_hidden_dim)
+            else:
+                self.clc_embed = TabularEmbedding(n_features, hidden_size, hidden_dim=cls_hidden_dim)
+
 
     def forward(self, x, x_clc, vectorize=False):  
         #print("X", x.shape, "x_clc", x_clc.shape)
@@ -145,6 +147,7 @@ class TransRP_ViT(nn.Module):
             x_clc = self.to_label_embedding(x_clc)
 
             x = torch.cat((x, x_clc), dim=1)
+            
         elif self.clinical_features_method == "m2":     # append the clinical features to each patch
             x_clc = x_clc[:, None, :]
             x_clc = x_clc.repeat(1, self.patch_num, 1 )
@@ -164,27 +167,58 @@ class TransRP_ViT(nn.Module):
 
             x = torch.cat((cls_token, x), dim=1)
         
-        elif self.clinical_features_method == "mcb":     # merge the clinical features to each patch using MCB
-            x2 = torch.zeros_like(x)
-            for i in range(self.patch_num):
-                x_patch = x[:, i, :]  # Flatten the patch to 1D
-                x2[:, i, :] = self.MCB_block(x_patch, x_clc)
-            x = x2
-        
 
         x = self.transformer(x)
         
 
-        if "cls" in self.clinical_features_method:
+        if "cls" in self.clinical_features_method:  # use the CLS token as the output
             x = x[:, 0, :]
         else:
-            x = self.norm(x)
+            x = self.norm(x)                 # use the mean of all of the patches as the output
             x = torch.mean(x, 1)       
 
         x = self.linear_layers(x, x_clc, vectorize=vectorize)
         
-        return x  #, hidden_states_out 
+        return x  
+
+
+
+class TabularEmbedding(nn.Module):
+    def __init__(self, tabular_dim, embed_dim, hidden_dim=128):
+        super(TabularEmbedding, self).__init__()
+        
+        # MLP to project tabular features to the ViT embedding space
+        self.fc = nn.Sequential(
+            nn.Linear(tabular_dim, hidden_dim),  # Hidden layer
+            nn.ReLU(),
+            nn.Linear(hidden_dim, embed_dim)    # Output embedding layer
+        )
     
+    def forward(self, tabular_data):
+        return self.fc(tabular_data)  # Projected embedding
+
+
+class GatedTabularEmbedding(nn.Module):
+    def __init__(self, tabular_dim, embed_dim, hidden_dim=128):
+        super(GatedTabularEmbedding, self).__init__()
+        # Linear layer for projection
+        self.fc = nn.Linear(tabular_dim, embed_dim)
+        # Gating network to generate a weight vector in [0,1]
+        self.gate = nn.Sequential(
+            nn.Linear(tabular_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, embed_dim),
+            nn.Sigmoid()
+        )
+
+    def forward(self, tabular_data):
+        # Compute the base embedding and the gate weights
+        embed = self.fc(tabular_data)
+        gate_weight = self.gate(tabular_data)
+        # Element-wise multiplication to modulate the embedding
+        gated_embed = embed * gate_weight
+        return gated_embed
+
 
 
 def get_transrp_vit(config, n_features : int, feature_map_dim_after_encoder):

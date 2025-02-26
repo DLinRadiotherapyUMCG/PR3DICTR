@@ -42,6 +42,8 @@ model:
   TransRP:
     image_encoder: 'densenet'  # which model to use an an image encoder ['resnet', 'densenet'] (requires their respective configs)
     clinical_features_method: 'm2'  # which method to use to insert features into (or after) the ViT ["m1", "m2", "m3", "mcb"] 
+    cls_hidden_dim: 128   # the sizes of the linear layers used to embed the clinical features into a CLS token
+    cls_gating: False              # whether to use the cls gating mechanism to weigh the clinical features
     vit_patch_size: [1,1,1]       # size of the feature map patches
     vit_dim: 768                  
     vit_depth: 12            
