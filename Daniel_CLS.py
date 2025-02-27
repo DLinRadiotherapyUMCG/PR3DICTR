@@ -36,11 +36,13 @@ if __name__ == '__main__':
 
     # CLS experiment
     config['general']['experiment_name'] = "Trial32_CLS_method"
-    config['general']['trialNumber'] = "CLS_no_gating"
+    config['general']['trialNumber'] = "CLS_no_gating_alpha_mixing"
 
     config['model']['TransRP']['clinical_features_method'] = 'cls'
     config['model']['TransRP']['cls_hidden_dim'] = 64
     config['model']['TransRP']['cls_gating'] = False
+
+    config["model"]["TransRP"]["cls_merge_image_features"] = True
     
 
     # # MAIN: DL running class with hyperparameter optimization
@@ -52,9 +54,9 @@ if __name__ == '__main__':
 
     # TEST ENSEMBLE CODE
 
-    # from src.evaluation.validate_on_test_set import validate_models_on_test_set
+    from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
-    # trial_dir = r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
-    # # # # run the models on the test set
-    # validate_models_on_test_set(config, trial_dir)
+    trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']) # r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
+    # # # run the models on the test set
+    validate_models_on_test_set(config, trial_dir)
 

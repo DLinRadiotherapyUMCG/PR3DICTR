@@ -136,6 +136,10 @@ class TransRP_ViT(nn.Module):
             else:
                 self.clc_embed = TabularEmbedding(n_features, hidden_size, hidden_dim=cls_hidden_dim)
 
+            self.cls_merge_image_patches = config["model"]["TransRP"]["cls_merge_image_features"]
+            if self.cls_merge_image_patches:
+                self.alpha = nn.Parameter(torch.tensor(0.5))
+
 
     def forward(self, x, x_clc, vectorize=False):  
         #print("X", x.shape, "x_clc", x_clc.shape)
@@ -147,7 +151,7 @@ class TransRP_ViT(nn.Module):
             x_clc = self.to_label_embedding(x_clc)
 
             x = torch.cat((x, x_clc), dim=1)
-            
+
         elif self.clinical_features_method == "m2":     # append the clinical features to each patch
             x_clc = x_clc[:, None, :]
             x_clc = x_clc.repeat(1, self.patch_num, 1 )
@@ -169,10 +173,15 @@ class TransRP_ViT(nn.Module):
         
 
         x = self.transformer(x)
-        
 
         if "cls" in self.clinical_features_method:  # use the CLS token as the output
-            x = x[:, 0, :]
+            #x = x[:, 0, :]
+            if self.cls_merge_image_patches:  # mix the CLS token with the mean of the image patches
+                cls_token = x[:, 0, :]
+                image_representation = torch.mean(x[:, 1:, :], 1) # mean of the image patches
+                x = self.alpha * cls_token + (1 - self.alpha) * image_representation
+            else:
+                x = x[:, 0, :]
         else:
             x = self.norm(x)                 # use the mean of all of the patches as the output
             x = torch.mean(x, 1)       
