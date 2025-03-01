@@ -119,8 +119,7 @@ class TransRP_ViT(nn.Module):
         else:
             n_features_linear_layers = 0
 
-        self.linear_layers = get_output_head(config, n_features_linear_layers)
-
+        
         if self.clinical_features_method ==  "m1": # add clinical features as an additional patch to the input of the transformer
             self.to_label_embedding = nn.Sequential(
                 nn.Linear(1, hidden_size), # new
@@ -137,8 +136,16 @@ class TransRP_ViT(nn.Module):
                 self.clc_embed = TabularEmbedding(n_features, hidden_size, hidden_dim=cls_hidden_dim)
 
             self.cls_merge_image_patches = config["model"]["TransRP"]["cls_merge_image_features"]
+            self.cls_per_class_weighting = config["model"]["TransRP"]["cls_per_class_weighting"]
+
             if self.cls_merge_image_patches:
                 self.alpha = nn.Parameter(torch.tensor(0.5))
+            if self.cls_per_class_weighting:
+                config["model"]["output_head"]["name"] = "hybridfusion"
+
+
+        self.linear_layers = get_output_head(config, n_features_linear_layers)
+
 
 
     def forward(self, x, x_clc, vectorize=False):  
@@ -170,7 +177,6 @@ class TransRP_ViT(nn.Module):
             #cls_tokens = torch.repeat_interleave(self.cls_token, x.size(0), dim=0)
 
             x = torch.cat((cls_token, x), dim=1)
-        
 
         x = self.transformer(x)
 
@@ -180,6 +186,15 @@ class TransRP_ViT(nn.Module):
                 cls_token = x[:, 0, :]
                 image_representation = torch.mean(x[:, 1:, :], 1) # mean of the image patches
                 x = self.alpha * cls_token + (1 - self.alpha) * image_representation
+            elif self.cls_per_class_weighting:
+                cls_token = x[:, 0, :]
+                image_representation = torch.mean(x[:, 1:, :], 1)
+
+                # x = (cls_token, image_representation)
+
+                x = self.linear_layers(cls_token, image_representation, None, vectorize=vectorize)
+
+                return x
             else:
                 x = x[:, 0, :]
         else:

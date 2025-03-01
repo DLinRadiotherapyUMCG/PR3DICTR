@@ -165,7 +165,7 @@ data:
   dataloader:
     dataloader_type: standard
     dataset_type: cache
-    num_workers: 8
+    num_workers: 4
     smartcache:
       cache_rate: 0.5
       num_replace_workers: 4
@@ -444,7 +444,7 @@ hyperparam_tuning:
 model:
   TransRP:
     clinical_features_method: m2
-    image_encoder: densenet
+    image_encoder: resnet
     vit_depth: 4
     vit_dim: 256
     vit_dropout_p: 0
@@ -509,7 +509,7 @@ model:
   linear_units_endpoint:
   - 32
   lrelu_alpha: 0.0731576958075853
-  model_name: resnet
+  model_name: TransRP
   n_clinical_layers: 0
   n_linear_layers: 2
   n_linear_layers_endpoint: 2
@@ -546,7 +546,7 @@ training:
     alpha: 0.5
     isEnabled: false
     learning_rate: 0.001
-  batch_size: 16
+  batch_size: 4
   loss:
     ASL:
       gamma_neg: 4
