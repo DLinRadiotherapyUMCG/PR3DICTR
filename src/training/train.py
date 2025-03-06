@@ -25,6 +25,7 @@ from src.utils.loss_func.calc_mixup_loss import calc_mixup_loss
 from src.training.utils.gradNorm import GradNorm
 from src.constants import MISSING_DATA_VALUE
 
+
 def train(config, model, loss_function, train_loader, val_loader, metricHandler):
     """
     Train the model.

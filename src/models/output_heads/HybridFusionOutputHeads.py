@@ -47,6 +47,9 @@ class HybridFusionOutputHeads(torch.nn.Module):
             for layer in self.endpoint_heads[endpoint]:
                 x_dict[endpoint] = layer(x_dict[endpoint])
 
+        #print(1/0)
+            
+
 
         if vectorize: # to stack the inputs into a single tensor (for [Captum's] attention maps)
             output_tensor = torch.cat([x_dict[endpoint] for endpoint in self.endpoint_list], dim=1)
@@ -103,8 +106,6 @@ class ClassSpecificInputWeighting(nn.Module):
 
     def forward(self, tokens_tuple):
         (cls_token, image_tokens) = tokens_tuple
-
-        #print(cls_token[0])
 
         # Use per-class alpha (reshaped for broadcasting)
         combined_representation = self.alpha * cls_token + (1 - self.alpha) * image_tokens

@@ -44,25 +44,34 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
         preds_dict[label] = []
         labels_dict[label] = []
 
+    # patient_IDs_list = val_loader.dataset.patient_IDs_list
+    # print(patient_IDs_list)
+
+    # for idx, ID in enumerate(patient_IDs_list):
+    #     print(idx, ID)
+    #     # get the data and target of the requested patient
+    #     data = val_loader.dataset.__getitem__(idx)
     
     with torch.no_grad():
         for i, batch in enumerate(val_loader):
-            logging.debug(f'Validation batch {i}')
-            inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
-
-            outputs = model(x=inputs, features=clinical_features)
-            mean_loss, loss_dict = loss_function(outputs, targets)
-
-            total_loss += mean_loss.item()       
-            for label in labels:
-                total_loss_dict[label] += loss_dict[label].item()
             
-            for lab_idx, label in enumerate(labels):
-                preds_dict[label] = preds_dict[label] + list(sigmoid_act(outputs[label]).cpu().detach().numpy().reshape((1,targets[:,lab_idx].shape[0]))[0])
-                labels_dict[label] = labels_dict[label] + list(targets[:,lab_idx].cpu().detach().numpy().reshape((1,targets[:,lab_idx].shape[0]))[0])
+                logging.debug(f'Validation batch {i}')
+                inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+
+                outputs = model(x=inputs, features=clinical_features)
+                mean_loss, loss_dict = loss_function(outputs, targets)
+
+                total_loss += mean_loss.item()       
+                for label in labels:
+                    total_loss_dict[label] += loss_dict[label].item()
+                
+                for lab_idx, label in enumerate(labels):
+                    preds_dict[label] = preds_dict[label] + list(sigmoid_act(outputs[label]).cpu().detach().numpy().reshape((1,targets[:,lab_idx].shape[0]))[0])
+                    labels_dict[label] = labels_dict[label] + list(targets[:,lab_idx].cpu().detach().numpy().reshape((1,targets[:,lab_idx].shape[0]))[0])
+                
+                num_batches += 1
+                patientIDs_list += list(batch['patient_id'])
             
-            num_batches += 1
-            patientIDs_list += list(batch['patient_id'])
 
     mean_metric_value, metric_dict = metric_handler.calculate_metric(preds_dict, labels_dict)
 

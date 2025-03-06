@@ -118,6 +118,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         logging.info('Getting model')
         model = get_classification_model(config, metadata=metadata, save_summary=True)
         model.to(device=DEVICE)
+        #model = torch.compile(model)
 
         # train the model
         model = train(config, model, loss_function, train_loader, val_loader, metricHandler)

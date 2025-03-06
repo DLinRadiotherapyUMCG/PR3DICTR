@@ -24,6 +24,8 @@ from monai.utils import set_determinism
 
 if __name__ == '__main__':
 
+    print(torch.compiler.list_backends())
+
     # Setup
     log_level = parse_args()
     setup_logging(log_level)
@@ -58,7 +60,7 @@ if __name__ == '__main__':
 
 
     # CLS experiment
-    config['general']['experiment_name'] = "Trial32_CLS_method_testing"
+    config['general']['experiment_name'] = "Trial32_CLS_method_testing_2"
     config['general']['trialNumber'] = "CLS_no_gating_output_mixing"
 
     config['model']['TransRP']['clinical_features_method'] = 'cls'

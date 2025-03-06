@@ -44,14 +44,15 @@ if __name__ == '__main__':
 
     config['data']['source'] = 'MDACC'
     config['data']['dataset_csv'] = "MDACC_stratified_sampling_test.csv"
+    config['columns']['clinical_features'] = [col_name.replace("W01", "BSL") for col_name in config['columns']['clinical_features']]  # force MDACC to use BSL (and not W01) features
 
-    config['paths']['csv'] = r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Documents\DL_NTCP_Multitox\datasets\MDACC_dataset"
-    config['paths']['images'] = r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Documents\DL_NTCP_Multitox\datasets\MDACC_dataset\mdacc_patients_high_res"
+    config['paths']['csv'] = r"/scratch/p306883/DL_NTCP_Multitox/datasets/MDACC_dataset"
+    config['paths']['images'] = r"/scratch/p306883/DL_NTCP_Multitox/datasets/MDACC_dataset/patients_high_res"
     #config['data']['paths']['results'] = r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06\MDACC\masks"
 
     
     # directory to folds folder
-    trial_dir = r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\PRIMA taste\results\Attentionmaps\Transrp_highres\TRP_Taste" # config['general']['resultsCurrentDirectory']
+    trial_dir = r"/scratch/p306883/rt_pred_results/Trial_32/Trial_32" #  # config['general']['resultsCurrentDirectory']
     #config['general']['resultsCurrentDirectory'] = trial_dir
     # # # # run the models on the test set
     validate_models_on_test_set(config, trial_dir)
