@@ -7,7 +7,7 @@ from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
 
-def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False, is_test_set=False):
+def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False, is_test_set=False, lr: bool = False):
     """
     A function that creates all of the desired plots, using the predictions csv.
     Args:
@@ -51,28 +51,40 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
         # LOOP THROUGH THE PLOTS
         # calibration plot
         if 'calibration' in visualisations_list:
-            filename = f"calibration_plot_{set_name}.png"
+            if not lr:  
+                filename = f"calibration_plot_{set_name}.png"
+            else:
+                filename = f"calibration_plot_LR_{set_name}.png"
             filename = alter_filename_if_external_dataset(config, filename)
             save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
             adaptive_make_calibration_plots(config, plotting_dict, column_names=endpoint_list, n_bins=n_bins, mode="calibration", title=f"Calibration Plot: {set_name} set", filedir=save_dir, return_fig=False)
 
         # reliability plot
         if 'reliability' in visualisations_list:
-            filename = f"reliability_plot_{set_name}.png"
+            if not lr:  
+                filename = f"reliability_plot_{set_name}.png"
+            else:
+                filename = f"reliability_plot_LR_{set_name}.png"
             filename = alter_filename_if_external_dataset(config, filename)
             save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
             adaptive_make_calibration_plots(config, plotting_dict, column_names=endpoint_list, n_bins=n_bins, mode="reliability", title=f"Reliability Plot: {set_name} set", filedir=save_dir, return_fig=False)
 
         # confusion matrix
         if 'confusion_matrix' in visualisations_list:  
-            filename = f"confusion_matrix_plot_{set_name}.png"
+            if not lr: 
+                filename = f"confusion_matrix_plot_{set_name}.png"
+            else:
+                filename = f"confusion_matrix_plot_LR_{set_name}.png"
             filename = alter_filename_if_external_dataset(config, filename)
             save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
             adaptive_make_calibration_plots(config, plotting_dict, column_names=endpoint_list, n_bins=n_bins, mode="confusion_matrix", title=f"Confusion Matrices: {set_name} set", filedir=save_dir, return_fig=False)  
 
         # ROC curve
-        if 'roc_curve' in visualisations_list:        
-            filename = f"ROC_curve_plot_{set_name}.png"
+        if 'roc_curve' in visualisations_list:  
+            if not lr:      
+                filename = f"ROC_curve_plot_{set_name}.png"
+            else:
+                filename = f"ROC_curve_plot_LR_{set_name}.png"
             filename = alter_filename_if_external_dataset(config, filename)
             save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
             adaptive_make_calibration_plots(config, plotting_dict, column_names=endpoint_list, n_bins=n_bins, mode="roc_curve", title=f"ROC curves: {set_name} set", filedir=save_dir, return_fig=False)  

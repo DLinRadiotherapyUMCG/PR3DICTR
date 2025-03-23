@@ -44,6 +44,9 @@ METRIC_TYPES = {
 }
 
 
+EARLY_NTCP_TIMEPOINTS = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7',]
+LATE_NTCP_TIMEPOINTS = ["W12", "M06", "M12", "M18", "M24", "M36", "M48", "M60"]  
+
 
 
 """ The dictionary of colour mapping for HNC RTDOSE  """

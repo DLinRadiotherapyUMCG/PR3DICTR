@@ -575,3 +575,58 @@ training:
   show_progress_bar: false
   stopping_criteria: loss
   validation_interval: 1
+
+
+
+
+CITOR:  # features of the CITOR (sub-)models for the early and late endpoints
+  dysphagia_late:
+    label: "Dysphagia_M06"
+    models:
+      model1:
+        features: ['OralCavity_Ext_meandose','PCM_Med_meandose','PCM_Inf_meandose','Dysphagia_W01_Grade2','Dysphagia_W01_Grade3_4','Loctum2_Pharynx','Loctum2_Larynx'] #,'Dysphagia_W01_Grade0_1' ,'Loctum2_Oral_Cavity'
+      model2:
+        features: ['PCM_Sup_meandose','PCM_Med_meandose','PCM_Inf_meandose','Dysphagia_W01_Grade2','Dysphagia_W01_Grade3_4','Loctum2_Pharynx','Loctum2_Larynx'] #,'Loctum2_Oral_Cavity','Dysphagia_W01_Grade0_1'
+  dysphagia_early:
+    label: "Dysphagia_w06"
+    models:
+      model1:
+        features: ['OralCavity_Ext_meandose','PCM_Med_meandose','PCM_Inf_meandose','DYSFAGIE_UMCGshort_W01_Grade2', 'DYSFAGIE_UMCGshort_W01_Grade3_4','Loctum_OC','Loctum_Pharynx','Loctum_Larynx']
+      model2:
+        features: ['PCM_Sup_meandose', 'PCM_Med_meandose', 'PCM_Inf_meandose', 'DYSFAGIE_UMCGshort_W01_Grade2', 'DYSFAGIE_UMCGshort_W01_Grade3_4', 'Loctum_OC', 'Loctum_Pharynx', 'Loctum_Larynx'] 
+  xerostomia_late:
+    label: 'Xerostomia_M06'
+    models:
+      model1:
+        features: ['Submandibular_meandose','Xerostomia_W01_Een_beetje','Xerostomia_W01_Nogal_Heel_erg','Xerostomia_W01_Helemaal_niet'] #,'Xerostomia_W01_Helemaal_niet'
+      model2:
+        features: ['Parotid_meandose','Xerostomia_W01_Een_beetje','Xerostomia_W01_Nogal_Heel_erg','Xerostomia_W01_Helemaal_niet'] # 'Xerostomia_W01_Helemaal_niet' 
+  xerostomia_early:
+    label: 'Xerostomia_w06'
+    models:
+      model1:
+        features: ['Submandibular_meandose','Xerostomia_W01_Een_beetje','Xerostomia_W01_Nogal_Heel_erg','Xerostomia_W01_Helemaal_niet'] 
+      model2:
+        features: ['Parotid_meandose','Xerostomia_W01_Een_beetje','Xerostomia_W01_Nogal_Heel_erg','Xerostomia_W01_Helemaal_niet'] 
+  taste_late:
+    label: 'Taste_M06'
+    models:
+      model1: 
+        features: ['Parotid_meandose', 'OralCavity_Ext_meandose','Age'] #  No submodels !
+  taste_early:
+    label: 'Taste_loss_w06'
+    models:
+      model1: 
+        features: ['OralCavity_Ext_meandose','Age'] # ln(oral cavity), age
+  sticky_saliva_late:
+    label: 'Sticky_M06'
+    models:
+      model1:
+        features: ['Submandibular_meandose', 'Sticky_W01_Een_beetje','Sticky_W01_Nogal_Heel_erg'] # ,'Sticky_W01_Helemaal_niet' BSL scores, submandibular
+      model2:
+        features: ['Parotid_meandose', 'Sticky_W01_Een_beetje','Sticky_W01_Nogal_Heel_erg'] # ,'Sticky_W01_Helemaal_niet' BSL, parotid (sqrt(mean dose parotid ipsi) + sqrt(mean dose parotid contra))
+  sticky_saliva_early:
+    label: 'Sticky_saliva_w06'
+    models:
+      model1: 
+        features: ['Sticky_W01_Een_beetje','Sticky_W01_Nogal_Heel_erg','Submandibular_meandose'] # BSL, Submandibular glands # 'Sticky_W01_Helemaal_niet'

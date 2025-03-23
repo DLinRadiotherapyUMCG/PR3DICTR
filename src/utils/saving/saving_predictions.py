@@ -33,7 +33,7 @@ def concatenate_predictions(config, list_of_pred_list_dicts: list[dict], list_of
 
 
 def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dict, y_true_list_dict: dict, mode_list: list[str], 
-                     is_test_set:bool=False, ensemble_predictions: bool = False):
+                     is_test_set:bool=False, ensemble_predictions: bool = False, filename: str = None):
 
     """
     Save prediction and corresponding true labels to csv.
@@ -74,7 +74,8 @@ def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dic
         df_y = pd.concat([df_y, df_y_pred, df_y_true], axis=1)
 
     # Save to file
-    output_file_dir = get_predictions_csv_dir(config, is_test_set, ensemble_predictions)
+    output_file_dir = get_predictions_csv_dir(config, is_test_set, ensemble_predictions, filename=filename)
+
 
     df_y.to_csv(output_file_dir, sep=';', index=False)
 

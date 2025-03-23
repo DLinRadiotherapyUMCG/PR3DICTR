@@ -243,6 +243,16 @@ saving:
     ensemble_predictions_csv: "ensemble_predictions.csv"   # filename of the ensemble predictions
       
 CITOR:  # features of the CITOR (sub-)models for the early and late endpoints
+  aspiration_late:
+    label: "Aspiration_M06"
+    models:
+      model1:
+        features: ['PCM_Med_meandose', 'Aspiration_W01_Een_beetje', 'Aspiration_W01_Nogal_Heel_erg']
+  aspiration_early:
+    label: "Aspiration_w06"
+    models:
+      model1:
+        features: ['Aspiration_W01_Een_beetje', 'Aspiration_W01_Nogal_Heel_erg']
   dysphagia_late:
     label: "Dysphagia_M06"
     models:
@@ -261,24 +271,22 @@ CITOR:  # features of the CITOR (sub-)models for the early and late endpoints
     label: 'Xerostomia_M06'
     models:
       model1:
-        features: ['Submandibular_meandose','Xerostomia_W01_Een_beetje','Xerostomia_W01_Heel_erg','Xerostomia_W01_Helemaal_niet'] #,'Xerostomia_W01_Helemaal_niet'
+        features: ['Submandibular_meandose','Xerostomia_W01_Een_beetje','Xerostomia_W01_Heel_erg'] #,'Xerostomia_W01_Helemaal_niet'] #,'Xerostomia_W01_Helemaal_niet'
       model2:
-        features: ['Parotid_sum_sqrt','Xerostomia_W01_Een_beetje','Xerostomia_W01_Heel_erg','Xerostomia_W01_Helemaal_niet'] # 'Xerostomia_W01_Helemaal_niet' 
+        features: ['Parotid_sum_sqrt','Xerostomia_W01_Een_beetje','Xerostomia_W01_Heel_erg'] #,'Xerostomia_W01_Helemaal_niet'] # 'Xerostomia_W01_Helemaal_niet' 
   xerostomia_early:
     label: 'Xerostomia_w06'
     models:
       model1:
-        features: ['Submandibular_meandose','Xerostomia_W01_Een_beetje','Xerostomia_W01_Heel_erg','Xerostomia_W01_Helemaal_niet'] 
+        features: ['Submandibular_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Heel_erg'] # ,'Xerostomia_W01_Helemaal_niet'] 
       model2:
-        features: ['Parotid_sum_sqrt','Xerostomia_W01_Een_beetje','Xerostomia_W01_Heel_erg','Xerostomia_W01_Helemaal_niet'] 
-  taste_loss_late:
+        features: ['Parotid_sum_sqrt', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Heel_erg'] # ,'Xerostomia_W01_Helemaal_niet'] 
+  taste_late:
     label: 'Taste_M06'
     models:
       model1: 
-        features: ['OralCavity_mean_sqrt','Age'] # 'Parotid_mean_ln', ln(mean dose parotid glands), sqrt(oral cavity), age
-      model2:
-        features: ['Parotid_mean_ln','Age'] #,'OralCavity_mean_sqrt'
-  taste_loss_early:
+        features: ['Parotid_mean_ln', 'OralCavity_mean_sqrt','Age'] # 'Parotid_mean_ln', ln(mean dose parotid glands), sqrt(oral cavity), age
+  taste_early:
     label: 'Taste_loss_w06'
     models:
       model1: 
@@ -287,9 +295,9 @@ CITOR:  # features of the CITOR (sub-)models for the early and late endpoints
     label: 'Sticky_M06'
     models:
       model1:
-        features: ['Sticky_W01_Een_beetje','Sticky_W01_Heel_erg','Submandibular_meandose'] # ,'Sticky_W01_Helemaal_niet' BSL scores, submandibular
+        features: ['Submandibular_meandose', 'Sticky_W01_Een_beetje', 'Sticky_W01_Heel_erg'] # ,'Sticky_W01_Helemaal_niet' BSL scores, submandibular
       model2:
-        features: ['Sticky_W01_Een_beetje','Sticky_W01_Heel_erg','Parotid_sum_sqrt'] # ,'Sticky_W01_Helemaal_niet' BSL, parotid (sqrt(mean dose parotid ipsi) + sqrt(mean dose parotid contra))
+        features: ['Parotid_sum_sqrt', 'Sticky_W01_Een_beetje', 'Sticky_W01_Heel_erg'] # ,'Sticky_W01_Helemaal_niet' BSL, parotid (sqrt(mean dose parotid ipsi) + sqrt(mean dose parotid contra))
   sticky_saliva_early:
     label: 'Sticky_saliva_w06'
     models:

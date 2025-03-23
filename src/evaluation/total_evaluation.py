@@ -12,7 +12,7 @@ from src.utils.saving.alter_filename_for_external_dataset import alter_filename_
 
 
 
-def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], is_test_set : bool = False, external_set: bool = False, pred_csv_dir: bool = None):
+def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], is_test_set : bool = False, external_set: bool = False, pred_csv_dir: bool = None, lr: bool = False):
     """
     A function to calculate the evaluation metrics for the current fold. The current directory is assumed to be the fold directory in the config, but can be manually overwritten.
     Metrics are calculated for each endpoint, and each set, and the results are stored in a csv file (one file per set).
@@ -69,32 +69,14 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
 
         # save the combined results to a csv
         combined_metrics_df = combined_metrics_df.sort_index()
+        if lr:
+            filename = f"all_LR_{set_name}_metrics.csv"
+        else:
+            filename = f"all_{set_name}_metrics.csv"
 
-        filename = f"all_{set_name}_metrics.csv"
         filename = alter_filename_if_external_dataset(config, filename)
         combined_metrics_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
         combined_metrics_df.to_csv(combined_metrics_csv_dir, sep=";")
 
 
-
-
-
-
-
-
-
-
-# # # FOR TESTING THIS FUNCTION (DANIEL)
-# 
-# if __name__ == "__main__":
-#     from src.config_presets.tools.get_config import get_config
-
-
-#     # Load the configuration file
-#     config = get_config('Multi_tox')
-
-#     config['general']['resultsCurrentDirectory'] = "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results/Results_0\Trial_2\KFold1"
-#     # Call the function
-#     total_evaluation_current_fold(config, external_set=False)
-    
-
+    logging.info(f"Total evaluation for current fold completed. Results saved in {config['general']['resultsCurrentDirectory']}")

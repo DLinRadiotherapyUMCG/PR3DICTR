@@ -4,14 +4,17 @@ from src.utils.saving.alter_filename_for_external_dataset import alter_filename_
 
 
 
-def get_predictions_csv_dir(config, test_set=False, ensemble_predictions=False, external_set=False):
-
-    if ensemble_predictions:
-        output_filename = config['saving']['filenames']['ensemble_predictions_csv']
-    elif test_set:
-        output_filename = config['saving']['filenames']['test_set_predictions_csv']
+def get_predictions_csv_dir(config, test_set=False, ensemble_predictions=False, external_set=False, filename=None):
+    print(filename)
+    if filename == None:
+        if ensemble_predictions:
+            output_filename = config['saving']['filenames']['ensemble_predictions_csv']
+        elif test_set:
+            output_filename = config['saving']['filenames']['test_set_predictions_csv']
+        else:
+            output_filename = config['saving']['filenames']['predictions_csv']
     else:
-        output_filename = config['saving']['filenames']['predictions_csv']
+        output_filename = filename
 
     # if using an external data source (e.g. for validating the model), then alter the predictions filename
     output_filename = alter_filename_if_external_dataset(config, output_filename)
