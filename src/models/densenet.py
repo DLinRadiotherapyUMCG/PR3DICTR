@@ -122,7 +122,7 @@ class _Transition(nn.Sequential):
         self.add_module("norm", nn.BatchNorm3d(in_channels))
         self.add_module("relu", nn.LeakyReLU(negative_slope=0))
         self.add_module("conv", nn.Conv3d(in_channels, out_channels, kernel_size=1, bias=False))
-        self.add_module("pool", nn.MaxPool3d(kernel_size=2, stride=2))
+        self.add_module("pool", nn.AvgPool3d(kernel_size=2, stride=2))
 
 
 class DenseNet(nn.Module):

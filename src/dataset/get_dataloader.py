@@ -109,7 +109,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     elif dataset_type == 'smartcache':
         ds_class = SmartCacheDataset
         update_dict = {'cache_rate': config['data']['dataloader']['smartcache']['cache_rate'], 
-                       'num_workers': num_workers, "num_replace_workers": 
+                       'num_init_workers': None, "num_replace_workers": 
                        config['data']['dataloader']['smartcache']['num_replace_workers']}
     else:
         raise ValueError('Invalid dataset_type: {}.'.format(dataset_type))

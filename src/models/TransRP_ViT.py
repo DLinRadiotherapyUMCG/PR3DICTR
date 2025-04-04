@@ -126,7 +126,7 @@ class TransRP_ViT(nn.Module):
                 nn.ReLU(inplace=True)
             )
 
-        if self.clinical_features_method == "cls":
+        elif self.clinical_features_method == "cls":
             #self.cls_token = nn.Parameter(torch.randn(1, 1, hidden_size))
             #self.clc_embed = nn.Linear(n_features, hidden_size)
             cls_hidden_dim = config["model"]["TransRP"]["cls_hidden_dim"]
@@ -142,6 +142,18 @@ class TransRP_ViT(nn.Module):
                 self.alpha = nn.Parameter(torch.tensor(0.5))
             if self.cls_per_class_weighting:
                 config["model"]["output_head"]["name"] = "hybridfusion"
+
+        elif self.clinical_features_method == "multi_cls":
+            self.N_endpoints = len(config["columns"]["labels"])
+            cls_hidden_dim = config["model"]["TransRP"]["cls_hidden_dim"]
+            #self.clc_embed_list = [TabularEmbedding(n_features, hidden_size, hidden_dim=cls_hidden_dim) for _ in range(self.N_endpoints)]
+            self.clc_embed_list = nn.ModuleList([TabularEmbedding(n_features, hidden_size, hidden_dim=cls_hidden_dim) for _ in range(self.N_endpoints)])
+            self.cls_merge_image_patches = False
+            self.cls_per_class_weighting = False
+
+            config["model"]["output_head"]["name"] = "multiToken"
+
+
 
 
         self.linear_layers = get_output_head(config, n_features_linear_layers)
@@ -178,7 +190,20 @@ class TransRP_ViT(nn.Module):
 
             x = torch.cat((cls_token, x), dim=1)
 
+        elif self.clinical_features_method == "multi_cls":     # USE MULTIPLE CLS TOKENS
+            cls_tokens = [self.clc_embed_list[i](x_clc) for i in range(self.N_endpoints)]
+            cls_tokens = torch.stack(cls_tokens, dim=1)
+
+            x = torch.cat((cls_tokens, x), dim=1)
+
         x = self.transformer(x)
+
+        if self.clinical_features_method == "multi_cls":
+            cls_tokens = x[:, :self.N_endpoints, :]  # take the CLS tokens (one per class)
+            x = self.linear_layers(cls_tokens, None, vectorize=vectorize)
+
+            return x
+
 
         if "cls" in self.clinical_features_method:  # use the CLS token as the output
             #x = x[:, 0, :]

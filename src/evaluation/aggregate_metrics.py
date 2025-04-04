@@ -5,7 +5,7 @@ import logging
 
 
 from src.utils.saving.create_results_directory import create_results_directory
-
+from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
 
 
@@ -32,7 +32,9 @@ def aggregate_cross_validation_metrics(config: dict,  k_folds_completed: int, se
 
         # Load the results csv file
         for set_name in sets:
-            results_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], f"all_{set_name}_metrics.csv")
+            filename = f"{set_name}_metrics.csv"
+            filename = alter_filename_if_external_dataset(config, filename)
+            results_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
 
             df_metrics = pd.read_csv(results_csv_dir, sep=";", index_col=0)
             dfs_list_dict[set_name].append(df_metrics.copy())
@@ -54,7 +56,9 @@ def aggregate_cross_validation_metrics(config: dict,  k_folds_completed: int, se
         
         # Save the merged dataframe to a CSV file
         
-        output_csv_dir = os.path.join(folderPath, f"aggregated_{set_name}_metrics.csv")
+        filename = f"aggregated_{set_name}_metrics.csv"
+        filename = alter_filename_if_external_dataset(config, filename)
+        output_csv_dir = os.path.join(folderPath, filename)
         df_out.to_csv(output_csv_dir, sep=";")
 
         logging.info(f"Saving aggregated {set_name} metrics to {output_csv_dir}")

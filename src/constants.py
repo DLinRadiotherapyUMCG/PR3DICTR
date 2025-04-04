@@ -2,7 +2,7 @@ import torch
 
 from src.visualization.attention_colormap import att_cmap, att_cmap_abs
 
-MAIN_DATA_SOURCE = "UMCG"
+MAIN_DATA_SOURCES = ["UMCG", "PRIMA", "PRI2MA" ]
 
 # Dataset column names
 SPLIT_COL_NAME = "Split"
@@ -11,6 +11,9 @@ PATIENT_ID_COL_NAME = "PatientID"
 PATIENT_ID_LENGTHS_DICT = {
     "UMCG": 7,
     "MDACC" : 10,
+    "PRIMA" : 5, 
+    "PRI2MA" : 5,  # just another way of typing PRIMA
+    
 }
 MISSING_DATA_VALUE = -1   # value for missing endpoints
 

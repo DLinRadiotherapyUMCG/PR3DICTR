@@ -1,4 +1,4 @@
-from src.constants import MAIN_DATA_SOURCE
+from src.constants import MAIN_DATA_SOURCES
 import os
 
 
@@ -15,7 +15,7 @@ def alter_filename_if_external_dataset(config, filename : str):
         filename (str): altered filename
     """
     data_source = config['data']['source']
-    if data_source != MAIN_DATA_SOURCE:
+    if data_source not in MAIN_DATA_SOURCES:
         filename, file_extension = os.path.splitext(filename)  
         filename = f"{filename}_{data_source}{file_extension}"  # e.g. predictions_MDACC.csv
 

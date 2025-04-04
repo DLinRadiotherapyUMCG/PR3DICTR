@@ -3,6 +3,7 @@ import logging
 import pandas as pd
 import numpy as np
 import torch
+import gc
 
 from src.constants import DEVICE
 from src.training.train import train
@@ -89,6 +90,9 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
     # iterate through the folds 
     for fold_idx, dataset_split_dict in enumerate(k_fold_dataframes_list, start=1):
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()  # clear the GPU memory
+        gc.collect()  # clear the CPU memory
 
         # set up logging and create the results directory
         create_results_directory(config, fold_idx)

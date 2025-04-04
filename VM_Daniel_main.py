@@ -24,8 +24,6 @@ from monai.utils import set_determinism
 
 if __name__ == '__main__':
 
-    print(torch.compiler.list_backends())
-
     # Setup
     log_level = parse_args()
     setup_logging(log_level)
@@ -60,21 +58,38 @@ if __name__ == '__main__':
 
 
     # CLS experiment
-    config['general']['experiment_name'] = "Trial32_CLS_method_testing_2"
-    config['general']['trialNumber'] = "CLS_no_gating_output_mixing"
+    config['general']['experiment_name'] = "new_data"
+    config['general']['trialNumber'] = "TRP_2"
 
-    config['model']['TransRP']['clinical_features_method'] = 'cls'
-    config['model']['TransRP']['cls_hidden_dim'] = 64
-    config['model']['TransRP']['cls_gating'] = False
-
-    config["model"]["TransRP"]["cls_merge_image_features"] = False
-    config["model"]["TransRP"]["cls_per_class_weighting"] = True
     
+    config['model']['TransRP']['clinical_features_method'] = 'm2'
 
+    config['data']['source'] = "PRI2MA"
+    config['data']['dataset_csv'] = "MT_dataset_with_all_structs.csv"
+    config['columns']['clinical_features'] = [#'Sex', 'Age',
+                      'Aspiration_W01_Helemaal_niet','Aspiration_W01_Een_beetje',  'Aspiration_W01_Nogal_Heel_erg', 
+                      'Dysphagia_W01_Grade0_1', 'Dysphagia_W01_Grade2', 'Dysphagia_W01_Grade3_4', 
+                      'Sticky_W01_Helemaal_niet', 'Sticky_W01_Een_beetje', 'Sticky_W01_Nogal_Heel_erg',
+                      'Taste_W01_Helemaal_niet','Taste_W01_Een_beetje',  'Taste_W01_Nogal_Heel_erg', 
+                      'Xerostomia_W01_Helemaal_niet', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg', 
+                      #'Chemotherapy'
+                      ]
+
+    # config['model']['TransRP']['image_encoder'] = 'convnext'
+    # #
+    # config['model']['convnext']['model_size'] = 'tiny'
+    # config['model']['convnext']['kernel_size'] = 3
+    # config['model']['convnext']['patch_size'] = 5
+
+    config['training']['batch_size'] = 4
+    config['training']['max_epochs'] = 2
+
+    config['data']['kFolds']['n_iterations'] = 2
+    
     # # MAIN: DL running class with hyperparameter optimization
     #
-    expHandler = experimentHandler(config)
-    expHandler.run_experiment(config)
+    #expHandler = experimentHandler(config)
+    #expHandler.run_experiment(config)
 
 
 

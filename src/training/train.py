@@ -109,6 +109,8 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
             optimizer.zero_grad(set_to_none=True)
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+            
+            # if mixup is enabled, then we need to know the lambda and indices for this batch, to compute the loss properly
             if mixup_is_enabled:
                 mixup_lambda = batch['lambda']
                 mixup_indices_batch = batch['indices']

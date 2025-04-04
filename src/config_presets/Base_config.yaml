@@ -30,6 +30,10 @@ model:
     model_depth: 121  # DenseNet model size [121, 169, 201, 264]
   efficientnetv2:
     use_bias: true
+  convnext:
+    model_size: 'tiny'  # ConvNext model size ["tiny", "small", "base", "large", "xlarge"]
+    kernel_size: 3
+    patch_size: 4
   ViT:
     vit_patch_size: 8   # sizes of the patches to divide the input image into
     vit_dim: 128        # dimension of the vector to embed each patch into

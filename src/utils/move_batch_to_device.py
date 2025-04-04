@@ -22,8 +22,12 @@ def move_batch_to_device(batch : dict, device : torch.device) -> Tuple[torch.Ten
     inputs, clinical_features, targets = batch['input'], batch['features'], batch['label_list']
 
     # send to device
-    inputs = inputs.to(device=device)
-    clinical_features = clinical_features.to(device=device)
-    targets = targets.to(device=device)
+    inputs = inputs.to(device=device, non_blocking=False)
+    clinical_features = clinical_features.to(device=device, non_blocking=False)
+    targets = targets.to(device=device, non_blocking=False)
+
+    # inputs = inputs.to(device=device, non_blocking=True)
+    # clinical_features = clinical_features.to(device=device, non_blocking=True)
+    # targets = targets.to(device=device, non_blocking=True)
 
     return inputs, clinical_features, targets

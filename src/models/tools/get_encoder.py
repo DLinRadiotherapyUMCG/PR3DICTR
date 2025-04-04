@@ -3,6 +3,7 @@
 from src.models.cnn_pooling import CNN_Pooling
 from src.models.resnet import get_resnet
 from src.models.densenet import get_densenet, get_short_densenet
+from src.models.convnext import get_convnext, get_short_convnext
 from src.models.densenet_OAR_early import get_densenet as get_densenet_OAR
 from src.models.efficientnetv2 import get_efficientnetv2
 from src.models.ViT import ViT
@@ -35,6 +36,8 @@ def get_encoder(config, channels, depth, height, width):
     elif model_name == 'densenet':
         encoder = get_densenet(config, config['model']['densenet']['model_depth'], channels)
 
+    elif model_name == "convnext":
+        encoder = get_convnext(config, config['model']['convnext']['model_size'], channels)
     
 
     elif model_name == "ViT":
@@ -79,6 +82,9 @@ def get_encoder(config, channels, depth, height, width):
             # encoder.features.transition_3.conv.stride = (1,1,1)
         elif config['model']['TransRP']['image_encoder'] == 'densenet_OAR':
             encoder = get_densenet_OAR(config, config['model']['densenet']['model_depth'], channels)
+
+        elif config['model']['TransRP']['image_encoder'] == 'convnext':
+            encoder = get_short_convnext(config, config['model']['convnext']['model_size'], channels)
             
         else:
             raise ValueError('Invalid image_encoder for TransRP model: {}.'.format(config['model']['TransRP']['image_encoder']))

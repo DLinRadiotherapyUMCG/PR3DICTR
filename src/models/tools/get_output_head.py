@@ -3,7 +3,7 @@ from torch import nn
 from src.models.tools.model_summary import get_model_summary
 from src.models.output_heads.MultiToxOutputHead import MultiToxOutputHead
 from src.models.output_heads.HybridFusionOutputHeads import HybridFusionOutputHeads
-
+from src.models.output_heads.multiTokenOutputHead import multiTokenOutputHead
 
 # NOTE: TODO: move Flatten() into the output head class ?
 def get_output_head(config, n_features, feature_map_dim_after_encoder = None):
@@ -17,6 +17,8 @@ def get_output_head(config, n_features, feature_map_dim_after_encoder = None):
         output_head = MultiToxOutputHead(config=config, n_features=n_features)
     elif output_head_name == "hybridfusion":
         output_head = HybridFusionOutputHeads(config=config)
+    elif output_head_name == "multitoken":
+        output_head = multiTokenOutputHead(config=config)
     
     # TODO: add more output heads here (i.e. multi-time)
     
