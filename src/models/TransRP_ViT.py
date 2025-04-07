@@ -205,13 +205,9 @@ class TransRP_ViT(nn.Module):
             return x
 
 
-        if "cls" in self.clinical_features_method:  # use the CLS token as the output
+        elif "cls" in self.clinical_features_method:  # use the CLS token as the output
             #x = x[:, 0, :]
-            if self.cls_merge_image_patches:  # mix the CLS token with the mean of the image patches
-                cls_token = x[:, 0, :]
-                image_representation = torch.mean(x[:, 1:, :], 1) # mean of the image patches
-                x = self.alpha * cls_token + (1 - self.alpha) * image_representation
-            elif self.cls_per_class_weighting:
+            if self.cls_per_class_weighting:
                 cls_token = x[:, 0, :]
                 image_representation = torch.mean(x[:, 1:, :], 1)
 
@@ -220,6 +216,12 @@ class TransRP_ViT(nn.Module):
                 x = self.linear_layers(cls_token, image_representation, None, vectorize=vectorize)
 
                 return x
+            
+            elif self.cls_merge_image_patches:  # mix the CLS token with the mean of the image patches
+                cls_token = x[:, 0, :]
+                image_representation = torch.mean(x[:, 1:, :], 1) # mean of the image patches
+                x = self.alpha * cls_token + (1 - self.alpha) * image_representation
+            
             else:
                 x = x[:, 0, :]
         else:

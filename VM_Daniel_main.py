@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
 
     # CLS experiment
-    config['general']['experiment_name'] = "new_data"
+    config['general']['experiment_name'] = "new_data_test"
     config['general']['trialNumber'] = "TRP_2"
 
     
@@ -82,14 +82,14 @@ if __name__ == '__main__':
     # config['model']['convnext']['patch_size'] = 5
 
     config['training']['batch_size'] = 4
-    config['training']['max_epochs'] = 2
+    config['training']['max_epochs'] = 1
 
     config['data']['kFolds']['n_iterations'] = 2
     
     # # MAIN: DL running class with hyperparameter optimization
     #
-    #expHandler = experimentHandler(config)
-    #expHandler.run_experiment(config)
+    expHandler = experimentHandler(config)
+    expHandler.run_experiment(config)
 
 
 

@@ -48,6 +48,8 @@ model:
     clinical_features_method: 'm2'  # which method to use to insert features into (or after) the ViT ["m1", "m2", "m3", "mcb"] 
     cls_hidden_dim: 128   # the sizes of the linear layers used to embed the clinical features into a CLS token
     cls_gating: False              # whether to use the cls gating mechanism to weigh the clinical features
+    cls_merge_image_features: False # i the output of the ViT should be the CLS token and the mean of the image tokens (if false, only the CLS token is used)
+    cls_per_class_weighting: False  # aply an alpha per class to the CLS token
     vit_patch_size: [1,1,1]       # size of the feature map patches
     vit_dim: 768                  
     vit_depth: 12            
@@ -79,7 +81,7 @@ model:
   num_ohe_classes: 1                        # number of output logits per endpoint [1, 2] (usually 1!)
 
 data:
-  source: 'UMCG'                                     # the source of the dataset you are using (change this for external validation, see constants.py)
+  source: 'UMCG'                                     # the source of the dataset you are using (change this for external validation, see constants.py) # ['PRIMA', 'UMCG', 'MDACC']
   dataset_csv: 'stratified_sampling_test_542.csv'    # name of the csv containing the IDs, clinical features, and endpoints
   stratify_on: []                                    # which column names to use in stratified sampling (list of strings)
   excluded_variable_name: [] # ExcludedVar           # column name of variable to exlude patients by
@@ -291,7 +293,7 @@ CITOR:  # features of the CITOR (sub-)models for the early and late endpoints
       model1: 
         features: ['Parotid_mean_ln', 'OralCavity_mean_sqrt','Age'] # 'Parotid_mean_ln', ln(mean dose parotid glands), sqrt(oral cavity), age
   taste_early:
-    label: 'Taste_loss_w06'
+    label: 'Taste_w06'
     models:
       model1: 
         features: ['OralCavity_mean_ln','Age'] # ln(oral cavity), age

@@ -70,9 +70,9 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
         # save the combined results to a csv
         combined_metrics_df = combined_metrics_df.sort_index()
         if lr:
-            filename = f"all_LR_{set_name}_metrics.csv"
+            filename = f"LR_{set_name}_metrics.csv"
         else:
-            filename = f"all_{set_name}_metrics.csv"
+            filename = f"{set_name}_metrics.csv"
 
         filename = alter_filename_if_external_dataset(config, filename)
         combined_metrics_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
