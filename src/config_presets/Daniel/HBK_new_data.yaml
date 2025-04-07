@@ -74,7 +74,7 @@ model:
 
 data:
   source: 'PRIMA'  # ['PRIMA', 'UMCG', 'MDACC']
-  dataset_csv: 'MT_dataset_with_all_structs..csv'  #  MDACC_features_present
+  dataset_csv: 'MT_dataset_with_all_structs.csv'  #  MDACC_features_present
   stratify_on: ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ] # "Loctum2"
   image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
   image_num_dimensions: 3
