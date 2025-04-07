@@ -27,9 +27,9 @@ paths:
   
   #results: "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results" # "C:/Users/d.c.macrae/Documents/pred_rt_results"
 
-  csv: "/scratch/s3719332/PRIMA_dataset"
+  csv: "/scratch/p306883/PRIMA_dataset"
   images: "/scratch/p306883/PRIMA_dataset/dataset_full_renamed"
-  results: "/scratch/s3719332/rt_pred_results"
+  results: "/scratch/p306883/rt_pred_results"
 
 model:
   model_name: "TransRP"
