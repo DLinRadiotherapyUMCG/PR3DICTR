@@ -6,6 +6,7 @@ import optuna
 import logging
 import traceback
 import os
+import copy
 
 
 class HyperTuning_Handler():
@@ -48,25 +49,26 @@ class HyperTuning_Handler():
             set_random_seed(config['general']['seed'])
 
         # update the config of this trial
-        config = self.update_trial_hyperparameters(config, trial)
+        trial_config = copy.deepcopy(config)
+        trial_config = self.update_trial_hyperparameters(trial_config, trial)
 
         # K-fold cross validation here
         try: # it is possible that the trial fails, likely due to bad hyperparameters leading to a model that is too large
             trial_hyper_param_dict = trial.params
-            all_results = K_fold_cross_validation(config, config_for_wandb=trial_hyper_param_dict)
+            all_results = K_fold_cross_validation(trial_config, config_for_wandb=trial_hyper_param_dict)
     
             # aggregate the results of the K-folds, report them to Optuna
-            optuna_results = self.results_handler(config, all_results)
+            optuna_results = self.results_handler(trial_config, all_results)
         
         except Exception as e:
             # print the trial's error to the logger (i.e. the print statements)
-            logging.error(f"Error in trial {config['general']['trialNumber']}. See error log .txt file for details.")
+            logging.error(f"Error in trial {trial_config['general']['trialNumber']}. See error log .txt file for details.")
             logging.error(e)
 
-            optuna_results = [0.0 for _ in config['hyperparam_tuning']['optuna']['objectives']]
+            optuna_results = [0.0 for _ in trial_config['hyperparam_tuning']['optuna']['objectives']]
 
             # also save the error to a text file (mostly for debugging later)
-            trial_dir = os.path.join(config["paths"]["results"], config['general']['experiment_name'], config["general"]["trialNumber"])
+            trial_dir = os.path.join(trial_config["paths"]["results"], trial_config['general']['experiment_name'], trial_config["general"]["trialNumber"])
             with open(os.path.join(trial_dir, 'error_log.txt'), 'a') as f:
                 f.write(str(e) + "\n")
                 f.write(traceback.format_exc())
