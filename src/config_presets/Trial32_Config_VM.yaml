@@ -1,8 +1,8 @@
 
 columns:
   clinical_features:
-  - Sex
-  - Age
+  - Geslacht
+  - Leeftijd
   - Aspiration_W01_Helemaal_niet
   - Aspiration_W01_Een_beetje
   - Aspiration_W01_Nogal_Heel_erg
@@ -121,7 +121,7 @@ data:
       - 1.0
       - 1.0
       - 1.0
-  source: UMCG
+  source: PRIMA
   stratify_on:
   - Aspiration_M06
   - Dysphagia_M06

@@ -10,7 +10,7 @@ general:
 
 columns: # 
   labels:  ["Aspiration_M06", "Dysphagia_M06", "Sticky_M06", "Taste_M06", "Xerostomia_M06" ]
-  clinical_features: ['Sex', 'Age',
+  clinical_features: ['Leeftijd',
                       'Aspiration_W01_Helemaal_niet','Aspiration_W01_Een_beetje',  'Aspiration_W01_Nogal_Heel_erg', 
                       'Dysphagia_W01_Grade0_1', 'Dysphagia_W01_Grade2', 'Dysphagia_W01_Grade3_4', 
                       'Sticky_W01_Helemaal_niet', 'Sticky_W01_Een_beetje', 'Sticky_W01_Nogal_Heel_erg',
@@ -63,8 +63,8 @@ model:
   dropout_p: 0.1
   use_bias: True
   # Linear layer params (output head)
-  n_linear_layers: 1
-  linear_units: [256] # shared layers for model head
+  n_linear_layers: 0
+  linear_units: [] # shared layers for model head
   n_clinical_layers: 0
   clinical_variables_linear_units: []
   clinical_variables_position: 1
