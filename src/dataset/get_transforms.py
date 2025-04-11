@@ -180,7 +180,7 @@ def get_transforms(config: dict):
     generic_transforms = Compose([
         LoadImaged(keys=image_keys, image_only=True, ensure_channel_first=False),
         CheckImageDimensions(keys=image_keys, desired_num_img_dims=config['data']['image_num_dimensions']),                                       # checks if there are enough dimensions (eg. [1,96,96,96] and not [96,96,96]), otherwise fixes it
-        EnsureTyped(keys=image_keys + ['features', 'label_list', 'patient_id'], data_type='tensor'),
+        EnsureTyped(keys=image_keys + ['features', 'label_list', 'patient_id'], data_type='tensor'),  # ensure that the data is a tensor
     ])
 
     # if data preprocessing is enabled, add the normalisation transform (e.g. for HNC dataset)
@@ -251,6 +251,22 @@ def get_transforms(config: dict):
                                 val_transforms,
                                 ConvertMetaTensorToTensor(keys=[concat_key, 'label_list', 'features', 'patient_id'])
                             ])
+    
+
+    # if True:
+    #     from src.constants import DEVICE
+    #     train_transforms = Compose([
+    #         train_transforms,
+    #         EnsureTyped(keys=[concat_key, 'label_list', 'features'], data_type='tensor'),
+    #         ToDeviced(keys=[concat_key, 'label_list', 'features'], device='cuda'),
+    #     ])
+    #     val_transforms = Compose([
+    #         val_transforms,
+    #         EnsureTyped(keys=[concat_key, 'label_list', 'features'], data_type='tensor'),
+    #         ToDeviced(keys=[concat_key, 'label_list', 'features'], device='cuda'),
+    #     ])
+
+        
 
     # Flatten the transforms (removes nested Composes, turns it into one long set of transforms)
     train_transforms = train_transforms.flatten()

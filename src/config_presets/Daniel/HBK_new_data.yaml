@@ -80,7 +80,7 @@ data:
   image_num_dimensions: 3
 
   dataloader:
-    num_workers: 8           # number of workers (cores) to use for data loading in each training batch
+    num_workers: 32           # number of workers (cores) to use for data loading in each training batch
   
   preprocessing:
     isEnabled: true

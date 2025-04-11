@@ -159,7 +159,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     from src.dataset.transforms.MixUp import MixUp
     dl_args_dict = {'dataset': data_ds, 'batch_size': batch_size, 'shuffle': shuffle, 'sampler': None,
                           'num_workers': num_workers, 'drop_last': drop_last, 'persistent_workers': persistent_workers,
-                          'pin_memory': pin_memory}
+                          'pin_memory': pin_memory, "prefetch_factor": 2} #  }   # "prefetch_factor": 4,
     
     # if we want to perform mixup augmentation, we need to change the collate function 
     # (as mixup is a batch-level augmentation, it can't be done in the transforms)

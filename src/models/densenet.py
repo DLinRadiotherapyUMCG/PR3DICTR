@@ -233,9 +233,10 @@ class DenseNet(nn.Module):
         
 
     def forward(self, x: torch.Tensor, autoencoder=False) -> torch.Tensor:
-        for layer in self.features:
-            #print(layer)
-            x = layer(x)
+        x = self.features(x)
+        # for layer in self.features:
+        #     #print(layer)
+        #     x = layer(x)
 
         if autoencoder == False:
             x = self.avgpool(x)

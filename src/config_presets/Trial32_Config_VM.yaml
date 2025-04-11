@@ -50,8 +50,8 @@ data:
     prob: 0.5
   dataloader:
     dataloader_type: standard
-    dataset_type: smartcache
-    num_workers: 4
+    dataset_type: cache
+    num_workers: 16
     smartcache:
       cache_rate: 0.5
       num_replace_workers: 4
@@ -150,7 +150,7 @@ general:
   region: HNC
   resultsCurrentDirectory: /scratch/s3719332/rt_pred_results/HP_TRP_HigherRes2_BEST/Trial_32/KFold1
   seed: 42
-  testMode: false
+  testMode: False
   trialNumber: Trial_32
   use_test_set: false
 hyperparam_tuning:

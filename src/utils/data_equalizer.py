@@ -14,63 +14,6 @@ def get_delimiter(file_path: str) -> str:
         return delimiter
 
 
-# def unique(list1):
-#     unique_list = []
-#     # traverse for all elements
-#     for i in range(len(list1)):
-#         if(list1[i] not in unique_list):
-#             unique_list.append(list1[i])
-#     return unique_list
-
-# def numberGroup(list1):
-#     uniqueValues = unique(list1)
-#     groupList = []
-    
-#     for i in range(len(list1)):
-#         for j in range(len(uniqueValues)):
-#             if(list1[i] == uniqueValues[j]):
-#                 groupList.append([j])
-#                 break
-#     return groupList
-
-
-# Splitter
-# def data_split(df, config, split = [.7,.15,.15], seed = 8):
-#     """
-#     Splits complete dataset [rows,columns] (rows = patients, columns = variables)
-#     into three subsets: train, validation and test
-    
-#     """        
-#     np.random.seed(seed)
-#     tox = config['columns']['labels'] #'RP' 
-
-#     # Train and Test split
-#     stratifyItems = config['data']['stratifyList']
-#     print("Stratify items: ",stratifyItems)
-#     combinedColumn = []
-#     for i in range(len(stratifyItems)):
-#         if(len(combinedColumn) == 0):
-#             combinedColumn = df[[stratifyItems[i]]].astype(str).to_numpy()
-#         else:
-#             combinedColumn = combinedColumn + df[[stratifyItems[i]]].astype(str).to_numpy()
-#     stratList = combinedColumn
-#     groupingList = numberGroup(stratList)
-#     train_val, test = train_test_split(df, test_size = split[2], random_state=seed, stratify=groupingList)
-    
-#     # Train and validation split
-#     split_trainval = split[1]/(split[1] + split[0])
-#     combinedColumn = []
-#     for i in range(len(stratifyItems)):
-#         if(len(combinedColumn) == 0):
-#             combinedColumn = train_val[[stratifyItems[i]]].astype(str).to_numpy()
-#         else:
-#             combinedColumn = combinedColumn + train_val[[stratifyItems[i]]].astype(str).to_numpy()
-#     stratList = combinedColumn
-#     groupingList = numberGroup(stratList)
-#     train, validation = train_test_split(train_val, test_size = split_trainval, random_state=seed, stratify=groupingList)  
-#     if(config['data']['equalizer']['isEnabled']):
-#         train = label_equalizer(train, config)
-#     return train, validation, test
 
 # Artificial end-point equality
 def label_equalizer(df, config):

@@ -58,7 +58,7 @@ class GradNorm(torch.nn.Module):
             pass
             #wandb.log(data = data)
 
-    def step(self, loss):
+    def step(self, loss, scaler=None):
         if self.iters == 0:
             self.setup(loss)
 
@@ -87,7 +87,14 @@ class GradNorm(torch.nn.Module):
         # clear gradients of weights
         self.optimizer.zero_grad()
         # backward pass for GradNorm
-        gradnorm_loss.backward()
+        
+
+        if scaler is not None:
+            scaler.scale(gradnorm_loss).backward()
+        else:
+            gradnorm_loss.backward()
+                
+        
         # log weights and loss
         self.log_weights.append(weights.detach().cpu().numpy().copy())
         self.log_loss.append(loss_ratio.detach().cpu().numpy().copy())

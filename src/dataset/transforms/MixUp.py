@@ -12,7 +12,10 @@ from monai.utils.type_conversion import convert_to_dst_type, convert_to_tensor
 from monai.config import KeysCollection
 from monai.data.utils import list_data_collate
 
+import time
+import logging
 
+from src.constants import DEVICE
 
 class MixUp():
     """
@@ -23,9 +26,11 @@ class MixUp():
         self.config = config
         self.alpha = config['data']['augmentation']['mixup']['alpha']
 
+        self.mean_time = 0
+        self.iters = 0
+
     def __call__(self, batch):
 
-        # first collate the batch
         batch = list_data_collate(batch)
 
         keys = list(batch.keys())
@@ -33,25 +38,26 @@ class MixUp():
         #device = batch[keys[0]].device
         
         # randomly samply a lambda value from a beta distribution
-        if self.alpha > 0:
-            lam = np.random.beta(self.alpha, self.alpha)
-        else:
-            lam = 1
+        lam = np.random.beta(self.alpha, self.alpha) if self.alpha > 0 else 1
 
         # create a random permutation of the batch indices
-        index = torch.randperm(batch_size)
+        index = torch.randperm(batch_size, device=batch[keys[0]].device)
 
         # perform the mixup on the model inputs (labels are dealt with in the training code)
-        mixed_data = batch
         for key in ['input', 'features']: # , 'label_list']:  # , 'features', 'label_list'
             #print(key)
-            mixed_data[key] = lam * batch[key] + (1 - lam) * batch[key][index, :]
+            data = batch[key]
+            #data = lam * data + (1 - lam) * data[index, :]
+
+            data.mul_(lam).add_((1 - lam) * data[index, :])
+
 
         # return the lambda value and mixing indicies with the batch
-        mixed_data['lambda'] = lam
-        mixed_data['indices'] = index
+        batch['lambda'] = lam
+        batch['indices'] = index
 
-        return mixed_data
+
+        return batch
 
 
 

@@ -65,6 +65,3 @@ class MultiTox_Loss(nn.Module):
 
         
         return batch_loss_mean, batch_loss_dict
-
-
-

@@ -36,30 +36,10 @@ if __name__ == '__main__':
     set_random_seed(config['general']['seed'])
     
     
-    #K_fold_cross_validation(config)
-
-    # # MAIN: DL running class with hyperparameter optimization
-    #
-
-    #expHandler = experimentHandler(config)
-    #expHandler.run_experiment(config)
-    #####hyperClass.Stop()
-
-
-    # TEST ENSEMBLE CODE
-
-    #from src.evaluation.validate_on_test_set import validate_models_on_test_set
-
-    # trial_dir = r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
-    # # # # run the models on the test set
-    # validate_models_on_test_set(config, trial_dir)
-
-
-
 
     # CLS experiment
-    config['general']['experiment_name'] = "new_data_test"
-    config['general']['trialNumber'] = "TRP_2"
+    config['general']['experiment_name'] = "AMP_test_full"
+    config['general']['trialNumber'] = "next_iter"
 
     
     config['model']['TransRP']['clinical_features_method'] = 'm2'
@@ -81,11 +61,16 @@ if __name__ == '__main__':
     # config['model']['convnext']['kernel_size'] = 3
     # config['model']['convnext']['patch_size'] = 5
 
-    config['training']['batch_size'] = 4
-    config['training']['max_epochs'] = 1
+    config['training']['batch_size'] = 6
+    config['training']['max_epochs'] = 3
 
-    config['data']['kFolds']['n_iterations'] = 2
-    
+    config['data']['kFolds']['n_iterations'] = 1
+    config['data']['dataloader']['dataset_type'] = 'smartcache'
+
+    #config['data']['augmentation']['mixup']['isEnabled'] = False
+
+    #config['general']['testMode'] = True
+    #config['data']['n_patients_total'] = 200
     # # MAIN: DL running class with hyperparameter optimization
     #
     expHandler = experimentHandler(config)
@@ -95,9 +80,9 @@ if __name__ == '__main__':
 
     # TEST ENSEMBLE CODE
 
-    from src.evaluation.validate_on_test_set import validate_models_on_test_set
+    # from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
-    trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']) # r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
-    # # # run the models on the test set
-    validate_models_on_test_set(config, trial_dir)
+    # trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']) # r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
+    # # # # run the models on the test set
+    # validate_models_on_test_set(config, trial_dir)
 

@@ -24,8 +24,8 @@ def set_random_seed(seed):
 
 
     # Make deterministic
-    #torch.backends.cudnn.deterministic = True
-    #torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def generate_random_seed():
