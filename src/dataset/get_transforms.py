@@ -116,7 +116,8 @@ def get_random_transforms(config: dict, keys: list) -> list:
 
         elif aug_name == 'rotate':
             rot_max = config['data']['augmentation']['list']['rotate']['max'] / 180 * 3.14  # convert degrees to radians
-            random_transforms.append(RandRotated(keys=keys, prob=data_aug_p, range_x=rot_max, align_corners=True, padding_mode='zeros', mode='bilinear'))
+            random_transforms.append(RandRotated(keys=keys, prob=data_aug_p, range_x=rot_max, align_corners=True, 
+                                                 padding_mode='zeros', mode='bilinear'))
         
         elif aug_name == 'noise':
             mean = config['data']['augmentation']['list']['noise']['mean']
@@ -178,7 +179,7 @@ def get_transforms(config: dict):
 
     # get all of the generic transforms (which apply to both the training and the validation/test sets)
     generic_transforms = Compose([
-        LoadImaged(keys=image_keys, image_only=True, ensure_channel_first=False),
+        LoadImaged(keys=image_keys, image_only=True, ensure_channel_first=False),  # load the images
         CheckImageDimensions(keys=image_keys, desired_num_img_dims=config['data']['image_num_dimensions']),                                       # checks if there are enough dimensions (eg. [1,96,96,96] and not [96,96,96]), otherwise fixes it
         EnsureTyped(keys=image_keys + ['features', 'label_list', 'patient_id'], data_type='tensor'),  # ensure that the data is a tensor
     ])
@@ -199,6 +200,7 @@ def get_transforms(config: dict):
                                     generic_transforms, 
                                     ConcatItemsd(keys=image_keys, name=concat_key, dim=0),
                                     DeleteItemsd(keys=image_keys),  # removes excess memory usage
+                                    EnsureTyped(keys=[concat_key,'features', 'label_list', 'patient_id'], data_type='tensor', dtype=torch.float16),  # ensure that the data is a tensor
                                     ])
     
     
@@ -245,11 +247,13 @@ def get_transforms(config: dict):
     train_transforms = Compose([
                                 train_transforms,
                                 #MONAI_MixUpd(keys=[concat_key], batch_size=config['training']['batch_size'], alpha=1.0),
-                                ConvertMetaTensorToTensor(keys=[concat_key, 'label_list', 'features', 'patient_id'])
+                                ConvertMetaTensorToTensor(keys=[concat_key, 'label_list', 'features', 'patient_id']),
+                                EnsureTyped(keys=[concat_key, 'label_list', 'features', 'patient_id'], data_type='tensor', dtype=torch.float),
                             ])
     val_transforms = Compose([
                                 val_transforms,
-                                ConvertMetaTensorToTensor(keys=[concat_key, 'label_list', 'features', 'patient_id'])
+                                ConvertMetaTensorToTensor(keys=[concat_key, 'label_list', 'features', 'patient_id']),
+                                EnsureTyped(keys=[concat_key, 'label_list', 'features', 'patient_id'], data_type='tensor', dtype=torch.float),
                             ])
     
 

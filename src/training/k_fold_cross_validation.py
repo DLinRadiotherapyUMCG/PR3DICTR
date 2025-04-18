@@ -210,6 +210,15 @@ def K_fold_cross_validation(config, config_for_wandb=None):
             if (val_mean_metric_val < config['hyperparam_tuning']['optuna']['kill_trial_threshold']) and (fold_idx >= 3):
                 logging.info(f'Early stopping at fold {fold_idx}. Metric value is too low')
                 break
+
+        if config['data']['dataloader']['dataset_type'] == 'smartcache':
+            train_loader.dataset.shutdown()  # shutdown the smartcache dataloader
+            val_loader.dataset.shutdown() 
+
+        del train_loader, val_loader # delete the dataloaders to free up memory
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache() # clear the GPU memory
+        gc.collect()  # clear the CPU memory
     
     # if we're doing the dataset amounts experiment, then we don't need to aggregate the results. Just return here
     if config['general']['dataset_amounts_experiment'] == True:

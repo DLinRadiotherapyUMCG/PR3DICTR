@@ -73,7 +73,12 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     
 
     sigmoid_act = torch.nn.Sigmoid()
+    num_batches_per_epoch = len(train_loader)
 
+
+    logging.debug(f'N training batches = {num_batches_per_epoch}')
+    logging.debug(f'batch size = {config["training"]["batch_size"]}')
+    
     # Training loop
     logging.info('Starting training loop')
     for epoch_num in range(1, config['training']['max_epochs'] + 1):
@@ -95,12 +100,14 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
         total_loss = 0.0
         train_loss_dict = {label : 0 for label in labels}
-        num_batches_per_epoch = len(train_loader)
-
+        
         start_epoch_time = time.time()
   
         if show_pbar:
             pbar = tqdm(total=len(train_loader), desc=f'Epoch {epoch_num}', position=0, leave=True)
+
+        #print("num_batches_per_epoch", num_batches_per_epoch)
+        
 
         for batch_num, batch in enumerate(train_loader, start=1):  # , disable=config["hyperparam_tuning"]["optuna"]["IsEnabled"]
             logging.debug(f'Batch {batch_num} of epoch {epoch_num}')
@@ -145,6 +152,8 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 # normal loss calculation
                 loss, loss_dict = loss_function(outputs, targets) 
 
+            
+
             if config['training']['GradNorm']['isEnabled']:
                 # reweight the losses using GradNorm (the loss is backpropagated in the GradNorm class)
                 optimizer.zero_grad()
@@ -153,7 +162,10 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             else:
                 # backpropagate the loss normally
                 if loss.grad_fn:
-                    loss.backward()
+                    if config['training']['gradient_accumulation_steps'] > 1:
+                        (loss / config['training']['gradient_accumulation_steps']).backward()  # divide the loss by the number of gradient accumulation steps
+                    else:
+                        loss.backward()
 
             # Calculate AUC            
             for idx, label in enumerate(labels):
@@ -166,13 +178,18 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 train_loss_dict[label] += loss_dict[label].item()
 
             # Update model weights
-            optimizer.step()
+            if batch_num % config['training']['gradient_accumulation_steps'] == 0:
+                optimizer.step()
 
             # Step the scheduler
             if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
                 scheduler.step(epoch_num + (batch_num / num_batches_per_epoch))
             elif config['training']['scheduler']['name'] in ['cyclic']:
                 scheduler.step()
+
+            if config['data']['dataloader']['dataset_type'] == 'smartcache':
+                # update the cache
+                train_loader.dataset.update_cache()
 
 
         if show_pbar: pbar.close()

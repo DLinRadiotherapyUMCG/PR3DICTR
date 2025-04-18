@@ -82,11 +82,11 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
         metadata (dict): dictioanry containing metadata about the input data (e.g. batch size or dimensions of the images)
     """
 
-    dataset_type = config['data']['dataloader']['dataset_type']   #'cache'
+    dataset_type = config['data']['dataloader']['dataset_type'] # if not validation_mode else 'cache'
     dataloader_type = config['data']['dataloader']['dataloader_type']        #'standard'
     batch_size = config['training']['batch_size'] if not validation_mode else 1
     #cache_rate = 1
-    num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else 1
+    num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else config['data']['dataloader']['num_workers'] // 2
     persistent_workers = True if num_workers > 0 else False#  config['data']['dataloader']['persistent_workers']
     drop_last = False
     pin_memory = True if num_workers > 0 else False
@@ -102,13 +102,17 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     elif dataset_type == 'cache':
         ds_class = CacheDataset
         update_dict = {'cache_rate': 1, 'num_workers': num_workers, "runtime_cache": 'process'}
-    # elif dataset_type == 'persistent':
-    #     ds_class = PersistentDataset
-    #     update_dict = {'cache_dir': cache_dir}
-    #     create_folder_if_not_exists(cache_dir)
+    elif dataset_type == 'persistent':
+        ds_class = PersistentDataset
+        data_dir = config['paths']['images']
+        cache_dir = os.path.join(os.path.dirname(data_dir), "dataloader_cache")
+        #cache_dir = "/home/macraedc/cached_data"
+        update_dict = {'cache_dir': cache_dir}
+        os.makedirs(cache_dir, exist_ok=True)
+        #create_folder_if_not_exists(cache_dir)
     elif dataset_type == 'smartcache':
         ds_class = SmartCacheDataset
-        update_dict = {'cache_rate': config['data']['dataloader']['smartcache']['cache_rate'], 
+        update_dict = {'cache_rate': 1 if validation_mode else config['data']['dataloader']['smartcache']['cache_rate'], 
                        'num_init_workers': None, "num_replace_workers": 
                        config['data']['dataloader']['smartcache']['num_replace_workers']}
     else:
@@ -117,7 +121,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     
     manager = Manager()
     data_dict = manager.list(data_dict)
-
+    
     # Define Dataset function arguments
     ds_args_dict = {'data': data_dict, 'transform': transforms}
 
