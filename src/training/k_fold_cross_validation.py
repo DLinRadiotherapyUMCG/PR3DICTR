@@ -50,9 +50,6 @@ def K_fold_cross_validation(config, config_for_wandb=None):
     metric_name = config['evaluation']['main_metric']
 
     # variables for results logging
-    train_aucs_list = []
-    val_aucs_list = []
-    test_aucs_list = []
     train_metrics_list_dict = {endpoint: list() for endpoint in endpoint_list}
     val_metrics_list_dict   = {endpoint: list() for endpoint in endpoint_list}
     test_metrics_list_dict  = {endpoint: list() for endpoint in endpoint_list}

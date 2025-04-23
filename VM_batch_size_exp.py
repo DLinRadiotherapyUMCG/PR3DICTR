@@ -42,7 +42,7 @@ if __name__ == '__main__':
     
 
     
-    config['model']['TransRP']['clinical_features_method'] = 'm2'
+    #config['model']['TransRP']['clinical_features_method'] = 'cls'
 
     config['data']['source'] = "PRI2MA"
     config['data']['dataset_csv'] = "MT_dataset_with_all_structs.csv"
@@ -56,6 +56,7 @@ if __name__ == '__main__':
                       ]
     
     sizes = [1,2,4,8, 16]
+    sizes = [1]
     #sizes = [4,8]
     # config['model']['TransRP']['image_encoder'] = 'convnext'
     # #
@@ -64,18 +65,20 @@ if __name__ == '__main__':
     # config['model']['convnext']['patch_size'] = 5
 
     config['training']['batch_size'] = 4
-    config['data']['dataloader']['dataset_type'] = 'persistent'
+    config['data']['dataloader']['dataset_type'] = 'cache'
     config['data']['dataloader']['num_workers'] = 16
     config['data']['dataloader']['smartcache']['num_workers'] = 0.3
     config['data']['dataloader']['smartcache']['num_workers'] = 4
 
-    #config['data']['augmentation']['mixup']['isEnabled'] = False
+    config['data']['augmentation']['mixup']['isEnabled'] = False
+
+    config['columns']['clinical_features'] = []
     
 
     #config['training']['show_progress_bar'] = True
 
     # config['data']['kFolds']['n_iterations'] = 3
-    # config['training']['max_epochs'] = 2
+    #config['training']['max_epochs'] = 1
 
     for size in sizes:
         # Disable randomness
@@ -83,7 +86,7 @@ if __name__ == '__main__':
 
         config['training']['gradient_accumulation_steps'] = size
 
-        config['general']['trialNumber'] = f"4x_{size}"
+        config['general']['trialNumber'] = f"4x_{size}_noMixup_no_clinical_features"
         
 
         #config['data']['augmentation']['mixup']['isEnabled'] = False
@@ -99,10 +102,10 @@ if __name__ == '__main__':
 
         # # TEST ENSEMBLE CODE
 
-        # from src.evaluation.validate_on_test_set import validate_models_on_test_set
+        from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
-        # trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']) # r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
-        # # # # run the models on the test set
-        # validate_models_on_test_set(config, trial_dir)
+        trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']) # r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
+        # # # run the models on the test set
+        validate_models_on_test_set(config, trial_dir)
 
         

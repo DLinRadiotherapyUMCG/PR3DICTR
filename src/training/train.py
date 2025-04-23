@@ -152,7 +152,10 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 # normal loss calculation
                 loss, loss_dict = loss_function(outputs, targets) 
 
-            
+            # if batch_num % config['training']['gradient_accumulation_steps'] != 0:
+            #     for module in model.modules():
+            #         if isinstance(module, torch.nn.BatchNorm3d):
+            #             module.track_running_stats = False
 
             if config['training']['GradNorm']['isEnabled']:
                 # reweight the losses using GradNorm (the loss is backpropagated in the GradNorm class)
@@ -179,17 +182,21 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
             # Update model weights
             if batch_num % config['training']['gradient_accumulation_steps'] == 0:
+                # for module in model.modules():
+                #     if isinstance(module, torch.nn.BatchNorm3d):
+                #         module.track_running_stats = True
+                # Step the optimizer    
                 optimizer.step()
 
-            # Step the scheduler
-            if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
-                scheduler.step(epoch_num + (batch_num / num_batches_per_epoch))
-            elif config['training']['scheduler']['name'] in ['cyclic']:
-                scheduler.step()
+                # Step the scheduler
+                if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
+                    scheduler.step(epoch_num + (batch_num / (num_batches_per_epoch / config['training']['gradient_accumulation_steps'])))
+                elif config['training']['scheduler']['name'] in ['cyclic']:
+                    scheduler.step()
 
-            if config['data']['dataloader']['dataset_type'] == 'smartcache':
-                # update the cache
-                train_loader.dataset.update_cache()
+        if config['data']['dataloader']['dataset_type'] == 'smartcache':
+            # update the cache
+            train_loader.dataset.update_cache()
 
 
         if show_pbar: pbar.close()
