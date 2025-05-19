@@ -163,12 +163,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 loss = torch.stack([loss_dict[label] for label in labels])
                 loss = gradNorm.step(loss)
             else:
-                # backpropagate the loss normally
+                # backpropagate the loss
                 if loss.grad_fn:
-                    if config['training']['gradient_accumulation_steps'] > 1:
-                        (loss / config['training']['gradient_accumulation_steps']).backward()  # divide the loss by the number of gradient accumulation steps
-                    else:
-                        loss.backward()
+                    loss.backward()
 
             # Calculate AUC            
             for idx, label in enumerate(labels):
@@ -181,18 +178,14 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 train_loss_dict[label] += loss_dict[label].item()
 
             # Update model weights
-            if batch_num % config['training']['gradient_accumulation_steps'] == 0:
-                # for module in model.modules():
-                #     if isinstance(module, torch.nn.BatchNorm3d):
-                #         module.track_running_stats = True
-                # Step the optimizer    
-                optimizer.step()
+            # Step the optimizer    
+            optimizer.step()
 
-                # Step the scheduler
-                if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
-                    scheduler.step(epoch_num + (batch_num / (num_batches_per_epoch / config['training']['gradient_accumulation_steps'])))
-                elif config['training']['scheduler']['name'] in ['cyclic']:
-                    scheduler.step()
+            # Step the scheduler
+            if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
+                scheduler.step(epoch_num + (batch_num / (num_batches_per_epoch / config['training']['gradient_accumulation_steps'])))
+            elif config['training']['scheduler']['name'] in ['cyclic']:
+                scheduler.step()
 
         if config['data']['dataloader']['dataset_type'] == 'smartcache':
             # update the cache

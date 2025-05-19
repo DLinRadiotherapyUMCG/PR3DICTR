@@ -38,8 +38,8 @@ if __name__ == '__main__':
     from src.experiments.endpoint_combinations import run_toxicity_combinations_experiment
 
 
-    experiment_name = "Trial32_endpoint_combinations"
-    run_toxicity_combinations_experiment(config, experiment_name)
+    experiment_name = "ST_TRP_photons_only"
+    run_single_toxicity_models_experiment(config, experiment_name)
     
 
     #K_fold_cross_validation(config)

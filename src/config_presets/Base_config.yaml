@@ -67,6 +67,8 @@ model:
     normalization: 'batch'               # which normalisation method to use ['batch', 'instance']
     
   # general model params
+  modulated_backbone: False # whtehr to include clinical features in the image encoder 
+  n_clinical_features_in_backbone']: 0 # number of clinical features to include in the image encoder, the first N clinical features are used ['modulated_backbone' must be True]
   lrelu_alpha: 0.1         # leaky ReLu value for the convolutional layers
   dropout_p: 0.1           # dropout probability 
   use_bias: True           # whether or not to use a bias term in the conv. layers

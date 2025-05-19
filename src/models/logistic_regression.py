@@ -5,7 +5,7 @@ import os
 from sklearn.linear_model import LogisticRegression
 
 from src.constants import PATIENT_ID_COL_NAME, PATIENT_ID_LENGTHS_DICT, EARLY_NTCP_TIMEPOINTS, LATE_NTCP_TIMEPOINTS
-
+from src.utils.saving.saving_predictions import concatenate_predictions, save_predictions
 
 
 def determine_CITOR_model_name(endpoint_name):
@@ -150,20 +150,6 @@ def refit_CITOR_model(config, df_train, endpoint = "Xerostomia_M06", CITOR_model
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-from src.utils.saving.saving_predictions import concatenate_predictions, save_predictions
 
 
 def determine_CITOR_model_name(endpoint_name):

@@ -38,15 +38,16 @@ if __name__ == '__main__':
     
 
     # CLS experiment
-    config['general']['experiment_name'] = "AMP_test_full"
-    config['general']['trialNumber'] = "next_iter"
+    config['general']['experiment_name'] = "W12_models"
+    config['general']['trialNumber'] = "TRP"
 
     
     config['model']['TransRP']['clinical_features_method'] = 'm2'
 
     config['data']['source'] = "PRI2MA"
     config['data']['dataset_csv'] = "MT_dataset_with_all_structs.csv"
-    config['columns']['clinical_features'] = [#'Sex', 'Age',
+    config['columns']['clinical_features'] = [
+                      'Geslacht', 'Leeftijd',
                       'Aspiration_W01_Helemaal_niet','Aspiration_W01_Een_beetje',  'Aspiration_W01_Nogal_Heel_erg', 
                       'Dysphagia_W01_Grade0_1', 'Dysphagia_W01_Grade2', 'Dysphagia_W01_Grade3_4', 
                       'Sticky_W01_Helemaal_niet', 'Sticky_W01_Een_beetje', 'Sticky_W01_Nogal_Heel_erg',
@@ -54,6 +55,9 @@ if __name__ == '__main__':
                       'Xerostomia_W01_Helemaal_niet', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg', 
                       #'Chemotherapy'
                       ]
+    
+    #config['columns']['labels'] = ['Aspiration_M06', 'Dysphagia_M06', 'Sticky_M06', 'Taste_M06', 'Xerostomia_M06']
+    config['columns']['labels'] = ['Aspiration_W12', 'Dysphagia_W12', 'Sticky_W12', 'Taste_W12', 'Xerostomia_W12']
 
     # config['model']['TransRP']['image_encoder'] = 'convnext'
     # #
@@ -61,11 +65,11 @@ if __name__ == '__main__':
     # config['model']['convnext']['kernel_size'] = 3
     # config['model']['convnext']['patch_size'] = 5
 
-    config['training']['batch_size'] = 6
-    config['training']['max_epochs'] = 3
+    config['training']['batch_size'] = 4
+    #config['training']['max_epochs'] = 3
 
-    config['data']['kFolds']['n_iterations'] = 1
-    config['data']['dataloader']['dataset_type'] = 'smartcache'
+    #config['data']['kFolds']['n_iterations'] = 1
+    #config['data']['dataloader']['dataset_type'] = 'smartcache'
 
     #config['data']['augmentation']['mixup']['isEnabled'] = False
 
@@ -80,9 +84,9 @@ if __name__ == '__main__':
 
     # TEST ENSEMBLE CODE
 
-    # from src.evaluation.validate_on_test_set import validate_models_on_test_set
+    from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
-    # trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']) # r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
-    # # # # run the models on the test set
-    # validate_models_on_test_set(config, trial_dir)
+    trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']) # r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
+    # # # run the models on the test set
+    validate_models_on_test_set(config, trial_dir)
 

@@ -18,6 +18,12 @@ class MultiTox_Classifier(nn.Module):
         # image encoder backbone (CNN, ResNet, etc.)
         self.encoder = encoder
         self.model_name = config['model']['model_name'].lower()
+        self.modulated_backbone = config['model']['modulated_backbone']
+
+        if self.modulated_backbone:
+            self.n_modulated_features = config['model']['n_clinical_features_in_backbone']
+            n_features = n_features - self.n_modulated_features # add 1 for the modulated proton feature
+        self.n_features = n_features
         
         # get the output head module (e.g. linear layers)
         if "transrp" in self.model_name:
@@ -56,7 +62,12 @@ class MultiTox_Classifier(nn.Module):
             avg_pool=True
         else: 
             avg_pool=False
-        x = self.encoder(x, autoencoder=avg_pool)
+
+        if self.modulated_backbone:
+            #x = self.encoder(x, features=features[:, :])
+            x = self.encoder(x, features=features[:, :self.n_modulated_features], autoencoder=avg_pool)
+        else:
+            x = self.encoder(x, autoencoder=avg_pool)
         
         if self.flatten is not None:
             x = self.flatten(x)
@@ -68,8 +79,15 @@ class MultiTox_Classifier(nn.Module):
         Does a forward pass of only the linear layers (the decision layers)
         Includes the entire output head (clinical, shared and non-shared layers)
         """
-        
-        x_dict = self.output_head(x, features, vectorize=vectorize)
+        if self.modulated_backbone:
+            #x = self.encoder(x, features=features[:, :])
+            clc_features = features[:, self.n_modulated_features:]
+        else:
+            clc_features = features
+
+        #x_dict = self.output_head(x, features[:, :], vectorize=vectorize)
+
+        x_dict = self.output_head(x, clc_features, vectorize=vectorize)
 
         return x_dict
     
@@ -81,10 +99,13 @@ class MultiTox_Classifier(nn.Module):
         """
         self.eval()
         with torch.no_grad():
-            x = self.forward_image_encoder(torch.zeros((1, metadata['channels'], metadata['depth'], metadata['height'], metadata['width'])), None)
+            temp_x_input = torch.zeros((1, metadata['channels'], metadata['depth'], metadata['height'], metadata['width'])).to(DEVICE)
+            temp_clc_features = torch.zeros((1, self.n_features)).to(DEVICE) if self.modulated_backbone else None
+            #print(DEVICE)
+            self.encoder.to(DEVICE)
+            x = self.forward_image_encoder(temp_x_input, temp_clc_features)
             #x = self.encoder(x)
             return x.shape[1:]
-
 
 
 

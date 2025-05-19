@@ -43,7 +43,7 @@ def run_single_toxicity_models_experiment(config, experiment_name, original_endp
         original_endpoints_list = config['columns']['labels']
 
 
-    main_features = ['Sex', 'Age', # "Chemotherapy",
+    main_features = ['Geslacht', 'Leeftijd', # "Chemotherapy",
                 #'Loctum2_Larynx', 'Loctum2_Oral_Cavity', 'Loctum2_Overig', 'Loctum2_Pharynx',
                 ]
 
