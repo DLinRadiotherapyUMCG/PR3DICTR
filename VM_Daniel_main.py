@@ -38,7 +38,7 @@ if __name__ == '__main__':
     
 
     # CLS experiment
-    config['general']['experiment_name'] = "W12_models"
+    config['general']['experiment_name'] = "W06_models"
     config['general']['trialNumber'] = "TRP"
 
     
@@ -57,7 +57,7 @@ if __name__ == '__main__':
                       ]
     
     #config['columns']['labels'] = ['Aspiration_M06', 'Dysphagia_M06', 'Sticky_M06', 'Taste_M06', 'Xerostomia_M06']
-    config['columns']['labels'] = ['Aspiration_W12', 'Dysphagia_W12', 'Sticky_W12', 'Taste_W12', 'Xerostomia_W12']
+    config['columns']['labels'] = ['Aspiration_W06', 'Dysphagia_W06', 'Sticky_W06', 'Taste_W06', 'Xerostomia_W06']
 
     # config['model']['TransRP']['image_encoder'] = 'convnext'
     # #

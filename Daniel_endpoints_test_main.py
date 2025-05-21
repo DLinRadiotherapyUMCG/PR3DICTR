@@ -20,6 +20,7 @@ import numpy as np
 import random
 import torch
 from monai.utils import set_determinism
+from itertools import combinations
 
 if __name__ == '__main__':
 
@@ -38,8 +39,30 @@ if __name__ == '__main__':
     from src.experiments.endpoint_combinations import run_toxicity_combinations_experiment
 
 
-    experiment_name = "ST_TRP_photons_only"
-    run_single_toxicity_models_experiment(config, experiment_name)
+    # experiment_name = "ST_TRP_photons_only"
+    # run_single_toxicity_models_experiment(config, experiment_name)
+
+    #experiment_name = "Trial32_endpoint_combinations"
+    
+    endpoint_combinations_dict = {}
+
+    # Example list of 5 items
+    original_endpoints = config['columns']['labels']
+
+    # Generate all possible pairs (combinations of 2 items)
+    all_possible_pairs = list(combinations(original_endpoints, 2))
+
+    # Store the combinations in the dictionary
+    for idx, pair in enumerate(all_possible_pairs):
+        pair = tuple(sorted(pair))
+        key = ''.join([item[0] for item in pair])
+        endpoint_combinations_dict[key] = pair
+
+    print(endpoint_combinations_dict)
+    print(len(endpoint_combinations_dict))
+
+    experiment_name = "TRP_all_pairs"
+    run_toxicity_combinations_experiment(config, experiment_name, endpoint_combinations_dict=endpoint_combinations_dict)
     
 
     #K_fold_cross_validation(config)
