@@ -30,7 +30,7 @@ if __name__ == '__main__':
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
-    config = get_config('Trial32_Config')
+    config = get_config('Trial32_Config_VM')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
 
     # experiment_name = "ST_TRP_photons_only"
-    # run_single_toxicity_models_experiment(config, experiment_name)
+    
 
     #experiment_name = "Trial32_endpoint_combinations"
     
@@ -54,29 +54,50 @@ if __name__ == '__main__':
 
     # Store the combinations in the dictionary
     for idx, pair in enumerate(all_possible_pairs):
-        pair = tuple(sorted(pair))
+        pair = list(sorted(pair))
         key = ''.join([item[0] for item in pair])
         endpoint_combinations_dict[key] = pair
 
     print(endpoint_combinations_dict)
     print(len(endpoint_combinations_dict))
 
-    experiment_name = "TRP_all_pairs"
-    run_toxicity_combinations_experiment(config, experiment_name, endpoint_combinations_dict=endpoint_combinations_dict)
+    experiment_name = "Dysphagia_M06_new_data"
+
+    config['data']['source'] = "PRI2MA"
+    config['data']['dataset_csv'] = "MT_dataset_with_all_structs.csv"
+    config['columns']['clinical_features'] = [
+                      'Geslacht', 'Leeftijd',
+                      'Aspiration_W01_Helemaal_niet','Aspiration_W01_Een_beetje',  'Aspiration_W01_Nogal_Heel_erg', 
+                      'Dysphagia_W01_Grade0_1', 'Dysphagia_W01_Grade2', 'Dysphagia_W01_Grade3_4', 
+                      'Sticky_W01_Helemaal_niet', 'Sticky_W01_Een_beetje', 'Sticky_W01_Nogal_Heel_erg',
+                      'Taste_W01_Helemaal_niet','Taste_W01_Een_beetje',  'Taste_W01_Nogal_Heel_erg', 
+                      'Xerostomia_W01_Helemaal_niet', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg', 
+                      #'Chemotherapy'
+                      ]
+    
+    config['training']['batch_size'] = 4
+    config['data']['dataloader']['num_workers'] = 16
+
+    from src.constants import DEVICE
+    print(DEVICE)
+
+    # run_single_toxicity_models_experiment(config, experiment_name, original_endpoints_list = ['Dysphagia_M06'])
+
+    # run_toxicity_combinations_experiment(config, experiment_name, endpoint_combinations_dict=endpoint_combinations_dict)
     
 
-    #K_fold_cross_validation(config)
+    # K_fold_cross_validation(config)
 
     # # MAIN: DL running class with hyperparameter optimization
     #
-    #expHandler = experimentHandler(config)
-    #expHandler.run_experiment(config)
+    # expHandler = experimentHandler(config)
+    # expHandler.run_experiment(config)
     #####hyperClass.Stop()
 
 
-    # TEST ENSEMBLE CODE
+    # # TEST ENSEMBLE CODE
 
-    #from src.evaluation.validate_on_test_set import validate_models_on_test_set
+    # from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
     # trial_dir = r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
     # # # # run the models on the test set

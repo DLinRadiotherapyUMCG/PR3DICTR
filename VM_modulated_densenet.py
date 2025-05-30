@@ -23,6 +23,12 @@ from monai.utils import set_determinism
 
 
 if __name__ == '__main__':
+    
+    print("PyTorch CUDA version:", torch.version.cuda)
+    print("Is CUDA available:", torch.cuda.is_available())
+    
+
+    """
 
     # Setup
     log_level = parse_args()
@@ -33,14 +39,13 @@ if __name__ == '__main__':
     config = get_config('Trial32_Config_VM')
 
     # Disable randomness
-    set_random_seed(config['general']['seed'])
-    
+    set_random_seed(config['general']['seed'])    
     
 
     # CLS experiment
     config['model']['model_name'] = 'TransRP'
     config['general']['experiment_name'] = "TRP_subsets"
-    config['general']['trialNumber'] = "only_photons_w_chemo"
+    config['general']['trialNumber'] = "only_photons_w_spatial_dropout"
 
     config['model']['TransRP']['image_encoder'] = 'densenet'
     config['model']['linear_units'] = []
@@ -100,11 +105,11 @@ if __name__ == '__main__':
     from src.experiments.endpoint_combinations import run_toxicity_combinations_experiment
 
 
-    experiment_name = "ST_TRP_photons_only"
-    run_single_toxicity_models_experiment(config, experiment_name)
+    # experiment_name = "ST_TRP_photons_only"
+    # run_single_toxicity_models_experiment(config, experiment_name)
 
-    # expHandler = experimentHandler(config)
-    # expHandler.run_experiment(config)
+    expHandler = experimentHandler(config)
+    expHandler.run_experiment(config)
 
         
 
@@ -115,5 +120,7 @@ if __name__ == '__main__':
     # trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']) # r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
     # # # # run the models on the test set
     # validate_models_on_test_set(config, trial_dir)
+
+    """
 
         

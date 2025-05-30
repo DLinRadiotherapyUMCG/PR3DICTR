@@ -20,6 +20,24 @@ from monai.networks.layers.factories import Conv, Dropout, Pool
 
 
 
+class SpatialDropout3D(nn.Module):
+    def __init__(self, drop_prob):
+        super(SpatialDropout3D, self).__init__()
+        self.drop_prob = drop_prob
+
+    def forward(self, x):
+        if not self.training or self.drop_prob == 0:
+            return x
+
+        # x: (N, C, D, H, W)
+        # Create dropout mask with shape (N, C, 1, 1, 1)
+        noise_shape = (x.size(0), x.size(1), 1, 1, 1)
+        mask = x.new_empty(noise_shape).bernoulli_(1 - self.drop_prob)
+        mask = mask / (1 - self.drop_prob)
+        #print(mask.shape)
+        return x * mask
+
+
 class _DenseLayer(nn.Module):
     def __init__(
         self,
@@ -58,8 +76,8 @@ class _DenseLayer(nn.Module):
         self.layers.add_module("relu2", nn.LeakyReLU(negative_slope=0))
         self.layers.add_module("conv2",  nn.Conv3d(out_channels, growth_rate, kernel_size=3, padding=1, bias=False))
 
-        if dropout_prob > 0:
-            self.layers.add_module("dropout", dropout_type(dropout_prob))
+        #if dropout_prob > 0:
+        self.layers.add_module("dropout", SpatialDropout3D(0.1))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         new_features = self.layers(x)
