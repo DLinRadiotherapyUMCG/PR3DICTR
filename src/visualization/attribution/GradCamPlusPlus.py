@@ -270,6 +270,7 @@ class GradCamPlusPlus(LayerAttribution, GradientAttribution):
 
         if relu_attributions:
             scaled_acts = tuple(F.relu(scaled_act) for scaled_act in scaled_acts)
+            
         return _format_output(len(scaled_acts) > 1, scaled_acts)
 
 

@@ -269,13 +269,13 @@ def plot_RTSTRUCT(axs, RTSTRUCT, slices, HNC_plotting_params, is_background=Fals
             axs[i].imshow(RTSTRUCT_slice, cmap=cmap, norm=norm, interpolation='none')
         else:
             # plots just the contours of the RTSTRUCT
-            axs[i].contour(
-                RTSTRUCT_slice > 0,
-                colors="black",
-                linewidths=HNC_plotting_params["RTSTRUCT"]["linewidth"] + 4,
-                alpha=HNC_plotting_params["RTSTRUCT"]["alpha"] * 0.25,
-                origin="lower",
-            )  # ensures orientation is correct (up/down)
+            # axs[i].contour(
+            #     RTSTRUCT_slice > 0,
+            #     colors="black",
+            #     linewidths=HNC_plotting_params["RTSTRUCT"]["linewidth"] + 4,
+            #     alpha=HNC_plotting_params["RTSTRUCT"]["alpha"] * 0.25,
+            #     origin="lower",
+            # )  # ensures orientation is correct (up/down)
             axs[i].contour(
                 RTSTRUCT_slice > 0,
                 colors=HNC_plotting_params["RTSTRUCT"]["color"],
