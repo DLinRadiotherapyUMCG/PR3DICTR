@@ -123,9 +123,9 @@ PLOTTING_PARAMS = {
     "LUNG" : {
         "CT": {
             "cmap": "gray",
-            "cmap_title": "HU",
-            "min_val": -1200,
-            "max_val": 400,
+            "cmap_title": "Binary",
+            "min_val": 0,
+            "max_val": 1,
         },
         "RTDOSE": {
             "cmap": "dose",

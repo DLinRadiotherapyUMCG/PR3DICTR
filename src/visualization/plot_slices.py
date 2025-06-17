@@ -207,7 +207,6 @@ def plot_RTDOSE(axs, RTDOSE, slices, RTcmap, is_background=False):
     # retrieve the colormap for RTDOSE (HNC)
     cmap, norm, levels = create_RTDOSE_cmap(RTcmap)
     levels = levels[1:]  # remove the first level, as it is the background level
-
     for i, slice_n in enumerate(slices):
         RTDOSE_slice = RTDOSE[slice_n]
         
@@ -359,7 +358,6 @@ def plot_slices(
 
     # Calculate the size of the figure based on the size of the plots
     if "Attention" not in row_dicts[0]:
-
         im_shape = get_slice_dimensions(row_dicts[0])
     else:
         im_shape = row_dicts[0]["Attention"][0].shape
@@ -437,6 +435,7 @@ def plot_slices(
                     min_val=PLOTTING_PARAMS["RTDOSE"]["min_val"],
                     max_val=PLOTTING_PARAMS["RTDOSE"]["max_val"],
                 )
+                print(f"Max dose found: {PLOTTING_PARAMS["RTDOSE"]["max_val"]}")
                 rtdose_is_background = (
                     True
                     if layers_to_plot[0] == "RTDOSE"

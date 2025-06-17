@@ -23,9 +23,9 @@ from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
 if __name__ == '__main__':
     # Setup
-    toxicity, log_level = parse_args()
+    log_level = parse_args()
     setup_logging(log_level)
-    # wandb.login()
+    # wandb.login()v
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
     config = get_config('DETOXLung_config')
