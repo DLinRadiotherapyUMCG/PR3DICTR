@@ -1,0 +1,137 @@
+import os
+import matplotlib.pyplot as plt
+
+from src.visualization.plot_slices import plot_slices
+
+def SelectModality(config, ptn, index):
+        dictFound = None
+        modalityKeys = config['data']['image_keys']
+        imageKey = modalityKeys[index]
+        if("ct" in imageKey):
+            ct_range = (config['data']['preprocessing']['ct']['a_max'] - config['data']['preprocessing']['ct']['a_min'])
+            dictFound = {"Label": "CT",
+                         "Name": "CT",
+                         "CT": ((ptn[index].cpu()* ct_range) + config['data']['preprocessing']['ct']['a_min'])}
+        elif("rtdose"):
+            rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
+            dictFound = {"Label": "RTDOSE",
+                         "Name": "RTDOSE",
+                         "RTDOSE": (ptn[index].cpu()* rtdose_range + config['data']['preprocessing']['rtdose']['a_min'])}
+        elif("mri"):
+            #TODO handle MRI images
+             dictFound = {"Label": "MRI",
+                         "Name": "MRI",
+                         "MRI": ptn[index].cpu()}
+        elif("segmentation_map"):
+            dictFound = {"Label": "RTSTRUCT",
+                         "Name": "segmentation_map",
+                         "RTSTRUCT": ptn[index].cpu()}
+        else:
+            # Otherwise also a structure
+            dictFound = {"Label": "RTSTRUCT",
+                         "Name": imageKey,
+                         "RTSTRUCT": ptn[index].cpu()}
+        return dictFound
+
+def adjust_modality(config, image, modality):
+    """
+    Adjusts the image to the correct range based on the modality.
+    Args:
+        image (torch.tensor): image to adjust
+        modality (str): modality of the image
+    Returns:
+        torch.tensor: adjusted image
+    """
+
+    if modality == 'CT':
+        ct_range = (config['data']['preprocessing']['ct']['a_max'] - config['data']['preprocessing']['ct']['a_min'])
+        image = (image * ct_range) + config['data']['preprocessing']['ct']['a_min']
+
+    elif modality == 'RTDOSE':
+        rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
+        image = image * rtdose_range + config['data']['preprocessing']['rtdose']['a_min']
+
+    elif modality == 'RTSTRUCT':
+        image = image
+
+    return image
+
+
+
+
+def plot_model_inputs(config, plot_inputs, epoch):
+    """
+
+    Plots the model inputs (CT, RTDOSE, Segmentation) used during training, and saves the figure as a png.
+    Args:
+        config (dict): configuration object
+        plot_inputs (list): list of model input images
+        epoch (int): current epoch number
+    Returns:
+        None
+
+    """
+    # check that the directory exists
+
+
+    save_folder = os.path.join(config['general']['resultsCurrentDirectory'], config['saving']['plot_training_slices']['folder_name'])
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder, exist_ok=True)
+
+    n_patients = config['saving']['plot_training_slices']['n_patients_per_epoch']
+    for patient_idx in range(min(n_patients, len(plot_inputs))):
+<<<<<<< HEAD
+
+        # list of dicts, where each dict is one image type to plot (i.e. one row)
+        plotting_rows_dicts = []
+
+        num_slices = plot_inputs[patient_idx][0].shape[0]
+=======
+        
+        # Check the image modalities used from config
+        modalityKeys = config['data']['image_keys']
+        plotting_rows_dicts = []
+        ptn = plot_inputs[patient_idx]
+        for i in range(len(modalityKeys)):
+            dictImage = SelectModality(config, ptn, i)
+            plotting_rows_dicts.append(dictImage)
+
+        # Expect always 1 image modality available and get the amount of slices
+        num_CT_slices = ptn[0].shape[0]
+>>>>>>> local_00002
+        num_plot_slices = config['saving']['plot_training_slices']['n_slices_per_patient']
+        slices = list(range(0, num_slices, num_slices // (num_plot_slices + 1)))[1:-1]
+
+
+        for image_channel_idx, image_modality_name in enumerate(config['data']['image_keys']):
+
+            image_modality_name = image_modality_name.upper()
+
+            if image_modality_name == "SEGMENTATION_MAP":
+                image_modality_name = "RTSTRUCT"
+            
+            # get the image out of the tensor
+            image = plot_inputs[patient_idx][image_channel_idx].cpu()
+            # adjust the scale of the image
+            scaled_image = adjust_modality(config, image, image_modality_name)
+
+            row_dict = {"Label" : image_modality_name,
+                        f"{image_modality_name}": scaled_image}
+            plotting_rows_dicts.append(row_dict)
+
+
+        #slices = [20, 30, 40, 50, 60, 70, 80, 90]
+        fig, axes = plot_slices(plotting_rows_dicts, slices, RT_region=config['general']['region'])# , title=f"{patient_id} slices")
+        filename=os.path.join(save_folder, 'epoch_{}_idx_{}.png'.format(epoch, patient_idx))
+        #print(filename)
+        fig.savefig(filename, bbox_inches='tight')
+        plotting_rows_dicts
+        plt.close(fig)
+<<<<<<< HEAD
+        plt.clf()
+=======
+            
+
+
+
+>>>>>>> local_00002

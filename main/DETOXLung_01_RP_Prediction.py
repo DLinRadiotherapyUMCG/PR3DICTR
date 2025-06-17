@@ -24,7 +24,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 
 if __name__ == '__main__':
     # Setup
-    toxicity, log_level = parse_args()
+    log_level = parse_args()
     setup_logging(log_level)
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')

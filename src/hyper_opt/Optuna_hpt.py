@@ -150,6 +150,9 @@ def Optuna_initialise_study(config):
         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
         create_file(pathOptunaStudyTracker)
+        storage = optuna.storages.RDBStorage(url = storage_name,
+        engine_kwargs = {'pool_size' : 20,
+        'max_overflow' : 0})
         print(storage_name)
 
         sampler = optuna.samplers.TPESampler(
@@ -161,7 +164,7 @@ def Optuna_initialise_study(config):
 
         study = optuna.create_study(
                             study_name = studyName, 
-                            storage = storage_name, 
+                            storage = storage, 
                             sampler = sampler,
                             load_if_exists = True,
                             directions = config['hyperparam_tuning']['optuna']['objective_direction'],

@@ -19,11 +19,13 @@ from src.utils.set_random_seed import set_random_seed
 from src.hyper_opt.hyperHandler import HyperTuning_Handler
 from src.utils.fileHandler import create_file, create_textfile
 
+from src.evaluation.validate_on_test_set import validate_models_on_test_set
+
 if __name__ == '__main__':
     # Setup
     log_level = parse_args()
     setup_logging(log_level)
-    # wandb.login()
+    # wandb.login()v
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
     config = get_config('DETOXLung_config')
@@ -31,7 +33,11 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['general']['seed'])
 
+
+    trial_dir = r"/scratch/p315317/Project/DETOX_Lung_RP/Results/Habrok_ResNet18-02_2025/Trial_33" # config['general']['resultsCurrentDirectory']
+    # # run the models on the test set
+    validate_models_on_test_set(config, trial_dir)
     # MAIN: DL running class with hyperparameter optimization
-    hyperClass = HyperTuning_Handler(config)
-    hyperClass.Operate(config)
-    hyperClass.Stop()
+    #hyperClass = HyperTuning_Handler(config)
+    #hyperClass.Operate(config)
+    #hyperClass.Stop()
