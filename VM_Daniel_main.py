@@ -38,8 +38,8 @@ if __name__ == '__main__':
     
 
     # CLS experiment
-    config['general']['experiment_name'] = "W06_models"
-    config['general']['trialNumber'] = "TRP"
+    config['general']['experiment_name'] = "TEST 123"
+    config['general']['trialNumber'] = "ResNet18"  # this is the name of the folder where the results will be saved
 
     
     config['model']['TransRP']['clinical_features_method'] = 'm2'
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     
     #config['columns']['labels'] = ['Aspiration_M06', 'Dysphagia_M06', 'Sticky_M06', 'Taste_M06', 'Xerostomia_M06']
     config['columns']['labels'] = ['Aspiration_W06', 'Dysphagia_W06', 'Sticky_W06', 'Taste_W06', 'Xerostomia_W06']
-    
+
     # config['model']['TransRP']['image_encoder'] = 'convnext'
     # #
     # config['model']['convnext']['model_size'] = 'tiny'
@@ -66,9 +66,12 @@ if __name__ == '__main__':
     # config['model']['convnext']['patch_size'] = 5
 
     config['training']['batch_size'] = 4
-    #config['training']['max_epochs'] = 3
+    config['training']['max_epochs'] = 2
 
-    #config['data']['kFolds']['n_iterations'] = 1
+
+    config['data']['kFolds']['n_iterations'] = 2
+
+    config['model']['model_name'] = 'resnet'
     #config['data']['dataloader']['dataset_type'] = 'smartcache'
 
     #config['data']['augmentation']['mixup']['isEnabled'] = False

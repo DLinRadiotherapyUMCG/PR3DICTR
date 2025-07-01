@@ -53,7 +53,6 @@ def initialise_WandB_group(config: dict, project_name: str, groupName = None, co
             config = config_for_wandb,
             reinit = True
         ) 
-
     
 
 
