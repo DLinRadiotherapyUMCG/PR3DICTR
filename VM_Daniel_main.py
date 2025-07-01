@@ -58,7 +58,7 @@ if __name__ == '__main__':
     
     #config['columns']['labels'] = ['Aspiration_M06', 'Dysphagia_M06', 'Sticky_M06', 'Taste_M06', 'Xerostomia_M06']
     config['columns']['labels'] = ['Aspiration_W06', 'Dysphagia_W06', 'Sticky_W06', 'Taste_W06', 'Xerostomia_W06']
-
+    
     # config['model']['TransRP']['image_encoder'] = 'convnext'
     # #
     # config['model']['convnext']['model_size'] = 'tiny'
