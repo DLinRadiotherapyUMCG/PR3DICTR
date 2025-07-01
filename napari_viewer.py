@@ -28,6 +28,8 @@ TODO:
 
 DATA_FOLDER = r"H:\MDACC_higherres\dataset_full_mdacc"
 
+DATA_FOLDER = r"\\zkh\appdata\RTDicom\Projectline_HNC_modelling\Users\Daniel MacRae\6. Unbalanced dataset\Data\dataset_full_ORN"
+
 class DiscreteColorbar(QWidget):
     def __init__(self, levels, colors, labels=None, title="Colorbar"):
         super().__init__()
@@ -157,6 +159,8 @@ class NapariRTViewer:
                 title="Dose (Gy)"
             )
             self.viewer.window.add_dock_widget(widget, area="right")
+
+            
 
         self.viewer.window.add_dock_widget(load_and_display, area="left")
         napari.run()

@@ -37,6 +37,13 @@ class MultiTox_Loss_ORIGINAL(nn.Module):
         mask = (targets != self.missing_endpoints_as_tensor[0]) # & (targets <= self.valid_endpoints_as_tensor[1])
         batch_loss = torch.nan_to_num(batch_loss, nan=0.0)
         batch_loss *= mask
+
+
+        # correlation regularization
+        preds_t = predictions.T  # shape (L, N)
+        corr = torch.corrcoef(preds_t)  # shape (L, L)
+        off_diag = torch.triu(corr, diagonal=1)
+        loss_corr_penalty = torch.mean(off_diag ** 2)
         
         num_valid_labels = mask.sum() # the number of non-missing labels
 
@@ -60,7 +67,7 @@ class MultiTox_Loss_ORIGINAL(nn.Module):
                 batch_loss_dict[endpoint_list[0]] = batch_loss[:].sum() / mask[:].sum()            
 
             # total mean loss
-            batch_loss_mean = batch_loss.sum() / mask.sum()
+            batch_loss_mean = batch_loss.sum() / mask.sum() + 0.001 * loss_corr_penalty  # add a small penalty for correlation regularization
             batch_loss_mean = torch.clamp(batch_loss_mean, min=0, max=10000) 
 
         

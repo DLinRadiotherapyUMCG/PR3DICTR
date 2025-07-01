@@ -99,7 +99,7 @@ def adaptive_make_calibration_plots(config, row_dicts, column_names, title=None,
                 axs[i][j].set_xlabel(x_axis_label)
 
             if i == 0:
-                axs[i][j].set_title(column_names[j])   # annotate column subtitle
+                axs[i][j].set_title(column_names[j]) # annotate column subtitle
             
             if j != 0:
                 axs[i][j].set_yticklabels([])

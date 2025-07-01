@@ -36,6 +36,7 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
 
     df_fold_all_preds = pd.read_csv(predictions_csv_dir, sep=";")
 
+    print(len(df_fold_all_preds))
 
     # loop over the train, val or test sets
     for set_name in sets:
