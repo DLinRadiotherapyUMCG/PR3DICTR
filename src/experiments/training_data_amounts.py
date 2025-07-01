@@ -45,9 +45,9 @@ def run_dataset_amounts_experiment(config, experiment_name, trial_seeds, dataset
         #experiment_config['general']['trialNumber'] = experiment_config['general']['seed'] 
             
 
-            #experiment_config['general']['trialNumber'] = f"{dataset_amount}_training_patients"
+        #experiment_config['general']['trialNumber'] = f"{dataset_amount}_training_patients"
 
-            #experiment_config['data']['subsample_train_set_size'] = dataset_amount  # set in the config how many training patients we want to use
+        #experiment_config['data']['subsample_train_set_size'] = dataset_amount  # set in the config how many training patients we want to use
 
         # train model for 1 fold
         expHandler = experimentHandler(experiment_config)

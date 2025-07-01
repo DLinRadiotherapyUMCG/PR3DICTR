@@ -30,7 +30,7 @@ if __name__ == '__main__':
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
-    config = get_config('Trial32_Config_VM')
+    config = get_config('Daniel/VM_uncertainty')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])

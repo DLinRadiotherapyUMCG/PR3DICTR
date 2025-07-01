@@ -10,7 +10,7 @@ def check_names(path):
         os.makedirs(os.path.dirname(path))
 
 
-def create_results_directory(config, KFoldIndex = -1, create_dir = True):
+def create_results_directory(config, KFoldIndex = -1, create_dir = True, folder_name = None):
     """
     Function to create the results directory for the current run.
     """
@@ -24,6 +24,10 @@ def create_results_directory(config, KFoldIndex = -1, create_dir = True):
         config["general"]["trialNumber"] = f"n_patients_{current_N_patients}"   # set the trial folder to be the number of patients
         seed = config["general"]["seed"]
         folderPath = os.path.join(experimentPath, f"n_patients_{current_N_patients}", f"seed_{seed}")
+
+    elif folder_name is not None:
+        folderPath = os.path.join(os.path.join(config["paths"]["results"], config['general']['experiment_name']), config["general"]["trialNumber"])
+        folderPath = os.path.join(folderPath, folder_name)
 
     elif (KFoldIndex != -1):
         folderPath = os.path.join(os.path.join(config["paths"]["results"], config['general']['experiment_name']), config["general"]["trialNumber"])
