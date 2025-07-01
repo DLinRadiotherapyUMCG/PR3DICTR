@@ -77,7 +77,7 @@ class _DenseLayer(nn.Module):
         self.layers.add_module("conv2",  nn.Conv3d(out_channels, growth_rate, kernel_size=3, padding=1, bias=False))
 
         #if dropout_prob > 0:
-        self.layers.add_module("dropout", SpatialDropout3D(0.1))
+        self.layers.add_module("dropout", nn.Dropout3d(dropout_prob))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         new_features = self.layers(x)
@@ -182,7 +182,6 @@ class DenseNet(nn.Module):
         n_input_channels = in_channels
 
         conv_type = nn.Conv3d
-        pool_type = nn.MaxPool3d
         avg_pool_type = nn.AdaptiveAvgPool3d
 
         first_kernel_size = 5

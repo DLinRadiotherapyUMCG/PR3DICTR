@@ -231,7 +231,21 @@ hyperparam_tuning:
   #     location: ["training",'optimizer','weight_decay']
   #     min: 0
   #     max: 1
-          
+
+
+
+uncertainty:
+  seed: 42                        # random seed for uncertainty estimation
+  method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
+  metric: 12345
+  deep_ensemble:
+    n_models: 5
+  dataset_split:
+    n_splits: 1                   # the number of data splits to make
+    validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
+    split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
+
+
 saving:
   config: True               # whether to save the config as a .yaml fule
   best_model: True           # whether to save the model weights on each fold

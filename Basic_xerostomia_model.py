@@ -15,11 +15,8 @@ from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 
 from src.experiments.experimentHandler import experimentHandler
+from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
-import numpy as np
-import random
-import torch
-from monai.utils import set_determinism
 
 if __name__ == '__main__':
 
@@ -28,20 +25,20 @@ if __name__ == '__main__':
     setup_logging(log_level)
 
     # Load the config
-    config = get_config('LL_test')
+    config = get_config('Xerostomia_model')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
     
 
     # # MAIN: DL running class (with optional hyperparameter optimization)
+    # this line is used to run the k-fold cross-validation
     expHandler = experimentHandler(config)
     expHandler.run_experiment(config)
 
 
-    # TEST ENSEMBLE CODE
-    from src.evaluation.validate_on_test_set import validate_models_on_test_set
-
+    # TEST THE ENSEMBLE OF MODELS ON THE TEST SET
+    
     # # # # run the models on the test set
     trial_dir = config['general']['resultsCurrentDirectory']
     validate_models_on_test_set(config, trial_dir)

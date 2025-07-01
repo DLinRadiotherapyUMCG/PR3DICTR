@@ -135,11 +135,11 @@ class MultiToxOutputHead(torch.nn.Module):
 
             # iteratively add linear layers to the ModuleList()
             for i in range(len(self.clinical_variables_linear_units) - 1):
-                if self.dropout_p > 0:
-                    self.clinical_variables_shared_fc_layers.add_module(
-                        f'Clinical_shared_dropout_{i+1}',
-                        torch.nn.Dropout(self.dropout_p)
-                    )
+                
+                self.clinical_variables_shared_fc_layers.add_module(
+                    f'Clinical_shared_dropout_{i+1}',
+                    torch.nn.Dropout(self.dropout_p)
+                )
                 self.clinical_variables_shared_fc_layers.add_module(
                     f'Clinical_shared_linear_{i+1}',
                     torch.nn.Linear(in_features=self.clinical_variables_linear_units[i],
@@ -171,8 +171,8 @@ class MultiToxOutputHead(torch.nn.Module):
                 additional_units = 0
             #print(self.clinical_variables_position)
             #print(i, additional_units, self.linear_units[i])
-            if self.dropout_p > 0:
-                self.shared_fc_layers.add_module(f'Dropout_shared_{i+1}', torch.nn.Dropout(self.dropout_p))
+            #if self.dropout_p > 0:
+            self.shared_fc_layers.add_module(f'Dropout_shared_{i+1}', torch.nn.Dropout(self.dropout_p))
             
             if i == 0:
                 self.shared_fc_layers.add_module(f'Linear_shared_{i+1}',
@@ -200,17 +200,13 @@ class MultiToxOutputHead(torch.nn.Module):
             linear_layers_endpoint_dict_i[endpoint] = torch.nn.ModuleList()
         self.endpoint_heads = torch.nn.ModuleDict(linear_layers_endpoint_dict_i)
 
-        # Add additional input units for the first non-shared linear layers if the clinical variables are concatenated        
-        # if self.clinical_variables_position - 1 == len(self.linear_units):
-        #     self.linear_units_endpoint = [self.linear_units[-1] + self.clinical_variables_linear_units[-1]] + self.linear_units_endpoint
-        # else:
-        #     self.linear_units_endpoint = [self.linear_units[-1]] + self.linear_units_endpoint
 
         for endpoint in self.endpoint_list:
             # loop through the non-shared linear layers
             for i in range(len(self.linear_units_endpoint)):
-                if self.dropout_p > 0:
-                    self.endpoint_heads[endpoint].add_module(f'Endpoint_Dropout_{i+1}', torch.nn.Dropout(self.dropout_p))
+                
+                self.endpoint_heads[endpoint].add_module(f'Endpoint_Dropout_{i+1}', torch.nn.Dropout(self.dropout_p))
+
                 if i == 0:
                     self.endpoint_heads[endpoint].add_module(f'Endpoint_Linear_{i+1}',
                                                     torch.nn.LazyLinear(out_features=self.linear_units_endpoint[i], bias=self.use_bias))
@@ -220,8 +216,9 @@ class MultiToxOutputHead(torch.nn.Module):
                                                          out_features=self.linear_units_endpoint[i], bias=self.use_bias))
                 self.endpoint_heads[endpoint].add_module(f'Endpoint_LReLU_{i+1}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
             # output layer/head for this toxicity endpoint
-            if self.dropout_p > 0:
-                    self.endpoint_heads[endpoint].add_module(f'Output_{endpoint}_Dropout', torch.nn.Dropout(self.dropout_p))
+            
+            self.endpoint_heads[endpoint].add_module(f'Output_{endpoint}_Dropout', torch.nn.Dropout(self.dropout_p))
+
             self.endpoint_heads[endpoint].add_module(f'Output_{endpoint}',
                                 torch.nn.LazyLinear(out_features=self.num_ohe_classes, bias=self.use_bias))
 
