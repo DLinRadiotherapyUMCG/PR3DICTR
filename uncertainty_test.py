@@ -37,36 +37,5 @@ if __name__ == '__main__':
     
     
 
-    # CLS experiment
-    config['general']['experiment_name'] = "W06_models"
-    config['general']['trialNumber'] = "TRP"
-
-    
-    config['model']['TransRP']['clinical_features_method'] = 'm2'
-
-    config['data']['source'] = "PRI2MA"
-    config['data']['dataset_csv'] = "MT_dataset_with_all_structs.csv"
-    config['columns']['clinical_features'] = [
-                      'Leeftijd',
-                      'Xerostomia_W01_Helemaal_niet', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg', 
-                      #'Chemotherapy'
-                      ]
-    
-    config['columns']['labels'] = ['Xerostomia_W06']
-    
-
-    config['training']['batch_size'] = 4
-    #
-    expHandler = experimentHandler(config)
-    expHandler.run_experiment(config)
-
-
-
-    # TEST ENSEMBLE CODE
-
-    from src.evaluation.validate_on_test_set import validate_models_on_test_set
-
-    trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']) # r"C:\Users\S.P.M. de Vette\OneDrive - UMCG\Desktop\pred_RT_results\Xerostomia_M06/ResNet18" # config['general']['resultsCurrentDirectory']
-    # # # run the models on the test set
-    validate_models_on_test_set(config, trial_dir)
-
+    from src.uncertainty.deep_ensemble import train_deep_ensemble_model
+    train_deep_ensemble_model(config)

@@ -435,7 +435,6 @@ def plot_slices(
                     min_val=PLOTTING_PARAMS["RTDOSE"]["min_val"],
                     max_val=PLOTTING_PARAMS["RTDOSE"]["max_val"],
                 )
-                print(f"Max dose found: {PLOTTING_PARAMS["RTDOSE"]["max_val"]}")
                 rtdose_is_background = (
                     True
                     if layers_to_plot[0] == "RTDOSE"
