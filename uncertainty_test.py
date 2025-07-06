@@ -21,6 +21,8 @@ import random
 import torch
 from monai.utils import set_determinism
 
+import src.hyper_opt.WandB_functions as WandB_functions
+
 
 if __name__ == '__main__':
 
@@ -34,8 +36,51 @@ if __name__ == '__main__':
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
-    
+
+    using_WandB = config['hyperparam_tuning']['WandB']['isEnabled']
+        
+    if (using_WandB):
+        print("logging in..........")
+        # Log into weights and biases
+        WandB_functions.login(config)
+        print("Weights and Biases is active")
     
 
-    from src.uncertainty.deep_ensemble import train_deep_ensemble_model
-    train_deep_ensemble_model(config)
+    from src.uncertainty.deep_ensemble import train_deep_ensemble_models, evaluate_deep_ensemble_models
+    from src.uncertainty.MC_dropout import train_MC_dropout_model, collect_bayesian_forward_passes
+
+    # train_MC_dropout_model(config)
+    # collect_bayesian_forward_passes(config)
+
+
+    # config['general']['experiment_name'] = "Deep ensemble"
+
+    # train_deep_ensemble_models(config)
+    # evaluate_deep_ensemble_models(config)
+
+    dropout_values = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+
+
+    config['general']['experiment_name'] = "Deep Ensemble"
+    config['general']['testMode'] = True  # Set to True to evaluate on the test set
+
+    config['general']['trialNumber'] = "Dysphagia_1"  # Set the trial number for TTA
+    config['columns']['labels'] = ["Dysphagia_M06"]  # Set the label for TTA
+    config['columns']['clinical_features'] = ["Geslacht", "Leeftijd", "Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4"]
+
+    train_deep_ensemble_models(config)
+    evaluate_deep_ensemble_models(config)
+
+    #train_MC_dropout_model(config)
+    #collect_bayesian_forward_passes(config, UQ_method='TTA')
+
+    config['general']['trialNumber'] = "Xerostomia_1"  # Set the trial number for TTA
+    config['columns']['labels'] = ["Xerostomia_M06"]  # Set the label for TTA
+    config['columns']['clinical_features'] = ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]
+
+    train_deep_ensemble_models(config)
+    evaluate_deep_ensemble_models(config)
+
+    #train_MC_dropout_model(config)
+    #collect_bayesian_forward_passes(config, UQ_method='TTA')
+

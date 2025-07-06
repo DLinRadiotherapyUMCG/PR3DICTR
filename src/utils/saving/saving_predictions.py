@@ -76,6 +76,5 @@ def save_predictions(config: dict, patient_ids: list[str], y_pred_list_dict: dic
     # Save to file
     output_file_dir = get_predictions_csv_dir(config, is_test_set, ensemble_predictions, filename=filename)
 
-
     df_y.to_csv(output_file_dir, sep=';', index=False)
 

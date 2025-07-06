@@ -102,10 +102,10 @@ def load_dataset(config : dict):
 
     # if in test mode, and we want to use a subset of the data, then subsample the total dataset
     if config['general']['testMode'] and "n_patients_total" in config['data']:
-        print("Subsampling the dataset for testing purposes.")
+        logging.info("Subsampling the dataset for testing purposes.")
         num_patients_sample = config['data']['n_patients_total']
         df_total = subsample_dataset(num_patients_sample, df_total)
-        print(len(df_total))
+        logging.info(f"Dataset now contains {len(df_total)} patients (after subsampling).")
     
     # split off the test set
     df_test = df_total[df_total[SPLIT_COL_NAME] == "test"]
@@ -115,7 +115,7 @@ def load_dataset(config : dict):
     train_size = df_train_val.shape[0]
     test_size = df_test.shape[0]
     total_size = df_total.shape[0]
-    print(f"Train/Val dataset {train_size} ({train_size/total_size*100}%), Test dataset {test_size} ({test_size/total_size*100}%)")
+    logging.info(f"Train/Val dataset {train_size} ({train_size/total_size*100}%), Test dataset {test_size} ({test_size/total_size*100}%)")
 
     # check patients not in same dataset
     assert not PtnID_SanityCheck(config,df_train_val,df_test)
@@ -231,7 +231,7 @@ def stratified_cumulative_sampling(X, y, sample_sizes, random_state=42):
     subsets = {}
 
     for size in sample_sizes:
-        print(size)
+        #print(size)
         remaining_indices = list(sampled_indices)
         
         strat_split = ShuffleSplit(n_splits=1, train_size=size - len(sampled_indices), random_state=random_state)
@@ -289,21 +289,6 @@ def subsample_dataset(num_patients_sample, df_dataset):
     return df_dataset
 
 
-def subsample_datasets(num_patients_sample, trainDf, valDf, testDf):
-    """
-    Subsample the datasets to that `num_patients_sample` are used in total (across all three datasets).
-    This is used for test mode.
-    """
-    # find the number of patients in each dataset, so that we can preserve the ratio of patients in each dataset (train, val, test)
-    n_train_loaded, n_val_loaded, n_test_loaded = trainDf.shape[0], valDf.shape[0], testDf.shape[0]
-    n_total_loaded = n_train_loaded + n_val_loaded + n_test_loaded
-
-    # Only use 100 patients for training dataset
-    trainDf = trainDf.iloc[:int(n_train_loaded/n_total_loaded * num_patients_sample)]
-    valDf = valDf.iloc[:int(n_val_loaded/n_total_loaded * num_patients_sample)]
-    testDf = testDf.iloc[:int(n_test_loaded/n_total_loaded * num_patients_sample)]
-
-    return trainDf, valDf, testDf
 
 
 

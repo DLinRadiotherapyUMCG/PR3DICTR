@@ -4,20 +4,21 @@ uncertainty:
   method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
   metric: 12345
   deep_ensemble:
-    n_models: 2
+    n_models: 10
+  MC_dropout:
+    n_forward_passes: 50          # number of forward passes to perform for each model in the ensemble
+    #dropout_p: 0.2 
   dataset_split:
     n_splits: 1                   # the number of data splits to make
     validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
     split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
 columns:
-  clinical_features:
-  - Geslacht
-  - Leeftijd
-  - Xerostomia_W01_Helemaal_niet
-  - Xerostomia_W01_Een_beetje
-  - Xerostomia_W01_Nogal_Heel_erg
+  clinical_features: ["Geslacht", "Leeftijd", "Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4"]
+  # ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]
+  
   labels:
-  - Xerostomia_M06
+  #- Xerostomia_M06
+  - Dysphagia_M06
 data:
   augmentation:
     isEnabled: true
@@ -139,13 +140,13 @@ evaluation:
     - reliability
     n_bins: 10
 general:
-  experiment_name: deep_ensemble_test
+  experiment_name: MC Dropout
   firstRun: false
   region: HNC
   resultsCurrentDirectory: 0
   seed: 42
-  testMode: True
-  trialNumber: test_0
+  testMode: False
+  trialNumber: Dysphagia_1
   use_test_set: false
 hyperparam_tuning:
   WandB:
@@ -381,17 +382,16 @@ model:
       - 1
   densenet:
     model_depth: 121
-  dropout_p: 0.02595495832717444
+  dropout_p: 0.2
   efficientnetv2:
     use_bias: true
   linear_units:
-  - 256
-  linear_units_endpoint:
-  - 32
-  lrelu_alpha: 0.0731576958075853
+  - 128
+  linear_units_endpoint: []
+  lrelu_alpha: 0.01
   model_name: resnet
   n_clinical_layers: 0
-  n_linear_layers: 2
+  n_linear_layers: 1
   n_linear_layers_endpoint: 2
   num_ohe_classes: 1
   output_head:
