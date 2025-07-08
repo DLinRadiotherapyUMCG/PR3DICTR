@@ -101,10 +101,10 @@ from src.config_presets.tools.load_config import load_config
 
 
 
-
-
 # UQ_method = 'MC_dropout'  # default method for uncertainty quantification
 #             'TTA' # Test Time Augmentation, not implemented yet
+
+
 
 def collect_bayesian_forward_passes(config, UQ_method = 'MC_dropout'):
     # get the test set data and make a test dataloader
@@ -114,7 +114,8 @@ def collect_bayesian_forward_passes(config, UQ_method = 'MC_dropout'):
     if UQ_method == 'MC_dropout':
         transforms_method = val_transforms
     elif UQ_method == 'TTA':
-        transforms_method = val_transforms
+        transforms_method = train_transforms
+        
     else:
         raise ValueError(f"Unrecognized UQ method: {UQ_method}. Supported methods are 'MC_dropout' and 'TTA'.")
 
@@ -136,9 +137,13 @@ def collect_bayesian_forward_passes(config, UQ_method = 'MC_dropout'):
     true_label_columns = [x+'_true' for x in endpoint_list]  # the columns in the predictions csv file
 
     for forward_pass_idx in tqdm(range(1, config['uncertainty'][UQ_method]['n_forward_passes'] + 1)):
+        if UQ_method == "TTA":
+            forward_pass_seed = forward_pass_idx # * config['general']['seed']  # set the seed for each forward pass
+        else:
+            forward_pass_seed = None
         
         # get the predictions for this forward pass
-        df_forward_pass_preds = collect_one_predictions_pass(model_config, model, test_loader, enable_MC_dropout=enable_MC_dropout)
+        df_forward_pass_preds = collect_one_predictions_pass(model_config, model, test_loader, enable_MC_dropout=enable_MC_dropout, seed=forward_pass_seed)
         
         df_forward_pass_preds.set_index('PatientID', inplace=True)  # set the index to PatientID
         df_forward_pass_preds.sort_index(inplace=True)  # sort the index by PatientID

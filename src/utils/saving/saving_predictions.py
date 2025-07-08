@@ -3,32 +3,39 @@ import torch
 import os
 
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
+import numpy as np
 
 
-def concatenate_predictions(config, list_of_pred_list_dicts: list[dict], list_of_true_list_dicts: list[dict]):
+def concatenate_predictions(config, list_of_pred_dicts: list[dict], list_of_true_dicts: list[dict]):
     """
-    Function to concatenate N list dicts of predictions and true labels into a single list dict of preds and true labels.
+    Function to concatenate N dicts of numpy arrays of predictions and true labels into a single dict of numpy arrays.
     For example, this function can merge together all of the training preds and validation preds into a single dict of preds.
     
     Args:
         config (dict): config dictionary
-        list_of_pred_list_dicts (list of dicts): list of dicts of lists of PyTorch tensors
-        list_of_true_list_dicts (list of dicts): list of dicts of lists of PyTorch tensors
+        list_of_pred_dicts (list of dicts): list of dicts of numpy arrays
+        list_of_true_dicts (list of dicts): list of dicts of numpy arrays
     Returns:
-        all_y_pred_list_dict (dict): a dict of lists with all of the predictions for each endpoint
-        all_y_true_list_dict (dict): a dict of lists with all of the true labels for each endpoint
+        all_y_pred_dict (dict): a dict of numpy arrays with all of the predictions for each endpoint
+        all_y_true_dict (dict): a dict of numpy arrays with all of the true labels for each endpoint
     """
     endpoint_list = config['columns']['labels']
 
-    all_y_pred_list_dict = {endpoint: [] for endpoint in endpoint_list}
-    all_y_true_list_dict = {endpoint: [] for endpoint in endpoint_list}
+    all_y_pred_dict = {endpoint: [] for endpoint in endpoint_list}
+    all_y_true_dict = {endpoint: [] for endpoint in endpoint_list}
 
-    for [preds, labels] in zip(list_of_pred_list_dicts, list_of_true_list_dicts):
+    for preds, labels in zip(list_of_pred_dicts, list_of_true_dicts):
         for endpoint in endpoint_list:
-            all_y_pred_list_dict[endpoint] += preds[endpoint]
-            all_y_true_list_dict[endpoint] += labels[endpoint]
-       
-    return all_y_pred_list_dict, all_y_true_list_dict
+            all_y_pred_dict[endpoint].append(preds[endpoint])
+            all_y_true_dict[endpoint].append(labels[endpoint])
+
+            print(labels[endpoint].shape, preds[endpoint].shape)
+
+    for endpoint in endpoint_list:
+        all_y_pred_dict[endpoint] = np.concatenate(all_y_pred_dict[endpoint], axis=0)
+        all_y_true_dict[endpoint] = np.concatenate(all_y_true_dict[endpoint], axis=0)
+
+    return all_y_pred_dict, all_y_true_dict
 
 
 

@@ -26,7 +26,7 @@ from src.training.utils.gradNorm import GradNorm
 from src.constants import MISSING_DATA_VALUE
 
 
-def train(config, model, loss_function, train_loader, val_loader, metricHandler):
+def train(config, model, loss_function, train_loader, val_loader, metricHandler, LabelTypesManager):
     """
     Train the model.
     :param config:
@@ -44,7 +44,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     labels = config['columns']['labels']
 
     # Get loss function, optimizer, and scheduler
-    loss_function = get_loss_function(config)
+    loss_function = get_loss_function(config, LabelTypesManager)
     optimizer = get_optimizer(config, model)
     if config['training']['scheduler']['name'] is not False:
         scheduler = get_scheduler(config, optimizer)
@@ -217,7 +217,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         
         # Perform validation
         if epoch_num % config['training']['validation_interval'] == 0:
-            val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
+            val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler, LabelTypesManager)
             logging.info(f'  Validation Loss={val_loss_value:.5f}, {metric_name}s={val_metric_dict}')
             #results_log.update({'val/loss':val_loss_value})
 

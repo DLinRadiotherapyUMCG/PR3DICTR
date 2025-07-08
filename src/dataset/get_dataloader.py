@@ -13,6 +13,8 @@ from monai.data import Dataset, CacheDataset, PersistentDataset, GDSDataset, Dat
 from multiprocessing import Manager
 
 
+from src.dataset.LabelTypesManager import LabelTypesManager
+from src.dataset.transforms.MixUp import MixUp
 
 
 
@@ -31,6 +33,11 @@ def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
     image_keys = config['data']['image_keys']
     clinical_features_columns = config['columns']['clinical_features']
     label_columns = config['columns']['labels']
+
+    LabelManager = LabelTypesManager(config)  # create a LabelTypesManager object to handle the labels
+    label_columns = LabelManager.label_names_full_list  # get the full list of labels, (including event and days labels for event endpoints)
+    #label_columns, _ = check_label_types(config, label_columns)  # check if the label types in the config match the endpoint list
+    print("LABELS:", label_columns)
     
     patient_ids_list = [str(patient_id) for patient_id in df['PatientID']]
 
@@ -84,7 +91,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
 
     dataset_type = config['data']['dataloader']['dataset_type'] # if not validation_mode else 'cache'
     dataloader_type = config['data']['dataloader']['dataloader_type']        #'standard'
-    batch_size = config['training']['batch_size'] if not validation_mode else 1
+    batch_size = config['training']['batch_size'] # if not validation_mode else 1
     #cache_rate = 1
     num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else config['data']['dataloader']['num_workers'] // 2
     persistent_workers = True if num_workers > 0 else False#  config['data']['dataloader']['persistent_workers']
@@ -151,16 +158,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     else:                 # the training dataset should always be shuffled
         shuffle = True
 
-    # if print_info:
-    #     logger.my_print('Dataloader arguments:')
-    #     logger.my_print('\tBatch_size: {}.'.format(batch_size))
-    #     logger.my_print('\tShuffle: {}.'.format(shuffle))
-    #     logger.my_print('\tSampler: {}.'.format(sampler))
-    #     logger.my_print('\tNum_workers: {}.'.format(num_workers))
-    #     logger.my_print('\tPersistent_workers: {}.'.format(config.persistent_workers))
-    #     logger.my_print('\tPin_memory: {}.'.format(config.pin_memory))
-    #     logger.my_print('\tTo_device: {}.'.format(config.to_device))
-    from src.dataset.transforms.MixUp import MixUp
+    
     dl_args_dict = {'dataset': data_ds, 'batch_size': batch_size, 'shuffle': shuffle, 'sampler': None,
                           'num_workers': num_workers, 'drop_last': drop_last, 'persistent_workers': persistent_workers,
                           'pin_memory': pin_memory, "prefetch_factor": 2} #  }   # "prefetch_factor": 4,

@@ -1,11 +1,11 @@
 
 data:
-  n_patients_total: 600
+  n_patients_total: 500
 
-#   kFolds:
-#     isEnabled: true
-#     n_splits: 5        # the number of data splits to make
-#     n_iterations: 2    # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
+  kFolds:
+    isEnabled: true
+    n_splits: 3        # the number of data splits to make
+    n_iterations: 1    # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
 
 training:
   max_epochs: 3

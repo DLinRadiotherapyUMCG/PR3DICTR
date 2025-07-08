@@ -10,7 +10,8 @@ general:
   dataset_amounts_experiment: False    # whether the dataset_amounts_experiment is being performed using bootstrapping
 
 columns:
-  labels: ["Xerostomia_M06"]           # the endpoints the model is (going to be) trained on (list)
+  labels: ["Xerostomia_M06", "OS"]           # the endpoints the model is (going to be) trained on (list)
+  labels_types: ["Binary", "Event"]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]  # Clinical features to insert into the model (list)
 
 paths:

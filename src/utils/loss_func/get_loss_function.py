@@ -10,11 +10,12 @@ import torch
 from src.utils.loss_func.loss_Focal import FocalLoss
 from src.utils.loss_func.loss_Hill import Hill
 from src.utils.loss_func.loss_ASL import AsymmetricLossOptimized
-from src.utils.loss_func.loss_NegativeLog import NegativeLogLikelihood
+# from pred_RT.graveyard.loss_NegativeLog import NegativeLogLikelihood
 from src.utils.loss_func.MultiTox_Loss import MultiTox_Loss
+from src.utils.loss_func.MultiLabel_Loss import MultiLabel_Loss
 
 
-def get_loss_function(config : dict):
+def get_loss_function(config : dict, LabelTypesManager):
     """
     Retrieves the loss function.
     Args:
@@ -31,7 +32,7 @@ def get_loss_function(config : dict):
         pos_weights = torch.as_tensor(config['training']['loss']['BCE']['pos_weight'], dtype=torch.float32, device=DEVICE)
         loss_function = torch.nn.BCEWithLogitsLoss(reduction = reduction, pos_weight = pos_weights)
 
-    # elif(loss_name =='softmargin'):       
+    # elif(loss_name == 'softmargin'):       
     #     loss_function = torch.nn.MultiLabelSoftMarginLoss(reduction = reduction, weight = weights)  # BUG: does not work properly, the outputted dimensions are incorrect
 
     elif loss_name == 'focal':
@@ -47,17 +48,17 @@ def get_loss_function(config : dict):
         gamma_pos = config['training']['loss']['ASL']['gamma_pos']
         loss_function = AsymmetricLossOptimized(gamma_neg=gamma_neg, gamma_pos=gamma_pos, reduction = reduction)
 
-    elif loss_name == 'nlll':
-        # Loss function for time event --> Requires 2 inputs (days, binaryCheckEvent)
-        if(len(config['columns']['label']) != 2):
-            raise Exception(f"Error: NLLL loss function expects 2 labels and got {config['columns']['label']}, abort code.")
-        loss_function = NegativeLogLikelihood(config)
+    # elif loss_name == 'nlll':
+    #     # Loss function for time event --> Requires 2 inputs (days, binaryCheckEvent)
+    #     if(len(config['columns']['label']) != 2):
+    #         raise Exception(f"Error: NLLL loss function expects 2 labels and got {config['columns']['label']}, abort code.")
+    #     loss_function = NegativeLogLikelihood(config)
     
     else:
         raise ValueError(f"Loss function {loss_name} not supported.")
     
     # wrap the loss function into a handler (behaves as a normal loss function in the training code)
-    multitox_loss_handler = MultiTox_Loss(config, loss_function)
+    multitox_loss_handler = MultiLabel_Loss(config, binary_loss_function=loss_function, LabelTypesManager=LabelTypesManager)
 
     return multitox_loss_handler
     

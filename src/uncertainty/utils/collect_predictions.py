@@ -8,7 +8,7 @@ from src.utils.move_batch_to_device import move_batch_to_device
 from src.uncertainty.utils.enable_dropout import enable_dropout
 
 
-def collect_one_predictions_pass(config : dict, model, data_loader, enable_MC_dropout=True):                                # TODO: Test time augmentation with this same function ????
+def collect_one_predictions_pass(config : dict, model, data_loader, enable_MC_dropout=True, seed=None):                                # TODO: Test time augmentation with this same function ????
     """
     Evaluate the model on the given dataloader.
     Args:
@@ -45,6 +45,9 @@ def collect_one_predictions_pass(config : dict, model, data_loader, enable_MC_dr
     # collect the predictions and labels
     with torch.no_grad():
         for i, batch in enumerate(data_loader):
+            # Ensure deterministic MONAI transforms for each batch
+            if (seed is not None) and (hasattr(data_loader.dataset, 'set_random_state')):
+                data_loader.dataset.set_random_state(seed=seed)
             
             logging.debug(f'Validation batch {i}')
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)

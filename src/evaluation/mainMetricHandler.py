@@ -11,10 +11,11 @@ class mainMetricHandler():
     This object is passed around in the train() and validate() functions in the main training loop, and is used for the per-epoch evaluation of the model.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, LabelTypesManager):
         self.config = config
         self.metric_name = self.config['evaluation']['main_metric']
         self.metric_function = get_metric_function(self.metric_name)
+        self.LabelTypesManager = LabelTypesManager
 
     def calculate_metric(self, y_pred_list_dict: dict, y_true_list_dict: dict):
         # compute the metric value for each endpoint

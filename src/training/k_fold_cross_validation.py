@@ -25,6 +25,7 @@ from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
 from src.evaluation.get_visualisations import get_visualizations
 from src.dataset.cumulative_sampling import generate_training_data_subsamples
 
+from src.dataset.LabelTypesManager import LabelTypesManager as LabelTypesManagerClass
 
 
 
@@ -47,6 +48,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         raise ValueError("The number of k-fold iterations must be greater than 0.")
 
     endpoint_list = config['columns']['labels']
+    LabelTypesManager = LabelTypesManagerClass(config)
     metric_name = config['evaluation']['main_metric']
 
     # variables for results logging
@@ -82,8 +84,8 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         test_loader, _ = make_dataloader(config, df_test, val_transforms, validation_mode=True)
         
     # get the loss function and metric handler
-    loss_function = get_loss_function(config)
-    metricHandler = mainMetricHandler(config)  # deals with the main metric to print during training
+    loss_function = get_loss_function(config, LabelTypesManager)
+    metricHandler = mainMetricHandler(config, LabelTypesManager)  # deals with the main metric to print during training
 
     # iterate through the folds 
     for fold_idx, dataset_split_dict in enumerate(k_fold_dataframes_list, start=1):
@@ -122,7 +124,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         #model = torch.compile(model)
 
         # train the model
-        model = train(config, model, loss_function, train_loader, val_loader, metricHandler)
+        model = train(config, model, loss_function, train_loader, val_loader, metricHandler, LabelTypesManager)
         model.eval()
 
         # get the predictions of the trained model on the training and validation (and test) sets
@@ -133,16 +135,16 @@ def K_fold_cross_validation(config, config_for_wandb=None):
             from monai.data.utils import list_data_collate
             train_loader.dataset.collate_fn = list_data_collate  # replace the mixup function with a simple collate function
         
-        train_loss_value, train_loss_dict, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
+        train_loss_value, train_loss_dict, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler, LabelTypesManager)
         print("   ", train_loss_value, train_mean_metric_val, train_metric_dict)
         logging.info('   Validation set')
-        val_loss_value, val_loss_dict, val_mean_metric_val, val_metric_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
+        val_loss_value, val_loss_dict, val_mean_metric_val, val_metric_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler, LabelTypesManager)
         print("   ",val_loss_value, val_mean_metric_val, val_metric_dict)
 
         # if the test set is enabled, also collect the results on that set
         if config['general']['use_test_set']:
             logging.info('   Test set')
-            test_loss_value, test_loss_dict, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(config, model, loss_function, test_loader, metricHandler)
+            test_loss_value, test_loss_dict, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(config, model, loss_function, test_loader, metricHandler, LabelTypesManager)
             print("   ",test_loss_value, test_mean_metric_val, test_metric_dict)
         else:
             test_loss_value = None
