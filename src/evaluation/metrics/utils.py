@@ -7,17 +7,20 @@ from sklearn.metrics import roc_curve
 
 from src.constants import MISSING_DATA_VALUE
 
+
 def remove_missing(config, true, pred):
     """
-    Removes the values that are indicated as missing with the missing indicator -1
+    Removes rows where any value in true or pred is equal to the missing indicator (-1).
     """
     missing_val = MISSING_DATA_VALUE
 
-    pred = pred[np.where(true != missing_val)]
-    true = true[np.where(true != missing_val)]
+    # Create a mask for rows without missing values in true or pred
+    mask = ~(true == missing_val).any(axis=1) #  | (pred == missing_val).any(axis=1))
+
+    true = true[mask]
+    pred = pred[mask]
 
     return true, pred
-
 
 
 def threshold(config, true, pred):

@@ -13,16 +13,30 @@ class mainMetricHandler():
 
     def __init__(self, config, LabelTypesManager):
         self.config = config
-        self.metric_name = self.config['evaluation']['main_metric']
-        self.metric_function = get_metric_function(self.metric_name)
+
+        #self.metric_name = self.config['evaluation']['main_metric']['binary_endpoints']
+
+        self.set_metric_functions()
+
         self.LabelTypesManager = LabelTypesManager
+
+
+    def set_metric_functions(self):
+
+        self.metric_functions = {}
+
+        for endpoint_type, metric_name in self.config['evaluation']['main_metric'].items():
+
+            self.metric_functions[endpoint_type] = get_metric_function(metric_name)
+
 
     def calculate_metric(self, y_pred_list_dict: dict, y_true_list_dict: dict):
         # compute the metric value for each endpoint
-        mean_metric_value, results_dict = calculate_metric_for_multiple_endpoints(self.config, y_pred_list_dict, y_true_list_dict, self.metric_function)
+        mean_metric_value, results_dict = calculate_metric_for_multiple_endpoints(self.config, y_pred_list_dict, y_true_list_dict, self.metric_functions)
     
         return mean_metric_value, results_dict
     
+
     def calculate_mixup_metric(self, y_pred_list_dict: dict, y_true_list_dict: dict, mixup_lambda_list, mixup_indices_list):
         # function to compute the metric values if MixUp augmentation is applied to the training set
         mixup_indices_list = mixup_indices_list.cpu().tolist()

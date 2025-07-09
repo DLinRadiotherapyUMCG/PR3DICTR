@@ -7,7 +7,7 @@ from src.evaluation.metrics.utils import remove_missing, calc_bins
 from sklearn.metrics import brier_score_loss
 
 def brier(config, true, pred):
-    true, pred = remove_missing(true,pred)
+    true, pred = remove_missing(config,true,pred)
     return brier_score_loss(true, pred)
 
 def ECE(config, true, pred):

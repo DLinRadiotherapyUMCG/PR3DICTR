@@ -202,7 +202,9 @@ training:
     learning_rate: 0.001     # learning rate for the GradNorm optimiser
 
 evaluation:
-  main_metric: "AUC"    # the metric shown during training
+  main_metric: 
+    Binary: "AUC"    # the metric shown during training
+    Event: "C-index"
   metrics_list: ["AUC"] #  ["AUC", "accuracy"]   # the metrics to calculate at the end of each fold (list of strings, see constant.py for options)
   metrics:
     threshold: 'YoudenJ'  # how to define the classification metrics threshold

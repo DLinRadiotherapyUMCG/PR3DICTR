@@ -38,6 +38,15 @@ def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
     label_columns = LabelManager.label_names_full_list  # get the full list of labels, (including event and days labels for event endpoints)
     #label_columns, _ = check_label_types(config, label_columns)  # check if the label types in the config match the endpoint list
     print("LABELS:", label_columns)
+    # Flatten label_columns in case it contains tuples
+    flattened_label_columns = []
+    for col in label_columns:
+        if isinstance(col, (list, tuple)):
+            flattened_label_columns.extend(col)
+        else:
+            flattened_label_columns.append(col)
+    label_columns = flattened_label_columns
+    
     
     patient_ids_list = [str(patient_id) for patient_id in df['PatientID']]
 
@@ -91,7 +100,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
 
     dataset_type = config['data']['dataloader']['dataset_type'] # if not validation_mode else 'cache'
     dataloader_type = config['data']['dataloader']['dataloader_type']        #'standard'
-    batch_size = config['training']['batch_size'] # if not validation_mode else 1
+    batch_size = config['training']['batch_size'] if not validation_mode else 1
     #cache_rate = 1
     num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else config['data']['dataloader']['num_workers'] // 2
     persistent_workers = True if num_workers > 0 else False#  config['data']['dataloader']['persistent_workers']

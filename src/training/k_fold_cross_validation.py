@@ -152,8 +152,8 @@ def K_fold_cross_validation(config, config_for_wandb=None):
             test_mean_metric_val = None
             test_metric_dict = {endpoint: None for endpoint in endpoint_list}
             test_patientIDs_list = []
-            test_preds_dict = {endpoint: [] for endpoint in endpoint_list}
-            test_targets_dict = {endpoint: [] for endpoint in endpoint_list}
+            test_preds_dict = {endpoint: None for endpoint in endpoint_list}
+            test_targets_dict = {endpoint: None for endpoint in endpoint_list}
         
 
         """    
@@ -167,7 +167,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
                                                                    [train_targets_dict, val_targets_dict, test_targets_dict])
 
         # save all the predictions into one csv file
-        save_predictions(config, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
+        save_predictions(config, LabelTypesManager, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
 
 
         # concatenate all of the AUC dicts and loss dicts

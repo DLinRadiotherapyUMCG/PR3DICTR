@@ -1,7 +1,7 @@
 from src.evaluation.metrics.classification import auc, auc_se, balanced_acc, accuracy, F1_score, precision, recall
 from src.evaluation.metrics.regression import r2, MSE, MAE, RMSE
 from src.evaluation.metrics.calibration import brier, ECE, MCE, ACE
-
+from src.evaluation.metrics.events import c_index
 
 
 def get_metric_function(metric_name : str):
@@ -48,6 +48,10 @@ def get_metric_function(metric_name : str):
         return MCE
     elif metric_name == 'ACE':
         return ACE
+    
+    # Event-based endpoint metrics
+    elif metric_name == 'C-index':
+        return c_index
 
     else:
         raise ValueError(f"Unsupported metric: {metric_name}")

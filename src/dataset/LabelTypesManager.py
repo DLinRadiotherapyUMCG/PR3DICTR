@@ -56,8 +56,8 @@ class LabelTypesManager(object):
                 output_label_types.append("Binary")
             elif label_type == "Event":
                 # for event endpoints, we need to add the '_days' suffix and '_event' to the endpoint name
-                output_endpoint_list.append(endpoint_name + "_event")
-                output_endpoint_list.append(endpoint_name + "_days")
+                #output_endpoint_list.append(endpoint_name + "_event")
+                output_endpoint_list.append((endpoint_name + "_event", endpoint_name + "_days"))
                 output_label_types.append( ("Event", "Days") )
                 #output_label_types.append("Event")
                 #output_endpoint_list.append(endpoint_name + "_days")

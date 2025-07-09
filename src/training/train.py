@@ -18,6 +18,7 @@ from src.training.validate import validate
 from src.models.tools.save_model import save_model, load_model
 from src.training.utils.check_improvement import check_improvement
 
+from src.training.utils.collect_all_preds_and_labels import collect_all_preds_and_labels
 from src.hyper_opt.WandB_functions import is_WandB_enabled, update_WandB_summary_table, WandB_log
 from src.visualization.plot_model_inputs import plot_model_inputs
 from src.evaluation.mainMetricHandler import mainMetricHandler
@@ -42,6 +43,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
 
     # Get the names of the end-points being evaluated 
     labels = config['columns']['labels']
+    label_types = config['columns']['labels_types']
 
     # Get loss function, optimizer, and scheduler
     loss_function = get_loss_function(config, LabelTypesManager)
@@ -51,7 +53,10 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
 
     # get the main metric with which to evaluate the training loop (e.g. AUC)
     #metricHandler = mainMetricHandler(config)
-    metric_name = metricHandler.metric_name
+    #metric_name = metricHandler.metric_name
+
+    metric_name = "METRIC"                                      # NOTE: this is a placeholder!!!!
+
     if config['training']['GradNorm']['isEnabled']:
         gradNorm = GradNorm(config = config,
                             model = model, # model.output_head.linear_layers.shared_fc_layers, 
@@ -72,7 +77,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
     patience_counter = 0
     
 
-    sigmoid_act = torch.nn.Sigmoid()
+    #sigmoid_act = torch.nn.Sigmoid()
     num_batches_per_epoch = len(train_loader)
 
 
@@ -168,9 +173,10 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
                     loss.backward()
 
             # Calculate AUC            
-            for idx, label in enumerate(labels):
-                out_tot[label] = out_tot[label] + list(sigmoid_act(outputs[label]).cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
-                targets_tot[label] = targets_tot[label] + list(targets[:,idx].cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
+            out_tot, targets_tot = collect_all_preds_and_labels(labels, label_types, out_tot, targets_tot, targets, outputs)
+
+                # out_tot[label] = out_tot[label] + list(sigmoid_act(outputs[label]).cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
+                # targets_tot[label] = targets_tot[label] + list(targets[:,idx].cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
 
             # Log the batch loss to the epoch loss
             total_loss += loss.item()
@@ -193,6 +199,13 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
 
 
         if show_pbar: pbar.close()
+
+        # move all preds and labels to CPU
+        for label in labels:
+            out_tot[label] = out_tot[label].cpu().detach().numpy()
+            targets_tot[label] = targets_tot[label].cpu().detach().numpy()
+
+            # print("CHECK DIMENSIONS", out_tot[label].shape, targets_tot[label].shape)  # DEBUG: print the shapes of the predictions and labels
 
         # Calculate evaluation metric
         if mixup_is_enabled:

@@ -133,7 +133,9 @@ data:
   stratify_on:
   - Xerostomia_M06
 evaluation:
-  main_metric: AUC
+  main_metric: 
+    Binary: "AUC"  
+    Event: "C-index"
   metrics:
     calibration_bins: 10
     threshold: YoudenJ
