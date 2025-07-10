@@ -49,6 +49,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
     endpoint_list = config['columns']['labels']
     LabelTypesManager = LabelTypesManagerClass(config)
+    config['saving']['label_column_names'] = LabelTypesManager.label_names_full_list  # save the label column names in the config for saving predictions
     metric_name = config['evaluation']['main_metric']
 
     # variables for results logging
@@ -206,7 +207,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
             val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
             mean_val_metric_value = np.mean(list(val_metrics_mean_dict.values()))
 
-            if (val_mean_metric_val < config['hyperparam_tuning']['optuna']['kill_trial_threshold']) and (fold_idx >= 3):
+            if (mean_val_metric_value < config['hyperparam_tuning']['optuna']['kill_trial_threshold']) and (fold_idx >= 3):
                 logging.info(f'Early stopping at fold {fold_idx}. Metric value is too low')
                 break
 

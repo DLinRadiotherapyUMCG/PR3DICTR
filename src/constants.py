@@ -44,6 +44,20 @@ METRIC_TYPES = {
         'MCE',
         'ACE',
     ],
+    "Event" : [
+        'C-index',
+    ]
+}
+
+METRIC_TYPES_PER_ENDPOINT_TYPE = {
+    "Binary" : [
+        "Classification",
+        "Calibration",
+        "Regression"
+    ],
+    "Event" : [
+        "Event",
+    ],
 }
 
 

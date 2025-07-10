@@ -45,11 +45,15 @@ def initialise_WandB_group(config: dict, project_name: str, groupName = None, co
     This is useful for grouping together K-folds of the same trial or model.
     """
 
+    dir = config['general']['resultsCurrentDirectory']
+    if dir.endswith('/'):
+        dir = dir[:-1]
+
     if is_WandB_enabled(config):
         wandb.init(
             project = project_name,
             group = groupName,
-            dir=config['general']['resultsCurrentDirectory'][:-1],
+            dir=dir,
             config = config_for_wandb,
             reinit = True
         ) 

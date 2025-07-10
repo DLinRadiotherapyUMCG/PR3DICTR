@@ -5,7 +5,7 @@ general:
   resultsCurrentDirectory: 0
   seed: 42
   testMode: True
-  trialNumber: Trial_1
+  trialNumber: Trial_3
   use_test_set: false
 
 
@@ -145,6 +145,7 @@ evaluation:
   - F1_score
   - ECE
   - ACE
+  - C-index
   visualisations:
     list:
     - calibration

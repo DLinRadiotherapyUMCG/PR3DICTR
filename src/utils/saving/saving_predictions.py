@@ -56,7 +56,7 @@ def save_predictions(config: dict, LabelTypesManager, patient_ids: list[str], y_
 
     endpoint_list = config['columns']['labels']
 
-    all_label_column_names = LabelTypesManager.label_names_full_list
+    all_label_column_names = config['saving']['label_column_names'] # LabelTypesManager.label_names_full_list
     label_column_types = LabelTypesManager.label_types_full_list
 
     print("Saving predictions for endpoints:", endpoint_list)

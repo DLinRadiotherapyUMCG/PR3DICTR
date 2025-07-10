@@ -13,11 +13,12 @@ from src.evaluation.metrics.calibration import ECE, MCE
 from src.evaluation.metrics.utils import remove_missing, threshold
 
 
-def adaptive_make_calibration_plots(config, row_dicts, column_names, title=None, mode='calibration', n_bins=10, filedir=None, return_fig=False):
+def adaptive_make_calibration_plots(config, row_dicts, column_names, title=None, mode='calibration', filedir=None, return_fig=False):
     """
     Make calibration plots for multiple models. This code is flexible in how many rows and columns the diagram can have
 
     """
+    n_bins = config['evaluation']['visualisations']['n_bins']
 
     colours = ['tab:pink',  'tab:orange', 'tab:green', 'tab:grey', 'tab:blue', 'tab:orange', 'tab:brown', 'tab:cyan']
 

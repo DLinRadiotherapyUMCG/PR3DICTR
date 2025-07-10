@@ -5,6 +5,8 @@ import wandb
 
 # Set working directory to --> "Pred_RT"
 import sys
+import gc
+import torch
 #from pathlib import Path
 #path_src = os.getcwd()
 #sys.path.insert(1, path_src)
@@ -33,6 +35,8 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['general']['seed'])
     
+    gc.collect()
+    torch.cuda.empty_cache()
 
     # # MAIN: DL running class (with optional hyperparameter optimization)
     expHandler = experimentHandler(config)

@@ -12,19 +12,20 @@ def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict
         config (dict): config dictionary
         y_pred_list_dict (dict of lists): dict of lists of PyTorch tensors
         y_true_list_dict (dict of lists): dict of lists of PyTorch tensors
-        metric_function (function): function that calculates the metric
+        metric_functions_dict (dict): a dictionary with desired endpoint types as the keys, and metric functions as values
     
     Returns:
         mean_metric_value (float): mean metric value over all endpoints
         results_dict (dict): dictionary with the results
     """
-    endpoint_list = config['columns']['labels']
-    endpoint_types_list = config['columns']['labels_types']
+
+    endpoint_list = y_pred_list_dict.keys()
+    endpoint_types_list = metric_functions_dict.keys()  # assuming metric_functions_dict is a dict with endpoint types as keys
 
     results_dict = {}
 
     for endpoint_name, endpoint_type in zip(endpoint_list, endpoint_types_list):
-        print("computing metric for endpoint:", endpoint_name, "of type", endpoint_type)
+
         # get the metric function for this type of endpoint
         metric_function = metric_functions_dict[endpoint_type]
 
