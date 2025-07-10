@@ -48,6 +48,10 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
 
             # get only the endpoints of the current endpoint_type (i.e. all Binary endpoints, or all Event endpoints)
             plotting_endpoints = [e for (e, t) in zip(config['columns']['labels'], config['columns']['labels_types']) if t == endpoint_type]
+            
+            # if there are no endpoints of this type, skip
+            if len(plotting_endpoints) == 0:
+                continue
 
             relevant_labels_per_endpoint_dict = {k: v for k, v in labels_per_endpoint_dict.items() if k in plotting_endpoints}
             relevant_predictions_per_endpoint_dict = {k: v for k, v in predictions_per_endpoint_dict.items() if k in plotting_endpoints}

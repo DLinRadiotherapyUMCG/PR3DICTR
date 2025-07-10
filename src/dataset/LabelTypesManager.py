@@ -22,12 +22,14 @@ class LabelTypesManager(object):
         #print(self.endpoint_type_groups_indicies)
 
         # set the binary endpoint indicies for the labels tensors and the predictions tensors
-        self.binary_targets_indicies = self.endpoint_type_groups_indicies['Binary']
-        self.binary_predictions_indicies = [i for i, t in enumerate(self.config['columns']['labels_types']) if t == "Binary"]
+        if "Binary" in self.endpoint_type_groups_indicies:
+            self.binary_targets_indicies = self.endpoint_type_groups_indicies['Binary']
+            self.binary_predictions_indicies = [i for i, t in enumerate(self.config['columns']['labels_types']) if t == "Binary"]
 
-        # set the event endpoint indicies for the labels tensors and the predictions tensors
-        self.event_targets_indicies = self.endpoint_type_groups_indicies['Event']
-        self.event_predictions_indicies = [i for i, t in enumerate(self.config['columns']['labels_types']) if t == "Event"]
+        if "Event" in self.endpoint_type_groups_indicies:
+            # set the event endpoint indicies for the labels tensors and the predictions tensors
+            self.event_targets_indicies = self.endpoint_type_groups_indicies['Event']
+            self.event_predictions_indicies = [i for i, t in enumerate(self.config['columns']['labels_types']) if t == "Event"]
 
     
     def check_label_types(self, endpoint_list: list, label_types: list):
@@ -57,8 +59,8 @@ class LabelTypesManager(object):
             elif label_type == "Event":
                 # for event endpoints, we need to add the '_days' suffix and '_event' to the endpoint name
                 #output_endpoint_list.append(endpoint_name + "_event")
-                output_endpoint_list.append((endpoint_name + "_event", endpoint_name + "_days"))
-                output_label_types.append( ("Event", "Days") )
+                output_endpoint_list.append((endpoint_name + "_event", endpoint_name + "_months"))
+                output_label_types.append( ("Event", "Months") )
                 #output_label_types.append("Event")
                 #output_endpoint_list.append(endpoint_name + "_days")
             else:
