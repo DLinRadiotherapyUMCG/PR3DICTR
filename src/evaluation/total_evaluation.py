@@ -4,7 +4,7 @@ import numpy as np
 import logging
 
 from src.evaluation.get_evaluation_metric import get_metric_function
-from src.constants import METRIC_TYPES, METRIC_TYPES_PER_ENDPOINT_TYPE
+from src.constants import METRIC_TYPES, METRICS_PER_ENDPOINT_TYPE
 from src.evaluation.per_endpoint_metrics import calculate_metric_for_multiple_endpoints
 from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe import get_predictions_and_labels_from_predictions_dataframe
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
@@ -46,7 +46,7 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
         metrics_to_calculate = config['evaluation']['metrics_list']
 
         # loop over the endpoint types
-        for endpoint_type, metric_types_list in METRIC_TYPES_PER_ENDPOINT_TYPE.items():
+        for endpoint_type, metric_types_list in METRICS_PER_ENDPOINT_TYPE.items():
 
             # get only the endpoints of the current endpoint_type (i.e. all Binary endpoints, or all Event endpoints)
             relevant_endpoints = [e for (e, t) in zip(config['columns']['labels'], config['columns']['labels_types']) if t == endpoint_type]

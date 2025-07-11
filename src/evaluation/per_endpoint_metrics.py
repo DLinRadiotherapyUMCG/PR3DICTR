@@ -20,11 +20,12 @@ def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict
     """
 
     endpoint_list = y_pred_list_dict.keys()
-    endpoint_types_list = metric_functions_dict.keys()  # assuming metric_functions_dict is a dict with endpoint types as keys
+    endpoint_names_to_types_dict = {name:type for name, type in zip(config['columns']['labels'], config['columns']['labels_types'])}
 
     results_dict = {}
 
-    for endpoint_name, endpoint_type in zip(endpoint_list, endpoint_types_list):
+    for endpoint_name in endpoint_list:
+        endpoint_type = endpoint_names_to_types_dict[endpoint_name]
 
         # get the metric function for this type of endpoint
         metric_function = metric_functions_dict[endpoint_type]

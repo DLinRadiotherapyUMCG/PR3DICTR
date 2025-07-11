@@ -49,7 +49,7 @@ METRIC_TYPES = {
     ]
 }
 
-METRIC_TYPES_PER_ENDPOINT_TYPE = {
+METRICS_PER_ENDPOINT_TYPE = {
     "Binary" : [
         "Classification",
         "Calibration",

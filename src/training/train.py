@@ -54,8 +54,10 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
     # get the main metric with which to evaluate the training loop (e.g. AUC)
     #metricHandler = mainMetricHandler(config)
     #metric_name = metricHandler.metric_name
+    metric_names_list = metricHandler.metric_names_list
+    temp_main_metric_name = "METRIC"
 
-    metric_name = "METRIC"                                      # NOTE: this is a placeholder!!!!
+    #metric_name = "METRIC"                                      # NOTE: this is a placeholder!!!!
 
     if config['training']['GradNorm']['isEnabled']:
         gradNorm = GradNorm(config = config,
@@ -63,7 +65,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
                             alpha = config['training']['GradNorm']['alpha'], 
                             lr = config['training']['GradNorm']['learning_rate'], 
                             WandB_is_enabled = config['hyperparam_tuning']['WandB']['isEnabled'])
-
 
 
     # Initialize the best model and lowest validation loss
@@ -75,9 +76,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
         best_value = 0
         
     patience_counter = 0
-    
-
-    #sigmoid_act = torch.nn.Sigmoid()
     num_batches_per_epoch = len(train_loader)
 
 
@@ -95,10 +93,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
         out_tot = dict.fromkeys(labels, [])
         targets_tot = dict.fromkeys(labels, [])
         
-        
-        # for label in labels: # TODO: check that this can be deleted, and that the lines above work
-        #     out_tot[label] = []
-        #     targets_tot[label] = []
 
         logging.info(f'Epoch {epoch_num}')
         model.train()
@@ -162,28 +156,24 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
             #         if isinstance(module, torch.nn.BatchNorm3d):
             #             module.track_running_stats = False
 
+            # Backpropagate the loss
             if config['training']['GradNorm']['isEnabled']:
                 # reweight the losses using GradNorm (the loss is backpropagated in the GradNorm class)
                 optimizer.zero_grad()
                 loss = torch.stack([loss_dict[label] for label in labels])
                 loss = gradNorm.step(loss)
             else:
-                # backpropagate the loss
                 if loss.grad_fn:
                     loss.backward()
 
             # Calculate AUC            
             out_tot, targets_tot = collect_all_preds_and_labels(labels, label_types, out_tot, targets_tot, targets, outputs)
 
-                # out_tot[label] = out_tot[label] + list(sigmoid_act(outputs[label]).cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
-                # targets_tot[label] = targets_tot[label] + list(targets[:,idx].cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
-
             # Log the batch loss to the epoch loss
             total_loss += loss.item()
             for label in labels:
                 train_loss_dict[label] += loss_dict[label].item()
-
-            # Update model weights
+        
             # Step the optimizer    
             optimizer.step()
 
@@ -205,8 +195,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
             out_tot[label] = out_tot[label].cpu().detach().numpy()
             targets_tot[label] = targets_tot[label].cpu().detach().numpy()
 
-            # print("CHECK DIMENSIONS", out_tot[label].shape, targets_tot[label].shape)  # DEBUG: print the shapes of the predictions and labels
-
         # Calculate evaluation metric
         if mixup_is_enabled:
             train_mean_metric_value, train_metric_dict = metricHandler.calculate_mixup_metric(out_tot, targets_tot, mixup_lambda_epoch, mixup_indices_epoch)
@@ -218,27 +206,30 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
         for label in labels:
             train_loss_dict[label] = train_loss_dict[label] / num_batches_per_epoch
                 
-        logging.info(f'  Training   Loss={avg_loss:.5f}, {metric_name}s={train_metric_dict}')
+        logging.info(f'  Training   Loss={avg_loss:.5f}, {temp_main_metric_name}={train_metric_dict}')
 
         results_log.update({'loss_train/mean_loss':avg_loss})
+
+        print("train_metric_dict", train_metric_dict)
+        print('metric_names_list', metric_names_list)
         
-        for key, val in train_metric_dict.items():
+        for metric_name, (key, val) in zip(metric_names_list, train_metric_dict.items()):
             results_log.update({f"train/{key}_{metric_name}" : val})
             results_log.update({f"loss_train/{key}" : train_loss_dict[key]})
         
-        results_log.update({f"train/mean_{metric_name}" : train_mean_metric_value})
+        results_log.update({f"train/mean_{temp_main_metric_name}" : train_mean_metric_value})
         
         # Perform validation
         if epoch_num % config['training']['validation_interval'] == 0:
             val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler, LabelTypesManager)
-            logging.info(f'  Validation Loss={val_loss_value:.5f}, {metric_name}s={val_metric_dict}')
+            logging.info(f'  Validation Loss={val_loss_value:.5f}, {temp_main_metric_name}s={val_metric_dict}')
             #results_log.update({'val/loss':val_loss_value})
 
-            for key, val in val_metric_dict.items():
+            for metric_name, (key, val) in zip(metric_names_list, val_metric_dict.items()):
                 results_log.update({f"val/{key}_{metric_name}" : val})
                 results_log.update({f"loss_val/{key}" : val_loss_dict[key]})
 
-            results_log.update({f"val/mean_{metric_name}" : val_mean_metric_value})
+            results_log.update({f"val/mean_{temp_main_metric_name}" : val_mean_metric_value})
             results_log.update({f"loss_val/mean_loss" : val_loss_value})
 
             # check if the model has improved on this epoch

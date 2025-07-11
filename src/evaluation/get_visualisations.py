@@ -6,7 +6,7 @@ from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe 
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
-from src.constants import METRIC_TYPES, METRIC_TYPES_PER_ENDPOINT_TYPE
+from src.constants import METRIC_TYPES, METRICS_PER_ENDPOINT_TYPE
 
 
 
@@ -44,7 +44,7 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
         predictions_per_endpoint_dict, labels_per_endpoint_dict = get_predictions_and_labels_from_predictions_dataframe(config, df_fold_all_preds, set_name)
 
         # loop over the endpoint types
-        for endpoint_type, metric_types_list in METRIC_TYPES_PER_ENDPOINT_TYPE.items():
+        for endpoint_type, metric_types_list in METRICS_PER_ENDPOINT_TYPE.items():
 
             # get only the endpoints of the current endpoint_type (i.e. all Binary endpoints, or all Event endpoints)
             plotting_endpoints = [e for (e, t) in zip(config['columns']['labels'], config['columns']['labels_types']) if t == endpoint_type]

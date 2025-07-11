@@ -42,7 +42,6 @@ class MultiLabel_Loss(nn.Module):
 
         # STEP 2: FLATTEN ALL OF THE TARGETS
         targets = labels_dict # .squeeze(1)
-        print("DEBUG", targets.shape, predictions.shape)
 
         all_loss_dictionaries = []
 
