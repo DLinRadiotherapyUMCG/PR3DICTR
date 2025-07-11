@@ -35,7 +35,6 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
 
 
     endpoint_list = config['columns']['labels']
-    n_bins = config['evaluation']['visualisations']['n_bins']
     visualisations_list = config['evaluation']['visualisations']['list']
 
     # loops over each dataset

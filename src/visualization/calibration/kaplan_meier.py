@@ -6,8 +6,6 @@ from lifelines.plotting import add_at_risk_counts
 
 
 
-
-
 def make_row_kaplan_meier_plots(config, row_ax, preds, labels, column_names):
     #print(preds)
     for i, col_name in enumerate(column_names):
@@ -16,8 +14,6 @@ def make_row_kaplan_meier_plots(config, row_ax, preds, labels, column_names):
         time_labels = labels[col_name][:, 1]  # assuming the second column is
 
         kaplan_meier_subplot(config, row_ax[i], y_preds, event_labels, time_labels, col_name)
-
-
 
 
 

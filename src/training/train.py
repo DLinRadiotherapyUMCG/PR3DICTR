@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 
 from src.constants import DEVICE
-from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.optimizer.get_optimizer import get_optimizer
 from src.utils.scheduler.get_scheduler import get_scheduler
 from src.utils.move_batch_to_device import move_batch_to_device
@@ -21,7 +20,6 @@ from src.training.utils.check_improvement import check_improvement
 from src.training.utils.collect_all_preds_and_labels import collect_all_preds_and_labels
 from src.hyper_opt.WandB_functions import is_WandB_enabled, update_WandB_summary_table, WandB_log
 from src.visualization.plot_model_inputs import plot_model_inputs
-from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.utils.loss_func.calc_mixup_loss import calc_mixup_loss
 from src.training.utils.gradNorm import GradNorm
 from src.constants import MISSING_DATA_VALUE
@@ -88,7 +86,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         logging.info(f'Epoch {epoch_num}')
 
         mixup_lambda_epoch = None
-        #current_epoch_num = epoch+1
         improved = False # Flag to indicate if the model has improved on this epoch
         results_log = dict()  # results log for the current epoch (for WandB)
         best_log_dict = None  # results dict of the best epoch thus far
