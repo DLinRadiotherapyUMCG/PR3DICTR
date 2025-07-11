@@ -21,6 +21,7 @@ class NegativeLogLikelihood(nn.Module):
         """
         self.events_endpoint_list = events_endpoint_list
         self.num_tasks = len(events_endpoint_list)
+        self.eps = 1e-8
 
     def forward(self, risk_pred, y, e):
         """
@@ -61,9 +62,9 @@ class NegativeLogLikelihood(nn.Module):
                 mask[(y_k.T - y_k) > 0] = zero_tensor
 
                 log_loss = torch.exp(risk_k) * mask
-                log_loss = torch.sum(log_loss, dim=0) / (torch.sum(mask, dim=0) + 0.1)
+                log_loss = torch.sum(log_loss, dim=0) / (torch.sum(mask, dim=0) + self.eps)
                 log_loss = torch.log(log_loss).reshape(-1, 1)
-                neg_log_loss = -torch.sum((risk_k - log_loss) * e_k.unsqueeze(1)) / (torch.sum(e_k) + 0.1)
+                neg_log_loss = -torch.sum((risk_k - log_loss) * e_k.unsqueeze(1)) / (torch.sum(e_k) + self.eps)
 
                 #total_loss += neg_log_loss
                 loss_dict[event_name] = neg_log_loss / valid_batch_size
@@ -71,3 +72,5 @@ class NegativeLogLikelihood(nn.Module):
         return loss_dict
     
         return total_loss + l2_norm, total_loss, l2_norm
+
+

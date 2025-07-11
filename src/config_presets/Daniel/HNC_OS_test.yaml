@@ -5,7 +5,7 @@ general:
   resultsCurrentDirectory: 0
   seed: 42
   testMode: True
-  trialNumber: Trial_3
+  trialNumber: Trial_10
   use_test_set: false
 
 
@@ -28,8 +28,8 @@ columns:
   clinical_features: ["Leeftijd"]
   # ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]
   
-  labels: ['Xerostomia_M06', 'OS']
-  labels_types: ["Binary", "Event"]
+  labels:  ['Xerostomia_M06', 'OS']
+  labels_types:  ["Binary", "Event"]
   #- Xerostomia_M06
 
 data:

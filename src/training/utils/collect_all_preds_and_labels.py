@@ -21,12 +21,6 @@ def collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, t
             
             lab_idx += 2
         
-        # print(label, type(endpoint_preds), type(endpoint_labels))  
-        # print(label, endpoint_preds.shape, endpoint_labels.shape)                                        # NOTE: TEMPORARILY CHANGED TO ONLY USE THE EVENT LABELS
-        
-        # endpoint_preds = endpoint_preds.cpu().detach().numpy()
-        # endpoint_labels = endpoint_labels.cpu().detach().numpy()
-
         # collect all of the predictions and labels 
         if len(preds_dict[label]) == 0:
             preds_dict[label] = endpoint_preds

@@ -26,8 +26,9 @@ class mainMetricHandler():
         self.metric_functions = {}
 
         for endpoint_type, metric_name in self.config['evaluation']['main_metric'].items():
+            if endpoint_type in self.config['columns']['labels_types']:
 
-            self.metric_functions[endpoint_type] = get_metric_function(metric_name)
+                self.metric_functions[endpoint_type] = get_metric_function(metric_name)
 
 
     def calculate_metric(self, y_pred_list_dict: dict, y_true_list_dict: dict):
