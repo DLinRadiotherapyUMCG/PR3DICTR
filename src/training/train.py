@@ -27,18 +27,22 @@ from src.training.utils.gradNorm import GradNorm
 from src.constants import MISSING_DATA_VALUE
 
 
-def train(config, model, loss_function, train_loader, val_loader, metricHandler, LabelTypesManager):
+def train(config, model, loss_function, train_loader, val_loader, metricHandler):
     """
     Train the model.
-    :param config:
-    :param train_data:
-    :param val_data:
-    :return: Model
+    Args:
+        config (dict): config params
+        model: the model to train
+        loss_function: the loss function to use
+        train_loader: the dataloader for the training set
+        val_loader: the dataloader for the validation set
+        metricHandler: the main metric handler to use for evaluation
+    Returns:
+        model: the trained model
     """
 
     # config run information
     show_pbar = config['training']['show_progress_bar']
-
     mixup_is_enabled = config['data']['augmentation']['mixup']['isEnabled']
 
     # Get the names of the end-points being evaluated 
@@ -46,18 +50,14 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
     label_types = config['columns']['labels_types']
 
     # Get loss function, optimizer, and scheduler
-    loss_function = get_loss_function(config, LabelTypesManager)
     optimizer = get_optimizer(config, model)
     if config['training']['scheduler']['name'] is not False:
         scheduler = get_scheduler(config, optimizer)
 
     # get the main metric with which to evaluate the training loop (e.g. AUC)
-    #metricHandler = mainMetricHandler(config)
-    #metric_name = metricHandler.metric_name
     metric_names_list = metricHandler.metric_names_list
-    temp_main_metric_name = "METRIC"
+    temp_main_metric_name = "METRIC"                                                    # NOTE: this is a placeholder!!!!
 
-    #metric_name = "METRIC"                                      # NOTE: this is a placeholder!!!!
 
     if config['training']['GradNorm']['isEnabled']:
         gradNorm = GradNorm(config = config,
@@ -85,6 +85,8 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
     # Training loop
     logging.info('Starting training loop')
     for epoch_num in range(1, config['training']['max_epochs'] + 1):
+        logging.info(f'Epoch {epoch_num}')
+
         mixup_lambda_epoch = None
         #current_epoch_num = epoch+1
         improved = False # Flag to indicate if the model has improved on this epoch
@@ -92,23 +94,17 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
         best_log_dict = None  # results dict of the best epoch thus far
         out_tot = dict.fromkeys(labels, [])
         targets_tot = dict.fromkeys(labels, [])
-        
-
-        logging.info(f'Epoch {epoch_num}')
-        model.train()
-
         total_loss = 0.0
         train_loss_dict = {label : 0 for label in labels}
+        
+        model.train()
         
         start_epoch_time = time.time()
   
         if show_pbar:
             pbar = tqdm(total=len(train_loader), desc=f'Epoch {epoch_num}', position=0, leave=True)
 
-        #print("num_batches_per_epoch", num_batches_per_epoch)
-        
-
-        for batch_num, batch in enumerate(train_loader, start=1):  # , disable=config["hyperparam_tuning"]["optuna"]["IsEnabled"]
+        for batch_num, batch in enumerate(train_loader, start=1):  
             logging.debug(f'Batch {batch_num} of epoch {epoch_num}')
 
             if show_pbar: pbar.update(1)
@@ -207,30 +203,26 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler,
             train_loss_dict[label] = train_loss_dict[label] / num_batches_per_epoch
                 
         logging.info(f'  Training   Loss={avg_loss:.5f}, {temp_main_metric_name}={train_metric_dict}')
-
+        results_log.update({f"train/mean_{temp_main_metric_name}" : train_mean_metric_value})
         results_log.update({'loss_train/mean_loss':avg_loss})
-
-        print("train_metric_dict", train_metric_dict)
-        print('metric_names_list', metric_names_list)
         
         for metric_name, (key, val) in zip(metric_names_list, train_metric_dict.items()):
             results_log.update({f"train/{key}_{metric_name}" : val})
             results_log.update({f"loss_train/{key}" : train_loss_dict[key]})
         
-        results_log.update({f"train/mean_{temp_main_metric_name}" : train_mean_metric_value})
+        
         
         # Perform validation
         if epoch_num % config['training']['validation_interval'] == 0:
-            val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler, LabelTypesManager)
+            val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, _, _, _ = validate(config, model, loss_function, val_loader, metricHandler)
+
             logging.info(f'  Validation Loss={val_loss_value:.5f}, {temp_main_metric_name}s={val_metric_dict}')
-            #results_log.update({'val/loss':val_loss_value})
+            results_log.update({f"val/mean_{temp_main_metric_name}" : val_mean_metric_value})
+            results_log.update({f"loss_val/mean_loss" : val_loss_value})
 
             for metric_name, (key, val) in zip(metric_names_list, val_metric_dict.items()):
                 results_log.update({f"val/{key}_{metric_name}" : val})
                 results_log.update({f"loss_val/{key}" : val_loss_dict[key]})
-
-            results_log.update({f"val/mean_{temp_main_metric_name}" : val_mean_metric_value})
-            results_log.update({f"loss_val/mean_loss" : val_loss_value})
 
             # check if the model has improved on this epoch
             best_value, improved = check_improvement(config, val_loss_value, val_mean_metric_value, best_value)

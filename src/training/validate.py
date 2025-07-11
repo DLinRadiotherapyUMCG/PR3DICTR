@@ -7,7 +7,7 @@ from src.utils.move_batch_to_device import move_batch_to_device
 from src.training.utils.collect_all_preds_and_labels import collect_all_preds_and_labels
 
 
-def validate(config : dict, model, loss_function, val_loader, metric_handler, LabelTypesManager):
+def validate(config : dict, model, loss_function, val_loader, metric_handler):
     """
     Evaluate the model on the given dataloader.
     Args:

@@ -40,7 +40,10 @@ def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict
             m_val = metric_function(config, labels, preds)
         results_dict[endpoint_name] = round(m_val, 3)
     
-    mean_metric_value = round(np.mean(list(results_dict.values())), 3)
+    if results_dict:
+        mean_metric_value = round(np.mean(list(results_dict.values())), 3)
+    else:
+        mean_metric_value = None  # or 0.0, depending on your use case
 
     return mean_metric_value, results_dict
 
