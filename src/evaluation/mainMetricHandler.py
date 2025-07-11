@@ -35,9 +35,6 @@ class mainMetricHandler():
         for endpoint_type in self.config['columns']['labels_types']:
             self.metric_names_list.append(self.config['evaluation']['main_metric'][endpoint_type])
 
-        print("LIST OF METRICS", self.metric_names_list, '\n\n\n')
-
-
     def calculate_metric(self, y_pred_list_dict: dict, y_true_list_dict: dict):
         # compute the metric value for each endpoint
         mean_metric_value, results_dict = calculate_metric_for_multiple_endpoints(self.config, y_pred_list_dict, y_true_list_dict, self.metric_functions)
