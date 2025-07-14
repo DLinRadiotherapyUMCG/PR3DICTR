@@ -7,7 +7,7 @@ from src.utils.move_batch_to_device import move_batch_to_device
 from src.training.utils.collect_all_preds_and_labels import collect_all_preds_and_labels
 
 
-def validate(config : dict, model, loss_function, val_loader, metric_handler, LabelTypesManager):
+def validate(config : dict, model, loss_function, val_loader, metric_handler):
     """
     Evaluate the model on the given dataloader.
     Args:
@@ -29,14 +29,6 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler, La
     label_types = config['columns']['labels_types']
 
     model.eval()
-
-    #total_loss = 0.0
-    #total_loss_dict = {lab: 0.0 for lab in labels}
-    #num_batches = 0
-    
-
-    #sigmoid_act = torch.nn.Sigmoid()
-    #identity_act = torch.nn.Identity()
     
     # to collect all of the predictions and labels
     patientIDs_list = []
@@ -51,22 +43,15 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler, La
     
     with torch.no_grad():
         for i, batch in enumerate(val_loader):
-            
                 logging.debug(f'Validation batch {i}')
                 inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
 
                 outputs = model(x=inputs, features=clinical_features)
-                #mean_loss, loss_dict = loss_function(outputs, targets)
-
-                #total_loss += mean_loss.item()       
-                # for label in labels:
-                #     total_loss_dict[label] += loss_dict[label].item()
                 
+                # collect all predictions and labels for each label type
                 preds_dict, labels_dict = collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, targets, outputs)
                 
                 all_targets = torch.cat([all_targets, targets], dim=0) if len(all_targets) > 0 else targets
-
-                #num_batches += 1
                 patientIDs_list += list(batch['patient_id'])
         
     # for validation, we can calculate the loss just once at the end (instead of for each batch)

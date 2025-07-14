@@ -36,8 +36,7 @@ def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
 
     LabelManager = LabelTypesManager(config)  # create a LabelTypesManager object to handle the labels
     label_columns = LabelManager.label_names_full_list  # get the full list of labels, (including event and days labels for event endpoints)
-    #label_columns, _ = check_label_types(config, label_columns)  # check if the label types in the config match the endpoint list
-    print("LABELS:", label_columns)
+
     # Flatten label_columns in case it contains tuples
     flattened_label_columns = []
     for col in label_columns:
@@ -59,12 +58,11 @@ def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
     
     # make a dictionary for each patient's data
     data_dicts = [
-            {#'ct': os.path.join(patients_data_dir, patient_id, config['data']['filenames']['ct']),
-            #'rtdose': os.path.join(patients_data_dir, patient_id, config['data']['filenames']['rtdose']),
-            #'segmentation_map': os.path.join(patients_data_dir, patient_id, config['data']['filenames']['segmentation_map']),
+            {
             'features': feature_values,
             'label_list': label_values,
-            'patient_id': patient_id}
+            'patient_id': patient_id
+            }
             for patient_id, feature_values, label_values in zip(patient_ids_list, features_list, label_values_list)
         ]
     

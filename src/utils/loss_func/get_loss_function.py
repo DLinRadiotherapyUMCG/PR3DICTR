@@ -1,11 +1,4 @@
 import torch
-from torch import nn
-
-import functools
-
-from src.constants import DEVICE
-
-import torch
 
 from src.utils.loss_func.loss_Focal import FocalLoss
 from src.utils.loss_func.loss_Hill import Hill
@@ -14,6 +7,7 @@ from src.utils.loss_func.loss_ASL import AsymmetricLossOptimized
 from src.utils.loss_func.MultiTox_Loss import MultiTox_Loss
 from src.utils.loss_func.MultiLabel_Loss import MultiLabel_Loss
 
+from src.constants import DEVICE
 
 def get_loss_function(config : dict, LabelTypesManager):
     """
@@ -24,16 +18,12 @@ def get_loss_function(config : dict, LabelTypesManager):
         loss_function (torch.nn.Module): the loss function
     """
     
-    #weights = None
     reduction = config['training']['loss']['reduction']
     loss_name = config['training']['loss']['name'].lower() # make the loss function name lowercase
 
     if loss_name == 'bce':
         pos_weights = torch.as_tensor(config['training']['loss']['BCE']['pos_weight'], dtype=torch.float32, device=DEVICE)
         loss_function = torch.nn.BCEWithLogitsLoss(reduction = reduction, pos_weight = pos_weights)
-
-    # elif(loss_name == 'softmargin'):       
-    #     loss_function = torch.nn.MultiLabelSoftMarginLoss(reduction = reduction, weight = weights)  # BUG: does not work properly, the outputted dimensions are incorrect
 
     elif loss_name == 'focal':
         alpha = config['training']['loss']['focal']['alpha']

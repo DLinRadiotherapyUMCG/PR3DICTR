@@ -1,11 +1,11 @@
 general:
-  experiment_name: OS test
+  experiment_name: OS_Test
   firstRun: false
   region: HNC
   resultsCurrentDirectory: 0
   seed: 42
   testMode: True
-  trialNumber: Trial_10
+  trialNumber: Trial_XYZ
   use_test_set: false
 
 
@@ -24,12 +24,14 @@ uncertainty:
     n_splits: 1                   # the number of data splits to make
     validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
     split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
+
+
 columns:
   clinical_features: ["Leeftijd"]
   # ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]
   
-  labels:  ['Xerostomia_M06', 'OS']
-  labels_types:  ["Binary", "Event"]
+  labels: ['Xerostomia_M06', 'OS', "Dysphagia_M06"]
+  labels_types:  ["Binary", "Event", "Binary"]
   #- Xerostomia_M06
 
 data:
@@ -150,6 +152,7 @@ evaluation:
     list:
     - calibration
     - reliability
+    - kaplan_meier
     n_bins: 10
 
 hyperparam_tuning:

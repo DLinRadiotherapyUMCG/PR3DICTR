@@ -210,8 +210,9 @@ evaluation:
     threshold: 'YoudenJ'  # how to define the classification metrics threshold
     calibration_bins: 10  # number of bins to use in the calibration metrics
   visualisations: 
-    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve'] # which plots to save per fold
+    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve', 'kaplan_meier'] # which plots to save per fold
     n_bins: 10            # nunber of bins to use in the calibration and reliability plot
+    kaplan_meier_max_timepoint: 60  # maximum time point to show in the Kaplan-Meier plot
 
 hyperparam_tuning:
   WandB:

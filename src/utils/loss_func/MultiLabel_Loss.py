@@ -1,11 +1,9 @@
 import torch
 from torch import nn
 
-from src.constants import MISSING_DATA_VALUE
-
 from src.utils.loss_func.loss_NLL import NegativeLogLikelihood
 
-
+from src.constants import MISSING_DATA_VALUE
 
 
 
@@ -33,7 +31,6 @@ class MultiLabel_Loss(nn.Module):
             self.events_loss_function.set_endpoint_list(self.LabelTypesManager.endpoint_type_groups_names['Event'])
 
 
-    
 
     def forward(self, outputs_dict, labels_dict):
         
@@ -42,7 +39,6 @@ class MultiLabel_Loss(nn.Module):
 
         # STEP 2: FLATTEN ALL OF THE TARGETS
         targets = labels_dict # .squeeze(1)
-        print("DEBUG", targets.shape, predictions.shape)
 
         all_loss_dictionaries = []
 
@@ -59,8 +55,7 @@ class MultiLabel_Loss(nn.Module):
             loss_dict_binary_endpoint = self.forward_binary_loss_function(binary_preds, binary_targets, endpoint_list=self.LabelTypesManager.endpoint_type_groups_names['Binary'])
         
             all_loss_dictionaries.append(loss_dict_binary_endpoint)
-        #else:
-        #    loss_dict_binary_endpoint = {endpoint: torch.tensor(0.0, device=predictions.device, dtype=predictions.dtype) for endpoint in self.LabelTypesManager.endpoint_type_groups_names['Binary']}
+        
         """
         EVENT ENDPOINTS (e.g. OS, LRC, DMFS, etc.)
         """
@@ -74,14 +69,10 @@ class MultiLabel_Loss(nn.Module):
             loss_dict_event_endpoints = self.events_loss_function(event_preds, event_days_label_tensor, event_binary_labels_tensor) 
 
             all_loss_dictionaries.append(loss_dict_event_endpoints)
-        #else:
-        #    loss_dict_event_endpoints = {endpoint: torch.tensor(0.0, device=predictions.device, dtype=predictions.dtype) for endpoint in self.LabelTypesManager.endpoint_type_groups_names['Event']}
+        
         """
         AGGREGATE THE LOSSES
         """
-
-        #all_loss_dictionaries
-        
         # merge the two dictionaries
         loss_dict = {}
         for d in all_loss_dictionaries:
@@ -89,9 +80,6 @@ class MultiLabel_Loss(nn.Module):
 
         # total loss should be the mean over all entries in the loss dicts
         total_loss = torch.stack(list(loss_dict.values())).mean()
-
-        
-        #loss_dict = {**loss_dict_binary_endpoint, **loss_dict_event_endpoints}
 
         return total_loss, loss_dict    
 

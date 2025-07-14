@@ -24,12 +24,16 @@ class mainMetricHandler():
     def set_metric_functions(self):
 
         self.metric_functions = {}
+        self.metric_names_list = []
 
         for endpoint_type, metric_name in self.config['evaluation']['main_metric'].items():
             if endpoint_type in self.config['columns']['labels_types']:
 
                 self.metric_functions[endpoint_type] = get_metric_function(metric_name)
 
+        # also make a list of metric names for the main metric (for logging and printing purposes)
+        for endpoint_type in self.config['columns']['labels_types']:
+            self.metric_names_list.append(self.config['evaluation']['main_metric'][endpoint_type])
 
     def calculate_metric(self, y_pred_list_dict: dict, y_true_list_dict: dict):
         # compute the metric value for each endpoint

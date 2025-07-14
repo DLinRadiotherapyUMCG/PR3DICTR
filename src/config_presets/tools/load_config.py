@@ -1,16 +1,22 @@
 import os
 
 import yaml
+import logging
 
 
-def load_config(config_path):
+def load_config(name, pathGiven = ""):
     """
     Load the config file for the toxicity.
     :param tox:
     :return: Config
     """
     
-    #config_path = 'src/Config_presets/' + name + '.yaml'
+    if pathGiven == "":
+        #config_path = 'src/config_presets/' + name + '.yaml'
+        config_path = os.path.join("src", "config_presets", name + ".yaml")
+    else:
+        #config_path = pathGiven + '\\' + 'src\\config_presets\\' + name + '.yaml'
+        config_path = os.path.join(pathGiven, "src", "config_presets", name + ".yaml")
 
     print(config_path)
 
@@ -23,4 +29,3 @@ def load_config(config_path):
         imported_config = yaml.safe_load(f)
 
     return imported_config
-

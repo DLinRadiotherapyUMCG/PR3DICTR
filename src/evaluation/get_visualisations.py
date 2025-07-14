@@ -1,12 +1,12 @@
 import os
 import pandas as pd
 
-from src.visualization.calibration.calibration_plots import adaptive_make_calibration_plots
+from src.visualization.calibration.adaptive_make_endpoint_plots import adaptive_make_endpoint_plots
 from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe import get_predictions_and_labels_from_predictions_dataframe
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
-from src.constants import METRIC_TYPES, METRIC_TYPES_PER_ENDPOINT_TYPE
+from src.constants import METRIC_TYPES, METRICS_PER_ENDPOINT_TYPE
 
 
 
@@ -35,7 +35,6 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
 
 
     endpoint_list = config['columns']['labels']
-    n_bins = config['evaluation']['visualisations']['n_bins']
     visualisations_list = config['evaluation']['visualisations']['list']
 
     # loops over each dataset
@@ -44,7 +43,7 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
         predictions_per_endpoint_dict, labels_per_endpoint_dict = get_predictions_and_labels_from_predictions_dataframe(config, df_fold_all_preds, set_name)
 
         # loop over the endpoint types
-        for endpoint_type, metric_types_list in METRIC_TYPES_PER_ENDPOINT_TYPE.items():
+        for endpoint_type, metric_types_list in METRICS_PER_ENDPOINT_TYPE.items():
 
             # get only the endpoints of the current endpoint_type (i.e. all Binary endpoints, or all Event endpoints)
             plotting_endpoints = [e for (e, t) in zip(config['columns']['labels'], config['columns']['labels_types']) if t == endpoint_type]
@@ -76,7 +75,7 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
                         filename = f"calibration_plot_LR_{set_name}.png"
                     filename = alter_filename_if_external_dataset(config, filename)
                     save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
-                    adaptive_make_calibration_plots(config, plotting_dict, column_names=plotting_endpoints, mode="calibration", title=f"Calibration Plot: {set_name} set", filedir=save_dir, return_fig=False)
+                    adaptive_make_endpoint_plots(config, plotting_dict, column_names=plotting_endpoints, mode="calibration", title=f"Calibration Plot: {set_name} set", filedir=save_dir, return_fig=False)
 
                 # reliability plot
                 if 'reliability' in visualisations_list:
@@ -86,7 +85,7 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
                         filename = f"reliability_plot_LR_{set_name}.png"
                     filename = alter_filename_if_external_dataset(config, filename)
                     save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
-                    adaptive_make_calibration_plots(config, plotting_dict, column_names=plotting_endpoints, mode="reliability", title=f"Reliability Plot: {set_name} set", filedir=save_dir, return_fig=False)
+                    adaptive_make_endpoint_plots(config, plotting_dict, column_names=plotting_endpoints, mode="reliability", title=f"Reliability Plot: {set_name} set", filedir=save_dir, return_fig=False)
 
                 # confusion matrix
                 if 'confusion_matrix' in visualisations_list:  
@@ -96,7 +95,7 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
                         filename = f"confusion_matrix_plot_LR_{set_name}.png"
                     filename = alter_filename_if_external_dataset(config, filename)
                     save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
-                    adaptive_make_calibration_plots(config, plotting_dict, column_names=plotting_endpoints, mode="confusion_matrix", title=f"Confusion Matrices: {set_name} set", filedir=save_dir, return_fig=False)  
+                    adaptive_make_endpoint_plots(config, plotting_dict, column_names=plotting_endpoints, mode="confusion_matrix", title=f"Confusion Matrices: {set_name} set", filedir=save_dir, return_fig=False)  
 
                 # ROC curve
                 if 'roc_curve' in visualisations_list:  
@@ -106,10 +105,18 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
                         filename = f"ROC_curve_plot_LR_{set_name}.png"
                     filename = alter_filename_if_external_dataset(config, filename)
                     save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
-                    adaptive_make_calibration_plots(config, plotting_dict, column_names=plotting_endpoints, mode="roc_curve", title=f"ROC curves: {set_name} set", filedir=save_dir, return_fig=False)  
+                    adaptive_make_endpoint_plots(config, plotting_dict, column_names=plotting_endpoints, mode="roc_curve", title=f"ROC curves: {set_name} set", filedir=save_dir, return_fig=False)  
 
             elif endpoint_type == 'Event':
-                pass
+                if 'kaplan_meier' in visualisations_list:
+                    if not lr:  
+                        filename = f"Kaplan_Meier_plot_{set_name}.png"
+                    else:
+                        filename = f"Kaplan_Meier_plot_LR_{set_name}.png"
+                    filename = alter_filename_if_external_dataset(config, filename)
+                    save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
+                    adaptive_make_endpoint_plots(config, plotting_dict, column_names=plotting_endpoints, mode="kaplan_meier", title=f"Kaplan-Meier Plots: {set_name} set", filedir=save_dir, return_fig=False)
+                    
         
             else:
                 pass
