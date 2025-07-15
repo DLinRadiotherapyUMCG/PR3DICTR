@@ -59,10 +59,6 @@ def save_predictions(config: dict, LabelTypesManager, patient_ids: list[str], y_
     all_label_column_names = config['saving']['label_column_names'] # LabelTypesManager.label_names_full_list
     label_column_types = LabelTypesManager.label_types_full_list
 
-    print("Saving predictions for endpoints:", endpoint_list)
-    print("Label column names:", all_label_column_names)
-    print("Label column types:", label_column_types)
-
     # Initialize df
     df_patient_ids = pd.DataFrame(patient_ids, columns=['PatientID'])
     df_mode = pd.DataFrame(mode_list, columns=['Mode'])

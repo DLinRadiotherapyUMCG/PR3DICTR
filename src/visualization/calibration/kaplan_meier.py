@@ -35,9 +35,7 @@ def kaplan_meier_subplot(config, ax, y_preds, event_labels, time_labels, endpoin
     ax.set_ylim(0.0, 1.0)
 
     # add the table at the bottom
-    add_at_risk_counts(kmf_1, kmf_0, ax=ax, fontsize=14, rows_to_show=['At risk'])
+    add_at_risk_counts(kmf_1, kmf_0, ax=ax, rows_to_show=['At risk'])
 
-    ax.set_ylabel(f"{endpoint_name} rate", fontsize = 16, fontweight = 'bold') # new
-    ax.set_xlabel('Time (months)',fontsize = 16, fontweight = 'bold')
-    ax.legend( loc='lower left', prop={ 'size': 12})
-    ax.tick_params(axis='both',labelsize = 12) 
+    ax.legend( loc='lower left')
+    ax.tick_params(axis='both') 

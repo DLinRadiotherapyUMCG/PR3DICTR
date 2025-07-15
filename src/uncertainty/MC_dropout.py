@@ -22,28 +22,29 @@ from src.hyper_opt.WandB_functions import initialise_WandB_group, login, stop_Wa
 from src.utils.saving.saving_predictions import concatenate_predictions, save_predictions
 from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.evaluation.get_visualisations import get_visualizations
-
 from src.uncertainty.utils.prediction_files import make_mean_predictions_dataframe
-
-
 from src.uncertainty.utils.collect_predictions import collect_one_predictions_pass
-
+from src.dataset.LabelTypesManager import LabelTypesManager
 
 
 
 def train_MC_dropout_model(config):
+
+    
 
     set_random_seed(config['general']['seed'])  # Set the random seed for reproducibility
 
     """
     Make the dataset and dataloader for uncertainty experiments.
     """
+    labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
+    # config['saving']['label_column_names'] = labelManager.label_names_full_list
     
     # Load the dataset and dataloader
     train_loader, val_loader, test_loader, metadata = get_dataset_for_uncertainty_experiments(config)
     
     # get the loss function and metric handler
-    loss_function = get_loss_function(config)
+    loss_function = get_loss_function(config, labelManager)
     metricHandler = mainMetricHandler(config)  # class to compute the metrics per epoch
 
     # train the model
@@ -78,7 +79,7 @@ def train_MC_dropout_model(config):
                                                                 [train_targets_dict, val_targets_dict, test_targets_dict])
 
     # save all the predictions into one csv file
-    save_predictions(config, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
+    save_predictions(config, labelManager, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
 
     # collect all metrics for this fold
     sets_to_evaluate = ['train', 'val', 'test']
@@ -97,6 +98,7 @@ from src.dataset.load_dataset import load_dataset, generate_K_fold_cross_validat
 from src.dataset.get_dataloader import make_dataloader   
 from src.models.tools.save_model import load_model
 from src.config_presets.tools.load_config import load_config
+from itertools import chain
 
 
 
@@ -107,6 +109,10 @@ from src.config_presets.tools.load_config import load_config
 
 
 def collect_bayesian_forward_passes(config, UQ_method = 'MC_dropout'):
+
+    # labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
+    #config['saving']['label_column_names'] = labelManager.label_names_full_list
+
     # get the test set data and make a test dataloader
     df_train_val, df_test = load_dataset(config)
     train_transforms, val_transforms = get_transforms(config)
@@ -134,7 +140,12 @@ def collect_bayesian_forward_passes(config, UQ_method = 'MC_dropout'):
     endpoint_list = config['columns']['labels']  # the endpoints to evaluate
 
     prediction_columns = [x+'_pred' for x in endpoint_list]  # the columns in the predictions csv file
-    true_label_columns = [x+'_true' for x in endpoint_list]  # the columns in the predictions csv file
+
+    all_label_column_names = config['saving']['label_column_names']
+    label_column_names = list(chain.from_iterable(
+        [list(x) if isinstance(x, tuple) else [x] for x in all_label_column_names]
+    ))
+    true_label_columns = ['{}_true'.format(x) for x in label_column_names]
 
     for forward_pass_idx in tqdm(range(1, config['uncertainty'][UQ_method]['n_forward_passes'] + 1)):
         if UQ_method == "TTA":

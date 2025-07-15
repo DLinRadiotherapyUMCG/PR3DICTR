@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import gc
 from tqdm import tqdm 
+from itertools import chain
 
 from src.constants import DEVICE
 
@@ -24,7 +25,7 @@ from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.evaluation.get_visualisations import get_visualizations
 
 from src.uncertainty.utils.prediction_files import make_mean_predictions_dataframe
-
+from src.dataset.LabelTypesManager import LabelTypesManager
 
 
 
@@ -39,12 +40,13 @@ def train_deep_ensemble_models(config):
     """
     Make the dataset and dataloader for uncertainty experiments.
     """
+    labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
     
     # Load the dataset and dataloader
     train_loader, val_loader, test_loader, metadata = get_dataset_for_uncertainty_experiments(config)
     
     # get the loss function and metric handler
-    loss_function = get_loss_function(config)
+    loss_function = get_loss_function(config, labelManager)
     metricHandler = mainMetricHandler(config)  # class to compute the metrics per epoch
 
     """
@@ -92,7 +94,7 @@ def train_deep_ensemble_models(config):
                                                                    [train_targets_dict, val_targets_dict, test_targets_dict])
 
         # save all the predictions into one csv file
-        save_predictions(config, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
+        save_predictions(config, labelManager, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
 
         # collect all metrics for this fold
         sets_to_evaluate = ['train', 'val', 'test']
@@ -120,7 +122,12 @@ def evaluate_deep_ensemble_models(config):
     endpoint_list = config['columns']['labels']  # the endpoints to evaluate
 
     prediction_columns = [x+'_pred' for x in endpoint_list]  # the columns in the predictions csv file
-    true_label_columns = [x+'_true' for x in endpoint_list]  # the columns in the predictions csv file
+    #true_label_columns = [x+'_true' for x in endpoint_list]  # the columns in the predictions csv file
+    all_label_column_names = config['saving']['label_column_names']
+    label_column_names = list(chain.from_iterable(
+        [list(x) if isinstance(x, tuple) else [x] for x in all_label_column_names]
+    ))
+    true_label_columns = ['{}_true'.format(x) for x in label_column_names]
 
     # join each model's test set predictions into one dataframe
     #df_all_test_preds = pd.DataFrame()

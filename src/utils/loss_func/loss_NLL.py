@@ -5,6 +5,29 @@ from src.constants import MISSING_DATA_VALUE
 
 
 
+class Regularization(object):
+    def __init__(self, order, weight_decay):
+        ''' The initialization of Regularization class
+        :param order: (int) norm order number
+        :param weight_decay: (float) weight decay rate
+        '''
+        super(Regularization, self).__init__()
+        self.order = order
+        self.weight_decay = weight_decay
+
+    def __call__(self, model):
+        ''' Performs calculates regularization(self.order) loss for model.
+        :param model: (torch.nn.Module object)
+        :return reg_loss: (torch.Tensor) the regularization(self.order) loss
+        '''
+        reg_loss = 0
+        for name, w in model.named_parameters():
+            if 'weight' in name:
+                reg_loss = reg_loss + torch.norm(w, p=self.order)
+        reg_loss = self.weight_decay * reg_loss
+        return reg_loss
+
+
 
 class NegativeLogLikelihood(nn.Module):
     def __init__(self):
@@ -13,6 +36,8 @@ class NegativeLogLikelihood(nn.Module):
         #self.reg = Regularization(order=2, weight_decay=self.L2_reg)
 
         self.missing_endpoints_as_tensor = torch.tensor([MISSING_DATA_VALUE])
+        self.eps = 0.1  # 1e-8
+        self.sigmoid = torch.nn.Sigmoid()
 
     def set_endpoint_list(self, events_endpoint_list):
         """
@@ -21,7 +46,7 @@ class NegativeLogLikelihood(nn.Module):
         """
         self.events_endpoint_list = events_endpoint_list
         self.num_tasks = len(events_endpoint_list)
-        self.eps = 1e-8
+        
 
     def forward(self, risk_pred, y, e):
         """
@@ -32,9 +57,13 @@ class NegativeLogLikelihood(nn.Module):
         # risk_pred = risk_pred.cuda()
         # y = y.cuda()
         # e = e.cuda()
+
         
         batch_size, num_tasks = risk_pred.shape
         assert num_tasks == self.num_tasks, "Mismatch in number of tasks"
+
+        # NOTE: TEMP
+        risk_pred = self.sigmoid(risk_pred)  # Apply sigmoid activation to risk predictions
 
         zero_tensor = torch.tensor(0.0, device=risk_pred.device, dtype=risk_pred.dtype)
         #total_loss = zero_tensor
@@ -62,7 +91,7 @@ class NegativeLogLikelihood(nn.Module):
                 mask[(y_k.T - y_k) > 0] = zero_tensor
 
                 log_loss = torch.exp(risk_k) * mask
-                log_loss = torch.sum(log_loss, dim=0) / (torch.sum(mask, dim=0) + self.eps)
+                log_loss = torch.sum(log_loss, dim=0) # / (torch.sum(mask, dim=0) + self.eps)
                 log_loss = torch.log(log_loss).reshape(-1, 1)
                 neg_log_loss = -torch.sum((risk_k - log_loss) * e_k.unsqueeze(1)) / (torch.sum(e_k) + self.eps)
 
@@ -71,6 +100,5 @@ class NegativeLogLikelihood(nn.Module):
 
         return loss_dict
     
-        return total_loss + l2_norm, total_loss, l2_norm
 
 

@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
-    config = get_config('Daniel/VM_uncertainty')
+    config = get_config('Daniel/VM_OS_uncertainty')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
@@ -62,38 +62,32 @@ if __name__ == '__main__':
     # config['model']['linear_units_endpoint'] = [32]
 
 
-    config['general']['experiment_name'] = "Deep Ensemble"
-    # config['general']['testMode'] = True  # Set to True to evaluate on the test set
-
-    config['general']['trialNumber'] = "Dysphagia_2"  # Set the trial number for TTA
-    config['columns']['labels'] = ["Dysphagia_M06"]  # Set the label for TTA
-    config['columns']['clinical_features'] = ["Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4",
-                                              "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg",
-                                                'Loctum2_Larynx', 'Loctum2_Oral_Cavity',  'Loctum2_Pharynx','Loctum2_Overig',
-                                                'P16_Negatief', 'P16_Niet_bepaald', 'P16_Positief', 
-                                                'WHO_0', 'WHO_1', 'WHO_2', 'WHO_3', 'WHO_4', 
-                                                'T0', 'T1', 'T2', 'T3', 'T4', 'Tis', 'Tx', 
-                                                'N0', 'N1', 'N2', 'N3', 
-                                                'Roken_Ja, in verleden', 'Roken_Ja, nog steeds', 'Roken_Nee'
-                                                ]
 
     
     
     # ["Geslacht", "Leeftijd", "Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4"]
+    config['general']['trialNumber'] = "OS_3"
 
-    train_deep_ensemble_models(config)
-    evaluate_deep_ensemble_models(config)
+    # config['general']['experiment_name'] = "Deep Ensemble"   
+    # train_deep_ensemble_models(config)
+    # evaluate_deep_ensemble_models(config)
 
-    # train_MC_dropout_model(config)
-    # collect_bayesian_forward_passes(config, UQ_method='TTA')
+    config['general']['experiment_name'] = "MC Dropout" 
+    train_MC_dropout_model(config)
+    collect_bayesian_forward_passes(config, UQ_method="MC_dropout") # UQ_method='TTA')
 
     # config['general']['trialNumber'] = "Xerostomia_2"  # Set the trial number for TTA
     # config['columns']['labels'] = ["Xerostomia_M06"]  # Set the label for TTA
     # config['columns']['clinical_features'] = ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]
 
-    # #train_deep_ensemble_models(config)
-    # #evaluate_deep_ensemble_models(config)
 
-    # train_MC_dropout_model(config)
-    # collect_bayesian_forward_passes(config, UQ_method='TTA')
+    # train_deep_ensemble_models(config)
+    # evaluate_deep_ensemble_models(config)
+    config['general']['experiment_name'] = "TTA" 
+    train_MC_dropout_model(config)
+    collect_bayesian_forward_passes(config, UQ_method='TTA')
+
+    config['general']['experiment_name'] = "Deep Ensemble"   
+    train_deep_ensemble_models(config)
+    evaluate_deep_ensemble_models(config)
 

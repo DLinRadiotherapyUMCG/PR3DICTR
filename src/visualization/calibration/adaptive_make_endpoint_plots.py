@@ -45,7 +45,8 @@ def adaptive_make_endpoint_plots(config, row_dicts, column_names, title=None, mo
         x_axis_label = "False Positive Rate"
         y_axis_label = "True Positive Rate"
     elif mode == "kaplan_meier":
-        x_axis_label = "Time (Months)"
+        date_unit = config['data']['event_endpoint_time_unit'].capitalize()
+        x_axis_label = f"Time ({date_unit})"
         y_axis_label = "Rate"
     else:
         raise ValueError("Calibration plotting mode must be either `calibration` or `reliability` or 'confusion_matrix' or 'roc_curve'")

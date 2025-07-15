@@ -36,9 +36,9 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
     labels_dict = dict.fromkeys(labels, [])
     all_targets = torch.tensor([], device=DEVICE, dtype=torch.float32)  # also save all of the targets in a single tensor (to calculate the loss at the end)
     
-    for label in labels:
-        preds_dict[label] = []
-        labels_dict[label] = []
+    # for label in labels:
+    #     preds_dict[label] = []
+    #     labels_dict[label] = []
     
     
     with torch.no_grad():

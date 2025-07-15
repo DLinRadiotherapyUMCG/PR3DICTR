@@ -92,6 +92,7 @@ data:
   image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
   image_num_dimensions: 3                            # dimension of each image (each image is 3D, so this is = 3)
   n_training_patients_list: []                       # list of number of patients to use for training (only used if 'dataset_amounts_experiment'=True)
+  event_endpoint_time_unit: "months"  # time unit for the event endpoints (e.g. "days", "months", "years"), should match the time unit in the dataset column names
 
   dataloader:
     dataloader_type: "standard"        # type of dataloader ['standard', 'thread']
@@ -212,7 +213,7 @@ evaluation:
   visualisations: 
     list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve', 'kaplan_meier'] # which plots to save per fold
     n_bins: 10            # nunber of bins to use in the calibration and reliability plot
-    kaplan_meier_max_timepoint: 60  # maximum time point to show in the Kaplan-Meier plot
+    kaplan_meier_max_timepoint: 1825  # maximum time point to show in the Kaplan-Meier plot
 
 hyperparam_tuning:
   WandB:

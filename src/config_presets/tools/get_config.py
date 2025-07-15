@@ -5,6 +5,7 @@ import os
 
 from src.config_presets.tools.load_config import load_config
 
+from src.dataset.LabelTypesManager import LabelTypesManager
 
 
 def get_config(name, name_base = 'Base_config', pathGiven = ""):
@@ -46,6 +47,11 @@ def check_config(config):
         config['columns']['labels_types'] = [config['columns']['labels_types']] * len(config['columns']['labels'])
     
     assert len(config['columns']['labels']) == len(config['columns']['labels_types']), "Number of labels must match number of label types."
+
+    # if the label_column_names is not specified, derive them from the labels and label_types in the current confg
+    if "label_column_names" not in config['saving'].keys(): 
+        labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
+        config['saving']['label_column_names'] = labelManager.label_names_full_list
 
 
 

@@ -38,6 +38,8 @@ if __name__ == '__main__':
     gc.collect()
     torch.cuda.empty_cache()
 
+    # config['data']['event_endpoint_time_unit'] = "days"  # set the time unit for the event endpoints (e.g. "days", "months", "years")
+
     # # MAIN: DL running class (with optional hyperparameter optimization)
     expHandler = experimentHandler(config)
     expHandler.run_experiment(config)

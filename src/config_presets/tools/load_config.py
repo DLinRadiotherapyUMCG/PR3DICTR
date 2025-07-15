@@ -10,15 +10,14 @@ def load_config(name, pathGiven = ""):
     :param tox:
     :return: Config
     """
+
+    if not name.endswith('.yaml'):
+        name += '.yaml'
     
     if pathGiven == "":
-        #config_path = 'src/config_presets/' + name + '.yaml'
-        config_path = os.path.join("src", "config_presets", name + ".yaml")
+        config_path = os.path.join("src", "config_presets", name) 
     else:
-        #config_path = pathGiven + '\\' + 'src\\config_presets\\' + name + '.yaml'
-        config_path = os.path.join(pathGiven, "src", "config_presets", name + ".yaml")
-
-    print(config_path)
+        config_path = os.path.join(pathGiven, "src", "config_presets", name)     
 
     # Check if the config file exists
     if not os.path.exists(config_path):
@@ -26,6 +25,6 @@ def load_config(name, pathGiven = ""):
 
     # Load the config file
     with open(config_path, 'r') as f:
-        imported_config = yaml.safe_load(f)
+        imported_config = yaml.load(f, Loader=yaml.FullLoader)
 
     return imported_config

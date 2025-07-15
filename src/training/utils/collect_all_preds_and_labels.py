@@ -5,6 +5,9 @@ def collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, t
     sigmoid_act = torch.nn.Sigmoid()
     identity_act = torch.nn.Identity()
 
+    # NOTE: TEMP
+    identity_act = torch.nn.Sigmoid()
+
     targets_idx = 0
 
     for lab_idx, label in enumerate(labels):

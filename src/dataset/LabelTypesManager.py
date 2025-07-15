@@ -12,6 +12,7 @@ class LabelTypesManager(object):
 
         self.labels_list = config['columns']['labels']
         self.label_types = config['columns']['labels_types']
+        self.event_time_unit = config['data']['event_endpoint_time_unit']  # e.g. "months", "days", "years"
         
 
         self.label_names_full_list, self.label_types_full_list = self.check_label_types(self.labels_list, self.label_types)
@@ -59,8 +60,8 @@ class LabelTypesManager(object):
             elif label_type == "Event":
                 # for event endpoints, we need to add the '_days' suffix and '_event' to the endpoint name
                 #output_endpoint_list.append(endpoint_name + "_event")
-                output_endpoint_list.append((endpoint_name + "_event", endpoint_name + "_months"))
-                output_label_types.append( ("Event", "Months") )
+                output_endpoint_list.append((f"{endpoint_name}_event", f"{endpoint_name}_{self.event_time_unit}"))
+                output_label_types.append(("Event", self.event_time_unit.capitalize()))
                 #output_label_types.append("Event")
                 #output_endpoint_list.append(endpoint_name + "_days")
             else:

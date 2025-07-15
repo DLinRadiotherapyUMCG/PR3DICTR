@@ -1,20 +1,19 @@
 general:
-  experiment_name: Dates_testing
+  experiment_name: Deep Ensemble
   firstRun: false
   region: HNC
   resultsCurrentDirectory: 0
   seed: 42
   testMode: True
-  trialNumber: Days
+  trialNumber: OS_1
   use_test_set: false
-
 
 uncertainty:
   seed: 42                        # random seed for uncertainty estimation
   method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
   metric: 12345
   deep_ensemble:
-    n_models: 10
+    n_models: 5
   MC_dropout:
     n_forward_passes: 20          # number of forward passes to perform for each model in the ensemble
     #dropout_p: 0.2 
@@ -24,18 +23,13 @@ uncertainty:
     n_splits: 1                   # the number of data splits to make
     validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
     split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
-
-
 columns:
+  labels: ["OS"]           # the endpoints the model is (going to be) trained on (list)
+  labels_types: ["Event"]
   clinical_features: ["Leeftijd"]
   # ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]
   
-  labels:  ['OS'] # ['Xerostomia_M06', 'OS', "Dysphagia_M06"]
-  labels_types: ["Event"] # ["Binary", "Event", "Binary"]
-  #- Xerostomia_M06
-
 data:
-  event_endpoint_time_unit: "months"
   augmentation:
     isEnabled: true
     list:
@@ -134,6 +128,10 @@ data:
       - 1.0
   source: PRIMA
   stratify_on:
+  - Aspiration_M06
+  - Dysphagia_M06
+  - Sticky_M06
+  - Taste_M06
   - Xerostomia_M06
 evaluation:
   main_metric: 
@@ -143,16 +141,9 @@ evaluation:
     calibration_bins: 10
     threshold: YoudenJ
   metrics_list:
-  - AUC
-  - accuracy
-  - F1_score
-  - ECE
-  - ACE
   - C-index
   visualisations:
     list:
-    - calibration
-    - reliability
     - kaplan_meier
     n_bins: 10
 
@@ -160,6 +151,168 @@ hyperparam_tuning:
   WandB:
     API_Key: c7f0f65fac8b7178ad7c5859ba6114775b16e694
     isEnabled: true
+  derived:
+    n_linear_layers:
+      filters:
+        location:
+        - model
+        - linear_units
+        log: false
+        name: LL_shared_
+        options:
+        - 64
+        - 128
+        - 256
+        - 512
+        type: categorical
+    n_linear_layers_endpoint:
+      filters:
+        location:
+        - model
+        - linear_units_endpoint
+        log: false
+        name: LL_endpoint_
+        options:
+        - 16
+        - 32
+        - 64
+        type: categorical
+  hyperparams:
+    LRELU_alpha:
+      location:
+      - model
+      - lrelu_alpha
+      max: 0.1
+      min: 0
+      name: LRELU_alpha
+      type: float
+    clinical_features_method:
+      location:
+      - model
+      - TransRP
+      - clinical_features_method
+      name: clinical_features_method
+      options:
+      - m1
+      - m2
+      type: categorical
+    dropout_p:
+      location:
+      - model
+      - dropout_p
+      max: 0.3
+      min: 0
+      name: dropout_p
+      type: float
+    learning_rate:
+      location:
+      - training
+      - optimizer
+      - learning_rate
+      name: learning_rate
+      options:
+      - 0.01
+      - 0.001
+      - 0.0001
+      type: categorical
+    mixup_alpha:
+      location:
+      - data
+      - augmentation
+      - mixup
+      - alpha
+      max: 5
+      min: 0
+      name: mixup_alpha
+      type: float
+    n_linear_layers:
+      location:
+      - model
+      - n_linear_layers
+      log: false
+      max: 3
+      min: 1
+      name: n_linear_layers
+      step: 1
+      type: int
+    n_linear_layers_endpoint:
+      location:
+      - model
+      - n_linear_layers_endpoint
+      log: false
+      max: 3
+      min: 1
+      name: n_linear_layers_endpoint
+      step: 1
+      type: int
+    noise:
+      location:
+      - data
+      - augmentation
+      - list
+      - noise
+      - isEnabled
+      name: noise
+      options:
+      - true
+      - false
+      type: categorical
+    vit_depth:
+      location:
+      - model
+      - TransRP
+      - vit_depth
+      name: vit_depth
+      options:
+      - 4
+      - 6
+      - 8
+      type: categorical
+    vit_dim:
+      location:
+      - model
+      - TransRP
+      - vit_dim
+      name: vit_dim
+      options:
+      - 256
+      - 512
+      - 768
+      type: categorical
+    vit_dropout_p:
+      location:
+      - model
+      - TransRP
+      - vit_dropout_p
+      name: vit_dropout_p
+      options:
+      - 0
+      - 0.1
+      - 0.2
+      type: categorical
+    vit_heads:
+      location:
+      - model
+      - TransRP
+      - vit_heads
+      name: vit_heads
+      options:
+      - 16
+      - 32
+      - 64
+      - 128
+      type: categorical
+    vit_mlp_dim:
+      location:
+      - model
+      - TransRP
+      - vit_mlp_dim
+      name: vit_mlp_dim
+      options:
+      - 256
+      - 512
+      - 1024
+      type: categorical
   optuna:
     isEnabled: false
     kill_trial_threshold: 0.6
@@ -192,6 +345,40 @@ model:
     vit_patch_size: 8
   clinical_variables_linear_units: []
   clinical_variables_position: 1
+  cnn_pooling:
+    conv_block_layers: 1
+    filters:
+    - 8
+    - 8
+    - 16
+    - 16
+    - 32
+    kernel_sizes:
+    - 7
+    - 5
+    - 4
+    - 3
+    - 3
+    normalization: batch
+    pad_value: 0
+    pooling: max
+    pooling_size: 2
+    strides:
+    - - 1
+      - 1
+      - 1
+    - - 1
+      - 1
+      - 1
+    - - 1
+      - 1
+      - 1
+    - - 1
+      - 1
+      - 1
+    - - 1
+      - 1
+      - 1
   densenet:
     model_depth: 121
   dropout_p: 0.2
@@ -211,7 +398,7 @@ model:
   resnet:
     conv1_kernel_size: 7
     conv1_stride: 2
-    model_depth: 10
+    model_depth: 18
   use_bias: true
 paths:
   csv: /home/macraedc/data/

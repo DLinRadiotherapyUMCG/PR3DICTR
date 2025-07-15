@@ -12,7 +12,8 @@ def make_mean_predictions_dataframe(df_all_test_preds, endpoint_list):
     Returns:
         pd.DataFrame: DataFrame with true labels and mean predictions for each endpoint.
     """
-    true_label_columns = [f"{endpoint}_true" for endpoint in endpoint_list]  # the columns with true labels
+
+    true_label_columns = [col for col in df_all_test_preds if col.endswith("_true")]  # the columns with true labels
 
    # make a file with the true labels and mean predictions for each toxicity
     df_mean_predictions = df_all_test_preds[true_label_columns].copy()  # start with the true labels

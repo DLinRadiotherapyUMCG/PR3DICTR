@@ -10,6 +10,8 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedShuffleSplit, ShuffleSplit
 
+from src.dataset.LabelTypesManager import LabelTypesManager
+
 from src.constants import PATIENT_ID_LENGTHS_DICT, PATIENT_ID_COL_NAME, SPLIT_COL_NAME
 
 
@@ -197,7 +199,19 @@ def generate_single_train_val_split(config, df_development_set):
     """
     # if the train-val split is stratified or random
     if config["data"]["kFolds"]["split_strategy"] == 'stratified':
-        labels = df_development_set[config['columns']['labels']]
+        LabelManager = LabelTypesManager(config)  # create a LabelTypesManager object to handle the labels
+        label_columns = LabelManager.label_names_full_list  # get the full list of labels, (including event and days labels for event endpoints)
+
+        # Flatten label_columns in case it contains tuples
+        flattened_label_columns = []
+        for col in label_columns:
+            if isinstance(col, (list, tuple)):
+                flattened_label_columns.append(col[0]) # here, we only need to stratify the event column (not the time column)
+            else:
+                flattened_label_columns.append(col)
+        
+        labels = df_development_set[flattened_label_columns]
+
     else:
         labels = None
 
