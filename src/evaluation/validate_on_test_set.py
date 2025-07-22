@@ -21,6 +21,7 @@ from src.models.tools.get_classification_model import get_classification_model
 from src.evaluation.get_visualisations import get_visualizations
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.evaluation.total_evaluation import total_evaluation_current_fold
+from src.dataset.LabelTypesManager import LabelTypesManager as LabelTypesManagerClass
 
 
 def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom\Projectline_HNC_modelling\Users\Luuk vd Hoek\Projects collection\Mini projects\SIMS\hnc-ensemble-master\results\Resnet_optimization_modtype3_2a_depth_newlabels\Trial_19/'): 
@@ -28,6 +29,8 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
     print(f"Validating models on {test_dataset_source} test set")
     # Get paths to folds and config from the experiment
     folds = [f.path for f in os.scandir(trial_dir) if f.is_dir()] # This does asume all folders within a trial are folds
+
+    print(folds)
     config_path = os.path.join(folds[0], main_config['saving']['filenames']['config_yaml']) 
     print(config_path)
     fold_config = load_config(config_path) # Gets the config folder from the first fold
@@ -35,7 +38,8 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
     # Load data and helper functions
     # the dataloader settings are taken from the model config
     metricHandler = mainMetricHandler(fold_config)
-    loss_function = get_loss_function(fold_config)
+    LabelTypesManager = LabelTypesManagerClass(fold_config)
+    loss_function = get_loss_function(fold_config, LabelTypesManager)
     train_transforms, val_transforms = get_transforms(fold_config)
 
     # the dataset itself is loaded from the main config (this allows for using the external test set)
@@ -79,7 +83,7 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
         mode_list = ['test'] * len(test_patientIDs_list)
         main_config['general']['resultsCurrentDirectory'] = fold_dir + r'/' # fold results saves to fold
         prediction_paths.append(main_config['general']['resultsCurrentDirectory'])
-        save_predictions(main_config, test_patientIDs_list, test_preds_dict, test_targets_dict, mode_list, is_test_set=True) 
+        save_predictions(main_config, LabelTypesManager, test_patientIDs_list, test_preds_dict, test_targets_dict, mode_list, is_test_set=True) 
         
         # save the predictions, to use for the ensemble predictions later
         if test_combined_preds == None:
@@ -109,8 +113,7 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
     mode_list = ['test'] * len(test_patientIDs_list)
     main_config['general']['resultsCurrentDirectory'] = trial_dir # combined results saves to the trial 
     prediction_paths.append(main_config['general']['resultsCurrentDirectory'])
-    save_predictions(main_config, test_patientIDs_list, test_combined_preds, test_targets_dict, mode_list, is_test_set=True, ensemble_predictions=True) 
-    
+    save_predictions(main_config, LabelTypesManager, test_patientIDs_list, test_combined_preds, test_targets_dict, mode_list, is_test_set=True, ensemble_predictions=True) 
 
     # compute metrics and save for the ensmble predictions
     pred_csv_dir = get_predictions_csv_dir(main_config, test_set=True, ensemble_predictions=True)

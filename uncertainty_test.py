@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
-    config = get_config('Daniel/VM_OS_uncertainty')
+    config = get_config('Daniel/Baoqiang_OS')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
@@ -66,15 +66,17 @@ if __name__ == '__main__':
     
     
     # ["Geslacht", "Leeftijd", "Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4"]
-    config['general']['trialNumber'] = "OS_3"
-
+    config['general']['trialNumber'] = "Baoqiang_LRC_2year"  # Set the trial number for the experiment
+    #config['columns']['clinical_features'] = []
     # config['general']['experiment_name'] = "Deep Ensemble"   
     # train_deep_ensemble_models(config)
     # evaluate_deep_ensemble_models(config)
 
+    
     config['general']['experiment_name'] = "MC Dropout" 
     train_MC_dropout_model(config)
     collect_bayesian_forward_passes(config, UQ_method="MC_dropout") # UQ_method='TTA')
+    
 
     # config['general']['trialNumber'] = "Xerostomia_2"  # Set the trial number for TTA
     # config['columns']['labels'] = ["Xerostomia_M06"]  # Set the label for TTA
@@ -83,11 +85,15 @@ if __name__ == '__main__':
 
     # train_deep_ensemble_models(config)
     # evaluate_deep_ensemble_models(config)
+
+    
     config['general']['experiment_name'] = "TTA" 
     train_MC_dropout_model(config)
     collect_bayesian_forward_passes(config, UQ_method='TTA')
-
+    
     config['general']['experiment_name'] = "Deep Ensemble"   
     train_deep_ensemble_models(config)
     evaluate_deep_ensemble_models(config)
+
+    
 

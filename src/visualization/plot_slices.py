@@ -1,9 +1,7 @@
-import matplotlib.colors as mcolors
-import colorcet as cc
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import numpy as np
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 from .rtdose_colormap import create_RTDOSE_cmap
@@ -12,494 +10,248 @@ import src.constants as constants
 
 plt.style.use('default')
 
-### DEFINE THE PLOTTING PARAMETERS ###
-# the order in which the images are plotted (CT is always bottom, Attention is always top)
-layer_plotting_order = ["CT", "RTDOSE", "RTSTRUCT", "Attention"]
+# --- Colormap Utilities ---
 
-# define which layers are to be plotted with a colormap
-colormap_layers = [
-    "Attention",
-    "RTDOSE",
-    "CT",
-    "RTSTRUCT",
-]  # first has most priority, last has least priority
-
-
-
-
-
-
-def create_colormap(cmap_name, min_value, max_value, HNC_plotting_params=None, N=256):
+def create_colormap(cmap_name, min_value, max_value, params=None, N=256):
     if cmap_name == "gray":
         cmap = LinearSegmentedColormap.from_list("CT_cmap", ["black", "white"], N=N)
-    elif cmap_name == "RTSTRUCT":
-        if not (min_value == 0 and max_value <= 1):
-            N = 16
-            # colors = [(0, 0, 0), (0, 1, 0)]
-            # cmap = LinearSegmentedColormap.from_list("RTSTRUCT_cmap", colors, N=N)
-        # if max_value <= 1:
-        colors = [(i / 15, 0, 0.5) for i in range(N)]
+    elif cmap_name == "RTSTRUCT" or cmap_name == "GTV":
+        colors = [(i / N, 0, 0.5) for i in range(N)]  # this colours list is only used if the RTSTRUCT is plotted as a background (so that each struct is a different colour)
         cmap = LinearSegmentedColormap.from_list("RTSTRUCT_cmap", colors, N=N)
-    elif cmap_name == "Attention":
-        min_value = 0
-        colors_list = HNC_plotting_params["Attention"]["cmap_abs_colors"]
+    elif cmap_name in ("Attention", "AttentionAbs"):
+        colors_list = params["Attention"]["cmap_abs_colors"]
         cmap = LinearSegmentedColormap.from_list("Attention_cmap", colors_list, N=N)
-    elif cmap_name == "AttentionAbs":
-        colors_list = HNC_plotting_params["Attention"]["cmap_abs_colors"]
-        cmap = LinearSegmentedColormap.from_list("Attention_cmap", colors_list, N=N)
+    elif cmap_name == "RTDOSE":
+        cmap, norm, _ = create_RTDOSE_cmap(params["RTcmap"])
+        return cmap, norm
+    elif cmap_name == "PET":
+        cmap_name = params["PET"]["cmap"]
+        cmap = LinearSegmentedColormap.from_list("PET_cmap", cmap_name, N=N)
     else:
-        # Load the colormap from matplotlib
         cmap = mpl.cm.get_cmap(cmap_name, N)
-
-    # Normalize the data to the range -200 to 400
     norm = Normalize(vmin=min_value, vmax=max_value)
-
-    labels = None
-
-    return cmap, norm, labels
-
-
-def make_row_colorbar(
-    fig, row_ax, num_slices, colorbar_layer_name, HNC_plotting_params, global_att_max, RTcmap=None,
-):
-    # get the coordinates of the last axis in the row, to place the colorbar for this row
-    [[x10, y10], [x11, y11]] = (
-        row_ax[num_slices - 1].get_position().get_points()
-    )  # get coordinates of the last axis
-    pad = 0.01
-    width = 0.01
-    height_scalar = 1  # padding (between img and colorbar) and width for the colorbar
-    max_height = y11 - y10  # height of the colorbar
-    left_coord = x11 + pad
-    bottom_coord = (
-        y10 + (max_height * (1 - height_scalar)) / 2
-    )  # this ensures the colorbar's height is centered
-    # add the colorbar axis
-    cbar_ax = fig.add_axes(
-        [left_coord, bottom_coord, width, max_height * height_scalar]
-    )
-    
-    # make a colorbar for the layer that defines the colormap to be used
-    cbar = None
-    if colorbar_layer_name == "CT":
-        cmap, norm, levels = create_colormap(
-            cmap_name=HNC_plotting_params["CT"]["cmap"],
-            min_value=HNC_plotting_params["CT"]["min_val"],
-            max_value=HNC_plotting_params["CT"]["max_val"],
-        )
-        cbar = fig.colorbar(
-            mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
-            cax=cbar_ax,
-            spacing="proportional",
-        )
-
-    # make the RTDOSE colorbar
-    elif colorbar_layer_name == "RTDOSE":
-        cmap, norm, levels = create_RTDOSE_cmap(RTcmap)
-        cbar = fig.colorbar(
-            mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
-            cax=cbar_ax,
-            spacing="proportional",
-            ticks=levels[1:],
-        )
-
-    # make the Attention colorbar
-    elif colorbar_layer_name == "Attention":
-        cmap, norm, levels = create_colormap(
-            cmap_name=HNC_plotting_params["Attention"]["cmap"],
-            min_value=-global_att_max,
-            max_value=global_att_max,
-            HNC_plotting_params=HNC_plotting_params,
-        )
-        cbar = fig.colorbar(
-            mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
-            cax=cbar_ax,
-            spacing="proportional",
-        )
-        cbar.formatter.set_powerlimits((0, 0))
-
-    # make the RTSTRUCT colorbar
-    elif colorbar_layer_name == "RTSTRUCT":
-        cmap, norm, levels = create_colormap(
-            cmap_name=HNC_plotting_params["RTSTRUCT"]["cmap"],
-            min_value=HNC_plotting_params["RTSTRUCT"]["min_val"],
-            max_value=HNC_plotting_params["RTSTRUCT"]["max_val"],
-        )
-        cbar = fig.colorbar(
-            mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
-            cax=cbar_ax,
-            spacing="proportional",
-        )
-
-    # put a title above the colorbar
-    if cbar is not None:
-        if colorbar_layer_name == "RTDOSE":
-            cbar.ax.set_title("cGy", loc="center", pad=5)
-        elif colorbar_layer_name.upper() == "CT":
-            cbar.ax.set_title("HU", loc="center", pad=5)
-        elif colorbar_layer_name.upper() == "Attention":
-            cbar.ax.set_title("Attention", loc="center", pad=5)
-
-        cbar.ax.yaxis.set_ticks_position("right")
-
-
-""" Data processing utilities"""
-
+    return cmap, norm
 
 def rescale_data(data, min_val, max_val):
-    """
-    Rescales the data from the [0,1] range (to the CT or RTDose ranges).
-    """
     if data.min() >= 0 and data.max() <= 1:
         return data * (max_val - min_val) + min_val
-    else:
-        return data
+    return data
 
-
-def get_slice_dimensions(input_dict):
-    """
-    Finds the dimensions of the images in the input dict, used to define the size of the axes.
-    """
-    for img_type in layer_plotting_order:
-        if img_type in input_dict.keys():
+def get_slice_dimensions(input_dict, layer_order):
+    for img_type in layer_order:
+        if img_type in input_dict:
             img = input_dict[img_type]
             return img.shape
-
     raise ValueError("No images found in input_dict")
 
+# --- Plotting Strategy Classes ---
 
-def determine_colorbar_layer(layers_to_plot, colormap_layers):
-    """
-    Finds the layer that should be used to create the colorbar, based on the layers that are to be plotted.
-    Args:
-        layers_to_plot (list): list of layers to be plotted
-        colormap_layers (list): list of layers that can be plotted with a colormap. The order of this list defines the priority with which the colorbar is made.
-    Returns:
-        lyr (string: the name of the layer that should be used to create the colorbar
-    """
-    for lyr in colormap_layers:
-        if lyr in layers_to_plot:
-            return lyr
+class ModalityPlotter:
+    def plot(self, axs, data, slices, params, **kwargs):
+        raise NotImplementedError
 
+class CTPlotter(ModalityPlotter):
+    def plot(self, axs, CT, slices, params, **kwargs):
+        cmap, norm = create_colormap(
+            params["cmap"], params["min_val"], params["max_val"], params
+        )
+        for i, slice_n in enumerate(slices):
+            axs[i].imshow(CT[slice_n], cmap=cmap, norm=norm, interpolation='none')
 
-""" Plotting functions. Differentiated by the type of image to be plotted. """
+class PETPlotter(ModalityPlotter):
+    def plot(self, axs, PET, slices, params, **kwargs):
+        cmap, norm = create_colormap(params["cmap"], params["min_val"], params["max_val"], params)
+        for i, slice_n in enumerate(slices):
+            axs[i].imshow(PET[slice_n], cmap=cmap, norm=norm, interpolation='none')
 
+class RTDOSEPlotter(ModalityPlotter):
+    def plot(self, axs, RTDOSE, slices, params, RTcmap, is_background=False, **kwargs):
+        cmap, norm, levels = create_RTDOSE_cmap(RTcmap)
+        levels = levels[1:]
+        for i, slice_n in enumerate(slices):
+            slice_data = RTDOSE[slice_n]
+            if is_background:
+                # plot the RTDOSE as a background (i.e. the colours should not be transparent)
+                axs[i].contourf(slice_data, cmap=cmap, norm=norm, levels=levels, alpha=1, origin="upper")
+                axs[i].contour(slice_data, levels=levels, norm=norm, colors="white", linewidths=1, alpha=1, origin="upper") # contours are white
+            else:
+                # plot the RTDOSE with transparency (e.g. for on top of the CT scan)
+                axs[i].contourf(slice_data, cmap=cmap, norm=norm, levels=levels, alpha=0.3, origin="lower")
+                axs[i].contour(slice_data, cmap=cmap, norm=norm, levels=levels, linewidths=1, origin="lower") # contours are coloured
 
-def plot_CT(axs, CT, slices, HNC_plotting_params):
-    """
-    Plots the CT slices using the same CT colormap for all slices.
-    """
-    cmap, norm, levels = create_colormap(
-        cmap_name=HNC_plotting_params["CT"]["cmap"],
-        min_value=HNC_plotting_params["CT"]["min_val"],
-        max_value=HNC_plotting_params["CT"]["max_val"],
-    )
+class RTSTRUCTPlotter(ModalityPlotter):
+    def plot(self, axs, RTSTRUCT, slices, params, is_background=False, **kwargs):
+        cmap, norm = create_colormap(params["cmap"], params["min_val"], params["max_val"], params, N= params["max_val"] + 1)
+        for i, slice_n in enumerate(slices):
+            slice_data = RTSTRUCT[slice_n]
+            if is_background:
+                axs[i].imshow(slice_data, cmap=cmap, norm=norm, interpolation='none')
+            else:
+                axs[i].contour(
+                    slice_data > 0,
+                    colors=params["color"],
+                    linewidths=params["linewidth"],
+                    alpha=params["alpha"],
+                    origin="lower",
+                )
 
-    for i, slice_n in enumerate(slices):
-        axs[i].imshow(CT[slice_n], cmap=cmap, norm=norm, interpolation='none')
+class AttentionPlotter(ModalityPlotter):
+    def plot(self, axs, Attention, slices, params, global_att_max, **kwargs):
+        plot_min, plot_max = 0, global_att_max
+        plot_cmap = params["cmap_abs"]
+        cmap, norm = create_colormap(plot_cmap, plot_min, plot_max, params)
+        alpha = params["alpha"]
+        for i, slice_n in enumerate(slices):
+            axs[i].imshow(Attention[slice_n], cmap=cmap, norm=norm, alpha=alpha, interpolation='none')
 
+class EmptyPlotter(ModalityPlotter):
+    def plot(self, axs, _, __, params, color="black", **kwargs):
+        for ax in axs:
+            ax.set_facecolor(color)
 
-def plot_RTDOSE(axs, RTDOSE, slices, RTcmap, is_background=False):
-    """
-    Plots the RTDOSE slcies using the colormap specified by RTcmap.
-    """
+# --- Modality Plotter Registry ---
 
-    # retrieve the colormap for RTDOSE (HNC)
-    cmap, norm, levels = create_RTDOSE_cmap(RTcmap)
-    levels = levels[1:]  # remove the first level, as it is the background level
-    for i, slice_n in enumerate(slices):
-        RTDOSE_slice = RTDOSE[slice_n]
-        
-        # if the RTDOSE is the background
-        if is_background:
-            contourf = axs[i].contourf(
-                RTDOSE_slice,
-                cmap=cmap,
-                norm=norm,
-                levels=levels,
-                alpha=1,
-                origin="upper",
-            )
-            contour = axs[i].contour(
-                RTDOSE_slice,
-                levels=levels,
-                norm=norm,
-                colors="white",
-                linewidths=1,
-                alpha=1,
-                origin="upper",
-            )
+MODALITY_PLOTTERS = {
+    "CT": CTPlotter(),
+    "RTDOSE": RTDOSEPlotter(),
+    "RTSTRUCT": RTSTRUCTPlotter(),
+    "GTV" : RTSTRUCTPlotter(),  # GTV uses the same plotting as RTSTRUCT
+    "Attention": AttentionPlotter(),
+    "PET": PETPlotter(),
+    "Empty": EmptyPlotter(),
+}
 
-        
-        # if the RTDOSE is not the background
-        else:
-            contourf = axs[i].contourf(
-                RTDOSE_slice,
-                cmap=cmap,
-                norm=norm,
-                levels=levels,
-                alpha=0.3,
-                origin="lower",
-            )
-            contour = axs[i].contour(
-                RTDOSE_slice,
-                cmap=cmap,
-                norm=norm,
-                levels=levels,
-                linewidths=1,
-                origin="lower",
-            )
+# --- Colorbar Utility ---
 
+def make_row_colorbar(fig, row_ax, num_slices, layer_name, params, global_att_max, RTcmap=None):
+    [[x10, y10], [x11, y11]] = row_ax[num_slices - 1].get_position().get_points()
+    pad, width, height_scalar = 0.01, 0.01, 1
+    max_height = y11 - y10
+    left_coord = x11 + pad
+    bottom_coord = y10 + (max_height * (1 - height_scalar)) / 2
+    cbar_ax = fig.add_axes([left_coord, bottom_coord, width, max_height * height_scalar])
+    cbar = None
 
-def plot_RTSTRUCT(axs, RTSTRUCT, slices, HNC_plotting_params, is_background=False):
-    """
-    Plots the RTSTRUCT image on the axes provided. If the RTSTRUCT is the background of the plot, then the contours are not plotted and imshow() is used instead.
-    """
-    cmap, norm, levels = create_colormap(
-        cmap_name=HNC_plotting_params["RTSTRUCT"]["cmap"],
-        min_value=HNC_plotting_params["RTSTRUCT"]["min_val"],
-        max_value=HNC_plotting_params["RTSTRUCT"]["max_val"],
-    )
-    for i, slice_n in enumerate(slices):
-        RTSTRUCT_slice = RTSTRUCT[slice_n]
+    if layer_name == "CT":
+        cmap, norm = create_colormap(params["CT"]["cmap"], params["CT"]["min_val"], params["CT"]["max_val"], params)
+        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax, spacing="proportional")
+        cbar.ax.set_title("HU", loc="center", pad=5)
+    elif layer_name == "PET":
+        cmap, norm = create_colormap(params["PET"]["cmap"], params["PET"]["min_val"], params["PET"]["max_val"], params)
+        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax, spacing="proportional")
+        cbar.ax.set_title("SUV", loc="center", pad=5)
+    elif layer_name == "RTDOSE":
+        cmap, norm, levels = create_RTDOSE_cmap(RTcmap)
+        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax, spacing="proportional", ticks=levels[1:])
+        cbar.ax.set_title("cGy", loc="center", pad=5)
+    elif layer_name == "Attention":
+        cmap, norm = create_colormap(params["Attention"]["cmap"], -global_att_max, global_att_max, params)
+        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax, spacing="proportional")
+        cbar.ax.set_title("Attention", loc="center", pad=5)
+        cbar.formatter.set_powerlimits((0, 0))
+    elif layer_name == "RTSTRUCT" or layer_name == "GTV":
+        cmap, norm = create_colormap(params[layer_name]["cmap"], params[layer_name]["min_val"], params[layer_name]["max_val"], params, N=params[layer_name]["max_val"])
+        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax, spacing="proportional")
+    if cbar is not None:
+        cbar.ax.yaxis.set_ticks_position("right")
 
-        if is_background:
-            # can just use imshow if the RTSTRUCT is the background (no contours needed for the RTSTRUCT)
-            axs[i].imshow(RTSTRUCT_slice, cmap=cmap, norm=norm, interpolation='none')
-        else:
-            # plots just the contours of the RTSTRUCT
-            # axs[i].contour(
-            #     RTSTRUCT_slice > 0,
-            #     colors="black",
-            #     linewidths=HNC_plotting_params["RTSTRUCT"]["linewidth"] + 4,
-            #     alpha=HNC_plotting_params["RTSTRUCT"]["alpha"] * 0.25,
-            #     origin="lower",
-            # )  # ensures orientation is correct (up/down)
-            axs[i].contour(
-                RTSTRUCT_slice > 0,
-                colors=HNC_plotting_params["RTSTRUCT"]["color"],
-                linewidths=HNC_plotting_params["RTSTRUCT"]["linewidth"],
-                alpha=HNC_plotting_params["RTSTRUCT"]["alpha"],
-                origin="lower",
-            )  # ensures orientation is correct (up/down)
-
-
-def plot_Attention(axs, Attention, slices, HNC_plotting_params, global_att_max):
-    """
-    Plots the attention map slices on the axes provided.
-    """
-    # Set min and max to the largest absolute value in the attention map
-    # This centers the colormap around 0, and ensures that the colormap is symmetric
-    att_min = np.min(Attention)
-    # If there is negative attention, set the colormap to be symmetric around 0, and
-    # pick a symmetric colormap
-    if False:#att_min < 0:
-        plot_min = -global_att_max
-        plot_max = global_att_max
-        plot_cmap = HNC_plotting_params["Attention"]["cmap"]
-    # If there is no negative attention, set the colormap to be from 0 to the largest
-    # value and pick a colormap that is not symmetric
-    else:
-        plot_min = 0
-        plot_max = global_att_max
-        plot_cmap = HNC_plotting_params["Attention"]["cmap_abs"]
-
-    cmap, norm, levels = create_colormap(
-        cmap_name=plot_cmap,
-        min_value=plot_min,
-        max_value=plot_max,
-        HNC_plotting_params=HNC_plotting_params,
-    )
-    alpha = HNC_plotting_params["Attention"]["alpha"]
-    for i, slice_n in enumerate(slices):
-        axs[i].imshow(Attention[slice_n], cmap=cmap, norm=norm, alpha=alpha, interpolation='none')
-
-
-def plot_empty_img(axs, color="black"):
-    """
-    Plots an empty image on the axes provided.
-    """
-    for ax in axs:
-        ax.set_facecolor(color)
-    return axs
-
-
-
-
-
-
-""" MAIN """
+# --- Main Plotting Function ---
 
 def get_plotting_params(RT_region):
     try:
-        plotting_params = constants.PLOTTING_PARAMS[RT_region]
+        return constants.PLOTTING_PARAMS[RT_region]
     except KeyError:
         raise ValueError(f"Unknown RT region: {RT_region}")
-    
-    return plotting_params
 
-
-
+def determine_colorbar_layer(layers_to_plot, colormap_layers):
+    for lyr in colormap_layers:
+        if lyr in layers_to_plot:
+            return lyr
 
 def plot_slices(
     row_dicts,
     slice_indexes,
     title=None,
-    #HNC_plotting_params=HNC_plotting_params,
     RT_region="HNC",
     plotting_axis="axial",
     verbose=False,
 ):
-    
     PLOTTING_PARAMS = get_plotting_params(RT_region)
+    layer_plotting_order = ["CT", "PET", "RTDOSE", "RTSTRUCT", "GTV", "Attention"]
+    colormap_layers = ["Attention", "RTDOSE", "PET", "CT", "GTV", "RTSTRUCT"]
 
     slice_count = len(slice_indexes)
     row_count = len(row_dicts)
 
-    # Calculate the size of the figure based on the size of the plots
-    if "Attention" not in row_dicts[0]:
-        im_shape = get_slice_dimensions(row_dicts[0])
-    else:
-        im_shape = row_dicts[0]["Attention"][0].shape
-
-    plot_width = im_shape[-2]
-    plot_height = im_shape[-1]
-
+    im_shape = get_slice_dimensions(row_dicts[0], layer_plotting_order)
+    plot_width, plot_height = im_shape[-2], im_shape[-1]
     fig_width = plot_width * slice_count / 30
     fig_height = plot_height * row_count / 28
 
-    # Create a gridspec to add a colorbar axis
     fig = plt.figure(figsize=(fig_width, fig_height))
-    gs = gridspec.GridSpec(
-        row_count,
-        slice_count,
-        width_ratios=[1] * slice_count,
-        hspace=0,
-        wspace=0.1,
-        figure=fig,
-    )
+    gs = gridspec.GridSpec(row_count, slice_count, width_ratios=[1] * slice_count, hspace=0, wspace=0.1, figure=fig)
 
-    # Initialize global max and min values for the attention maps
-    global_att_max = float('-inf')
+    # Find global attention max
+    global_att_max = max(
+        max(abs(np.min(row.get("Attention", [0]))), abs(np.max(row.get("Attention", [0]))))
+        for row in row_dicts if "Attention" in row
+    ) if any("Attention" in row for row in row_dicts) else 1
 
-    # Loop over all rows and calculate min and max values
-    for row_dict in row_dicts:
-        if "Attention" in row_dict:
-            ATTENTION = row_dict["Attention"]
-            local_min = np.min(ATTENTION)
-            local_max = np.max(ATTENTION)
-            abs_max = max(abs(local_min), abs(local_max))
-            global_att_max = max(global_att_max, abs_max)
-
-    # Create title
     if title is not None:
         fig.suptitle(title, fontsize=16, y=0.95)
 
-    # Create subplots
-    axs = [
-        [plt.subplot(gs[i, j]) for j in range(slice_count)] for i in range(row_count)
-    ]
+    axs = [[plt.subplot(gs[i, j]) for j in range(slice_count)] for i in range(row_count)]
 
-    # rotate the axes of the plots, if not plotting in the axial plane
     if plotting_axis.lower() != "axial":
         row_dicts = rotate_arrs_in_plotting_row_dicts(row_dicts, layer_plotting_order, plotting_axis)
 
-    # loop over the plot rows
-    for row_idx in range(row_count):
-        row_dict = row_dicts[row_idx]
-        # loop through the dictionary keys and plot the images in the correct order (e.g. CT first)
-        layers_to_plot = [x for x in layer_plotting_order if x in row_dict.keys()]
+    for row_idx, row_dict in enumerate(row_dicts):
+        layers_to_plot = [x for x in layer_plotting_order if x in row_dict]
         if verbose:
             print(row_idx, "layers_to_plot:", layers_to_plot)
-        # reversed_layers_to_plot = layers_to_plot[::-1]
-
-        # figure out which layer the colormap should come from
         colorbar_layer_name = determine_colorbar_layer(layers_to_plot, colormap_layers)
 
-        im = None
         for layer_idx, layer_name in enumerate(layers_to_plot):
-            if layer_name == "CT":
-                CT = row_dict["CT"]
-                #CT = rescale_data(
-                #    CT,
-                #    min_val=HNC_plotting_params["CT"]["min_val"],
-                #    max_val=HNC_plotting_params["CT"]["max_val"],
-                #)
-
-                plot_CT(axs[row_idx], CT, slice_indexes, PLOTTING_PARAMS)
-
-            elif layer_name == "RTDOSE":
-                RTDOSE = row_dict["RTDOSE"]
-                RTDOSE = rescale_data(
-                    RTDOSE,
+            plotter = MODALITY_PLOTTERS.get(layer_name, MODALITY_PLOTTERS["Empty"])
+            params = PLOTTING_PARAMS.get(layer_name, {})
+            kwargs = {}
+            if layer_name == "RTDOSE":
+                kwargs["RTcmap"] = RT_region
+                kwargs["is_background"] = (layer_idx == 0 and "Attention" not in layers_to_plot)
+                row_dict[layer_name] = rescale_data(
+                    row_dict[layer_name],
                     min_val=PLOTTING_PARAMS["RTDOSE"]["min_val"],
                     max_val=PLOTTING_PARAMS["RTDOSE"]["max_val"],
                 )
-                rtdose_is_background = (
-                    True
-                    if layers_to_plot[0] == "RTDOSE"
-                    and "Attention" not in layers_to_plot
-                    else False
-                )
-                plot_RTDOSE(
-                    axs[row_idx],
-                    RTDOSE,
-                    slice_indexes,
-                    RT_region,
-                    is_background=rtdose_is_background,
-                )
-
-            elif layer_name == "Attention":
+            if layer_name == "RTSTRUCT" or layer_name == "GTV":
+                params["min_val"] = 0
+                params["max_val"] = row_dict[layer_name].max()
+                #print(params["max_val"])
+                kwargs["is_background"] = (layer_idx == 0)
+            if layer_name == "Attention":
+                kwargs["global_att_max"] = global_att_max
                 if layer_idx == 0:
-                    plot_empty_img(
-                        axs[row_idx],
-                        color=PLOTTING_PARAMS["Attention"]["background_color"],
-                    )
-
-                ATTENTION = row_dict["Attention"]
-
-                plot_Attention(
-                    axs[row_idx], ATTENTION, slice_indexes, PLOTTING_PARAMS, global_att_max
-                )
-
-            elif layer_name == "RTSTRUCT":
-                RTSTRUCT = row_dict["RTSTRUCT"]
-                PLOTTING_PARAMS["RTSTRUCT"]["min_val"] = 0
-                PLOTTING_PARAMS["RTSTRUCT"]["max_val"] = RTSTRUCT.max()
-
-                rtstruct_is_background = True if layer_idx == 0 else False
-                plot_RTSTRUCT(
-                    axs[row_idx],
-                    RTSTRUCT,
-                    slice_indexes,
-                    PLOTTING_PARAMS,
-                    is_background=rtstruct_is_background,
-                )
+                    MODALITY_PLOTTERS["Empty"].plot(axs[row_idx], None, None, params, color=params["background_color"])
+            plotter.plot(axs[row_idx], row_dict[layer_name], slice_indexes, params, **kwargs)
 
         make_row_colorbar(
             fig,
             row_ax=axs[row_idx],
             num_slices=slice_count,
-            colorbar_layer_name=colorbar_layer_name,
-            HNC_plotting_params=PLOTTING_PARAMS,
+            layer_name=colorbar_layer_name,
+            params=PLOTTING_PARAMS,
             RTcmap=RT_region,
             global_att_max=global_att_max,
         )
 
-    # Only show axes at the outer edges
     for i in range(row_count):
         for j in range(slice_count):
             axs[i][j].set_aspect("equal")
             if i != row_count - 1:
                 axs[i][j].xaxis.set_visible(False)
-            # else:
-            #    axs[i][j].xaxis.set_ticks([0,100])  # NOTE: can correct the ticks here!
             if j != 0:
                 axs[i][j].yaxis.set_visible(False)
-            # else:
-            #    axs[i][j].yaxis.set_ticks([0,100])
 
-    # Add titles to each row
     for i, ax in enumerate(axs):
         ax[0].annotate(
             row_dicts[i]["Label"],

@@ -62,9 +62,6 @@ class NegativeLogLikelihood(nn.Module):
         batch_size, num_tasks = risk_pred.shape
         assert num_tasks == self.num_tasks, "Mismatch in number of tasks"
 
-        # NOTE: TEMP
-        risk_pred = self.sigmoid(risk_pred)  # Apply sigmoid activation to risk predictions
-
         zero_tensor = torch.tensor(0.0, device=risk_pred.device, dtype=risk_pred.dtype)
         #total_loss = zero_tensor
         loss_dict = {event : zero_tensor for event in self.events_endpoint_list}

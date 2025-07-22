@@ -43,7 +43,7 @@ def load_model(config, model):
 
     # Log and Save
     logging.info(f'Loading model from {fileLocation}')
-    model.load_state_dict(torch.load(fileLocation))
+    model.load_state_dict(torch.load(fileLocation, weights_only=True))
     return model
 
 

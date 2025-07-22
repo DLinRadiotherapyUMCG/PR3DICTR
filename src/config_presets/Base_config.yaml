@@ -103,11 +103,11 @@ data:
       num_replace_workers: 4           # number of workers to replace cache with
 
   preprocessing:
-    isEnabled: false                   # whether or not preprocessing steps should be applied to the image data files
+    isEnabled: true                   # whether or not preprocessing steps should be applied to the image data files
     crop: true                         # if the image files need cropping
     crop_shape: [96, 96, 96]           # dimension to crop to
-    needs_scaling: ["ct", "rtdose", 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
-    needs_label_mapping: ["segmentation_map"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
+    needs_scaling: ["ct", "rtdose", 'pet', 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
+    needs_label_mapping: ["segmentation_map", "gtv_total"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
     ct: 
       a_min: -200            # lowest range to clip from
       a_max: 400             # highest range to clip from
@@ -125,9 +125,17 @@ data:
       a_max: 12345
       b_min: 0
       b_max: 1
+      clip: true
+    pet:             # example of how to scale a PET image
+      a_min: 0
+      a_max: 25      # SUV units
+      b_min: 0
+      b_max: 1
+      clip: true
     segmentation_map:      # value encoding of the structures in `segmentation_map.npy`, before feeding to model (set to 0 if don't want to include that structure)
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
-
+    gtv_total:
+      target_labels: [0.0, 1.0]  # target labels for the GTV total segmentation map (0 = no GTV, 1 = GTV present)
   kFolds:
     n_splits: 5           # the number of data splits to make
     n_iterations: 5       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
@@ -141,7 +149,7 @@ data:
     resamplingDirection: 'over'   # ['over', 'under']  
 
   augmentation:
-    isEnabled: true      # whether or not to apply random augmention during training
+    isEnabled: false      # whether or not to apply random augmention during training
     prob: 0.5            # probability of applying each augmentation (flip is always 0.5)
     list:
       flip:
@@ -213,7 +221,7 @@ evaluation:
   visualisations: 
     list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve', 'kaplan_meier'] # which plots to save per fold
     n_bins: 10            # nunber of bins to use in the calibration and reliability plot
-    kaplan_meier_max_timepoint: 1825  # maximum time point to show in the Kaplan-Meier plot
+    kaplan_meier_max_timepoint: 60  # maximum time point to show in the Kaplan-Meier plot
 
 hyperparam_tuning:
   WandB:

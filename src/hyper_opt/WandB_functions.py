@@ -24,7 +24,8 @@ def login(config: dict) -> None:
     """ 
     if is_WandB_enabled(config):
         # Login with account
-        wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])            
+        wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])   
+        wandb.Settings(quiet=True)  # Suppress WandB output    
     return
 
 
@@ -34,7 +35,7 @@ def stop_WandB_trial(config: dict) -> None:
     Finishes a WandB run (e.g. a trial).
     """
     if is_WandB_enabled(config):
-        wandb.finish(quiet=True)
+        wandb.finish()
 
 
 
