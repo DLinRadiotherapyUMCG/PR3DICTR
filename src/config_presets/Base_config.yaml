@@ -52,7 +52,7 @@ model:
     cls_merge_image_features: False # i the output of the ViT should be the CLS token and the mean of the image tokens (if false, only the CLS token is used)
     cls_per_class_weighting: False  # aply an alpha per class to the CLS token
     vit_patch_size: [1,1,1]       # size of the feature map patches
-    vit_dim: 768                  
+    vit_dim: 768                                
     vit_depth: 12            
     vit_heads: 12
     vit_mlp_dim: 1024
@@ -255,7 +255,7 @@ uncertainty:
     n_models: 10
   MC_dropout:
     n_forward_passes: 10          # number of forward passes to perform for each model in the ensemble
-    dropout_p: 0.1                # dropout probability to use during inference (if not specified, uses the model's default dropout_p)
+    dropout_p: 0.2                # dropout probability to use during inference (if not specified, uses the model's default dropout_p)
     #use_batchnorm: True            # whether to use batchnorm layers in the model (if False, uses dropout instead)
     #n_forward_passes_per_model: 10 # number of forward passes per model in the ensemble, if using '
   TTA:

@@ -37,6 +37,11 @@ def train_MC_dropout_model(config):
     """
     Make the dataset and dataloader for uncertainty experiments.
     """
+
+    # set dropout probability for MC dropout
+    config['model']['dropout_p'] = config['uncertainty']['MC_dropout']['dropout_p'] 
+    config['model']['TransRP']['vit_dropout_p'] = config['uncertainty']['MC_dropout']['dropout_p']  # set the dropout probability for the TransRP model
+
     labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
     # config['saving']['label_column_names'] = labelManager.label_names_full_list
     

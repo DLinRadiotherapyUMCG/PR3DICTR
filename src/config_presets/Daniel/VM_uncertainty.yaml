@@ -1,3 +1,12 @@
+general:
+  experiment_name: MC Dropout
+  firstRun: false
+  region: HNC
+  resultsCurrentDirectory: 0
+  seed: 42
+  testMode: False
+  trialNumber: Dysphagia_1
+  use_test_set: false
 
 uncertainty:
   seed: 42                        # random seed for uncertainty estimation
@@ -41,7 +50,7 @@ data:
         isEnabled: true
         max: 15
     mixup:
-      alpha: 0.5
+      alpha: 0.2
       isEnabled: false
     prob: 0.5
   dataloader:
@@ -72,8 +81,8 @@ data:
     crop: true
     crop_shape:
     - 96
-    - 192
-    - 192
+    - 96
+    - 96
     ct:
       a_max: 400
       a_min: -200
@@ -81,11 +90,6 @@ data:
       b_min: 0
       clip: true
     isEnabled: true
-    mri:
-      a_max: 12345
-      a_min: 0
-      b_max: 1
-      b_min: 0
     needs_label_mapping:
     - segmentation_map
     needs_scaling:
@@ -119,13 +123,11 @@ data:
       - 1.0
   source: PRIMA
   stratify_on:
-  - Aspiration_M06
   - Dysphagia_M06
-  - Sticky_M06
-  - Taste_M06
-  - Xerostomia_M06
 evaluation:
-  main_metric: AUC
+  main_metric: 
+    Binary: "AUC"  
+    Event: "C-index"
   metrics:
     calibration_bins: 10
     threshold: YoudenJ
@@ -140,15 +142,7 @@ evaluation:
     - calibration
     - reliability
     n_bins: 10
-general:
-  experiment_name: MC Dropout
-  firstRun: false
-  region: HNC
-  resultsCurrentDirectory: 0
-  seed: 42
-  testMode: False
-  trialNumber: Dysphagia_1
-  use_test_set: false
+
 hyperparam_tuning:
   WandB:
     API_Key: c7f0f65fac8b7178ad7c5859ba6114775b16e694
@@ -383,11 +377,11 @@ model:
       - 1
   densenet:
     model_depth: 121
-  dropout_p: 0.2
+  dropout_p: 0.0
   efficientnetv2:
     use_bias: true
   linear_units:
-  - 128
+  - 256
   linear_units_endpoint: []
   lrelu_alpha: 0.01
   model_name: resnet
@@ -404,7 +398,7 @@ model:
   use_bias: true
 paths:
   csv: /home/macraedc/data/
-  images: /home/macraedc/data/dataset_full_renamed
+  images: /home/macraedc/data/dataset_full_2mm_anonymized
   results: /home/macraedc/rt_pred_results
 saving:
   best_model: true
@@ -443,10 +437,10 @@ training:
     reduction: none
   max_epochs: 200
   optimizer:
-    learning_rate: 0.0001
+    learning_rate: 0.001
     momentum: 0.8
-    name: Adam
-    weight_decay: 0.0
+    name: SGD
+    weight_decay: 0.00
   patience: 10
   scheduler:
     T_0: 40

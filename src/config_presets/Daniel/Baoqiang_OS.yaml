@@ -17,7 +17,7 @@ uncertainty:
     n_models: 10
   MC_dropout:
     n_forward_passes: 20          # number of forward passes to perform for each model in the ensemble
-    #dropout_p: 0.2 
+    dropout_p: 0.2
   TTA:
     n_forward_passes: 20
   dataset_split:
@@ -28,8 +28,10 @@ uncertainty:
 
 columns:
   clinical_features: ["Leeftijd", "PACK_YEARS", 'P16_Negative', 'P16_Positive', 'P16_Unknown', 'WHO_0', 'WHO_1', 'WHO_2', 'WHO_3', 'T_stage_0', 'T_stage_1', 'T_stage_2', 'T_stage_3', 'N_stage_0', 'N_stage_1', 'N_stage_2', 'N_stage_3', 'N_stage_4', 'N_stage_5']
+  #clinical_features: ["PACK_YEARS", 'T_stage_0', 'T_stage_1', 'T_stage_2', 'T_stage_3', 'N_stage_0', 'N_stage_1', 'N_stage_2', 'N_stage_3', 'N_stage_4', 'N_stage_5']
+
   # ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]
-  labels: ['LRC_2year_censored'] # ['OS'] # ['Xerostomia_M06', 'OS', "Dysphagia_M06"]
+  labels: ['OS_2year_censored'] # ['OS'] # ['Xerostomia_M06', 'OS', "Dysphagia_M06"]   # OS_2year_censored
   labels_types: ["Binary"] # ["Binary", "Event", "Binary"]
   #- Xerostomia_M06
 
@@ -55,7 +57,7 @@ data:
         isEnabled: true
         max: 15
     mixup:
-      alpha: 0.5
+      alpha: 0.1
       isEnabled: false
     prob: 0.5
   dataloader:
@@ -136,7 +138,7 @@ data:
     gtv_total:
       target_labels: [0.0, 1.0]
   source: UMCG
-  stratify_on: ['LRC_2year_censored']
+  stratify_on: ['OS_2year_censored']
 evaluation:
   main_metric: 
     Binary: "AUC"  
@@ -237,10 +239,10 @@ saving:
 training:
   gradient_accumulation_steps: 1
   GradNorm:
-    alpha: 0.5
+    alpha: 0.1
     isEnabled: false
     learning_rate: 0.001
-  batch_size: 8
+  batch_size: 4
   loss:
     ASL:
       gamma_neg: 4
@@ -257,8 +259,8 @@ training:
   optimizer:
     learning_rate: 0.0001
     momentum: 0.8
-    name: Adam
-    weight_decay: 0.01
+    name: SGD
+    weight_decay: 0.0
   patience: 10
   scheduler:
     T_0: 40

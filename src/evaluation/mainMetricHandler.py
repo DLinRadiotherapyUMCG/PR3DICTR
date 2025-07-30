@@ -56,7 +56,7 @@ class mainMetricHandler():
 
         weights = np.concatenate([mixup_lambda_list, [1 - x for x in  mixup_lambda_list]])
 
-        mean_metric_value, results_dict = calculate_metric_for_multiple_endpoints(self.config, y_pred, y_true, self.metric_function, sample_weights=weights)
+        mean_metric_value, results_dict = calculate_metric_for_multiple_endpoints(self.config, y_pred, y_true, self.metric_functions, sample_weights=weights)
 
         return mean_metric_value, results_dict
 
