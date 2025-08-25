@@ -16,7 +16,7 @@ from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.saving.saving_predictions import concatenate_predictions, save_predictions
 from src.utils.saving.create_results_directory import create_results_directory
 from src.utils.list_dicts import append_to_list_dicts
-
+from src.utils.data_equalizer import get_delimiter, label_equalizer
 from src.config_presets.tools.save_config import save_config
 from src.hyper_opt.WandB_functions import initialise_WandB_group, login, stop_WandB_trial
 from src.evaluation.mainMetricHandler import mainMetricHandler
@@ -106,6 +106,9 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
         # get the data split and make the dataloaders for this fold
         train_data, val_data = dataset_split_dict['train'], dataset_split_dict['val']
+        # perform over/undersampling of the training set here
+        if(config['data']['equalizer']['isEnabled']):
+            train_data = label_equalizer(train_data, config)
         train_loader, metadata = make_dataloader(config, train_data, train_transforms, validation_mode=False)
         val_loader, _ = make_dataloader(config, val_data, val_transforms, validation_mode=True)
 

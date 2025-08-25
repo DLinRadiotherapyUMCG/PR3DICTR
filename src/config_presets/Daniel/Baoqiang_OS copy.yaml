@@ -1,5 +1,5 @@
 general:
-  experiment_name: DATA_OPC_OS_2year_TEST
+  experiment_name: OPC_OS_2year
   firstRun: false
   region: HNC
   resultsCurrentDirectory: 0
@@ -14,7 +14,7 @@ uncertainty:
   method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
   metric: 12345
   deep_ensemble:
-    n_models: 20
+    n_models: 10
   MC_dropout:
     n_forward_passes: 20          # number of forward passes to perform for each model in the ensemble
     dropout_p: 0.2
@@ -69,9 +69,9 @@ data:
       num_replace_workers: 4
   dataset_csv: OPC_data.csv
   equalizer:
-    isEnabled: true
+    isEnabled: false
     ratio: 0.5
-    resamplingDirection: over
+    resamplingDirection: up
   excluded_values: []
   excluded_variable_name: []
   image_keys:
@@ -174,7 +174,7 @@ hyperparam_tuning:
     - val_mean_AUC
 model:
   TransRP:
-    clinical_features_method: m2
+    clinical_features_method: m3
     image_encoder: densenet
     vit_depth: 12
     vit_dim: 768
@@ -249,7 +249,7 @@ training:
       gamma_pos: 1
     BCE:
       pos_weight:
-      - 1
+      - 2
     focal:
       alpha: 0.25
       gamma: 2

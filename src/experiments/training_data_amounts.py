@@ -12,8 +12,7 @@ from src.experiments.experimentHandler import experimentHandler
 
 def run_dataset_amounts_experiment(config, experiment_name, trial_seeds, dataset_amounts, disable_data_augmentation=True):
     """
-    This function runs the an experiment using different combinations of endpoints removal experiment. It will retrain the model on the dataset with one of the inputs (CT, dose, segmentations, clinical features) removed.
-    Usage: It can be called from a main.py file, as long as you give it a config. It will then use the experimentHandler class to run the experiment.
+    
     """
 
     assert config['hyperparam_tuning']['optuna']['isEnabled'] == False, "This experiment is not compatible with hyperparameter tuning. Please set 'isEnabled' to False in the config file."

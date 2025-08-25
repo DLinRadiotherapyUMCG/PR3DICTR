@@ -28,7 +28,7 @@ from src.dataset.LabelTypesManager import LabelTypesManager
 
 
 
-def train_MC_dropout_model(config):
+def train_MC_dropout_model(config, UQ_method = "MC_dropout"):
 
     
 
@@ -46,56 +46,66 @@ def train_MC_dropout_model(config):
     # config['saving']['label_column_names'] = labelManager.label_names_full_list
     
     # Load the dataset and dataloader
-    train_loader, val_loader, test_loader, metadata = get_dataset_for_uncertainty_experiments(config)
+    train_loaders, val_loader, test_loader, metadata = get_dataset_for_uncertainty_experiments(config, UQ_method = "MC_dropout")
+
+    print(" LEN TRAIN LOADERS", len(train_loaders))
+    for train_loader_idx, train_loader in enumerate(train_loaders, start=1):
     
-    # get the loss function and metric handler
-    loss_function = get_loss_function(config, labelManager)
-    metricHandler = mainMetricHandler(config)  # class to compute the metrics per epoch
+        # get the loss function and metric handler
+        loss_function = get_loss_function(config, labelManager)
+        metricHandler = mainMetricHandler(config)  # class to compute the metrics per epoch
 
-    # train the model
-    # set the directory 
-    create_results_directory(config, folder_name=f"model_1")
+        # train the model
+        # set the directory 
+        KFoldIndex = train_loader_idx if config['general']['dataset_amounts_experiment'] else -1
+        folder_name = f"model_1"
+        create_results_directory(config, KFoldIndex=KFoldIndex, folder_name=folder_name, UQ_experiment=True)
 
-    logging.info(f'Training model')
-    initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=None)
+        logging.info(f'Training model')
+        initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=None)
 
-    # save the config file for this model
-    save_config(config)
+        # save the config file for this model
+        save_config(config)
 
-    logging.info('Getting model')
-    model = get_classification_model(config, metadata=metadata, save_summary=True)
-    model.to(device=DEVICE)
-    model = train(config, model, loss_function, train_loader, val_loader, metricHandler)
+        logging.info('Getting model')
+        model = get_classification_model(config, metadata=metadata, save_summary=True)
+        model.to(device=DEVICE)
+        model = train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
-    stop_WandB_trial(config)
-    """
-    Validate the model on all sets (train, val, test) and save the results and predictions.
-    """
-    logging.info('Validating model')
+        stop_WandB_trial(config)
+        """
+        Validate the model on all sets (train, val, test) and save the results and predictions.
+        """
+        logging.info('Validating model')
 
-    _, _, _, _, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
-    _, _, _, _, val_preds_dict,   val_targets_dict,   val_patientIDs_list   = validate(config, model, loss_function, val_loader, metricHandler)
-    _, _, _, _, test_preds_dict,  test_targets_dict,  test_patientIDs_list  = validate(config, model, loss_function, test_loader, metricHandler)
-    
-    # save predictions
-    all_patientIDs_list = train_patientIDs_list + val_patientIDs_list + test_patientIDs_list                 # IDs column
-    mode_list = ['train']*len(train_patientIDs_list) + ['val']*len(val_patientIDs_list) + ['test']*len(test_patientIDs_list)  # Mode column
-    all_preds_dict, all_targets_dict = concatenate_predictions(config, [train_preds_dict, val_preds_dict, test_preds_dict],  # concat the predictions and labels
-                                                                [train_targets_dict, val_targets_dict, test_targets_dict])
+        _, _, _, _, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
+        _, _, _, _, val_preds_dict,   val_targets_dict,   val_patientIDs_list   = validate(config, model, loss_function, val_loader, metricHandler)
+        _, _, _, _, test_preds_dict,  test_targets_dict,  test_patientIDs_list  = validate(config, model, loss_function, test_loader, metricHandler)
+        
+        # save predictions
+        all_patientIDs_list = train_patientIDs_list + val_patientIDs_list + test_patientIDs_list                 # IDs column
+        mode_list = ['train']*len(train_patientIDs_list) + ['val']*len(val_patientIDs_list) + ['test']*len(test_patientIDs_list)  # Mode column
+        all_preds_dict, all_targets_dict = concatenate_predictions(config, [train_preds_dict, val_preds_dict, test_preds_dict],  # concat the predictions and labels
+                                                                    [train_targets_dict, val_targets_dict, test_targets_dict])
 
-    # save all the predictions into one csv file
-    save_predictions(config, labelManager, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
+        # save all the predictions into one csv file
+        save_predictions(config, labelManager, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
 
-    # collect all metrics for this fold
-    sets_to_evaluate = ['train', 'val', 'test']
-    total_evaluation_current_fold(config, sets=sets_to_evaluate, external_set=False)
+        # collect all metrics for this fold
+        sets_to_evaluate = ['train', 'val', 'test']
+        total_evaluation_current_fold(config, sets=sets_to_evaluate, external_set=False)
 
-    # make the visualisations (plots) for this fold
-    get_visualizations(config, sets=sets_to_evaluate, pred_csv_dir=None, external_set=False)
+        # make the visualisations (plots) for this fold
+        get_visualizations(config, sets=sets_to_evaluate, pred_csv_dir=None, external_set=False)
 
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache() # clear the GPU memory
-    gc.collect()  # clear the CPU memory
+        experiment_dir = config['general']['resultsCurrentDirectory'] # os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'], f'model_{model_idx}')
+        collect_bayesian_forward_passes(config, experiment_dir, test_loader, metadata, UQ_method = 'MC_dropout')
+
+        del train_loader
+        
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache() # clear the GPU memory
+        gc.collect()  # clear the CPU memory
 
 
 from src.dataset.get_transforms import get_transforms
@@ -108,16 +118,9 @@ from itertools import chain
 
 
 
-# UQ_method = 'MC_dropout'  # default method for uncertainty quantification
-#             'TTA' # Test Time Augmentation, not implemented yet
 
-
-
-def collect_bayesian_forward_passes(config, UQ_method = 'MC_dropout'):
-
-    # labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
-    #config['saving']['label_column_names'] = labelManager.label_names_full_list
-
+def post_hoc_collect_bayesian_forward_passes(config, UQ_method = "MC_dropout"):
+    # MAKE TEST LOADER AND STUFF HERE
     # get the test set data and make a test dataloader
     df_train_val, df_test = load_dataset(config)
     train_transforms, val_transforms = get_transforms(config)
@@ -132,7 +135,18 @@ def collect_bayesian_forward_passes(config, UQ_method = 'MC_dropout'):
 
     test_loader, metadata = make_dataloader(config, df_test, transforms_method, validation_mode=True)
 
-    experiment_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'], 'model_1')
+    experiment_dir = config['general']['resultsCurrentDirectory'] # os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'], 'model_1')
+    #model_config = load_config(os.path.join(experiment_dir, config['saving']['filenames']['config_yaml']) )
+
+    collect_bayesian_forward_passes(config=config, experiment_dir=experiment_dir, UQ_method=UQ_method, test_loader=test_loader, metadata=metadata)
+
+
+def collect_bayesian_forward_passes(config, experiment_dir, test_loader, metadata, UQ_method = 'MC_dropout',):
+
+    # labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
+    #config['saving']['label_column_names'] = labelManager.label_names_full_list
+
+    
     model_config = load_config(os.path.join(experiment_dir, config['saving']['filenames']['config_yaml']) )
 
     # load in the model weights

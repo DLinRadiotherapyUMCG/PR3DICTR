@@ -1,6 +1,7 @@
 import csv
 import os
 from typing import Optional, List
+import logging
 
 import numpy as np
 import pandas as pd
@@ -23,6 +24,8 @@ def label_equalizer(df, config):
 
     ratio = config['data']['equalizer']['ratio']
     method = config['data']['equalizer']['resamplingDirection']
+
+    logging.info(f"Using label equaliser on training set. Direction = {method}, ratio = {ratio}")
 
     X = df[ptnVar].to_numpy()
     y = df[tox].to_numpy()
@@ -89,5 +92,7 @@ def label_equalizer(df, config):
         # Create new dataframe
         df_new = pd.DataFrame(rowsIncluded, columns=columnHeaders)
         return df_new
-    
-    
+
+    else:
+        raise ValueError(f"resamplingDirection must be 'over' or 'under'. Currently: {method}")
+

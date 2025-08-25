@@ -140,11 +140,14 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
     # Check and validate if KFolds settings are active
     k_fold_dataframes_collection = []
 
+    # print("CONFIG N_SPLITS", config["data"]["kFolds"]["n_splits"])
+
     # if the config dictates only 1 n_split, then just do a single train-val split (i.e. no K-fold cross-validation)
     if config["data"]["kFolds"]["n_splits"] == 1:
         logging.warning("WARNING: K-Fold cross-validation is set to 1 split. This is equivalent to a single train-val split.")
         
         train_i_df, val_i_df = generate_single_train_val_split(config, df_development_set)
+                
         k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
         #return [generate_single_train_val_split(config, df_development_set)]
     
@@ -169,13 +172,9 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
             train_i_df = df_development_set.iloc[train_index]
             val_i_df   = df_development_set.iloc[val_index]
 
-            #trainDf_sel = mergeDf.iloc[train_index]
-            if(config['data']['equalizer']['isEnabled']):
-                train_i_df = label_equalizer(train_i_df, config)
-            
-            # TODO: subsampling here !!
             assert not PtnID_SanityCheck(config, train_i_df, val_i_df)
 
+            
             k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
 
     

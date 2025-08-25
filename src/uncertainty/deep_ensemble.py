@@ -43,7 +43,7 @@ def train_deep_ensemble_models(config):
     labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
     
     # Load the dataset and dataloader
-    train_loader, val_loader, test_loader, metadata = get_dataset_for_uncertainty_experiments(config)
+    train_loaders, val_loader, test_loader, metadata = get_dataset_for_uncertainty_experiments(config)
     
     # get the loss function and metric handler
     loss_function = get_loss_function(config, labelManager)
@@ -59,66 +59,85 @@ def train_deep_ensemble_models(config):
     # generate a random seed for each model
     seeds = [np.random.randint(0, 10000) for _ in range(n_models)]
 
-    for model_idx in range(1, n_models + 1):
-        set_random_seed(seeds[model_idx - 1])  # Set the random seed for each model
+    print(" LEN TRAIN LOADERS", len(train_loaders))
 
-        # set the directory for this model
-        create_results_directory(config, folder_name=f"model_{model_idx}")
+    for train_loader_idx, train_loader in enumerate(train_loaders, start=1):
 
-        logging.info(f'Fold {model_idx}/{n_models}')
-        initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=None)
+        for model_idx in range(1, n_models + 1):
+            set_random_seed(seeds[model_idx - 1])  # Set the random seed for each model
 
-        # save the config file for this model
-        save_config(config)
+            # set the directory for this model
+            KFoldIndex = train_loader_idx if config['general']['dataset_amounts_experiment'] else -1
+            create_results_directory(config, KFoldIndex=KFoldIndex,  folder_name=f"model_{model_idx}", UQ_experiment=True)
 
-        logging.info('Getting model')
-        model = get_classification_model(config, metadata=metadata, save_summary=True)
-        model.to(device=DEVICE)
-        model = train(config, model, loss_function, train_loader, val_loader, metricHandler)
+            logging.info(f'Fold {model_idx}/{n_models}')
+            initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=None)
 
-        stop_WandB_trial(config)
-        """
-        Validate the model on all sets (train, val, test) and save the results and predictions.
-        """
-        logging.info('Validating model')
+            # save the config file for this model
+            save_config(config)
 
-        _, _, _, _, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
-        _, _, _, _, val_preds_dict,   val_targets_dict,   val_patientIDs_list   = validate(config, model, loss_function, val_loader, metricHandler)
-        _, _, _, _, test_preds_dict,  test_targets_dict,  test_patientIDs_list  = validate(config, model, loss_function, test_loader, metricHandler)
-        
-        # save predictions
-        all_patientIDs_list = train_patientIDs_list + val_patientIDs_list + test_patientIDs_list                 # IDs column
-        mode_list = ['train']*len(train_patientIDs_list) + ['val']*len(val_patientIDs_list) + ['test']*len(test_patientIDs_list)  # Mode column
-        
-        all_preds_dict, all_targets_dict = concatenate_predictions(config, [train_preds_dict, val_preds_dict, test_preds_dict],  # concat the predictions and labels
-                                                                   [train_targets_dict, val_targets_dict, test_targets_dict])
+            logging.info('Getting model')
+            model = get_classification_model(config, metadata=metadata, save_summary=True)
+            model.to(device=DEVICE)
+            model = train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
-        # save all the predictions into one csv file
-        save_predictions(config, labelManager, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
+            stop_WandB_trial(config)
+            """
+            Validate the model on all sets (train, val, test) and save the results and predictions.
+            """
+            logging.info('Validating model')
 
-        # collect all metrics for this fold
-        sets_to_evaluate = ['train', 'val', 'test']
-        total_evaluation_current_fold(config, sets=sets_to_evaluate, external_set=False)
+            _, _, _, _, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
+            _, _, _, _, val_preds_dict,   val_targets_dict,   val_patientIDs_list   = validate(config, model, loss_function, val_loader, metricHandler)
+            _, _, _, _, test_preds_dict,  test_targets_dict,  test_patientIDs_list  = validate(config, model, loss_function, test_loader, metricHandler)
+            
+            # save predictions
+            all_patientIDs_list = train_patientIDs_list + val_patientIDs_list + test_patientIDs_list                 # IDs column
+            mode_list = ['train']*len(train_patientIDs_list) + ['val']*len(val_patientIDs_list) + ['test']*len(test_patientIDs_list)  # Mode column
+            
+            all_preds_dict, all_targets_dict = concatenate_predictions(config, [train_preds_dict, val_preds_dict, test_preds_dict],  # concat the predictions and labels
+                                                                    [train_targets_dict, val_targets_dict, test_targets_dict])
 
-        # make the visualisations (plots) for this fold
-        get_visualizations(config, sets=sets_to_evaluate, pred_csv_dir=None, external_set=False)
+            # save all the predictions into one csv file
+            save_predictions(config, labelManager, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
 
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache() # clear the GPU memory
-        gc.collect()  # clear the CPU memory
+            # collect all metrics for this fold
+            sets_to_evaluate = ['train', 'val', 'test']
+            total_evaluation_current_fold(config, sets=sets_to_evaluate, external_set=False)
+
+            # make the visualisations (plots) for this fold
+            get_visualizations(config, sets=sets_to_evaluate, pred_csv_dir=None, external_set=False)
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache() # clear the GPU memory
+            gc.collect()  # clear the CPU memory
 
 
-    logging.info('Deep ensemble training complete!')
+
+        logging.info('Deep ensemble training complete!')
+
+        logging.info('Evaluating deep ensemble models')
+        experiment_dir = config['general']['resultsCurrentDirectory']
+        print("ONE", experiment_dir)
+        experiment_dir = os.path.dirname(experiment_dir)
+        print("TWO", experiment_dir)
+        evaluate_deep_ensemble_models(config, experiment_dir)
 
 
 
+def post_hoc_evaluate_deep_ensemble_models(config, experiment_dir):
+    pass
 
-def evaluate_deep_ensemble_models(config):
+def evaluate_deep_ensemble_models(config, experiment_dir):
     """
     Evaluate the deep ensemble models.
     """
-    logging.info('Evaluating deep ensemble models')
-    experiment_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
+    #logging.info('Evaluating deep ensemble models')
+    #experiment_dir = config['general']['resultsCurrentDirectory'] # os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
+    #print("EXPERIMENT DIR", experiment_dir)
+    
+    print("EXPERIMENT DIR", experiment_dir)
+    print(os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']))
     endpoint_list = config['columns']['labels']  # the endpoints to evaluate
 
     prediction_columns = [x+'_pred' for x in endpoint_list]  # the columns in the predictions csv file
