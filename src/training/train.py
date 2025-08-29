@@ -176,6 +176,8 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             elif config['training']['scheduler']['name'] in ['cyclic']:
                 scheduler.step()
 
+           
+
         if config['data']['dataloader']['dataset_type'] == 'smartcache':
             # update the cache
             train_loader.dataset.update_cache()
@@ -245,7 +247,10 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         logging.info(f'  Epoch duration = {(time.time() - start_epoch_time):.2f} seconds')
         
         # log this epoch's results to WandB
-        WandB_log(config, results_log, epoch = epoch_num)               
+        WandB_log(config, results_log, epoch = epoch_num)  
+
+        # del val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, results_log, best_log_dict
+        # torch.cuda.empty_cache()             
 
 
     # Load the best model, and return it

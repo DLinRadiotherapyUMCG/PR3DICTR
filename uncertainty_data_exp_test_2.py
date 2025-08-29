@@ -34,7 +34,7 @@ if __name__ == '__main__':
     
     
     # ["Geslacht", "Leeftijd", "Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4"]
-    config['general']['trialNumber'] = "Xero1"  # Set the trial number for the experiment
+    config['general']['trialNumber'] = "Xerostomia_1"  # Set the trial number for the experiment
     config['general']['dataset_amounts_experiment'] = True
 
     config['columns']['labels'] = ["Xerostomia_M06"]  # Set the label for TTA
@@ -42,9 +42,9 @@ if __name__ == '__main__':
     
     config['data']['n_training_patients_list'] = [100, 200, 300, 400, 500, 600, 700, 800]
 
-    config['training']['max_epochs'] = 1
-    config['uncertainty']['deep_ensemble']['n_models'] = 2
-    config['uncertainty']['MC_dropout']['n_forward_passes'] = 10
+    #config['training']['max_epochs'] = 1
+    config['uncertainty']['deep_ensemble']['n_models'] = 5
+    #config['uncertainty']['MC_dropout']['n_forward_passes'] = 10
 
 
     #config['columns']['clinical_features'] = []
@@ -54,18 +54,18 @@ if __name__ == '__main__':
 
     #config['data']['image_keys'] = [        "ct"    ]
 
-    config['general']['experiment_name'] = "DATA MC Dropout" 
-    train_MC_dropout_model(config, UQ_method="MC_dropout")
-    #collect_bayesian_forward_passes(config, UQ_method="MC_dropout") # UQ_method='TTA')
+    # config['general']['experiment_name'] = "DATA MC Dropout" 
+    # train_MC_dropout_model(config, UQ_method="MC_dropout")
+    # # # collect_bayesian_forward_passes(config, UQ_method="MC_dropout") # UQ_method='TTA')
     
-    # config['general']['experiment_name'] = "TTA" 
-    # train_MC_dropout_model(config)
-    # collect_bayesian_forward_passes(config, UQ_method='TTA')
-    
-    
-    # config['general']['experiment_name'] = "DATA Deep Ensemble NORMAL"   
-    # train_deep_ensemble_models(config)
-    # evaluate_deep_ensemble_models(config)
+    #config['general']['experiment_name'] = "DATA TTA" 
+    #train_MC_dropout_model(config, UQ_method='TTA')
+    # # # collect_bayesian_forward_passes(config, UQ_method='TTA')
+
+
+    config['general']['experiment_name'] = "DATA Deep Ensemble"   
+    train_deep_ensemble_models(config)
+    # # # evaluate_deep_ensemble_models(config)
     
 
 

@@ -43,18 +43,29 @@ def train_MC_dropout_model(config, UQ_method = "MC_dropout"):
     config['model']['TransRP']['vit_dropout_p'] = config['uncertainty']['MC_dropout']['dropout_p']  # set the dropout probability for the TransRP model
 
     labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
+    # get the loss function and metric handler
+    loss_function = get_loss_function(config, labelManager)
+    metricHandler = mainMetricHandler(config)  # class to compute the metrics per epoch
     # config['saving']['label_column_names'] = labelManager.label_names_full_list
     
     # Load the dataset and dataloader
-    train_loaders, val_loader, test_loader, metadata = get_dataset_for_uncertainty_experiments(config, UQ_method = "MC_dropout")
+    #train_loaders, val_loader, test_loader, metadata
+    df_train_list, df_val, df_test = get_dataset_for_uncertainty_experiments(config, UQ_method = UQ_method)
+    train_transforms, val_transforms = get_transforms(config)
+    test_set_transforms = val_transforms if UQ_method != "TTA" else train_transforms
 
-    print(" LEN TRAIN LOADERS", len(train_loaders))
-    for train_loader_idx, train_loader in enumerate(train_loaders, start=1):
+    val_loader, _ = make_dataloader(config, df_val, val_transforms, validation_mode=True)  
+    test_loader, _ = make_dataloader(config, df_test, test_set_transforms, validation_mode=True)
+
+    print(" LEN TRAIN LOADERS", len(df_train_list))
+    for train_loader_idx, df_train in enumerate(df_train_list, start=1):
+
+        
+        train_loader, metadata = make_dataloader(config, df_train, train_transforms, validation_mode=False)
+
+        print(len(df_train))
+        print(metadata)
     
-        # get the loss function and metric handler
-        loss_function = get_loss_function(config, labelManager)
-        metricHandler = mainMetricHandler(config)  # class to compute the metrics per epoch
-
         # train the model
         # set the directory 
         KFoldIndex = train_loader_idx if config['general']['dataset_amounts_experiment'] else -1
@@ -101,11 +112,17 @@ def train_MC_dropout_model(config, UQ_method = "MC_dropout"):
         experiment_dir = config['general']['resultsCurrentDirectory'] # os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'], f'model_{model_idx}')
         collect_bayesian_forward_passes(config, experiment_dir, test_loader, metadata, UQ_method = 'MC_dropout')
 
+        del train_loader.dataset
         del train_loader
-        
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache() # clear the GPU memory
-        gc.collect()  # clear the CPU memory
+        model.to('cpu')
+        del model
+
+        # Explicitly delete any remaining references and clear CUDA cache
+        for obj_name in ['train_loader', 'metadata', 'loss_function', 'metricHandler']:
+            if obj_name in locals():
+                del locals()[obj_name]
+        torch.cuda.empty_cache()
+        gc.collect()
 
 
 from src.dataset.get_transforms import get_transforms
@@ -141,6 +158,9 @@ def post_hoc_collect_bayesian_forward_passes(config, UQ_method = "MC_dropout"):
     collect_bayesian_forward_passes(config=config, experiment_dir=experiment_dir, UQ_method=UQ_method, test_loader=test_loader, metadata=metadata)
 
 
+
+
+
 def collect_bayesian_forward_passes(config, experiment_dir, test_loader, metadata, UQ_method = 'MC_dropout',):
 
     # labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
@@ -151,7 +171,7 @@ def collect_bayesian_forward_passes(config, experiment_dir, test_loader, metadat
 
     # load in the model weights
     model = get_classification_model(config, metadata=metadata, save_summary=False)
-    model.cuda()
+    model.to(DEVICE)
     model = load_model(model_config, model) # load the saved weights
     enable_MC_dropout = True if UQ_method == 'MC_dropout' else False  # enable dropout at inference tme if the UQ method is MC dropout
 
@@ -217,9 +237,7 @@ def collect_bayesian_forward_passes(config, experiment_dir, test_loader, metadat
     
     df_mean_predictions.to_csv(os.path.join(experiment_dir, config['uncertainty']['filenames']['mean_predictions_filename'] ), sep=';', index=True)
 
-
-
-
+    del model, df_mean_predictions, DF_ALL_PREDS
 
 
 

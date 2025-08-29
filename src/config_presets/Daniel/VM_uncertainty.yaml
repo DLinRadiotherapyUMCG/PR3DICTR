@@ -56,7 +56,7 @@ data:
   dataloader:
     dataloader_type: standard
     dataset_type: cache
-    num_workers: 16
+    num_workers: 12
     smartcache:
       cache_rate: 0.5
       num_replace_workers: 4

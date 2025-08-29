@@ -28,6 +28,8 @@ from src.uncertainty.utils.prediction_files import make_mean_predictions_datafra
 from src.dataset.LabelTypesManager import LabelTypesManager
 
 
+from src.dataset.get_transforms import get_transforms
+from src.dataset.get_dataloader import make_dataloader   
 
 
 def train_deep_ensemble_models(config):
@@ -43,8 +45,12 @@ def train_deep_ensemble_models(config):
     labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
     
     # Load the dataset and dataloader
-    train_loaders, val_loader, test_loader, metadata = get_dataset_for_uncertainty_experiments(config)
-    
+    train_datasets_list, df_val, df_test = get_dataset_for_uncertainty_experiments(config)
+    train_transforms, val_transforms = get_transforms(config)
+
+    val_loader, _ = make_dataloader(config, df_val, val_transforms, validation_mode=True)
+    test_loader, _ = make_dataloader(config, df_test, val_transforms, validation_mode=True)
+
     # get the loss function and metric handler
     loss_function = get_loss_function(config, labelManager)
     metricHandler = mainMetricHandler(config)  # class to compute the metrics per epoch
@@ -57,14 +63,15 @@ def train_deep_ensemble_models(config):
 
     n_models = config['uncertainty']['deep_ensemble']['n_models']
     # generate a random seed for each model
-    seeds = [np.random.randint(0, 10000) for _ in range(n_models)]
+    seeds_list = [np.random.randint(0, 10000) for _ in range(n_models)]
 
-    print(" LEN TRAIN LOADERS", len(train_loaders))
 
-    for train_loader_idx, train_loader in enumerate(train_loaders, start=1):
+    for train_loader_idx, train_dataset in enumerate(train_datasets_list, start=1):
+
+        train_loader, metadata = make_dataloader(config, train_dataset, train_transforms, validation_mode=False)
 
         for model_idx in range(1, n_models + 1):
-            set_random_seed(seeds[model_idx - 1])  # Set the random seed for each model
+            set_random_seed(seeds_list[model_idx - 1])  # Set the random seed for each model
 
             # set the directory for this model
             KFoldIndex = train_loader_idx if config['general']['dataset_amounts_experiment'] else -1
@@ -108,19 +115,18 @@ def train_deep_ensemble_models(config):
             # make the visualisations (plots) for this fold
             get_visualizations(config, sets=sets_to_evaluate, pred_csv_dir=None, external_set=False)
 
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache() # clear the GPU memory
-            gc.collect()  # clear the CPU memory
-
-
-
         logging.info('Deep ensemble training complete!')
+
+        # delete the dataloader and clear cache
+        del train_loader
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache() # clear the GPU memory
+        gc.collect()  # clear the CPU memory
+
 
         logging.info('Evaluating deep ensemble models')
         experiment_dir = config['general']['resultsCurrentDirectory']
-        print("ONE", experiment_dir)
-        experiment_dir = os.path.dirname(experiment_dir)
-        print("TWO", experiment_dir)
+        experiment_dir = os.path.dirname(experiment_dir)  # remove "/model_N" subfolder
         evaluate_deep_ensemble_models(config, experiment_dir)
 
 

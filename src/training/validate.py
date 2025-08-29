@@ -43,16 +43,17 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
     
     with torch.no_grad():
         for i, batch in enumerate(val_loader):
-                logging.debug(f'Validation batch {i}')
-                inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+            logging.debug(f'Validation batch {i}')
+            inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
 
-                outputs = model(x=inputs, features=clinical_features)
-                
-                # collect all predictions and labels for each label type
-                preds_dict, labels_dict = collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, targets, outputs)
-                
-                all_targets = torch.cat([all_targets, targets], dim=0) if len(all_targets) > 0 else targets
-                patientIDs_list += list(batch['patient_id'])
+            outputs = model(x=inputs, features=clinical_features)
+            
+            # collect all predictions and labels for each label type
+            preds_dict, labels_dict = collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, targets, outputs)
+
+            all_targets = torch.cat([all_targets, targets.detach()], dim=0) if len(all_targets) > 0 else targets.detach()
+            patientIDs_list += list(batch['patient_id'])
+
         
     # for validation, we can calculate the loss just once at the end (instead of for each batch)
     avg_loss, total_loss_dict = loss_function(preds_dict, all_targets)
@@ -70,6 +71,7 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
     mean_metric_value, metric_dict = metric_handler.calculate_metric(preds_dict, labels_dict)
 
     # avg_loss = total_loss / num_batches
+    del outputs, all_targets
 
     return avg_loss, total_loss_dict, mean_metric_value, metric_dict, preds_dict, labels_dict, patientIDs_list
 

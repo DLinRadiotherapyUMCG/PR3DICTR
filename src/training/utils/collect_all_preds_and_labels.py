@@ -5,9 +5,6 @@ def collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, t
     sigmoid_act = torch.nn.Sigmoid()
     identity_act = torch.nn.Identity()
 
-    # NOTE: TEMP
-    identity_act = torch.nn.Sigmoid()
-
     targets_idx = 0
 
     for lab_idx, label in enumerate(labels):
@@ -18,7 +15,7 @@ def collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, t
             targets_idx += 1
                     
         elif label_types[lab_idx] == 'Event':
-                        # If the label is an event, we need to reshape the predictions and targets
+            # If the label is an event, we need to reshape the predictions and targets
             endpoint_preds = identity_act(outputs[label])
             endpoint_labels = targets[:, targets_idx:targets_idx+2] #  Get both event and days labels
             
@@ -26,10 +23,10 @@ def collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, t
 
         # collect all of the predictions and labels 
         if len(preds_dict[label]) == 0:
-            preds_dict[label] = endpoint_preds
-            labels_dict[label] = endpoint_labels
+            preds_dict[label] = endpoint_preds.detach()
+            labels_dict[label] = endpoint_labels.detach()
         else:
-            preds_dict[label] = torch.cat([preds_dict[label], endpoint_preds], dim=0)
-            labels_dict[label] = torch.cat([labels_dict[label], endpoint_labels], dim=0)
-        
+            preds_dict[label] = torch.cat([preds_dict[label], endpoint_preds.detach()], dim=0)
+            labels_dict[label] = torch.cat([labels_dict[label], endpoint_labels.detach()], dim=0)
+
     return preds_dict, labels_dict
