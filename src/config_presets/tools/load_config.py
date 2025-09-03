@@ -17,7 +17,7 @@ def load_config(name, pathGiven = ""):
     if pathGiven == "":
         config_path = os.path.join("src", "config_presets", name) 
     else:
-        config_path = os.path.join(pathGiven, "src", "config_presets", name)     
+        config_path = os.path.join(pathGiven, "src", "config_presets", name) 
 
     # Check if the config file exists
     if not os.path.exists(config_path):

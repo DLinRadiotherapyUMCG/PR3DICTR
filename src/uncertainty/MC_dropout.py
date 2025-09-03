@@ -41,7 +41,7 @@ def train_MC_dropout_model(config, UQ_method = "MC_dropout"):
     # set dropout probability for MC dropout
     config['model']['dropout_p'] = config['uncertainty']['MC_dropout']['dropout_p'] 
     config['model']['TransRP']['vit_dropout_p'] = config['uncertainty']['MC_dropout']['dropout_p']  # set the dropout probability for the TransRP model
-
+    
     labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
     # get the loss function and metric handler
     loss_function = get_loss_function(config, labelManager)
@@ -50,7 +50,7 @@ def train_MC_dropout_model(config, UQ_method = "MC_dropout"):
     
     # Load the dataset and dataloader
     #train_loaders, val_loader, test_loader, metadata
-    df_train_list, df_val, df_test = get_dataset_for_uncertainty_experiments(config, UQ_method = UQ_method)
+    df_train_list, df_val, df_test = get_dataset_for_uncertainty_experiments(config)
     train_transforms, val_transforms = get_transforms(config)
     test_set_transforms = val_transforms if UQ_method != "TTA" else train_transforms
 

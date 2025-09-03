@@ -34,16 +34,20 @@ if __name__ == '__main__':
     
     
     # ["Geslacht", "Leeftijd", "Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4"]
-    config['general']['trialNumber'] = "Xerostomia_1"  # Set the trial number for the experiment
+    config['general']['trialNumber'] = "Dysphagia_1"  # Set the trial number for the experiment
     config['general']['dataset_amounts_experiment'] = True
 
-    config['columns']['labels'] = ["Xerostomia_M06"]  # Set the label for TTA
-    config['columns']['clinical_features'] = ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]
+    # config['columns']['labels'] = ["Xerostomia_M06"]  # Set the label for TTA
+    # config['columns']['clinical_features'] = ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]
     
     config['data']['n_training_patients_list'] = [100, 200, 300, 400, 500, 600, 700, 800]
 
     #config['training']['max_epochs'] = 1
     config['uncertainty']['deep_ensemble']['n_models'] = 5
+
+    from src.dataset.LabelTypesManager import LabelTypesManager
+    labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
+    config['saving']['label_column_names'] = labelManager.label_names_full_list
     #config['uncertainty']['MC_dropout']['n_forward_passes'] = 10
 
 
@@ -54,12 +58,12 @@ if __name__ == '__main__':
 
     #config['data']['image_keys'] = [        "ct"    ]
 
-    # config['general']['experiment_name'] = "DATA MC Dropout" 
-    # train_MC_dropout_model(config, UQ_method="MC_dropout")
+    config['general']['experiment_name'] = "DATA MC Dropout" 
+    train_MC_dropout_model(config, UQ_method="MC_dropout")
     # # # collect_bayesian_forward_passes(config, UQ_method="MC_dropout") # UQ_method='TTA')
     
-    #config['general']['experiment_name'] = "DATA TTA" 
-    #train_MC_dropout_model(config, UQ_method='TTA')
+    config['general']['experiment_name'] = "DATA TTA" 
+    train_MC_dropout_model(config, UQ_method='TTA')
     # # # collect_bayesian_forward_passes(config, UQ_method='TTA')
 
 

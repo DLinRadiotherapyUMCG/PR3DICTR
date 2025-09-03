@@ -16,7 +16,7 @@ uncertainty:
     n_models: 10
   MC_dropout:
     n_forward_passes: 20          # number of forward passes to perform for each model in the ensemble
-    #dropout_p: 0.2 
+    dropout_p: 0.2 
   TTA:
     n_forward_passes: 20
   dataset_split:
@@ -29,30 +29,9 @@ columns:
   
   labels: ["Dysphagia_M06"]           # the endpoints the model is (going to be) trained on (list)
   labels_types: ["Binary"]
+
 data:
-  augmentation:
-    isEnabled: true
-    list:
-      affine:
-        isEnabled: true
-        scale_max: 0.02
-        translate_max: 6
-        z_scale: -0.2
-      flip:
-        isEnabled: true
-      noise:
-        isEnabled: true
-        mean: 0
-        std: 0.01
-      random_crop:
-        isEnabled: true
-      rotate:
-        isEnabled: true
-        max: 15
-    mixup:
-      alpha: 0.2
-      isEnabled: false
-    prob: 0.5
+  
   dataloader:
     dataloader_type: standard
     dataset_type: cache
@@ -60,11 +39,7 @@ data:
     smartcache:
       cache_rate: 0.5
       num_replace_workers: 4
-  dataset_csv: MT_dataset_with_all_structs.csv
-  equalizer:
-    isEnabled: false
-    ratio: 0.5
-    resamplingDirection: up
+  
   excluded_values: []
   excluded_variable_name: []
   image_keys:
@@ -121,9 +96,10 @@ data:
       - 1.0
       - 1.0
       - 1.0
+    gtv_total:
+      target_labels: [0.0, 1.0]
   source: PRIMA
-  stratify_on:
-  - Dysphagia_M06
+
 evaluation:
   main_metric: 
     Binary: "AUC"  

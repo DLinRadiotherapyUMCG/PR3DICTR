@@ -18,7 +18,7 @@ def set_dataset_config_for_uncertainty(config):
 
 
 
-def get_dataset_for_uncertainty_experiments(config, UQ_method = "MC_dropout"):
+def get_dataset_for_uncertainty_experiments(config):
     # override the dataloader settings
     set_dataset_config_for_uncertainty(config)
 
@@ -36,9 +36,13 @@ def get_dataset_for_uncertainty_experiments(config, UQ_method = "MC_dropout"):
         # over/under sampling of the training set
         if(config['data']['equalizer']['isEnabled']):
             df_train_list = [label_equalizer(train_i_df, config) for train_i_df in df_train_list]
+
     else:
         dataset_split_dict = k_fold_dataframes_list[0]  # the first split is used for training and validation
         train_data, df_val = dataset_split_dict['train'], dataset_split_dict['val']
+
+        if(config['data']['equalizer']['isEnabled']):
+            train_data = label_equalizer(train_data, config)
 
         df_train_list = [train_data]
 

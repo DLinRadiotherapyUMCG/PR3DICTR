@@ -22,6 +22,7 @@ def get_loss_function(config : dict, LabelTypesManager):
     loss_name = config['training']['loss']['name'].lower() # make the loss function name lowercase
 
     if loss_name == 'bce':
+        print(config['training']['loss']['BCE']['pos_weight'])
         pos_weights = torch.as_tensor(config['training']['loss']['BCE']['pos_weight'], dtype=torch.float32, device=DEVICE)
         loss_function = torch.nn.BCEWithLogitsLoss(reduction = reduction, pos_weight = pos_weights)
 

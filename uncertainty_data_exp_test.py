@@ -11,6 +11,7 @@ if __name__ == '__main__':
     # Setup
     log_level = parse_args()
     setup_logging(log_level)
+    
     # wandb.login()
     # wandb.init(project=toxicity, job_type='train')
     # Load the config
@@ -34,34 +35,45 @@ if __name__ == '__main__':
     
     
     # ["Geslacht", "Leeftijd", "Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4"]
-    config['general']['trialNumber'] = "OS_1"  # Set the trial number for the experiment
+    config['general']['trialNumber'] = "OS_1_m3"  # Set the trial number for the experiment
     config['general']['dataset_amounts_experiment'] = True
+
+    config['uncertainty']['deep_ensemble']['n_models'] = 5
     
     config['data']['n_training_patients_list'] = [50, 100, 150, 200]
     # config['training']['max_epochs'] = 1
     # config['uncertainty']['deep_ensemble']['n_models'] = 2
     # config['uncertainty']['MC_dropout']['n_forward_passes'] = 10
 
+    config['general']['experiment_name'] = "DATA MC Dropout" 
+    train_MC_dropout_model(config, UQ_method="MC_dropout")
+
 
     #config['columns']['clinical_features'] = []
     # config['general']['experiment_name'] = "Deep Ensemble"   
     # train_deep_ensemble_models(config)
     # evaluate_deep_ensemble_models(config)
+    """
 
     #config['data']['image_keys'] = [        "ct"    ]
+    from src.dataset.LabelTypesManager import LabelTypesManager
+    labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
+    config['saving']['label_column_names'] = labelManager.label_names_full_list
 
     config['general']['experiment_name'] = "DATA MC Dropout" 
     train_MC_dropout_model(config, UQ_method="MC_dropout")
-    #collect_bayesian_forward_passes(config, UQ_method="MC_dropout") # UQ_method='TTA')
+    # # # collect_bayesian_forward_passes(config, UQ_method="MC_dropout") # UQ_method='TTA')
     
     config['general']['experiment_name'] = "DATA TTA" 
     train_MC_dropout_model(config, UQ_method='TTA')
-    # collect_bayesian_forward_passes(config, UQ_method='TTA')
+    # # # collect_bayesian_forward_passes(config, UQ_method='TTA')
     
     
-    # config['general']['experiment_name'] = "DATA Deep Ensemble NORMAL"   
-    # train_deep_ensemble_models(config)
+    config['general']['experiment_name'] = "DATA Deep Ensemble"   
+    train_deep_ensemble_models(config)
     # evaluate_deep_ensemble_models(config)
+
+    """
     
 
 
