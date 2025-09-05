@@ -5,10 +5,10 @@ from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 
-import src.hyper_opt.WandB_functions as WandB_functions
+import os
 
-import faulthandler, signal
-faulthandler.register(signal.SIGUSR1)
+from src.experiments.experimentHandler import experimentHandler
+import src.hyper_opt.WandB_functions as WandB_functions
 
 
 def load_modal_config_for_uncertainty_experiment(config, endpoint_name = "Dysphagia_M06"):
@@ -69,46 +69,31 @@ if __name__ == '__main__':
     from src.uncertainty.MC_dropout import train_MC_dropout_model, collect_bayesian_forward_passes
     
     # Choose the endpoint
-    endpoint = "LRC"
-    #endpoint = "OS"
+    endpoint_list = ["Dysphagia_M06", "Xerostomia_M06", "OS", "LRC"]
 
-    config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
+    config['general']['experiment_name'] = "Normal UQ Models"
 
-    # SETTINGS FOR DATA AMOUNTS EXPERIMENT
-    config['general']['dataset_amounts_experiment'] = False
+    for endpoint in endpoint_list:
+        config = get_config(CONFIG_NAME)
 
-    config['uncertainty']['deep_ensemble']['n_models'] = 5
-    # config['data']['n_training_patients_list'] = [50, 100, 150, 200]
-
-
-
-    config['general']['experiment_name'] = "Tune MC LRC" 
-    dropout_rates = [0.1, 0.2, 0.3, 0.4, 0.5]
-
-
-    # config['data']['equalizer']['isEnabled'] = False
-
-    for d_rate in dropout_rates:
-        #config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
-        config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
-
-        config['general']['trialNumber'] = f"{int(d_rate*100)}" 
-
-        train_MC_dropout_model(config, UQ_method="MC_dropout")
-
-
-    # MODEL TRAINING
+        # Disable randomness
+        set_random_seed(config['general']['seed'])
     
 
+        config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
 
-    # 
-    # config['general']['trialNumber'] = f"{endpoint}_with_oversampling_adam" 
-    #config['data']['equalizer']['isEnabled'] = True
-   
+        # SETTINGS FOR DATA AMOUNTS EXPERIMENT
+        config['general']['dataset_amounts_experiment'] = False
+        config['general']['trialNumber'] = endpoint
 
-
-
-
-    
+        expHandler = experimentHandler(config)
+        expHandler.run_experiment(config)
 
 
+        # # TEST ENSEMBLE CODE
+        from src.evaluation.validate_on_test_set import validate_models_on_test_set
+
+        # # # run the models on the test set
+        #trial_dir = config['general']['resultsCurrentDirectory']
+        trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
+        validate_models_on_test_set(config, trial_dir)

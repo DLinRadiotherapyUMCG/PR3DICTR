@@ -98,7 +98,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
 
     dataset_type = config['data']['dataloader']['dataset_type'] # if not validation_mode else 'cache'
     dataloader_type = config['data']['dataloader']['dataloader_type']        #'standard'
-    batch_size = config['training']['batch_size'] if not validation_mode else 1
+    batch_size = config['training']['batch_size'] # if not validation_mode else 1
     #cache_rate = 1
     num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else config['data']['dataloader']['num_workers'] // 2
     persistent_workers = True if num_workers > 0 else False#  config['data']['dataloader']['persistent_workers']

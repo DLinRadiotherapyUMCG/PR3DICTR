@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import roc_auc_score
 from lifelines.utils import concordance_index
+from sklearn.metrics import accuracy_score
 
 
 def plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, colours_dict):
@@ -25,7 +26,8 @@ def plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_met
         preds_arr = mean_preds_iter.copy()
         uq_arr = UQ_metric_iter.copy()
 
-        while np.unique(labels_arr if ENDPOINT_TYPES[endpoint] == "Binary" else labels_arr[:, 0]).size >= 2:
+        # while np.unique(labels_arr if ENDPOINT_TYPES[endpoint] == "Binary" else labels_arr[:, 0]).size >= 2:
+        for _ in range(len(mean_preds_iter)):
             max_idx = np.argmax(uq_arr)
             preds_arr = np.delete(preds_arr, max_idx, axis=0)
             labels_arr = np.delete(labels_arr, max_idx, axis=0)
@@ -34,7 +36,10 @@ def plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_met
 
             if ENDPOINT_TYPES[endpoint] == "Binary":
                 if np.unique(labels_arr).size == 2:
+                    
                     metric_value = roc_auc_score(labels_arr, preds_arr)
+                    thresh_value = 0.5
+                    metric_value = accuracy_score(labels_arr, preds_arr>thresh_value)
                 else:
                     metric_value = 1
             else:

@@ -98,7 +98,7 @@ model:
 paths:
   csv: /home/macraedc/data/uncertainty_project
   images: /home/macraedc/data/preprocessed_OS_dataset_2mm
-  results: /home/macraedc/rt_pred_results
+  # results: /home/macraedc/rt_pred_results
 
 
 training:

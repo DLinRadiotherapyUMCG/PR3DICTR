@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from src.uncertainty.visualisation.calibration_plot import plot_calibration_subplot, plot_calibration_error_over_dataset_size
+from src.uncertainty.visualisation.calibration_plot import plot_calibration_subplot, plot_error_calibration_subplot, plot_calibration_error_over_dataset_size
 from src.uncertainty.visualisation.sparsification_plot import plot_sparsification_subplot
 
 
@@ -61,33 +61,49 @@ def plot_nested_UQ(
             
             if plot_type == "calibration":
                 plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict)
+            elif plot_type == "error calibration":
+                plot_error_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict)
             elif plot_type == "sparsification":
                 plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, colours_dict)
             elif plot_type == "calibration_error_dataset_size":
                 plot_calibration_error_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict)
+            else:
+                raise ValueError(f"Unknown plot_type: {plot_type}")
             
 
             # Titles and labels
-            if i == 0:
+            if i == 0 and n_rows >= 1:
                 ax.set_title(col_val)
             if j == 0:
                 #ax.set_ylabel("AUC" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
                 if plot_type == "calibration" or plot_type == "sparsification":
-                    ax.set_ylabel("AUC" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
+                    ax.set_ylabel("Accuracy" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
                 elif plot_type == "calibration_error_dataset_size":
                     ax.set_ylabel("UQ Calibration Error (MSE)")
+                elif plot_type == "error calibration":
+                    ax.set_ylabel("Error (BCE loss)")
                 ax.annotate(row_val, xy=(-0.3, 0.5), xycoords='axes fraction',
                             ha='right', va='center', fontsize=12, rotation=90)
             
+            # Hide xlabel for all axes except those in the last row
             if i != n_rows - 1:
-                ax.set_xlabel("") # hide the xlabel for all but the last row
-                pass  # xlabel is set in subfunctions
+                ax.set_xlabel("")  # hide the xlabel for all but the last row
+                # pass  # xlabel is set in subfunctions
+            
             if i == 0 and j == 0:
                 fig.legend(title="UQ Metric", loc='upper right', bbox_to_anchor=(1.2, 0.98))
 
+    if plot_type == "calibration":
+        title = "Certainty vs Accuracy"
+    elif plot_type == "sparsification":
+        title = "N. Samples Dropped vs Accuracy"
+    elif plot_type == "calibration_error_dataset_size":
+        title = "Dataset Size vs. UQ Calibration Error"
+    elif plot_type == "error calibration":
+        title = "Uncertainty vs Error"
+
     plt.suptitle(
-        "AUC vs. Uncertainty Bins for Different UQ Methods" if plot_type == "calibration"
-        else "AUC vs. Samples Dropped for Different UQ Methods",
+        title,
         fontsize=16
     )
 

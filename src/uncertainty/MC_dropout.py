@@ -166,14 +166,20 @@ def collect_bayesian_forward_passes(config, experiment_dir, test_loader, metadat
     # labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
     #config['saving']['label_column_names'] = labelManager.label_names_full_list
 
-    
+    #print((experiment_dir, config['saving']['filenames']['config_yaml']) )
     model_config = load_config(os.path.join(experiment_dir, config['saving']['filenames']['config_yaml']) )
 
+    model_config['paths']['results'] = model_config['paths']['results']
+    model_config['general']['resultsCurrentDirectory'] = config['general']['resultsCurrentDirectory']
+
     # load in the model weights
-    model = get_classification_model(config, metadata=metadata, save_summary=False)
+    model = get_classification_model(model_config, metadata=metadata, save_summary=False)
     model.to(DEVICE)
     model = load_model(model_config, model) # load the saved weights
     enable_MC_dropout = True if UQ_method == 'MC_dropout' else False  # enable dropout at inference tme if the UQ method is MC dropout
+
+    # print("dropout is enabled:", enable_MC_dropout)
+    # print(model_config['model']['dropout_p'])
 
     # use the validate function to get the predictions
     endpoint_list = config['columns']['labels']  # the endpoints to evaluate

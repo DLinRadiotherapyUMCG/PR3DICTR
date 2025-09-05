@@ -129,7 +129,7 @@ model:
 paths:
   csv: /home/macraedc/data/uncertainty_project
   images: /home/macraedc/data/dataset_full_2mm_anonymized
-  results: /home/macraedc/rt_pred_results
+  # results: /home/macraedc/rt_pred_results
 
 
 
@@ -156,7 +156,7 @@ training:
   optimizer:
     learning_rate: 0.001
     momentum: 0.8
-    name: Adam
+    name: SGD
     weight_decay: 0.00
   patience: 10
   scheduler:

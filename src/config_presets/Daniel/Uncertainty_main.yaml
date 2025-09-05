@@ -15,10 +15,10 @@ uncertainty:
   deep_ensemble:
     n_models: 10
   MC_dropout:
-    n_forward_passes: 20          # number of forward passes to perform for each model in the ensemble
+    n_forward_passes: 50          # number of forward passes to perform for each model in the ensemble
     dropout_p: 0.2 
   TTA:
-    n_forward_passes: 20
+    n_forward_passes: 50
   dataset_split:
     n_splits: 1                   # the number of data splits to make
     validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
@@ -35,7 +35,7 @@ data:
   dataloader:
     dataloader_type: standard
     dataset_type: cache
-    num_workers: 12
+    num_workers: 8
     smartcache:
       cache_rate: 0.5
       num_replace_workers: 4
@@ -375,7 +375,7 @@ model:
 paths:
   csv: /home/macraedc/data/
   images: /home/macraedc/data/dataset_full_2mm_anonymized
-  results: /home/macraedc/rt_pred_results
+  results: /home/macraedc/UQ_results
 saving:
   best_model: true
   config: true

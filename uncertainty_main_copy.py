@@ -67,48 +67,31 @@ if __name__ == '__main__':
 
     from src.uncertainty.deep_ensemble import train_deep_ensemble_models, evaluate_deep_ensemble_models
     from src.uncertainty.MC_dropout import train_MC_dropout_model, collect_bayesian_forward_passes
-    
-    # Choose the endpoint
-    endpoint = "LRC"
-    #endpoint = "OS"
 
-    config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
+    endpoints = ["Dysphagia_M06", "Xerostomia_M06", "OS", "LRC"]
 
-    # SETTINGS FOR DATA AMOUNTS EXPERIMENT
-    config['general']['dataset_amounts_experiment'] = False
+    for endpoint in endpoints:
+        config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
 
-    config['uncertainty']['deep_ensemble']['n_models'] = 5
-    # config['data']['n_training_patients_list'] = [50, 100, 150, 200]
+        # SETTINGS FOR DATA AMOUNTS EXPERIMENT
+        config['general']['dataset_amounts_experiment'] = False
 
+        # TTA
 
+        config['general']['experiment_name'] = "TTA" 
+        config['general']['trialNumber'] = endpoint
 
-    config['general']['experiment_name'] = "Tune MC LRC" 
-    dropout_rates = [0.1, 0.2, 0.3, 0.4, 0.5]
+        set_random_seed(config['general']['seed'])
+        train_MC_dropout_model(config, UQ_method="TTA")
 
+        # DEEP ENSEMBLE
 
-    # config['data']['equalizer']['isEnabled'] = False
+        config['general']['experiment_name'] = "Deep Ensemble"
+        config['general']['trialNumber'] = endpoint
 
-    for d_rate in dropout_rates:
-        #config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
-        config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
+        set_random_seed(config['general']['seed'])
+        train_deep_ensemble_models(config)
 
-        config['general']['trialNumber'] = f"{int(d_rate*100)}" 
-
-        train_MC_dropout_model(config, UQ_method="MC_dropout")
-
-
-    # MODEL TRAINING
-    
-
-
-    # 
-    # config['general']['trialNumber'] = f"{endpoint}_with_oversampling_adam" 
-    #config['data']['equalizer']['isEnabled'] = True
-   
-
-
-
-
-    
+        
 
 
