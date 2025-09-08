@@ -39,7 +39,7 @@ def plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_met
                     
                     metric_value = roc_auc_score(labels_arr, preds_arr)
                     thresh_value = 0.5
-                    metric_value = accuracy_score(labels_arr, preds_arr>thresh_value)
+                    #metric_value = accuracy_score(labels_arr, preds_arr>thresh_value)
                 else:
                     metric_value = 1
             else:

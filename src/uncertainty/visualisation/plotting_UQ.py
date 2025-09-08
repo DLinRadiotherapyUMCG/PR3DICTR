@@ -13,6 +13,7 @@ def plot_nested_UQ(
     plot_type="calibration", # "calibration" or "sparsification" or 'calibration_error_dataset_size
     row_key="method",
     col_key="endpoint",
+    normalisation_method="minmax",
     N_bins=5,
     colours_dict=None
 ):
@@ -60,13 +61,13 @@ def plot_nested_UQ(
                 continue
             
             if plot_type == "calibration":
-                plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict)
+                plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
             elif plot_type == "error calibration":
-                plot_error_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict)
+                plot_error_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
             elif plot_type == "sparsification":
                 plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, colours_dict)
             elif plot_type == "calibration_error_dataset_size":
-                plot_calibration_error_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict)
+                plot_calibration_error_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
             else:
                 raise ValueError(f"Unknown plot_type: {plot_type}")
             
@@ -77,7 +78,7 @@ def plot_nested_UQ(
             if j == 0:
                 #ax.set_ylabel("AUC" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
                 if plot_type == "calibration" or plot_type == "sparsification":
-                    ax.set_ylabel("Accuracy" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
+                    ax.set_ylabel("AUC" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
                 elif plot_type == "calibration_error_dataset_size":
                     ax.set_ylabel("UQ Calibration Error (MSE)")
                 elif plot_type == "error calibration":
@@ -96,7 +97,7 @@ def plot_nested_UQ(
     if plot_type == "calibration":
         title = "Certainty vs Accuracy"
     elif plot_type == "sparsification":
-        title = "N. Samples Dropped vs Accuracy"
+        title = "Number of 'Most Uncertain' Samples Removed vs. AUC"
     elif plot_type == "calibration_error_dataset_size":
         title = "Dataset Size vs. UQ Calibration Error"
     elif plot_type == "error calibration":

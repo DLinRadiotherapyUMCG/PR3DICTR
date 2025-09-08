@@ -31,7 +31,6 @@ columns:
   labels_types: ["Binary"]
 
 data:
-  
   dataloader:
     dataloader_type: standard
     dataset_type: cache
