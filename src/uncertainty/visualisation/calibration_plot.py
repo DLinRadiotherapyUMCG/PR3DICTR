@@ -1,14 +1,10 @@
-import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import roc_auc_score
-from lifelines.utils import concordance_index
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.metrics import log_loss, roc_curve, roc_auc_score, accuracy_score
+from lifelines.utils import concordance_index
 
 from src.evaluation.metrics.classification import accuracy
-from sklearn.metrics import log_loss
-
-from sklearn.metrics import roc_curve
 
 
 def normalise_uncertainty_values(UQ_metric, normalisation_method="minmax" ):
@@ -20,7 +16,9 @@ def normalise_uncertainty_values(UQ_metric, normalisation_method="minmax" ):
     Returns:
         UQ_metric_normalised (np.array): normalised uncertainty values
     """
-    if normalisation_method == "minmax":
+    if normalisation_method is None:
+        UQ_metric_normalised = UQ_metric
+    elif normalisation_method == "minmax":
         UQ_metric_normalised = (UQ_metric - np.min(UQ_metric)) / (np.max(UQ_metric) - np.min(UQ_metric) + 1e-8)
     elif normalisation_method == "percentile":
         lower = np.percentile(UQ_metric, 5)
@@ -98,14 +96,6 @@ def plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metric
 
 
 
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_auc_score
-from lifelines.utils import concordance_index
-import numpy as np
-import pandas as pd
-
-from src.evaluation.metrics.classification import accuracy
-from sklearn.metrics import log_loss
 
 
 def plot_error_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method="minmax"):

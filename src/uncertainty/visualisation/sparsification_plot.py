@@ -6,6 +6,20 @@ from sklearn.metrics import accuracy_score
 
 
 def plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, colours_dict):
+    """
+    Plots a sparsification subplot on the given axis. Sparsification involves iteratively removing samples with the highest uncertainty
+    and evaluating the performance metric (AUC for binary classification, C-index for survival analysis) at each step.
+    Args:
+        ax: Matplotlib axis to plot on.
+        df_UQ_temp: DataFrame containing the UQ results for a specific endpoint and method
+        endpoint: The endpoint being evaluated (e.g., "OS", "LRC").
+        ENDPOINT_TYPES: Dictionary mapping endpoints to their types ("Binary" or "Event").
+        UQ_metrics_list: List of uncertainty metrics to evaluate (e.g., ["Predictive Entropy", "Mutual Information"]).
+        colours_dict: Dictionary mapping UQ metric names to colors for plotting.
+    Returns:
+        None (the plot is drawn on the provided axis).
+    """
+
     if ENDPOINT_TYPES[endpoint] == "Binary":
         df_UQ_no_missing_labels = df_UQ_temp[df_UQ_temp['True Labels'] != -1]
         labels_iter = df_UQ_no_missing_labels['True Labels'].copy()
@@ -37,9 +51,9 @@ def plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_met
             if ENDPOINT_TYPES[endpoint] == "Binary":
                 if np.unique(labels_arr).size == 2:
                     
-                    metric_value = roc_auc_score(labels_arr, preds_arr)
+                    # metric_value = roc_auc_score(labels_arr, preds_arr)
                     thresh_value = 0.5
-                    #metric_value = accuracy_score(labels_arr, preds_arr>thresh_value)
+                    metric_value = accuracy_score(labels_arr, preds_arr>thresh_value)
                 else:
                     metric_value = 1
             else:

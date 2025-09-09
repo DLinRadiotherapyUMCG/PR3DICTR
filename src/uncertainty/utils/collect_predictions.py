@@ -19,13 +19,7 @@ def collect_one_predictions_pass(config : dict, model, data_loader, enable_MC_dr
         val_loader: dataloader with the dataset to validate the model on
         metric_handler: class object to compute the main metric specified in the config
     Returns:
-        avg_loss: average loss over the dataloader
-        total_loss_dict: average loss per label
-        mean_metric_value: mean metric value
-        metric_dict: dictionary of metric values for each label
-        preds_dict: dictionary of predictions for each label
-        labels_dict: dictionary of true labels for each label
-        patientIDs_list: list of patient IDs in the dataloader
+        df_preds: DataFrame with predictions and true labels for all endpoints
     """
     endpoint_list = config['columns']['labels']
     label_types = config['columns']['labels_types']

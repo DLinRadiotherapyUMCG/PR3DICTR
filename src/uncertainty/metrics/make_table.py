@@ -32,8 +32,6 @@ def make_nested_UQ_table(
             if df_UQ_temp is None:
                 continue
             for uq_metric_name in UQ_metrics_list:
-                #print(df_UQ_temp)
-
                         
                 UQ_metric = df_UQ_no_missing_labels[uq_metric_name].values
                 if uq_metric_name == "Binary Entropy":

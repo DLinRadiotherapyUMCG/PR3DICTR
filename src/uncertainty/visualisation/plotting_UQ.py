@@ -17,6 +17,24 @@ def plot_nested_UQ(
     N_bins=5,
     colours_dict=None
 ):
+    
+    """
+    Plots the nested uncertainty quantification (UQ) results. The function creates a grid of subplots based on the specified row and column keys (which can be "endpoint", "method", or "metric").
+    Each subplot visualizes the relationship between uncertainty and performance metrics (AUC for binary classification, C-index for survival analysis) using different UQ metrics.
+    Args:
+        UQ_RESULTS_DICT: Dictionary containing UQ results for different endpoints and methods.
+        ENDPOINT_TYPES: Dictionary mapping endpoints to their types ("Binary" or "Event").
+        UQ_methods_list: List of UQ methods to include in the plots (e.g., ["MC Dropout", "Deep Ensemble"]).
+        UQ_metrics_list: List of uncertainty metrics to evaluate (e.g., ["Predictive Entropy", "Mutual Information"]).
+        plot_type: Type of plot to generate ("calibration", "sparsification", "calibration_error_dataset_size", "error calibration").
+        row_key: Key to use for rows in the subplot grid ("endpoint", "method", or "metric").
+        col_key: Key to use for columns in the subplot grid ("endpoint", "method", or "metric").
+        normalisation_method: Method for normalizing uncertainty metrics ("minmax", "percentile", or None).
+        N_bins: Number of bins to use for calibration plots.
+        colours_dict: Optional dictionary mapping UQ metric names to colors for plotting.
+    Returns:
+        fig: Matplotlib figure containing the nested UQ plots.
+    """
     # Map keys to axes
     key_map = {
         "endpoint": list(UQ_RESULTS_DICT.keys()),

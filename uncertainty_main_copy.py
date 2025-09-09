@@ -41,6 +41,8 @@ if __name__ == '__main__':
     gc.collect()
     torch.cuda.empty_cache()
 
+    print(torch.cuda.memory_summary())
+
 
     log_level = parse_args()
     setup_logging(log_level)
@@ -69,6 +71,7 @@ if __name__ == '__main__':
     from src.uncertainty.MC_dropout import train_MC_dropout_model, collect_bayesian_forward_passes
 
     endpoints = ["Dysphagia_M06", "Xerostomia_M06", "OS", "LRC"]
+    endpoints = ['Dysphagia_M06']
 
     for endpoint in endpoints:
         config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
@@ -78,16 +81,16 @@ if __name__ == '__main__':
 
         # TTA
 
-        config['general']['experiment_name'] = "TTA" 
-        config['general']['trialNumber'] = endpoint
+        # config['general']['experiment_name'] = "TTA" 
+        # config['general']['trialNumber'] = endpoint
 
-        set_random_seed(config['general']['seed'])
-        train_MC_dropout_model(config, UQ_method="TTA")
+        # set_random_seed(config['general']['seed'])
+        # train_MC_dropout_model(config, UQ_method="TTA")
 
         # DEEP ENSEMBLE
 
         config['general']['experiment_name'] = "Deep Ensemble"
-        config['general']['trialNumber'] = endpoint
+        config['general']['trialNumber'] = endpoint + "_v2"
 
         set_random_seed(config['general']['seed'])
         train_deep_ensemble_models(config)

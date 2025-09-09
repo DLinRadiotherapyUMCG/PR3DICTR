@@ -49,50 +49,26 @@ if __name__ == '__main__':
         "Xerostomia_M06" : [100, 200, 300, 400, 500, 600, 700, 800]
     }
 
-    endpoints = ["Dysphagia_M06" , "Xerostomia_M06", "OS", "LRC"]
-    endpoints = ["OS", "LRC"]
+    endpoints = ["Dysphagia_M06"] #  , "Xerostomia_M06", "OS", "LRC"]
+    # endpoints = ["OS", "LRC"]
 
-    for endpoint in endpoints:
-        config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
-
-    
-        config['general']['experiment_name'] = "Normal UQ Models"
-        config['general']['trialNumber'] = endpoint
-
-        expHandler = experimentHandler(config)
-        expHandler.run_experiment(config)
-
-
-        # # TEST ENSEMBLE CODE
-        from src.evaluation.validate_on_test_set import validate_models_on_test_set
-
-        # # # run the models on the test set
-        #trial_dir = config['general']['resultsCurrentDirectory']
-        trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
-        validate_models_on_test_set(config, trial_dir)
+    for idx in range(5):
+        for endpoint in endpoints:
+            config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
 
         
-        # config['general']['dataset_amounts_experiment'] = False
-        # config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
+            config['general']['experiment_name'] = "Data MC Dropout"
+            config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"
+
+            
+            
+            config['general']['dataset_amounts_experiment'] = True
+            config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
 
 
-        # config['general']['experiment_name'] = "TTA" 
-        # config['general']['trialNumber'] = endpoint
 
-        # set_random_seed(config['general']['seed'])
-        # train_MC_dropout_model(config, UQ_method="TTA")
+            set_random_seed(idx)
+            train_MC_dropout_model(config, UQ_method="MC_dropout")
 
-
-        # config['general']['experiment_name'] = "Deep Ensemble" 
-        # config['general']['trialNumber'] = endpoint
-
-        # set_random_seed(config['general']['seed'])
-        # # train_MC_dropout_model(config, UQ_method="MC_dropout")
-
-        # train_deep_ensemble_models(config)
-
-
-        # set_random_seed(config['general']['seed'])
-    
 
 
