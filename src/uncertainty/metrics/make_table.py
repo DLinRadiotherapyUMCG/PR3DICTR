@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import log_loss, roc_auc_score, accuracy_score
 from lifelines.utils import concordance_index
 
 def make_nested_UQ_table(
@@ -45,7 +45,8 @@ def make_nested_UQ_table(
                     idx = uq_bins == b
                     if ENDPOINT_TYPES[endpoint] == "Binary":
                         if np.unique(true_labels[idx]).size == 2:
-                            auc = roc_auc_score(true_labels[idx], mean_preds[idx])
+                            # auc = roc_auc_score(true_labels[idx], mean_preds[idx])
+                            auc = accuracy_score(true_labels[idx], mean_preds[idx] > 0.5)
                             aucs.append(auc)
                         else:
                             aucs.append(1)
@@ -59,7 +60,7 @@ def make_nested_UQ_table(
                 
                 value = np.sum((np.array(aucs) - np.array(bin_centers))**2) / len(aucs)
                 # COMPUTE METRIC HERE
-                #value = metric_func(config, aucs, bin_centers)
+                # value = metric_func(config, aucs, bin_centers)
                 rows.append({
                     "endpoint": endpoint,
                     "method": method,

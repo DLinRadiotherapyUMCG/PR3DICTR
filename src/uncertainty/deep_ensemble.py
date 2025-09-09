@@ -138,12 +138,6 @@ def evaluate_deep_ensemble_models(config, experiment_dir):
     """
     Evaluate the deep ensemble models.
     """
-    #logging.info('Evaluating deep ensemble models')
-    #experiment_dir = config['general']['resultsCurrentDirectory'] # os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
-    #print("EXPERIMENT DIR", experiment_dir)
-    
-    print("EXPERIMENT DIR", experiment_dir)
-    print(os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber']))
     endpoint_list = config['columns']['labels']  # the endpoints to evaluate
 
     prediction_columns = [x+'_pred' for x in endpoint_list]  # the columns in the predictions csv file

@@ -52,23 +52,33 @@ if __name__ == '__main__':
     endpoints = ["Dysphagia_M06"] #  , "Xerostomia_M06", "OS", "LRC"]
     # endpoints = ["OS", "LRC"]
 
-    for idx in range(5):
-        for endpoint in endpoints:
-            config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
-
+    # for idx in range(5):
+    #     for endpoint in endpoints:
+    #         config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
         
-            config['general']['experiment_name'] = "Data MC Dropout"
-            config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"
-
+    #         config['general']['experiment_name'] = "Data MC Dropout"
+    #         config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"
+  
             
-            
-            config['general']['dataset_amounts_experiment'] = True
-            config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
+    #         config['general']['dataset_amounts_experiment'] = True
+    #         config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
+
+    #         set_random_seed(idx)
+    #         train_MC_dropout_model(config, UQ_method="MC_dropout")
 
 
+    
+    for endpoint in endpoints:
+        config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
 
-            set_random_seed(idx)
-            train_MC_dropout_model(config, UQ_method="MC_dropout")
+    
+        config['general']['experiment_name'] = "DATA MC Dropout"
+        config['general']['trialNumber'] = endpoint
+        
+        config['general']['dataset_amounts_experiment'] = True
+        config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
 
+        # set_random_seed(idx)
+        train_MC_dropout_model(config, UQ_method="MC_dropout")
 
 

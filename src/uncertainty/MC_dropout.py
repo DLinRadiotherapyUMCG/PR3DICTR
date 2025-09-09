@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import gc
 from tqdm import tqdm 
+from itertools import chain
 
 from src.constants import DEVICE
 
@@ -25,6 +26,11 @@ from src.evaluation.get_visualisations import get_visualizations
 from src.uncertainty.utils.prediction_files import make_mean_predictions_dataframe
 from src.uncertainty.utils.collect_predictions import collect_one_predictions_pass
 from src.dataset.LabelTypesManager import LabelTypesManager
+from src.dataset.get_transforms import get_transforms
+from src.dataset.load_dataset import load_dataset, generate_K_fold_cross_validation_splits
+from src.dataset.get_dataloader import make_dataloader   
+from src.models.tools.save_model import load_model
+from src.config_presets.tools.load_config import load_config
 
 
 
@@ -125,12 +131,6 @@ def train_MC_dropout_model(config, UQ_method = "MC_dropout"):
         gc.collect()
 
 
-from src.dataset.get_transforms import get_transforms
-from src.dataset.load_dataset import load_dataset, generate_K_fold_cross_validation_splits
-from src.dataset.get_dataloader import make_dataloader   
-from src.models.tools.save_model import load_model
-from src.config_presets.tools.load_config import load_config
-from itertools import chain
 
 
 

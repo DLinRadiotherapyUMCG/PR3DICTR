@@ -2,6 +2,7 @@
 """
 Helper functions for classification metrics
 """
+import logging
 import numpy as np
 from sklearn.metrics import roc_curve
 
@@ -38,8 +39,7 @@ def threshold(config, true, pred):
         threshold = threshold
         
     else:
-        print('non_proper threshold selection, defaulted to 0.5')
-        threshold = 0.5
+        raise ValueError('Invalid threshold type: {}.'.format(type(threshold)))
 
     # the actual thresholding    
     pred[pred >= threshold] = 1

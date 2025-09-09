@@ -82,7 +82,7 @@ def plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metric
                     aucs.append(1)
             bin_centers.append(1- UQ_metric_norm[idx].mean())
 
-        ax.plot(bin_centers, aucs, 'o', label=UQ_metric_name, color=colours_dict[UQ_metric_name])
+        ax.plot(bin_centers, aucs, 'o', label=UQ_metric_name, color=colours_dict[UQ_metric_name], markersize=5)
         coef = np.polyfit(bin_centers, aucs, 1)
         linear_fit = np.poly1d(coef)
         x_values = np.linspace(0, 1, 100)
@@ -140,7 +140,7 @@ def plot_error_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_
                     aucs.append(1)
             bin_centers.append(UQ_metric_norm[idx].mean())
 
-        ax.plot(bin_centers, aucs, 'o', label=UQ_metric_name, color=colours_dict[UQ_metric_name])
+        ax.plot(bin_centers, aucs, 'o', label=UQ_metric_name, color=colours_dict[UQ_metric_name], markersize=5)
         coef = np.polyfit(bin_centers, aucs, 1)
         linear_fit = np.poly1d(coef)
         x_values = np.linspace(0, 1, 100)
@@ -200,9 +200,10 @@ def plot_calibration_error_over_dataset_size(
                 idx = uq_bins == b
                 if ENDPOINT_TYPES[endpoint] == "Binary":
                     if np.unique(true_labels[idx]).size == 2:
-                        auc = roc_auc_score(true_labels[idx], mean_preds[idx])
-                        #auc = log_loss(true_labels[idx], mean_preds[idx])
-                        auc = accuracy_score(true_labels[idx], mean_preds[idx] > 0.5)
+                        # auc = roc_auc_score(true_labels[idx], mean_preds[idx])
+                        auc = log_loss(true_labels[idx], mean_preds[idx])
+                        # 
+                        # auc = accuracy_score(true_labels[idx], mean_preds[idx] > 0.5)
                         aucs.append(auc)
                     else:
                         aucs.append(1)

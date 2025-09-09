@@ -1,5 +1,5 @@
 import numpy as np
-
+import logging
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import StratifiedShuffleSplit, ShuffleSplit
@@ -63,7 +63,7 @@ def generate_training_data_subsamples(config, k_fold_dataframes_list):
         df_train_sample, sampled_indices = perform_cumulative_sampling(config, df_all_train_patients, sampled_indices, n_training_patients)
 
         k_fold_dataframes_list.append({'train': df_train_sample, 'val': df_val})
-        print(f"Sampled {len(df_train_sample)} patients")
+        #rint(f"Sampled {len(df_train_sample)} patients")
 
-    print(len(k_fold_dataframes_list), len(config['data']['n_training_patients_list']))
+    logging.info(len(k_fold_dataframes_list), len(config['data']['n_training_patients_list']))
     return k_fold_dataframes_list

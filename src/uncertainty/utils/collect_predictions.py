@@ -35,13 +35,13 @@ def collect_one_predictions_pass(config : dict, model, data_loader, enable_MC_dr
     # for endpoint in endpoint_list:
     #     preds_dict[endpoint] = []
     #     labels_dict[endpoint] = []
+    # Ensure deterministic MONAI transforms for each batch
+    if (seed is not None) and (hasattr(data_loader.dataset, 'set_random_state')):
+        data_loader.dataset.set_random_state(seed=seed)
     
     # collect the predictions and labels
     with torch.no_grad():
         for i, batch in enumerate(data_loader):
-            # Ensure deterministic MONAI transforms for each batch
-            if (seed is not None) and (hasattr(data_loader.dataset, 'set_random_state')):
-                data_loader.dataset.set_random_state(seed=seed)
             
             logging.debug(f'Validation batch {i}')
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
