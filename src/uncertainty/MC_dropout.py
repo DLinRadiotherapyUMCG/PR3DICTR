@@ -63,14 +63,9 @@ def train_MC_dropout_model(config, UQ_method = "MC_dropout"):
     val_loader, _ = make_dataloader(config, df_val, val_transforms, validation_mode=True)  
     test_loader, _ = make_dataloader(config, df_test, test_set_transforms, validation_mode=True)
 
-    print(" LEN TRAIN LOADERS", len(df_train_list))
     for train_loader_idx, df_train in enumerate(df_train_list, start=1):
 
-        
         train_loader, metadata = make_dataloader(config, df_train, train_transforms, validation_mode=False)
-
-        print(len(df_train))
-        print(metadata)
     
         # train the model
         # set the directory 

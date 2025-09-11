@@ -1,3 +1,4 @@
+import gc
 import os
 import logging
 import pandas as pd
@@ -128,7 +129,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 # mask out missing values
                 targets[targets == MISSING_DATA_VALUE] = 0
 
-            #print("hi")
             # plot model inputs
             if (config['saving']['plot_training_slices']['isEnabled']) and (epoch_num == 1 or epoch_num % config['saving']['plot_training_slices']['every_n_epochs'] == 0) and (batch_num == 1):
                 plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)
@@ -144,10 +144,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 # normal loss calculation
                 loss, loss_dict = loss_function(outputs, targets) 
 
-            # if batch_num % config['training']['gradient_accumulation_steps'] != 0:
-            #     for module in model.modules():
-            #         if isinstance(module, torch.nn.BatchNorm3d):
-            #             module.track_running_stats = False
 
             # Backpropagate the loss
             if config['training']['GradNorm']['isEnabled']:
@@ -176,7 +172,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             elif config['training']['scheduler']['name'] in ['cyclic']:
                 scheduler.step()
 
-           
 
         if config['data']['dataloader']['dataset_type'] == 'smartcache':
             # update the cache
@@ -249,9 +244,11 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         # log this epoch's results to WandB
         WandB_log(config, results_log, epoch = epoch_num)  
 
-        # del val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, results_log, best_log_dict
-        # torch.cuda.empty_cache()             
 
+    logging.info('Training complete!')
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    gc.collect()
 
     # Load the best model, and return it
     if config['saving']['best_model']: 

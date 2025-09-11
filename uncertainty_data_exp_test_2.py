@@ -1,3 +1,4 @@
+import copy
 from src.experiments.experimentHandler import experimentHandler
 from src.config_presets.tools.get_config import get_config
 from src.utils.logging.logging import setup_logging
@@ -40,7 +41,7 @@ if __name__ == '__main__':
     
     # config['general']['dataset_amounts_experiment'] = False
 
-    config['uncertainty']['deep_ensemble']['n_models'] = 10
+    config['uncertainty']['deep_ensemble']['n_models'] = 5
 
     training_patients_dict = {
         "OS" : [50, 100, 150, 200], 
@@ -49,13 +50,15 @@ if __name__ == '__main__':
         "Xerostomia_M06" : [100, 200, 300, 400, 500, 600, 700, 800]
     }
 
-    endpoints = ["Dysphagia_M06", "Xerostomia_M06"] # , "OS", "LRC"]
+    endpoints = ["Dysphagia_M06", "Xerostomia_M06", "OS", "LRC"]
 
-    # endpoints = ["LRC"]
+    endpoints = ["Dysphagia_M06", "Xerostomia_M06", "OS", "LRC"]
 
-    for idx in [2, 3, 4]:
+    endpoints = ["OS", "LRC"]
+
+    for idx in [2,3,4]:  # range(5):
         for endpoint in endpoints:
-            run_config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
+            run_config = load_modal_config_for_uncertainty_experiment(copy.deepcopy(config), endpoint_name=endpoint)
         
             #config['general']['experiment_name'] = "Data MC Dropout"
             run_config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"
@@ -71,10 +74,10 @@ if __name__ == '__main__':
             #     run_config['general']['experiment_name'] = "Data MC Dropout"
             #     train_MC_dropout_model(run_config, UQ_method="MC_dropout")
 
-
-            # set_random_seed(idx)
-            run_config['general']['experiment_name'] = "Data TTA"
-            train_MC_dropout_model(run_config, UQ_method="TTA")
+            if not (idx == 1 and endpoint == "Dysphagia_M06"):
+                set_random_seed(idx)
+                run_config['general']['experiment_name'] = "Data TTA"
+                train_MC_dropout_model(run_config, UQ_method="TTA")
 
             # set_random_seed(idx)
             # run_config['general']['experiment_name'] = "Data Deep Ensemble"

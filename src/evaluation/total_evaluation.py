@@ -3,9 +3,9 @@ import os
 import numpy as np
 import logging
 
-from src.evaluation.get_evaluation_metric import get_metric_function
+from src.evaluation.get_metric_function import get_metric_function
 from src.constants import METRIC_TYPES, METRICS_PER_ENDPOINT_TYPE
-from src.evaluation.per_endpoint_metrics import calculate_metric_for_multiple_endpoints
+from src.evaluation.calculate_metric_for_multiple_endpoints import calculate_metric_for_multiple_endpoints
 from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe import get_predictions_and_labels_from_predictions_dataframe
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset

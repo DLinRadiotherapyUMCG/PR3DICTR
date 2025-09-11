@@ -1,7 +1,7 @@
 import numpy as np
 
-from src.evaluation.per_endpoint_metrics import calculate_metric_for_multiple_endpoints
-from src.evaluation.get_evaluation_metric import get_metric_function
+from src.evaluation.calculate_metric_for_multiple_endpoints import calculate_metric_for_multiple_endpoints
+from src.evaluation.get_metric_function import get_metric_function
 
 ###
 

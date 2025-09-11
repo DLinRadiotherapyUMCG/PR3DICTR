@@ -1,3 +1,7 @@
+uncertainty:
+  MC_dropout:
+    dropout_p: 0.3
+
 
 columns:
   clinical_features: ["Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]

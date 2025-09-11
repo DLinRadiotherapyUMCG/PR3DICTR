@@ -1,3 +1,8 @@
+uncertainty:
+  MC_dropout:
+    dropout_p: 0.2 
+
+
 
 columns:
   clinical_features: ["Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4",

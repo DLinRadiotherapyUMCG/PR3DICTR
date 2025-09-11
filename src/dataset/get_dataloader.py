@@ -99,14 +99,20 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     dataset_type = config['data']['dataloader']['dataset_type'] # if not validation_mode else 'cache'
     dataloader_type = config['data']['dataloader']['dataloader_type']        #'standard'
     batch_size = config['training']['batch_size'] # if not validation_mode else 1
-    #cache_rate = 1
     num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else config['data']['dataloader']['num_workers'] // 2
     persistent_workers = True if num_workers > 0 else False#  config['data']['dataloader']['persistent_workers']
     drop_last = False
     pin_memory = True if num_workers > 0 else False
     
-    
-    dataset_size = len(df_data)
+    # check that the dataframe is not empty
+    if len(df_data) == 0:
+        logging.warning("The dataframe passed to make_dataloader is empty. Returning None for dataloader and metadata.")
+
+        dataloader = None
+        metadata = None
+        return dataloader, metadata
+
+
     data_dict, patient_IDs_list = prepare_data_dictionaries(config, df_data)  # do some reformatting of the dataframe -> list of dictionaries
     update_dict = None
 
@@ -132,7 +138,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     else:
         raise ValueError('Invalid dataset_type: {}.'.format(dataset_type))
     
-    
+    # these lines are needed to make the Dataset class work with multiple workers (prevents a memory leak)
     manager = Manager()
     data_dict = manager.list(data_dict)
     
@@ -160,12 +166,8 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     dl_class = ToxDataLoader
 
     # Define Dataloader function arguments
-    if validation_mode:   # the validation and test datasets should not be shuffled
-        shuffle = False
-    else:                 # the training dataset should always be shuffled
-        shuffle = True
+    shuffle = False if validation_mode else True # the validation and test sets should not be shuffled, training should always be shuffled
 
-    
     dl_args_dict = {'dataset': data_ds, 'batch_size': batch_size, 'shuffle': shuffle, 'sampler': None,
                           'num_workers': num_workers, 'drop_last': drop_last, 'persistent_workers': persistent_workers,
                           'pin_memory': pin_memory, "prefetch_factor": 2} #  }   # "prefetch_factor": 4,
@@ -177,30 +179,25 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     
     
     # Initialize DataLoader
-    if dataset_size > 0:
-        dataloader = dl_class(**dl_args_dict) 
+    dataloader = dl_class(**dl_args_dict) 
 
-        example_data = next(iter(dataloader))
-        
-        batch_size1, channels, depth, height, width = example_data['input'].shape
-        batch_size2, n_features = example_data['features'].shape
+    # collect some metadata about the image dimensions, number of features, etc.
+    example_data = next(iter(dataloader))
+    
+    batch_size1, channels, depth, height, width = example_data['input'].shape
+    batch_size2, n_features = example_data['features'].shape
+    batch_size3, n_labels = example_data['label_list'].shape
+    
+    assert batch_size1 == batch_size2 == batch_size3 # all batch sizes should be the same
 
-        #print("features", example_data['features'].shape)
-        #print("label_list", example_data['label_list'].shape)
-        batch_size3, n_labels = example_data['label_list'].shape
-        
-        assert batch_size1 == batch_size2 == batch_size3
-
-        metadata = {
-            "channels": channels,
-            "depth": depth,
-            "height": height,
-            "width": width,
-            "n_features": n_features,
-            "n_labels": n_labels,
-        }
-    else:
-        dataloader, metadata = None, None
+    metadata = {
+        "channels": channels,
+        "depth": depth,
+        "height": height,
+        "width": width,
+        "n_features": n_features,
+        "n_labels": n_labels,
+    }
     
     return dataloader, metadata
 

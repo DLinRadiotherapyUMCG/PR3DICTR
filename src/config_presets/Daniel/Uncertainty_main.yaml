@@ -23,6 +23,7 @@ uncertainty:
     n_splits: 1                   # the number of data splits to make
     validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
     split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
+    
 columns:
   clinical_features: ["Geslacht", "Leeftijd", "Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4"]
   # ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]

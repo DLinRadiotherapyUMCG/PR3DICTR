@@ -1,3 +1,7 @@
+uncertainty:
+  MC_dropout:
+    dropout_p: 0.1 
+
 
 columns:
   clinical_features: ["Leeftijd", "PACK_YEARS", 'P16_Negative', 'P16_Positive', 'P16_Unknown', 'WHO_0', 'WHO_1', 'WHO_2', 'WHO_3', 'T_stage_0', 'T_stage_1', 'T_stage_2', 'T_stage_3', 'N_stage_0', 'N_stage_1', 'N_stage_2', 'N_stage_3', 'N_stage_4', 'N_stage_5']
