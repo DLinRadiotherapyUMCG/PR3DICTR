@@ -29,7 +29,7 @@ from src.dataset.LabelTypesManager import LabelTypesManager as LabelTypesManager
 
 
 
-def K_fold_cross_validation(config, config_for_wandb=None):
+def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
     """
     A function to perform K-folds cross-validation. Creates the dataset splits, trains and evaluates a model for N folds.
     Args:
@@ -278,6 +278,11 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
     # aggregate all of the metric results for this trial
     aggregate_cross_validation_metrics(config, k_folds_completed=fold_idx, sets=['train', 'val'])
+
+    if(modelCard != None):
+        pathExport = os.path.join(config['modelcard']['saveLocation'],config['modelcard']['saved_modelcard_filename'] + ".json")
+        modelCard.absorb_config_details(config)
+        modelCard.to_json(pathExport)
 
     return results
 

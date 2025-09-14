@@ -78,7 +78,7 @@ def check_image_data_exists(config : dict, df : pd.DataFrame):
 
 
 
-def load_dataset(config : dict):
+def load_dataset(config : dict, modelCard = None):
     """
     Loads the entire dataset from one dataset_csv. Removes any patients that should be excluded or that are missing iamge data, subsamples the dataset (if needed),
     and returns a dataframe containing the train_val patients and a dataframe with the test patients.
@@ -118,6 +118,8 @@ def load_dataset(config : dict):
     test_size = df_test.shape[0]
     total_size = df_total.shape[0]
     logging.info(f"Train/Val dataset {train_size} ({train_size/total_size*100}%), Test dataset {test_size} ({test_size/total_size*100}%)")
+    if(modelCard != None):
+        modelCard.insert(["training_data","number_of_patients"],total_size)
 
     # check patients not in same dataset
     assert not PtnID_SanityCheck(config,df_train_val,df_test)
