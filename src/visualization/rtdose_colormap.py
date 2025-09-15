@@ -6,8 +6,6 @@ import src.constants as constants
 
 
 
-
-
 """ Functions to turn a color mapping dictionary into a matplotlib colormap """
 
 
@@ -31,6 +29,8 @@ def remove_duplicate_RGB_values(dictionary):
     return dictionary
 
 
+
+
 def create_RTDOSE_cmap(name):
     """ Create a custom colormap from a dictionary
     
@@ -46,7 +46,7 @@ def create_RTDOSE_cmap(name):
     except KeyError:
         raise ValueError(f"Unknown colormap name: {name}")
     
-    assert(isinstance(colormapping_dict, dict))
+    assert isinstance(colormapping_dict, dict)
 
     colormapping_dict = dict(sorted(colormapping_dict.items(), key=lambda x: x[0]))
 

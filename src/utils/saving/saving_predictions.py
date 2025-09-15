@@ -70,7 +70,7 @@ def save_predictions(config: dict, LabelTypesManager, patient_ids: list[str], y_
         y_true = y_true_list_dict[endpoint]
 
         # Save to DataFrame
-        if config['model']['num_ohe_classes'] == 1:
+        if config['model']['output_head']['num_ohe_classes'] == 1:
             df_y_pred = pd.DataFrame(y_pred, columns=['{}_pred'.format(endpoint)])
 
             # check if this endpoint has just one column in the label, or multiple columns (e.g. event and days)
@@ -89,6 +89,4 @@ def save_predictions(config: dict, LabelTypesManager, patient_ids: list[str], y_
     output_file_dir = get_predictions_csv_dir(config, is_test_set, ensemble_predictions, filename=filename)
 
     df_y.to_csv(output_file_dir, sep=';', index=False)
-
-    print(output_file_dir, "saved with shape", df_y.shape)
 

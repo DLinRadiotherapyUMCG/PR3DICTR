@@ -1,12 +1,13 @@
-from src.utils.set_random_seed import set_random_seed, generate_random_seed
-from src.training.k_fold_cross_validation import K_fold_cross_validation
-import src.hyper_opt.Optuna_hpt as Optuna_hpt
-
 import optuna
 import logging
 import traceback
 import os
 import copy
+
+
+from src.utils.set_random_seed import set_random_seed, generate_random_seed
+from src.training.k_fold_cross_validation import K_fold_cross_validation
+import src.hyper_opt.Optuna_hpt as Optuna_hpt
 
 
 class HyperTuning_Handler():
@@ -15,7 +16,7 @@ class HyperTuning_Handler():
     """
     def __init__(self,config):
         # Set optuna
-        self.Optuna_study = Optuna_hpt.Optuna_initialise_study(config) 
+        self.Optuna_study = Optuna_hpt.initialize_optuna_study(config) 
         self.config = config
 
 
@@ -77,11 +78,6 @@ class HyperTuning_Handler():
             trial.set_user_attr("failed", True)
 
             raise optuna.exceptions.TrialPruned()  # NOTE: this will set the trial to pruned
-
-            # self.Optuna_study.tell(trial.number, None, state=optuna.trial.TrialState.FAIL)  # NOTE: set the trial to 'failed'
-
-            # return None
-
             
 
         return optuna_results

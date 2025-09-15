@@ -42,7 +42,6 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
 
         # Replace the placeholder with a call to the new function
         predictions_per_endpoint_dict, labels_per_endpoint_dict = get_predictions_and_labels_from_predictions_dataframe(config, df_fold_all_preds, set_name)
-
         metrics_to_calculate = config['evaluation']['metrics_list']
 
         # loop over the endpoint types

@@ -304,7 +304,7 @@ hyperparam_tuning:
     # n_linear_layers:
     #   type: 'int'
     #   name: 'n_linear_layers'
-    #   location: ['model','n_linear_layers']
+    #   location: ['model','output_head','n_linear_layers']
     #   min: 0
     #   max: 3
     #   step: 1
@@ -313,7 +313,7 @@ hyperparam_tuning:
     n_linear_layers_endpoint:
       type: 'int'
       name: 'n_linear_layers_endpoint'
-      location: ['model','n_linear_layers_endpoint']
+      location: ['model','output_head','n_linear_layers_endpoint']
       min: 0
       max: 2
       step: 1
@@ -325,7 +325,7 @@ hyperparam_tuning:
     #   linear_units:
     #     type: 'categorical'
     #     name: 'LL_shared_'
-    #     location: ['model','linear_units']
+    #     location: ['model','output_head','linear_units']
     #     options: [64,128,256,512]
     #     log: False
 
@@ -333,7 +333,7 @@ hyperparam_tuning:
       linear_units_endpoint:
         type: 'categorical'
         name: 'LL_endpoint_'
-        location: ['model','linear_units_endpoint']
+        location: ['model','output_head','linear_units_endpoint']
         options: [16,32,64]
         log: False
 

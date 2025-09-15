@@ -1,5 +1,3 @@
-from src.experiments.experimentHandler import experimentHandler
-
 import numpy as np
 import random
 import torch
@@ -9,6 +7,7 @@ import os
 
 from src.utils.set_random_seed import set_random_seed
 from src.evaluation.validate_on_test_set import validate_models_on_test_set
+from src.experiments.experimentHandler import experimentHandler
 
 
 def get_single_tox_feature_set(endpoint):

@@ -2,28 +2,26 @@ import torch
 from torch import nn
 
 
-class MultiToxOutputHead(torch.nn.Module):
+class MultiLabelOutputHead(torch.nn.Module):
     """
     A class to define the linear layers and output head(s) of the model. 
     Can be given to different models as a module, so that the different models can share the same output head (and so that the code for it is shared).
     """
     def __init__(self, config, n_features):
-        super(MultiToxOutputHead, self).__init__()
+        super(MultiLabelOutputHead, self).__init__()
 
         self.predict_CT_contrast = False
         self.endpoint_list = [x for x in config['columns']['labels'] if "CT+C" not in x]
         self.n_features = n_features
         self.dropout_p = config['model']['dropout_p'] 
-        self.num_ohe_classes = config['model']['num_ohe_classes'] 
+        self.num_ohe_classes = config['model']['output_head']['num_ohe_classes'] 
         self.use_bias = config['model']['use_bias']
         self.lrelu_alpha = config['model']['lrelu_alpha']
-        self.linear_units = config['model']['linear_units']
+        self.linear_units = config['model']['output_head']['linear_units']
         self.linear_units = None if self.linear_units == 0 else self.linear_units
-        self.clinical_variables_linear_units = config['model']['clinical_variables_linear_units']
-        self.linear_units_endpoint = config['model']['linear_units_endpoint']
-        self.clinical_variables_position = config['model']['clinical_variables_position']
-
-        self.variance_logit_head = False
+        self.clinical_variables_linear_units = config['model']['output_head']['clinical_variables_linear_units']
+        self.linear_units_endpoint = config['model']['output_head']['linear_units_endpoint']
+        self.clinical_variables_position = config['model']['output_head']['clinical_variables_position']
         
         if self.clinical_variables_position >= 0 and self.clinical_variables_linear_units is not None and self.linear_units is None:
             raise ValueError('clinical_variables_position >= 0, clinical_variables_linear_units is None, and '
@@ -95,7 +93,6 @@ class MultiToxOutputHead(torch.nn.Module):
                 # Add features to this linear layer
                 
                 x = torch.cat([x, features], dim=1)
-                #print("CONCAT 2", x.shape)
 
         if len(self.shared_fc_layers) == self.clinical_variables_position + 1 and (self.n_features > 0): # if the clinical variables are concatenated to the last linear layer
             # Add features just before the non-shared layers
@@ -156,13 +153,7 @@ class MultiToxOutputHead(torch.nn.Module):
 
     def _make_shared_fc_layers(self):
         self.shared_fc_layers = torch.nn.ModuleList()
-        #self.linear_units = self.linear_units
-
-        # if len(self.linear_units) == 0:
-        #     self.shared_fc_layers.add_module(f'Identity', torch.nn.Identity())
-        #     self.shared_fc_layers.add_module(f'LReLU_shared_{0}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
         
-        # else:
         for i in range(0, len(self.linear_units)):
             # `- 1` because the input of the very first fully-connected layer is from the flatten layer (instead of a linear layer).
             if i == self.clinical_variables_position - 1 and self.n_features > 0:

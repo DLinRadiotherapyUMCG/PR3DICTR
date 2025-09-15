@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 import os
 import optuna
+import logging
 
 from src.utils.fileHandler import create_file, create_folder
 
@@ -36,6 +36,8 @@ def normal_hyperparameters(config, trial):
                 raise Exception("Stopped trials due to error.")
     return config
 
+
+
 def derived_hyperparameters(config, trial):
     '''
     Some hyperparameters are connected/ interdependend, here derived 
@@ -51,7 +53,7 @@ def derived_hyperparameters(config, trial):
                 location = hyperinfo['location']
                 base_name = hyperinfo['name']
 
-                for i in range(config['model']['n_clinical_layers']):
+                for i in range(config['model']['output_head']['n_clinical_layers']):
                     hyperinfo_new = hyperinfo.copy()
                     hyperinfo_new['name'] = base_name + str(i)
                     suggested_value = generate_value(trial, hyperinfo_new)
@@ -70,11 +72,11 @@ def derived_hyperparameters(config, trial):
                 location = hyperinfo['location']
                 base_name = hyperinfo['name']
                 if "clinical_variables_position" in base_name.lower():  # which layer to add the clinical variables (is dependent on the number of shared linear layers)
-                    hyperinfo['max'] = config['model']['n_linear_layers'] + 1 # the max should be the index of the last shared linear layer + 1
+                    hyperinfo['max'] = config['model']['output_head']['n_linear_layers'] + 1 # the max should be the index of the last shared linear layer + 1
                     suggested_value = generate_value(trial, hyperinfo)
                     config = update_config(config,location,suggested_value)
                 else:
-                    for i in range(config['model']['n_linear_layers']):
+                    for i in range(config['model']['output_head']['n_linear_layers']):
                         hyperinfo_new = hyperinfo.copy()
                         hyperinfo_new['name'] = base_name + str(i)
                         suggested_value = generate_value(trial, hyperinfo_new)
@@ -91,7 +93,7 @@ def derived_hyperparameters(config, trial):
                 hyperinfo = config['hyperparam_tuning']['derived']['n_linear_layers_endpoint'][key]  
                 location = hyperinfo['location']
                 base_name = hyperinfo['name']
-                for i in range(config['model']['n_linear_layers_endpoint']):
+                for i in range(config['model']['output_head']['n_linear_layers_endpoint']):
                     hyperinfo_new = hyperinfo.copy()
                     hyperinfo_new['name'] = base_name + str(i)
                     suggested_value = generate_value(trial, hyperinfo_new)
@@ -136,12 +138,13 @@ def generate_value(trial, hyperinfo, firstRun = False):
         suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], hyperinfo['min'], hyperinfo['max'])
     if hyperinfo['type'] == 'un':
         suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], hyperinfo['min'], hyperinfo['max'])       
+    
     return suggested_value
 
 
 
 
-def Optuna_initialise_study(config):
+def initialize_optuna_study(config):
     study = None
     if config['hyperparam_tuning']['optuna']['isEnabled']:
 
@@ -150,10 +153,14 @@ def Optuna_initialise_study(config):
         pathOptunaStudyTracker = os.path.join(os.path.join(config['paths']['results'] , studyName), "track_optuna.db")
         storage_name = f"sqlite:///{pathOptunaStudyTracker}"
         create_file(pathOptunaStudyTracker)
-        storage = optuna.storages.RDBStorage(url = storage_name,
-        engine_kwargs = {'pool_size' : 20,
-        'max_overflow' : 0})
-        print(storage_name)
+        storage = optuna.storages.RDBStorage(
+            url = storage_name,
+            engine_kwargs = {
+                'pool_size' : 20,
+                'max_overflow' : 0
+            }
+        )
+        logging.info(f"Using Optuna storage at: {storage_name}")
 
         sampler = optuna.samplers.TPESampler(
                               n_startup_trials = config['hyperparam_tuning']['optuna']['n_startup_trials'],  # how many random trials to run before starting the bayesian optimization
@@ -173,9 +180,9 @@ def Optuna_initialise_study(config):
         # check if an experiment has been run before
         config['general']['firstRun'] = (len(study.get_trials()) == 0)
         if config['general']['firstRun']:
-            print("First optuna run has been detected!")
+            logging.info("First optuna run has been detected!")
         else:
-            print("Continuing existing optuna run!")
+            logging.info("Continuing existing optuna run!")
 
     return study
 

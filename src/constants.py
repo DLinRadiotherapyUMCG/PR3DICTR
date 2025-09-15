@@ -12,9 +12,9 @@ PATIENT_ID_LENGTHS_DICT = {
     "UMCG": 7,
     "MDACC" : 10,
     "PRIMA" : 5, 
-    "PRI2MA" : 5,  # just another way of typing PRIMA
-    
+    "PRI2MA" : 5,  # just another way of typing PRIMA   
 }
+
 MISSING_DATA_VALUE = -1   # value for missing endpoints
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

@@ -20,8 +20,7 @@ class LabelTypesManager(object):
 
         self.endpoint_type_groups_indicies, self.endpoint_type_groups_names = self.seperate_endpoint_indicies(self.labels_list, self.label_types)
 
-        #print(self.endpoint_type_groups_indicies)
-
+        
         # set the binary endpoint indicies for the labels tensors and the predictions tensors
         if "Binary" in self.endpoint_type_groups_indicies:
             self.binary_targets_indicies = self.endpoint_type_groups_indicies['Binary']

@@ -28,7 +28,7 @@ if __name__ == '__main__':
     setup_logging(log_level)
 
     # Load the config
-    config = get_config('LL_test')
+    config = get_config('Xerostomia_model')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
     # # # # run the models on the test set
-    trial_dir = config['general']['resultsCurrentDirectory']
+    # trial_dir = config['general']['resultsCurrentDirectory']
+    trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
     validate_models_on_test_set(config, trial_dir)
 

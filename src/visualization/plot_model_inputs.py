@@ -82,11 +82,10 @@ def plot_model_inputs(config, plot_inputs, epoch):
             plotting_rows_dicts.append(row_dict)
 
 
-        #slices = [20, 30, 40, 50, 60, 70, 80, 90]
         fig, axes = plot_slices(plotting_rows_dicts, slices, RT_region=config['general']['region'])# , title=f"{patient_id} slices")
+        
         filename=os.path.join(save_folder, 'epoch_{}_idx_{}.png'.format(epoch, patient_idx))
-        #print(filename)
         fig.savefig(filename, bbox_inches='tight')
-        plotting_rows_dicts
+
         plt.close(fig)
         plt.clf()

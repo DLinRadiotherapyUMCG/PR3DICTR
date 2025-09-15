@@ -7,3 +7,4 @@ def log_table(rich_table):    # NOTE: DANIEL: what does this do?
     with console.capture() as capture:
         console.print(rich_table)
     return Text.from_ansi(capture.get())
+

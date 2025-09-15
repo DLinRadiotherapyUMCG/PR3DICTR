@@ -275,3 +275,13 @@ def subsample_datasets(num_patients_sample, trainDf, valDf, testDf):
 
     return trainDf, valDf, testDf
 
+
+
+
+
+def Complete_SanityCheck(config,dfArray):
+    for i in range(len(dfArray) - 1):
+        for j in range(i + 1,len(dfArray)):
+            if(has_patient_overlap(config,dfArray[i],dfArray[j])):
+                return True
+    return False      
