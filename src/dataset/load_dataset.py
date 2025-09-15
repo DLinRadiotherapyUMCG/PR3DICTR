@@ -229,42 +229,6 @@ def generate_single_train_val_split(config, df_development_set):
 
 
 
-def stratified_cumulative_sampling(X, y, sample_sizes, random_state=42):
-    """
-    Perform stratified cumulative sampling.
-    
-    Parameters:
-        X (array-like): Feature matrix.
-        y (array-like): Target labels for stratification.
-        sample_sizes (list): List of cumulative sample sizes (e.g., [100, 200, 300, ...]).
-        random_state (int): Random seed for reproducibility.
-    
-    Returns:
-        dict: Dictionary containing subsets with keys as sample sizes.
-    """
-    sampled_indices = set()
-    subsets = {}
-
-    for size in sample_sizes:
-        #print(size)
-        remaining_indices = list(sampled_indices)
-        
-        strat_split = ShuffleSplit(n_splits=1, train_size=size - len(sampled_indices), random_state=random_state)
-        new_indices, _ = next(strat_split.split(X[remaining_indices], y[remaining_indices]))
-        new_indices = np.array(remaining_indices)[new_indices]  # Convert to original index space
-        
-        sampled_indices.update(new_indices)
-        subsets[size] = (X[list(sampled_indices)], y[list(sampled_indices)])
-    
-    return subsets
-
-
-
-
-
-
-
-
 
 
 

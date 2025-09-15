@@ -7,6 +7,7 @@ from src.utils.set_random_seed import set_random_seed
 
 import src.hyper_opt.WandB_functions as WandB_functions
 import os
+import torch, gc
 
 if __name__ == '__main__':
 
@@ -41,7 +42,7 @@ if __name__ == '__main__':
     
     # config['general']['dataset_amounts_experiment'] = False
 
-    config['uncertainty']['deep_ensemble']['n_models'] = 5
+    
 
     training_patients_dict = {
         "OS" : [50, 100, 150, 200], 
@@ -52,12 +53,13 @@ if __name__ == '__main__':
 
     endpoints = ["Dysphagia_M06", "Xerostomia_M06", "OS", "LRC"]
 
-    endpoints = ["Dysphagia_M06", "Xerostomia_M06", "OS", "LRC"]
+    endpoints = ["OS", "Dysphagia_M06",  "Xerostomia_M06", "LRC"]
 
-    endpoints = ["OS", "LRC"]
+    #endpoints = ["OS"]
 
-    for idx in [2,3,4]:  # range(5):
-        for endpoint in endpoints:
+    for endpoint in endpoints:
+        for idx in range(5):
+        
             run_config = load_modal_config_for_uncertainty_experiment(copy.deepcopy(config), endpoint_name=endpoint)
         
             #config['general']['experiment_name'] = "Data MC Dropout"
@@ -66,6 +68,7 @@ if __name__ == '__main__':
             
             run_config['general']['dataset_amounts_experiment'] = True
             run_config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
+            
 
             # run_config['training']['max_epochs'] = 1
 
@@ -74,14 +77,19 @@ if __name__ == '__main__':
             #     run_config['general']['experiment_name'] = "Data MC Dropout"
             #     train_MC_dropout_model(run_config, UQ_method="MC_dropout")
 
-            if not (idx == 1 and endpoint == "Dysphagia_M06"):
-                set_random_seed(idx)
-                run_config['general']['experiment_name'] = "Data TTA"
-                train_MC_dropout_model(run_config, UQ_method="TTA")
+            # if not (idx == 3 and endpoint == "Dysphagia_M06"):
+            #     set_random_seed(idx)
+            #     run_config['general']['experiment_name'] = "Data TTA"
+            #     train_MC_dropout_model(run_config, UQ_method="TTA")
 
-            # set_random_seed(idx)
-            # run_config['general']['experiment_name'] = "Data Deep Ensemble"
-            # train_deep_ensemble_models(run_config)
+            set_random_seed(idx)
+            run_config['general']['experiment_name'] = "Data Deep Ensemble"
+            run_config['uncertainty']['deep_ensemble']['n_models'] = 5         # NOTE: only 5 models, 10 takes too long for the data experiment
+            train_deep_ensemble_models(run_config)
             #evaluate_deep_ensemble_models(run_config)
+
+            torch.cuda.empty_cache()
+            gc.collect()
+            torch.cuda.empty_cache()
 
 

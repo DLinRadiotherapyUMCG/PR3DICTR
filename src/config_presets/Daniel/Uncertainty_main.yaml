@@ -35,7 +35,7 @@ data:
   dataloader:
     dataloader_type: standard
     dataset_type: cache
-    num_workers: 8
+    num_workers: 12
     smartcache:
       cache_rate: 0.5
       num_replace_workers: 4
@@ -389,7 +389,7 @@ saving:
   plot_training_slices:
     every_n_epochs: 50
     folder_name: figures
-    isEnabled: true
+    isEnabled: false
     n_patients_per_epoch: 1
     n_slices_per_patient: 8
 training:

@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # Choose the endpoint
     endpoint_list = ["Dysphagia_M06", "Xerostomia_M06", "OS", "LRC"]
 
-    config['general']['experiment_name'] = "Normal UQ Models"
+    config['general']['experiment_name'] = "Normal UQ Models X"
 
     for endpoint in endpoint_list:
         config = get_config(CONFIG_NAME)

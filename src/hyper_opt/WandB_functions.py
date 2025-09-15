@@ -26,7 +26,7 @@ def login(config: dict) -> None:
         # Login with account
         wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])   
         wandb.Settings(quiet=True)  # Suppress WandB output    
-    return
+    
 
 
 
