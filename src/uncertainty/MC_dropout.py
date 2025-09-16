@@ -31,7 +31,7 @@ from src.dataset.load_dataset import load_dataset, generate_K_fold_cross_validat
 from src.dataset.get_dataloader import make_dataloader   
 from src.models.tools.save_model import load_model
 from src.config_presets.tools.load_config import load_config
-
+from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
 
 def train_MC_dropout_model(config, UQ_method = "MC_dropout"):
@@ -161,7 +161,6 @@ def collect_bayesian_forward_passes(config, experiment_dir, test_loader, metadat
     # labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
     #config['saving']['label_column_names'] = labelManager.label_names_full_list
 
-    #print((experiment_dir, config['saving']['filenames']['config_yaml']) )
     model_config = load_config(os.path.join(experiment_dir, config['saving']['filenames']['config_yaml']) )
 
     model_config['paths']['results'] = model_config['paths']['results']
@@ -227,7 +226,10 @@ def collect_bayesian_forward_passes(config, experiment_dir, test_loader, metadat
     DF_ALL_PREDS = DF_ALL_PREDS[true_label_columns + all_prediction_columns]
 
     # save the predictions to a csv file
-    DF_ALL_PREDS.to_csv(os.path.join(experiment_dir, config['uncertainty']['filenames']['all_predictions_filename'] ), sep=';', index=True)
+    
+    # alter the filename if the dataset is external
+    all_preds_filename = alter_filename_if_external_dataset(config, config['uncertainty']['filenames']['all_predictions_filename'])
+    DF_ALL_PREDS.to_csv(os.path.join(experiment_dir, all_preds_filename), sep=';', index=True)
 
     """
     Save the mean predictions for each toxicity endpoint.
@@ -236,7 +238,8 @@ def collect_bayesian_forward_passes(config, experiment_dir, test_loader, metadat
     # make a file with the true labels and mean predictions for each toxicity
     df_mean_predictions = make_mean_predictions_dataframe(DF_ALL_PREDS, endpoint_list)
     
-    df_mean_predictions.to_csv(os.path.join(experiment_dir, config['uncertainty']['filenames']['mean_predictions_filename'] ), sep=';', index=True)
+    mean_preds_filename = alter_filename_if_external_dataset(config, config['uncertainty']['filenames']['mean_predictions_filename'])
+    df_mean_predictions.to_csv(os.path.join(experiment_dir, mean_preds_filename), sep=';', index=True)
 
     del model, df_mean_predictions, DF_ALL_PREDS
 

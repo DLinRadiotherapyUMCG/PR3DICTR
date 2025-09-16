@@ -170,67 +170,153 @@ def plot_calibration_error_over_dataset_size(
     # Prepare rows for DataFrame
     rows = []
 
-    N_patients_list = df_data_dict.keys()
+    N_iterations_list = list(df_data_dict.keys())
+    N_patients_list = list(df_data_dict[N_iterations_list[0]].keys())
     
-    for N_patients in N_patients_list:
-        df_UQ_temp = df_data_dict[N_patients]
-
-        if ENDPOINT_TYPES[endpoint] == "Binary":
-            df_UQ_no_missing_labels = df_UQ_temp[df_UQ_temp['True Labels'] != -1]
-            true_labels = df_UQ_no_missing_labels['True Labels'].values
-        else:
-            df_UQ_no_missing_labels = df_UQ_temp[df_UQ_temp['True Label Event'] != -1]
-            true_labels = df_UQ_no_missing_labels[['True Label Event', 'True Months Event']].values
-
-        mean_preds = df_UQ_no_missing_labels['Mean Prediction'].values
-        #print(df_UQ_temp)
-
-        for UQ_metric_name in UQ_metrics_list:
-
-                    
-            UQ_metric = df_UQ_no_missing_labels[UQ_metric_name].values
-            if UQ_metric_name == "Binary Entropy":
-                UQ_metric_norm = UQ_metric
-            else:
-                UQ_metric_norm = normalise_uncertainty_values(UQ_metric, normalisation_method=normalisation_method)
-
-            uq_bins = pd.qcut(UQ_metric_norm, N_bins, labels=False, duplicates='drop')
-            aucs, bin_centers = [], []
-            for b in np.unique(uq_bins):
-                idx = uq_bins == b
-                if ENDPOINT_TYPES[endpoint] == "Binary":
-                    if np.unique(true_labels[idx]).size == 2:
-                        # auc = roc_auc_score(true_labels[idx], mean_preds[idx])
-                        auc = log_loss(true_labels[idx], mean_preds[idx])
-                        # 
-                        # auc = accuracy_score(true_labels[idx], mean_preds[idx] > 0.5)
-                        aucs.append(auc)
-                    else:
-                        aucs.append(1)
-                else:
-                    if np.unique(true_labels[idx][:, 0]).size == 2:
-                        auc = concordance_index(true_labels[idx][:, 1], mean_preds[idx], true_labels[idx][:, 0])
-                        aucs.append(auc)
-                    else:
-                        aucs.append(1)
-                bin_centers.append(UQ_metric_norm[idx].mean())
+    for iteration in N_iterations_list:
             
-            value = np.sum(abs(np.array(aucs) - np.array(bin_centers))**2) / len(aucs)
-            # COMPUTE METRIC HERE
-            #value = metric_func(config, aucs, bin_centers)
-            rows.append({
-                "endpoint": endpoint,
-                "N_patients": N_patients,
-                "uq_metric": UQ_metric_name,
-                "metric_value": value
-            })
- 
+        for N_patients in N_patients_list:
+            df_UQ_temp = df_data_dict[iteration][N_patients]
+
+
+            if ENDPOINT_TYPES[endpoint] == "Binary":
+                df_UQ_no_missing_labels = df_UQ_temp[df_UQ_temp['True Labels'] != -1]
+                true_labels = df_UQ_no_missing_labels['True Labels'].values
+            else:
+                df_UQ_no_missing_labels = df_UQ_temp[df_UQ_temp['True Label Event'] != -1]
+                true_labels = df_UQ_no_missing_labels[['True Label Event', 'True Months Event']].values
+
+            mean_preds = df_UQ_no_missing_labels['Mean Prediction'].values
+            #print(df_UQ_temp)
+
+            for UQ_metric_name in UQ_metrics_list:
+
+                        
+                UQ_metric = df_UQ_no_missing_labels[UQ_metric_name].values
+                if UQ_metric_name == "Binary Entropy":
+                    UQ_metric_norm = UQ_metric
+                else:
+                    UQ_metric_norm = normalise_uncertainty_values(UQ_metric, normalisation_method=normalisation_method)
+
+                uq_bins = pd.qcut(UQ_metric_norm, N_bins, labels=False, duplicates='drop')
+                aucs, bin_centers = [], []
+                for b in np.unique(uq_bins):
+                    idx = uq_bins == b
+                    if ENDPOINT_TYPES[endpoint] == "Binary":
+                        if np.unique(true_labels[idx]).size == 2:
+                            # auc = roc_auc_score(true_labels[idx], mean_preds[idx])
+                            # auc = log_loss(true_labels[idx], mean_preds[idx])
+                            # 
+                            auc = accuracy_score(true_labels[idx], mean_preds[idx] > 0.5)
+                            aucs.append(auc)
+                        else:
+                            aucs.append(1)
+                    else:
+                        if np.unique(true_labels[idx][:, 0]).size == 2:
+                            auc = concordance_index(true_labels[idx][:, 1], mean_preds[idx], true_labels[idx][:, 0])
+                            aucs.append(auc)
+                        else:
+                            aucs.append(1)
+                    bin_centers.append(UQ_metric_norm[idx].mean())
+                
+                value = np.sum(abs(np.array(aucs) - np.array(bin_centers))) / len(aucs)
+                # COMPUTE METRIC HERE
+                #value = metric_func(config, aucs, bin_centers)
+                rows.append({
+                    "endpoint": endpoint,
+                    "N_patients": int(N_patients),
+                    "uq_metric": UQ_metric_name,
+                    "metric_value": value
+                })
+    
     df = pd.DataFrame(rows)
 
-    for UQ_metric_name in df['uq_metric'].unique():
-        subset = df[df['uq_metric'] == UQ_metric_name]
-        ax.plot(subset['N_patients'], subset['metric_value'], label=UQ_metric_name, color=colours_dict[UQ_metric_name])
+    grouped = df.groupby(['N_patients', 'uq_metric'])['metric_value'].agg(['mean', 'std']).reset_index()
+    for uq_metric in grouped['uq_metric'].unique():
+        subset = grouped[grouped['uq_metric'] == uq_metric]# .sort_values('N_patients')
+        #print(subset)
+        ax.errorbar(
+            subset['N_patients'],
+            subset['mean'],
+            yerr=subset['std'],
+            label=uq_metric,
+            marker='o',
+            capsize=3,
+            color=colours_dict[uq_metric]
+        )
+    
 
     ax.set_xlabel("N training patients")
 
     #return df
+
+
+
+def plot_UQ_values_over_dataset_size(
+        ax,
+    df_data_dict,
+    endpoint,
+    ENDPOINT_TYPES,
+    UQ_metrics_list,
+    N_bins,
+    colours_dict,
+    normalisation_method="minmax",
+):
+    # Prepare rows for DataFrame
+    rows = []
+
+    N_iterations_list = list(df_data_dict.keys())
+    N_patients_list = list(df_data_dict[N_iterations_list[0]].keys())
+    
+    for iteration in N_iterations_list:
+            
+        for N_patients in N_patients_list:
+            df_UQ_temp = df_data_dict[iteration][N_patients]
+
+
+            if ENDPOINT_TYPES[endpoint] == "Binary":
+                df_UQ_no_missing_labels = df_UQ_temp[df_UQ_temp['True Labels'] != -1]
+                true_labels = df_UQ_no_missing_labels['True Labels'].values
+            else:
+                df_UQ_no_missing_labels = df_UQ_temp[df_UQ_temp['True Label Event'] != -1]
+                true_labels = df_UQ_no_missing_labels[['True Label Event', 'True Months Event']].values
+
+            mean_preds = df_UQ_no_missing_labels['Mean Prediction'].values
+            #print(df_UQ_temp)
+
+            for UQ_metric_name in UQ_metrics_list:
+
+                        
+                UQ_metric = df_UQ_no_missing_labels[UQ_metric_name].values
+                if UQ_metric_name == "Binary Entropy":
+                    UQ_metric_norm = UQ_metric
+                else:
+                    UQ_metric_norm = normalise_uncertainty_values(UQ_metric, normalisation_method=normalisation_method)
+
+                mean_UQ_value = np.mean(UQ_metric_norm)
+                rows.append({
+                    "endpoint": endpoint,
+                    "N_patients": int(N_patients),
+                    "uq_metric": UQ_metric_name,
+                    "mean_UQ_value": mean_UQ_value
+                })
+
+    
+    df = pd.DataFrame(rows)
+
+    grouped = df.groupby(['N_patients', 'uq_metric'])['mean_UQ_value'].agg(['mean', 'std']).reset_index()
+    for uq_metric in grouped['uq_metric'].unique():
+        subset = grouped[grouped['uq_metric'] == uq_metric]# .sort_values('N_patients')
+        #print(subset)
+        ax.errorbar(
+            subset['N_patients'],
+            subset['mean'],
+            yerr=subset['std'],
+            label=uq_metric,
+            marker='o',
+            capsize=3,
+            color=colours_dict[uq_metric]
+        )
+    
+
+    ax.set_xlabel("N training patients")

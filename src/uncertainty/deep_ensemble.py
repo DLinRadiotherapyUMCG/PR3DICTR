@@ -7,6 +7,7 @@ import gc
 from tqdm import tqdm 
 from itertools import chain
 
+from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 from src.constants import DEVICE
 
 from src.models.tools.get_classification_model import get_classification_model
@@ -28,8 +29,12 @@ from src.uncertainty.utils.prediction_files import make_mean_predictions_datafra
 from src.dataset.LabelTypesManager import LabelTypesManager
 
 
-from src.dataset.get_transforms import get_transforms
+from src.dataset.get_transforms import get_transforms 
+from src.dataset.load_dataset import load_dataset, generate_K_fold_cross_validation_splits
 from src.dataset.get_dataloader import make_dataloader   
+from src.models.tools.save_model import load_model
+from src.config_presets.tools.load_config import load_config
+from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
 
 def train_deep_ensemble_models(config):
@@ -131,6 +136,72 @@ def train_deep_ensemble_models(config):
 
 
 
+
+def external_evaluate_deep_ensemble_models(config, experiment_dir):
+    # MAKE TEST LOADER AND STUFF HERE
+    # get the test set data and make a test dataloader
+    labelManager = LabelTypesManager(config=config)
+    # get the loss function and metric handler
+    loss_function = get_loss_function(config, labelManager)
+    metricHandler = mainMetricHandler(config)  # class to compute the metrics per epoch
+
+    df_train_val, df_test = load_dataset(config)
+    train_transforms, val_transforms = get_transforms(config)
+
+    test_loader, metadata = make_dataloader(config, df_test, val_transforms, validation_mode=True)
+
+    
+
+    experiment_dir = config['general']['resultsCurrentDirectory'] # os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'], 'model_1')
+    
+    for model_idx in range(1, config['uncertainty']['deep_ensemble']['n_models'] + 1):
+        model_dir = os.path.join(experiment_dir, f"model_{model_idx}")
+        model_predictions_csv_dir = os.path.join(model_dir, config['saving']['filenames']['predictions_csv'])
+        if not os.path.exists(model_predictions_csv_dir):
+            raise FileNotFoundError(f"Model predictions file not found: {model_predictions_csv_dir}")
+        
+        print(model_dir, config['saving']['filenames']['config_yaml'])
+        model_config = load_config(os.path.join(model_dir, config['saving']['filenames']['config_yaml']))
+
+        model_config['general']['resultsCurrentDirectory'] = model_config['general']['resultsCurrentDirectory'].replace("Dysphagia_M06_v2", "Dysphagia_M06")  # TEMPORARY FIX FOR LOADING CONFIGS WITH THE WRONG FOLDER NAME
+
+        config['general']['resultsCurrentDirectory'] = model_config['general']['resultsCurrentDirectory']  # set the current directory to the model directory to save results in the right place
+        
+
+        # load in the model weights
+        model = get_classification_model(model_config, metadata=metadata, save_summary=False)
+        model.to(DEVICE)
+        model = load_model(model_config, model) # load the saved weights
+
+        # print("dropout is enabled:", enable_MC_dropout)
+        # print(model_config['model']['dropout_p'])
+
+        # use the validate function to get the predictions
+        endpoint_list = config['columns']['labels']  # the endpoints to evaluate
+
+        prediction_columns = [x+'_pred' for x in endpoint_list]  # the columns in the predictions csv file
+
+        all_label_column_names = config['saving']['label_column_names']
+        label_column_names = list(chain.from_iterable(
+            [list(x) if isinstance(x, tuple) else [x] for x in all_label_column_names]
+        ))
+        true_label_columns = ['{}_true'.format(x) for x in label_column_names]
+
+        
+        _, _, _, _, test_preds_dict,  test_targets_dict,  test_patientIDs_list  = validate(config, model, loss_function, test_loader, metricHandler)
+                
+        # save predictions
+        all_patientIDs_list = test_patientIDs_list                 # IDs column
+        mode_list =  ['test']*len(test_patientIDs_list)  # Mode column
+        
+        all_preds_dict, all_targets_dict = concatenate_predictions(config, [test_preds_dict],  # concat the predictions and labels
+                                                                [test_targets_dict])
+
+        # save all the predictions into one csv file
+        save_predictions(config, labelManager, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
+
+
+
 def post_hoc_evaluate_deep_ensemble_models(config, experiment_dir):
     pass
 
@@ -153,7 +224,8 @@ def evaluate_deep_ensemble_models(config, experiment_dir):
     
     for model_idx in tqdm(range(1, config['uncertainty']['deep_ensemble']['n_models'] + 1)):
         #model_dir = os.path.join(config['general']['resultsCurrentDirectory'], f"model_{model_idx}")
-        model_predictions_csv_dir = os.path.join(experiment_dir, f"model_{model_idx}", config['saving']['filenames']['predictions_csv'])
+        model_preds_filename = alter_filename_if_external_dataset(config, config['saving']['filenames']['predictions_csv'])
+        model_predictions_csv_dir = os.path.join(experiment_dir, f"model_{model_idx}", model_preds_filename)
         df_model_preds = pd.read_csv(model_predictions_csv_dir, sep=';', index_col='PatientID')
         
         # keep only the test patients
@@ -194,7 +266,8 @@ def evaluate_deep_ensemble_models(config, experiment_dir):
     df_all_test_preds = df_all_test_preds[true_label_columns + all_prediction_columns]
 
     # save the predictions to a csv file
-    df_all_test_preds.to_csv(os.path.join(experiment_dir, config['uncertainty']['filenames']['all_predictions_filename'] ), sep=';', index=True)
+    all_preds_filename = alter_filename_if_external_dataset(config, config['uncertainty']['filenames']['all_predictions_filename'])
+    df_all_test_preds.to_csv(os.path.join(experiment_dir, all_preds_filename), sep=';', index=True)
 
     """
     Save the mean predictions for each toxicity endpoint.
@@ -203,7 +276,8 @@ def evaluate_deep_ensemble_models(config, experiment_dir):
     # make a file with the true labels and mean predictions for each toxicity
     df_mean_predictions = make_mean_predictions_dataframe(df_all_test_preds, endpoint_list)
     
-    df_mean_predictions.to_csv(os.path.join(experiment_dir, config['uncertainty']['filenames']['mean_predictions_filename'] ), sep=';', index=True)
+    mean_predictions_filename = alter_filename_if_external_dataset(config, config['uncertainty']['filenames']['mean_predictions_filename'])
+    df_mean_predictions.to_csv(os.path.join(experiment_dir, mean_predictions_filename), sep=';', index=True)
 
 
     logging.info('Finished collecting deep ensemble model predictions!')

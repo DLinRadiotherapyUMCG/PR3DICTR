@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from src.uncertainty.visualisation.calibration_plot import plot_calibration_subplot, plot_error_calibration_subplot, plot_calibration_error_over_dataset_size
+from src.uncertainty.visualisation.calibration_plot import plot_calibration_subplot, plot_error_calibration_subplot, plot_calibration_error_over_dataset_size, plot_UQ_values_over_dataset_size
 from src.uncertainty.visualisation.sparsification_plot import plot_sparsification_subplot
 
 
@@ -86,6 +86,8 @@ def plot_nested_UQ(
                 plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, colours_dict)
             elif plot_type == "calibration_error_dataset_size":
                 plot_calibration_error_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
+            elif plot_type == "plot_UQ_values_over_dataset_size":
+                plot_UQ_values_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
             else:
                 raise ValueError(f"Unknown plot_type: {plot_type}")
             
@@ -96,11 +98,13 @@ def plot_nested_UQ(
             if j == 0:
                 #ax.set_ylabel("AUC" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
                 if plot_type == "calibration" or plot_type == "sparsification":
-                    ax.set_ylabel("AUC" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
+                    ax.set_ylabel("Accuracy" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
                 elif plot_type == "calibration_error_dataset_size":
-                    ax.set_ylabel("UQ Calibration Error (MSE)")
+                    ax.set_ylabel("UQ Calibration Error")
                 elif plot_type == "error calibration":
                     ax.set_ylabel("Error (BCE loss)")
+                elif plot_type == "plot_UQ_values_over_dataset_size":
+                    ax.set_ylabel("Mean Uncertainty")
                 ax.annotate(row_val, xy=(-0.3, 0.5), xycoords='axes fraction',
                             ha='right', va='center', fontsize=12, rotation=90)
             
@@ -115,11 +119,13 @@ def plot_nested_UQ(
     if plot_type == "calibration":
         title = "Certainty vs Accuracy"
     elif plot_type == "sparsification":
-        title = "Number of 'Most Uncertain' Samples Removed vs. AUC"
+        title = "Number of 'Most Uncertain' Samples Removed vs. Accuracy"
     elif plot_type == "calibration_error_dataset_size":
-        title = "Dataset Size vs. UQ Calibration Error"
+        title = "Training Dataset Size vs. UQ Calibration Error"
     elif plot_type == "error calibration":
         title = "Uncertainty vs Error"
+    elif plot_type == "plot_UQ_values_over_dataset_size":
+        title = "Training Dataset Size vs. Mean Uncertainty"
 
     plt.suptitle(
         title,

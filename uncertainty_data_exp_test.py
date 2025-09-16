@@ -34,7 +34,7 @@ if __name__ == '__main__':
     from src.uncertainty.deep_ensemble import train_deep_ensemble_models, evaluate_deep_ensemble_models
     from src.uncertainty.MC_dropout import train_MC_dropout_model, collect_bayesian_forward_passes, post_hoc_collect_bayesian_forward_passes
     
-    from uncertainty_main import load_modal_config_for_uncertainty_experiment
+    from uncertainty_main import load_model_config_for_uncertainty_experiment
     
     # ["Geslacht", "Leeftijd", "Dysphagia_W01_Grade0_1", "Dysphagia_W01_Grade2", "Dysphagia_W01_Grade3_4"]
     
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     for idx in [2, 3, 4]:
         for endpoint in endpoints:
-            run_config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
+            run_config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
         
             #config['general']['experiment_name'] = "Data MC Dropout"
             run_config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"

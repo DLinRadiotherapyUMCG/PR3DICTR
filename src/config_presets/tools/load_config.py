@@ -19,6 +19,8 @@ def load_config(name, pathGiven = ""):
     else:
         config_path = os.path.join(pathGiven, "src", "config_presets", name) 
 
+    print(config_path)
+
     # Check if the config file exists
     if not os.path.exists(config_path):
         raise ValueError('Config file not found. Please check the toxicity_configs folder.')

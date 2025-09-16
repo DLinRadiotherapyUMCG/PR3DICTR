@@ -11,7 +11,7 @@ import faulthandler, signal
 faulthandler.register(signal.SIGUSR1)
 
 
-def load_modal_config_for_uncertainty_experiment(config, endpoint_name = "Dysphagia_M06"):
+def load_model_config_for_uncertainty_experiment(config, endpoint_name = "Dysphagia_M06"):
     if endpoint_name == "OS":
         model_config = load_config("Daniel/uncertainty_models/Baoqiang_OS")
         
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     endpoint = "LRC"
     #endpoint = "OS"
 
-    config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
+    config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
 
     # SETTINGS FOR DATA AMOUNTS EXPERIMENT
     config['general']['dataset_amounts_experiment'] = False

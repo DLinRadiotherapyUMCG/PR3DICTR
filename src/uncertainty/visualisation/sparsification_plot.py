@@ -50,7 +50,7 @@ def plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_met
 
             if ENDPOINT_TYPES[endpoint] == "Binary":
                 if np.unique(labels_arr).size == 2:
-                    metric_value = roc_auc_score(labels_arr, preds_arr)
+                    # metric_value = roc_auc_score(labels_arr, preds_arr)
                     thresh_value = 0.5
                     metric_value = accuracy_score(labels_arr, preds_arr>thresh_value)
                 else:
