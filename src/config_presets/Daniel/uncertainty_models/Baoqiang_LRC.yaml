@@ -92,7 +92,7 @@ model:
   n_linear_layers_endpoint: 2
   num_ohe_classes: 1
   output_head:
-    name: multitox
+    name: multilabel
   resnet:
     conv1_kernel_size: 7
     conv1_stride: 2
