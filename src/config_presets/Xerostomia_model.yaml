@@ -3,9 +3,9 @@ general:
   seed: 42
   firstRun: false
   experiment_name: 'Xerostomia_M06'
-  trialNumber: "ResNet18"
+  trialNumber: "no images"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
-  testMode: True
+  testMode: False
   use_test_set: false
 
 columns: # 
@@ -32,7 +32,7 @@ model:
   output_head:
     name: "multilabel"
     n_linear_layers: 1
-    linear_units: [16] # shared layers for model head
+    linear_units: [32, 16] # shared layers for model head
     n_clinical_layers: 0
     clinical_variables_linear_units: []
     clinical_variables_position: 1
@@ -56,7 +56,7 @@ data:
   source: 'PRIMA'  # ['UMCG', 'MDACC']
   dataset_csv: 'MT_dataset_with_all_structs_no_missing.csv'  #  MDACC_features_present
   stratify_on: ["CT_Artefact" ] # "Loctum2"
-  image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
+  image_keys:  [] # ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
   image_num_dimensions: 3
 
   dataloader:

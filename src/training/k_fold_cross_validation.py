@@ -132,9 +132,15 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         
         train_loss_value, train_loss_dict, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
         print("   ", train_loss_value, train_mean_metric_val, train_metric_dict)
+        logging.info(f'   Mean {metric_name}: {train_mean_metric_val}')
+        logging.info(f'   Loss: {train_loss_value}')
+        logging.info(f'   Metrics: {train_metric_dict}')
         logging.info('   Validation set')
         val_loss_value, val_loss_dict, val_mean_metric_val, val_metric_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
         print("   ",val_loss_value, val_mean_metric_val, val_metric_dict)
+        logging.info(f'   Mean {metric_name}: {val_mean_metric_val}')
+        logging.info(f'   Loss: {val_loss_value}')
+        logging.info(f'   Metrics: {val_metric_dict}')
 
         # if the test set is enabled, also collect the results on that set
         if config['general']['use_test_set']:

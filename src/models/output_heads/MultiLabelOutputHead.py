@@ -10,8 +10,7 @@ class MultiLabelOutputHead(torch.nn.Module):
     def __init__(self, config, n_features):
         super(MultiLabelOutputHead, self).__init__()
 
-        self.predict_CT_contrast = False
-        self.endpoint_list = [x for x in config['columns']['labels'] if "CT+C" not in x]
+        self.endpoint_list = config['columns']['labels']
         self.n_features = n_features
         self.dropout_p = config['model']['dropout_p'] 
         self.num_ohe_classes = config['model']['output_head']['num_ohe_classes'] 
@@ -50,10 +49,6 @@ class MultiLabelOutputHead(torch.nn.Module):
         # makes:
         #   self.non_shared_endpoint_fc_layers    
 
-        if self.predict_CT_contrast:
-            self._make_CT_contrast_output_head()
-            # makes:
-            #   self.CT_contrast_output_head
 
 
     def forward(self, x, features=None, vectorize=False):
@@ -62,13 +57,6 @@ class MultiLabelOutputHead(torch.nn.Module):
         #x = self.flatten(x)
 
         x_dict = dict()
-
-        if self.predict_CT_contrast:
-            #CT_contrast = 
-            CT_contrast = x.clone()
-            for layer in self.CT_contrast_layers:
-                CT_contrast = layer(CT_contrast)
-            x_dict["CT+C"] = CT_contrast
 
         # ----- SHARED LAYERS ----- #
         # MLP clinical variables (SHARED)
@@ -160,16 +148,12 @@ class MultiLabelOutputHead(torch.nn.Module):
                 additional_units = self.clinical_variables_linear_units[-1]
             else:
                 additional_units = 0
-            #print(self.clinical_variables_position)
-            #print(i, additional_units, self.linear_units[i])
-            #if self.dropout_p > 0:
+            
             self.shared_fc_layers.add_module(f'Dropout_shared_{i+1}', torch.nn.Dropout(self.dropout_p))
             
             if i == 0:
                 self.shared_fc_layers.add_module(f'Linear_shared_{i+1}',
                                                 torch.nn.LazyLinear(out_features=self.linear_units[i], bias=self.use_bias)
-                                        #torch.nn.Linear(in_features=self.linear_units[i],
-                                        #                ,
                                                         )
             else:
                 self.shared_fc_layers.add_module(f'Linear_shared_{i+1}',
@@ -212,21 +196,5 @@ class MultiLabelOutputHead(torch.nn.Module):
 
             self.endpoint_heads[endpoint].add_module(f'Output_{endpoint}',
                                 torch.nn.LazyLinear(out_features=self.num_ohe_classes, bias=self.use_bias))
-
-    def _make_CT_contrast_output_head(self):
-        self.CT_contrast_layers = torch.nn.ModuleList()
-
-        self.CT_contrast_layers.add_module(f'CT_contrast_{1}',
-                                                 torch.nn.LazyLinear(out_features=64, bias=self.use_bias)
-                                                 )
-        self.CT_contrast_layers.add_module(f'LReLU_CT_contrast_{1}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
-
-        self.CT_contrast_layers.add_module(f'CT_contrast_{2}',
-                                                torch.nn.Linear(in_features=64,
-                                                                out_features=16, bias=self.use_bias))
-        self.CT_contrast_layers.add_module(f'LReLU_CT_contrast_{2}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
-        self.CT_contrast_layers.add_module(f'CT_contrast_{3}',
-                                                torch.nn.Linear(in_features=16,
-                                                                out_features=1, bias=self.use_bias))
 
 

@@ -2,13 +2,14 @@
 import os
 import torch
 from torch import nn
+import logging
 
 from src.constants import DEVICE
 from src.models.tools.get_encoder import get_encoder
 from src.models.tools.model_summary import get_model_summary
 from src.models.tools.get_output_head import get_output_head
 from src.models.TransRP_ViT import get_transrp_vit
-
+from src.models.MLP import MultiLayerPerceptron
 
 class ImageClassifier(nn.Module):
     def __init__(self, encoder, config, n_features : int, metadata = None):
@@ -86,18 +87,29 @@ class ImageClassifier(nn.Module):
             
             self.encoder.to(DEVICE)
             x = self.forward_image_encoder(temp_x_input, temp_clc_features)
-            
+            print(x.shape)
             return x.shape[1:]
+
+
 
 
 
 def get_classification_model(config, metadata, save_summary=True):
   
     channels,depth,height,width,n_features = metadata['channels'], metadata['depth'], metadata['height'], metadata['width'], metadata['n_features']
-    encoder = get_encoder(config, channels, depth, height, width)
-    # Put the image encoder into a model
-    model = ImageClassifier(encoder=encoder, config=config, n_features=n_features, metadata=metadata)
 
+
+    if channels > 0: # if images are present
+        logging.info("Creating image model")
+        
+        encoder = get_encoder(config, channels, depth, height, width)
+        # Put the image encoder into a model
+        model = ImageClassifier(encoder=encoder, config=config, n_features=n_features, metadata=metadata)
+
+    else:
+        logging.info("No image_keys present. Creating clinical-only model (MLP)")
+        channels, depth, height, width = 1, 1, 1, 1 # dummy values for model summary
+        model = MultiLayerPerceptron(encoder=None, config=config, n_features=n_features, metadata=metadata)
 
     get_model_summary(config=config, model=model, input_size=[(config['training']['batch_size'], channels, depth, height, width), (config['training']['batch_size'], max(n_features, 1))], 
                                                 device=DEVICE, save_to_file=save_summary)

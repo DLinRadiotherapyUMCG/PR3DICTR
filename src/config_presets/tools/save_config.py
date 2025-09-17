@@ -19,8 +19,11 @@ def save_config(config):
     
     print(f"Saving config to {out_dir}")
     print("DANIEL")
-    
+
     yaml = YAML()
+    yaml.width = 120
+
+    
     with open(out_dir, "w") as f:
         yaml.dump(config, f)
 
