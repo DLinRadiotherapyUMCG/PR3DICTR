@@ -32,14 +32,14 @@ def remove_duplicate_RGB_values(dictionary):
 
 
 def create_RTDOSE_cmap(name):
-    """ Create a custom colormap from a dictionary
-    
+    """ 
+    Create a custom colormap from a dictionary.
     Args: 
-        colors <dict>: Levels to colornames
+        name (str): name of a RT colormap in constants.PLOT_SLICES_COLOURMAPS (e.g. "HNC" or "LUNG)
     Returns:
-        cmap <matplotlib.colors.ListedColormap>: Custom colormap
-        norm <matplotlib.colors.BoundaryNorm>: Normalize the colorbar
-        labels <list>: Labels for the colorbar
+        cmap (matplotlib.colors.ListedColormap): Custom colormap
+        norm (matplotlib.colors.BoundaryNorm): Normalize the colorbar
+        labels (list): Labels for the colorbar
     """
     try:
         colormapping_dict = constants.PLOT_SLICES_COLOURMAPS[name]
@@ -51,7 +51,7 @@ def create_RTDOSE_cmap(name):
     colormapping_dict = dict(sorted(colormapping_dict.items(), key=lambda x: x[0]))
 
     colormapping_dict = remove_duplicate_RGB_values(colormapping_dict)
-
+    
     
     labels = sorted(colormapping_dict.keys())
     clrs = [colormapping_dict[l] for l in labels[:-1]]

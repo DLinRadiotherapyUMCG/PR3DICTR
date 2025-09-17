@@ -29,7 +29,9 @@ def create_colormap(cmap_name, min_value, max_value, params=None, N=256):
         cmap = LinearSegmentedColormap.from_list("PET_cmap", cmap_name, N=N)
     else:
         cmap = mpl.cm.get_cmap(cmap_name, N)
+
     norm = Normalize(vmin=min_value, vmax=max_value)
+    
     return cmap, norm
 
 def rescale_data(data, min_val, max_val):

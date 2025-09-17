@@ -22,17 +22,3 @@ def get_output_head(config, n_features, feature_map_dim_after_encoder = None):
         
     return output_head
     
-
-
-# def get_linear_layers(config, n_features):
-#     """
-#     Get the output head (linear layers) of a model by name.
-#     """
-
-#     model_name = config['model']['model_name'].lower()
-#     linear_layers_name = config['model']['output_head']['name'].lower()
-        
-#     # linear
-#     if linear_layers_name == "multitoxoutputhead":
-#         linear_layers = MultiToxOutputHead(config=config, n_features=n_features)
-#         flatten = nn.Flatten()

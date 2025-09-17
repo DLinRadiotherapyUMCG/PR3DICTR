@@ -24,6 +24,7 @@ def get_encoder(config, channels, depth, height, width):
 
     if model_name == 'cnn_pooling':
         encoder = CNN_Pooling(config=config, n_input_channels=channels)  
+        
     elif model_name == 'resnet':
         encoder = get_resnet(config=config, model_depth=config['model']['resnet']['model_depth'], channels=channels)
 

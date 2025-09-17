@@ -128,15 +128,3 @@ class HyperTuning_Handler():
 
         return trial_result
 
-
-
-
-# def check_if_trial_params_are_repeated(trial):
-#     for t in trial.study.trials:
-#         if t.params == trial.params and t.number != trial.number:
-#             print(t.number, trial.number)
-#             print("DUPLICATE!!!")
-#             return True
-
-#     return False
-

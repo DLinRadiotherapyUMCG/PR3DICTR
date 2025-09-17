@@ -131,8 +131,8 @@ def train_deep_ensemble_models(config):
 
 
 
-def post_hoc_evaluate_deep_ensemble_models(config, experiment_dir):
-    pass
+
+
 
 def evaluate_deep_ensemble_models(config, experiment_dir):
     """

@@ -26,7 +26,7 @@ def normal_hyperparameters(config, trial):
 
             # Check if multi is encountered
             if(hyperinfo['name'].startswith("n_")):
-                suggested_value = generate_value(trial, hyperinfo, config['general']['firstRun'])
+                suggested_value = generate_value(trial, hyperinfo)
             else:   
                 suggested_value = generate_value(trial, hyperinfo)
             
@@ -105,14 +105,10 @@ def derived_hyperparameters(config, trial):
         
     return config
 
-# def set_min_value(hyperinfo, firstRun):
-#     minValue = hyperinfo['min']
-#     if firstRun:
-#         minValue = hyperinfo['max']
-#     return minValue
 
 
-def generate_value(trial, hyperinfo, firstRun = False):
+
+def generate_value(trial, hyperinfo):
     """
     Selects and generates a value based on hyperinfo
     """
@@ -178,8 +174,7 @@ def initialize_optuna_study(config):
                             )
 
         # check if an experiment has been run before
-        config['general']['firstRun'] = (len(study.get_trials()) == 0)
-        if config['general']['firstRun']:
+        if len(study.get_trials()) == 0:
             logging.info("First optuna run has been detected!")
         else:
             logging.info("Continuing existing optuna run!")

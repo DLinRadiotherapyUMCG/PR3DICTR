@@ -74,3 +74,5 @@ def update_WandB_summary_table(config : dict, best_log_dict : dict):
 
         # update the best log. This appears in the 'summary' tab in WandB (the table of results)
         wandb.run.summary.update(best_log_dict)
+
+

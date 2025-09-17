@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-import os
-
 from torchinfo import summary
 from src.utils.fileHandler import create_folder, create_textfile
 
@@ -8,13 +5,14 @@ from src.utils.fileHandler import create_folder, create_textfile
 def get_model_summary(config, model, input_size, device, save_to_file = True):
     
     """
-    Get model summary and number of trainable parameters.
+    Get model summary and number of trainable parameters. Saves the summary to a text file, within the Kfold folder, if specified.
 
     Args:
-        model:
-        input_size:
-        device:
-        logger:
+        config (dict): configuration dictionary
+        model (torch.nn.Module): the model to summarize
+        input_size (tuple or list of tuples): input size for the model summary
+        device (torch.device or string): device to use for the model summary
+        save_to_file (bool): whether to save the summary to a text file
 
     Returns:
         total_params (int): number of trainable parameters
