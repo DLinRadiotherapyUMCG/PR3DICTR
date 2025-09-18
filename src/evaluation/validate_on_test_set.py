@@ -11,7 +11,7 @@ from src.dataset.load_dataset import load_dataset
 from src.dataset.get_transforms import get_transforms
 from src.dataset.get_dataloader import make_dataloader
 from src.training.validate import validate
-from src.models.tools.save_model import load_model
+from src.models.tools.load_model import load_model
 from src.evaluation.get_metric_function import get_metric_function
 from src.constants import METRIC_TYPES
 from src.evaluation.calculate_metric_for_multiple_endpoints import calculate_metric_for_multiple_endpoints

@@ -158,7 +158,7 @@ class small_conv_block(torch.nn.Module):
 
 class CNN_Pooling(torch.nn.Module):
     """
-    Deep CNN that used pooling (and not stride) to reduce the feature map size.
+    Deep CNN that uses pooling (and not stride) to reduce the feature map size.
     """
 
     def __init__(self, config, n_input_channels):

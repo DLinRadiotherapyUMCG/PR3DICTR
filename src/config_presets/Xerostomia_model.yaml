@@ -15,7 +15,7 @@ columns: #
 paths:
   csv: /home/macraedc/data/
   images: /home/macraedc/data/dataset_full_2mm_anonymized
-  results: /home/macraedc/UQ_results
+  results: /home/macraedc/rt_pred_results
 
   # csv: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset"
   # images: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset/patients_high_res"  # patients_high_res
@@ -32,10 +32,10 @@ model:
   output_head:
     name: "multilabel"
     n_linear_layers: 1
-    linear_units: [32, 16] # shared layers for model head
+    linear_units: [32] # shared layers for model head
     n_clinical_layers: 0
     clinical_variables_linear_units: []
-    clinical_variables_position: 1
+    clinical_variables_position: 3
     n_linear_layers_endpoint: 0
     linear_units_endpoint: []
     num_ohe_classes: 1
@@ -56,7 +56,7 @@ data:
   source: 'PRIMA'  # ['UMCG', 'MDACC']
   dataset_csv: 'MT_dataset_with_all_structs_no_missing.csv'  #  MDACC_features_present
   stratify_on: ["CT_Artefact" ] # "Loctum2"
-  image_keys:  [] # ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
+  image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
   image_num_dimensions: 3
 
   dataloader:

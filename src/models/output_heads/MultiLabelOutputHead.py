@@ -1,200 +1,138 @@
 import torch
 from torch import nn
 
-
-class MultiLabelOutputHead(torch.nn.Module):
+class MultiLabelOutputHead(nn.Module):
     """
-    A class to define the linear layers and output head(s) of the model. 
-    Can be given to different models as a module, so that the different models can share the same output head (and so that the code for it is shared).
+    Defines the output head for multi-label classification, supporting shared and endpoint-specific layers,
+    as well as optional clinical variable integration.
     """
     def __init__(self, config, n_features):
-        super(MultiLabelOutputHead, self).__init__()
+        super().__init__()
 
+        # Configuration
         self.endpoint_list = config['columns']['labels']
         self.n_features = n_features
-        self.dropout_p = config['model']['dropout_p'] 
-        self.num_ohe_classes = config['model']['output_head']['num_ohe_classes'] 
+        self.dropout_p = config['model']['dropout_p']
+        self.num_ohe_classes = config['model']['output_head']['num_ohe_classes']
         self.use_bias = config['model']['use_bias']
         self.lrelu_alpha = config['model']['lrelu_alpha']
-        self.linear_units = config['model']['output_head']['linear_units']
-        self.linear_units = None if self.linear_units == 0 else self.linear_units
-        self.clinical_variables_linear_units = config['model']['output_head']['clinical_variables_linear_units']
-        self.linear_units_endpoint = config['model']['output_head']['linear_units_endpoint']
-        self.clinical_variables_position = config['model']['output_head']['clinical_variables_position']
-        
-        if self.clinical_variables_position >= 0 and self.clinical_variables_linear_units is not None and self.linear_units is None:
-            raise ValueError('clinical_variables_position >= 0, clinical_variables_linear_units is None, and '
-                             'linear_units is None is not allowed, because clinical_variables_position >= 0 implies '
-                             'that the clinical variables will be concatenated linear_units[clinical_variables_position].')
-        if self.clinical_variables_position <= 0 and  self.linear_units is not None:
-            raise ValueError('clinical_variables_position 0 (or lower)! It\'s indexing must start at 1 (for the first linear layer)!')
-        if self.clinical_variables_position > len(self.linear_units)+1:
-            raise ValueError('clinical_variables_position is higher than (the number of linear layers + 1)! \n'
-                             f'clinical_variables_position = {self.clinical_variables_position}, linear layers = {len(self.linear_units)}')
-        
-        #self.flatten = nn.Flatten()
+        self.linear_units = config['model']['output_head']['linear_units'] or None
+        self.clinical_units = config['model']['output_head']['clinical_variables_linear_units']
+        self.endpoint_units = config['model']['output_head']['linear_units_endpoint']
+        self.clinical_pos = config['model']['output_head']['clinical_variables_position']
 
-        if n_features > 0:
-            self._make_clinical_fc_layers(n_features)
-            # makes:
-            #   self.clinical_variables_fc_layer
-            #   self.clinical_variables_linear_units
+        # Validation
+        self._validate_config()
 
-        self._make_shared_fc_layers()
-        # makes:
-        #   self.shared_fc_layers
-        #   self.n_sublayers_per_linear_layer
-
-        self._make_non_shared_endpoint_fc_layers()
-        # makes:
-        #   self.non_shared_endpoint_fc_layers    
-
-
+        # Build layers
+        self._build_clinical_layers(n_features)
+        self._build_shared_layers()
+        self._build_endpoint_layers()
 
     def forward(self, x, features=None, vectorize=False):
-
-        # Flatten the input tensor
-        #x = self.flatten(x)
-
-        x_dict = dict()
-
-        # ----- SHARED LAYERS ----- #
-        # MLP clinical variables (SHARED)
-        if (self.n_features > 0) and (self.clinical_variables_linear_units is not None):
-            #print("self.clinical_variables_linear_units = ", self.clinical_variables_linear_units)
-            for layer in self.clinical_variables_shared_fc_layers:
+        """
+        Forward pass through the output head.
+        Args:
+            x: Main input tensor.
+            features: Clinical features tensor (optional).
+            vectorize: If True, stack outputs for all endpoints into a single tensor.
+        Returns:
+            Dict of endpoint outputs or stacked tensor.
+        """
+        # Process clinical features if present
+        if self.n_features > 0 and self.clinical_units is not None:
+            for layer in self.clinical_layers:
                 features = layer(features)
 
-        # Linear layers (SHARED)
-        for i, layer in enumerate(self.shared_fc_layers):
-            #print("self.linear_units", self.linear_units)
-            # Add features to flattened layer (clinical features are an input to the first (shared) linear layer)
-            if i == 0 and self.clinical_variables_position == 1 and (self.n_features > 0) :
-                # Add features to flattened layer
+        # Shared layers with clinical feature concatenation at specified position
+        for i, layer in enumerate(self.shared_layers):
+            if i == 0 and self.clinical_pos == 1 and self.n_features > 0:
                 x = torch.cat([x, features], dim=1)
-
             x = layer(x)
-
-            if (self.n_features > 0) and (
-                     (i + 1) / self.n_sublayers_per_linear_layer == self.clinical_variables_position - 1) \
-                     and not ( self.clinical_variables_position == 1):
-                # Add features to this linear layer
-                
+            if self.n_features > 0 and self._should_concat_clinical(i):
                 x = torch.cat([x, features], dim=1)
 
-        if len(self.shared_fc_layers) == self.clinical_variables_position + 1 and (self.n_features > 0): # if the clinical variables are concatenated to the last linear layer
-            # Add features just before the non-shared layers
+        # Final clinical concat if required
+        if self._should_concat_final():
+            x = torch.cat([x, features], dim=1)
+        elif len(self.shared_layers) == 0 and self.n_features > 0:
             x = torch.cat([x, features], dim=1)
 
-        elif len(self.shared_fc_layers) == 0 and (self.n_features > 0):  # if there are no shared layers
-            # Add features to the flattening layer
-            x = torch.cat([x, features], dim=1)
-
-
-        # ----- NON-SHARED LAYERS, ENDPOINT SPECIFIC ----- #
-        # Clone tensor (preserving the gradient)
+        # Endpoint-specific layers
+        outputs = {}
         for endpoint in self.endpoint_list:
-            x_dict[endpoint] = x.clone()
-        assert len(x_dict) == len(self.endpoint_heads) or len(x_dict) - 1 == len(self.endpoint_heads)
-
-        # Linear layers (NON-SHARED, endpoint specific)
-        for endpoint in self.endpoint_list:
-
-            for layer in self.endpoint_heads[endpoint]:
-                x_dict[endpoint] = layer(x_dict[endpoint])
-
-        if vectorize: # to stack the inputs into a single tensor (for [Captum's] attention maps)
-            output_tensor = torch.cat([x_dict[endpoint] for endpoint in self.endpoint_list], dim=1)
-            return output_tensor
-        else:
-            return x_dict
-
-
-    def _make_clinical_fc_layers(self, n_features):
-        
-        if (self.n_features > 0) and (self.clinical_variables_linear_units is not None):
-            self.clinical_variables_shared_fc_layers = torch.nn.ModuleList()
-
-            # make a list of linear layers, starting with the clinical input size
-            self.clinical_variables_linear_units = [n_features] + self.clinical_variables_linear_units
-
-            # iteratively add linear layers to the ModuleList()
-            for i in range(len(self.clinical_variables_linear_units) - 1):
-                
-                self.clinical_variables_shared_fc_layers.add_module(
-                    f'Clinical_shared_dropout_{i+1}',
-                    torch.nn.Dropout(self.dropout_p)
-                )
-                self.clinical_variables_shared_fc_layers.add_module(
-                    f'Clinical_shared_linear_{i+1}',
-                    torch.nn.Linear(in_features=self.clinical_variables_linear_units[i],
-                                    out_features=self.clinical_variables_linear_units[i + 1],
-                                    bias=self.use_bias)
-                )
-                self.clinical_variables_shared_fc_layers.add_module(
-                    f'Clinical_shared_LReLU_{i+1}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
-        else:
-            # no extra layers, just feed the features directly into the model
-            self.clinical_variables_linear_units = [n_features]
-
-
-
-    def _make_shared_fc_layers(self):
-        self.shared_fc_layers = torch.nn.ModuleList()
-        
-        for i in range(0, len(self.linear_units)):
-            # `- 1` because the input of the very first fully-connected layer is from the flatten layer (instead of a linear layer).
-            if i == self.clinical_variables_position - 1 and self.n_features > 0:
-                additional_units = self.clinical_variables_linear_units[-1]
-            else:
-                additional_units = 0
-            
-            self.shared_fc_layers.add_module(f'Dropout_shared_{i+1}', torch.nn.Dropout(self.dropout_p))
-            
-            if i == 0:
-                self.shared_fc_layers.add_module(f'Linear_shared_{i+1}',
-                                                torch.nn.LazyLinear(out_features=self.linear_units[i], bias=self.use_bias)
-                                                        )
-            else:
-                self.shared_fc_layers.add_module(f'Linear_shared_{i+1}',
-                                            torch.nn.Linear(in_features=self.linear_units[i-1] + additional_units,
-                                                            out_features=self.linear_units[i],
-                                                            bias=self.use_bias))
-            self.shared_fc_layers.add_module(f'LReLU_shared_{i+1}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
-
-        if self.n_features > 0 and len(self.linear_units) > 0:
-            self.n_sublayers_per_linear_layer = len(self.shared_fc_layers) / (len(self.linear_units))
-        #else:
-        #    self.n_sublayers_per_linear_layer = 0
-
+            endpoint_x = x.clone()
+            for layer in self.endpoint_layers[endpoint]:
+                endpoint_x = layer(endpoint_x)
+            outputs[endpoint] = endpoint_x
     
-    def _make_non_shared_endpoint_fc_layers(self):
-        # Initialize linear layers (NON-SHARED, endpoint specific)
-        linear_layers_endpoint_dict_i = dict()
+        if vectorize:
+            return torch.cat([outputs[ep] for ep in self.endpoint_list], dim=1)
+        return outputs
+
+    def _validate_config(self):
+        # function to check that the linear layer parameters in the config are valid 
+        if self.n_features > 0: # only need to check these things if there are clinical features in the first place
+            if self.clinical_pos > 1 and self.linear_units is None:
+                raise ValueError('clinical_variables_position cannot be more than 1 if there are no (shared) linear layers.')
+            if self.clinical_pos < 1:
+                raise ValueError('clinical_variables_position must be at least 1! (for the first linear layer).')
+            if self.linear_units and self.clinical_pos > len(self.linear_units) + 1:
+                raise ValueError('clinical_variables_position exceeds number of linear layers + 1.')
+
+    def _build_clinical_layers(self, n_features):
+        # Build linear layers for processing clinical features
+        if self.n_features > 0 and self.clinical_units is not None:
+            units = [n_features] + self.clinical_units
+            self.clinical_layers = nn.ModuleList()
+            for i in range(len(units) - 1):
+                self.clinical_layers.append(nn.Dropout(self.dropout_p))
+                self.clinical_layers.append(nn.Linear(units[i], units[i + 1], bias=self.use_bias))
+                self.clinical_layers.append(nn.LeakyReLU(self.lrelu_alpha))
+        else:
+            self.clinical_layers = nn.ModuleList()
+
+    def _build_shared_layers(self):
+        # Build the shared linear layers
+        self.shared_layers = nn.ModuleList()
+        if not self.linear_units:
+            return
+        for i, out_units in enumerate(self.linear_units):
+            in_units = self.linear_units[i - 1] if i > 0 else None
+            if i == self.clinical_pos - 1 and self.n_features > 0:
+                clinical_units = self.clinical_units[-1] if self.clinical_units else self.n_features
+                in_units = (in_units or 0) + clinical_units
+            self.shared_layers.append(nn.Dropout(self.dropout_p))
+            if i == 0:
+                self.shared_layers.append(nn.LazyLinear(out_units, bias=self.use_bias))
+            else:
+                self.shared_layers.append(nn.Linear(in_units, out_units, bias=self.use_bias))
+            self.shared_layers.append(nn.LeakyReLU(self.lrelu_alpha))
+
+        if self.n_features > 0 and self.linear_units:
+            self.n_sublayers_per_linear_layer = len(self.shared_layers) / len(self.linear_units)
+
+    def _build_endpoint_layers(self):
+        # Build endpoint-specific layers (one set per endpoint, can be thought of as 'output heads' for each endpoint)
+        self.endpoint_layers = nn.ModuleDict()
         for endpoint in self.endpoint_list:
-            linear_layers_endpoint_dict_i[endpoint] = torch.nn.ModuleList()
-        self.endpoint_heads = torch.nn.ModuleDict(linear_layers_endpoint_dict_i)
-
-
-        for endpoint in self.endpoint_list:
-            # loop through the non-shared linear layers
-            for i in range(len(self.linear_units_endpoint)):
-                
-                self.endpoint_heads[endpoint].add_module(f'Endpoint_Dropout_{i+1}', torch.nn.Dropout(self.dropout_p))
-
+            layers = nn.ModuleList()
+            for i, out_units in enumerate(self.endpoint_units):
+                layers.append(nn.Dropout(self.dropout_p))
                 if i == 0:
-                    self.endpoint_heads[endpoint].add_module(f'Endpoint_Linear_{i+1}',
-                                                    torch.nn.LazyLinear(out_features=self.linear_units_endpoint[i], bias=self.use_bias))
+                    layers.append(nn.LazyLinear(out_units, bias=self.use_bias))
                 else:
-                    self.endpoint_heads[endpoint].add_module(f'Endpoint_Linear_{i+1}',
-                                         torch.nn.Linear(in_features=self.linear_units_endpoint[i-1],
-                                                         out_features=self.linear_units_endpoint[i], bias=self.use_bias))
-                self.endpoint_heads[endpoint].add_module(f'Endpoint_LReLU_{i+1}', nn.LeakyReLU(negative_slope = self.lrelu_alpha))
-            # output layer/head for this toxicity endpoint
-            
-            self.endpoint_heads[endpoint].add_module(f'Output_{endpoint}_Dropout', torch.nn.Dropout(self.dropout_p))
+                    layers.append(nn.Linear(self.endpoint_units[i - 1], out_units, bias=self.use_bias))
+                layers.append(nn.LeakyReLU(self.lrelu_alpha))
+            layers.append(nn.Dropout(self.dropout_p))
+            layers.append(nn.LazyLinear(self.num_ohe_classes, bias=self.use_bias))
+            self.endpoint_layers[endpoint] = layers
 
-            self.endpoint_heads[endpoint].add_module(f'Output_{endpoint}',
-                                torch.nn.LazyLinear(out_features=self.num_ohe_classes, bias=self.use_bias))
+    def _should_concat_clinical(self, i):
+        # Determines if clinical features should be concatenated at this shared layer
+        return ((i + 1) / getattr(self, 'n_sublayers_per_linear_layer', 1) == self.clinical_pos - 1
+                and self.clinical_pos != 1)
 
-
+    def _should_concat_final(self):
+        # Determines if clinical features should be concatenated after last shared layer
+        return (self.linear_units and len(self.shared_layers) == self.clinical_pos + 1 and self.n_features > 0)
