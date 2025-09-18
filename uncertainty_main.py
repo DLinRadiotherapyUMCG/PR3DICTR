@@ -21,6 +21,8 @@ def load_model_config_for_uncertainty_experiment(config, endpoint_name = "Dyspha
         model_config = load_config("Daniel/uncertainty_models/Suzanne_Dysphagia")
     elif endpoint_name == "Xerostomia_M06":
         model_config = load_config("Daniel/uncertainty_models/Hung_Xerostomia")
+    elif endpoint_name == "Taste_M06":
+        model_config = load_config("Daniel/uncertainty_models/Taste")
     else:
         raise ValueError("Endpoint not recognized. Please choose either 'OS', 'LRC', 'Dysphagia_M06', or 'Xerostomia_M06'.")
     
@@ -69,7 +71,7 @@ if __name__ == '__main__':
     from src.uncertainty.MC_dropout import train_MC_dropout_model, collect_bayesian_forward_passes
     
     # Choose the endpoint
-    endpoint = "LRC"
+    endpoint = "Taste_M06"
     #endpoint = "OS"
 
     config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
@@ -82,7 +84,7 @@ if __name__ == '__main__':
 
 
 
-    config['general']['experiment_name'] = "Tune MC LRC" 
+    config['general']['experiment_name'] = "Tune MC Taste" 
     dropout_rates = [0.1, 0.2, 0.3, 0.4, 0.5]
 
 

@@ -6,33 +6,12 @@ from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
 
 import src.hyper_opt.WandB_functions as WandB_functions
+from uncertainty_main import load_model_config_for_uncertainty_experiment
 
 import faulthandler, signal
 faulthandler.register(signal.SIGUSR1)
 
 
-def load_modal_config_for_uncertainty_experiment(config, endpoint_name = "Dysphagia_M06"):
-    if endpoint_name == "OS":
-        model_config = load_config("Daniel/uncertainty_models/Baoqiang_OS")
-        
-    elif endpoint_name == "LRC":
-        model_config = load_config("Daniel/uncertainty_models/Baoqiang_LRC")
-    elif endpoint_name == "Dysphagia_M06":
-        model_config = load_config("Daniel/uncertainty_models/Suzanne_Dysphagia")
-    elif endpoint_name == "Xerostomia_M06":
-        model_config = load_config("Daniel/uncertainty_models/Hung_Xerostomia")
-    else:
-        raise ValueError("Endpoint not recognized. Please choose either 'OS', 'LRC', 'Dysphagia_M06', or 'Xerostomia_M06'.")
-    
-    # use the model_config to adjust the model/endpoints/features in the main config
-    update_config(base=config, updates=model_config, allow_new_keys=False)
-
-    # update labels
-    from src.dataset.LabelTypesManager import LabelTypesManager
-    labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
-    config['saving']['label_column_names'] = labelManager.label_names_full_list
-
-    return config
 
 
 
@@ -71,26 +50,26 @@ if __name__ == '__main__':
     from src.uncertainty.MC_dropout import train_MC_dropout_model, collect_bayesian_forward_passes
 
     endpoints = ["Dysphagia_M06", "Xerostomia_M06", "OS", "LRC"]
-    endpoints = ['Dysphagia_M06']
+    endpoints = ['Taste_M06']
 
     for endpoint in endpoints:
-        config = load_modal_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
+        config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
 
         # SETTINGS FOR DATA AMOUNTS EXPERIMENT
         config['general']['dataset_amounts_experiment'] = False
 
         # TTA
 
-        # config['general']['experiment_name'] = "TTA" 
-        # config['general']['trialNumber'] = endpoint
+        config['general']['experiment_name'] = "TTA" 
+        config['general']['trialNumber'] = endpoint
 
-        # set_random_seed(config['general']['seed'])
-        # train_MC_dropout_model(config, UQ_method="TTA")
+        set_random_seed(config['general']['seed'])
+        train_MC_dropout_model(config, UQ_method="TTA")
 
         # DEEP ENSEMBLE
 
         config['general']['experiment_name'] = "Deep Ensemble"
-        config['general']['trialNumber'] = endpoint + "_v2"
+        config['general']['trialNumber'] = endpoint
 
         set_random_seed(config['general']['seed'])
         train_deep_ensemble_models(config)
