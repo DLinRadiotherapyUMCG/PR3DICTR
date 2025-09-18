@@ -7,16 +7,16 @@ import copy
 
 from src.utils.set_random_seed import set_random_seed, generate_random_seed
 from src.training.k_fold_cross_validation import K_fold_cross_validation
-import src.hyper_opt.Optuna_hpt as Optuna_hpt
+import pred_RT.src.hyper_opt.utils as utils
 
 
-class HyperTuning_Handler():
+class OptunaExperimentManager():
     """
     An object to run and manage hyperparameter tuning experiments.
     """
     def __init__(self,config):
         # Set optuna
-        self.Optuna_study = Optuna_hpt.initialize_optuna_study(config) 
+        self.Optuna_study = utils.initialize_optuna_study(config) 
         self.config = config
 
 
@@ -94,10 +94,10 @@ class HyperTuning_Handler():
         """
 
         # Alter normal hyperparameters
-        updated_config = Optuna_hpt.normal_hyperparameters(config, trial)
+        updated_config = utils.normal_hyperparameters(config, trial)
 
         # Alter any hyperparameters that are dependend on other parameters 
-        updated_config = Optuna_hpt.derived_hyperparameters(updated_config, trial)
+        updated_config = utils.derived_hyperparameters(updated_config, trial)
 
         return updated_config
 

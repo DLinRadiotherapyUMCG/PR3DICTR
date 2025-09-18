@@ -1,10 +1,7 @@
 import logging
 import os
-import yaml
-import pandas as pd
 import torch
-from src.utils.fileHandler import create_folder, create_file
-from src.constants import PATIENT_ID_COL_NAME
+from src.utils.fileHandler import create_folder
 
 
 def save_model(config, model):

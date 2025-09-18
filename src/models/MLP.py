@@ -6,7 +6,19 @@ from torch import nn
 
 
 class MultiLayerPerceptron(nn.Module):
-    def __init__(self, encoder, config, n_features : int, metadata = None):
+    """
+    Multi-Layer Perceptron (MLP) model for processing clinical variables.
+    Only gets used if there are no image inputs (in which case no image encoder is needed).
+    Args:
+        encoder: Not used, for compatibility with other models and the rest of the codebase
+        config: Configuration dictionary containing model parameters
+        n_features (int): Number of clinical features
+        metadata: Not used, for compatibility with other models
+    Returns:
+        x_dict: Dictionary with endpoint-specific outputs
+    """
+
+    def __init__(self, config, encoder, n_features : int, metadata = None):
         super(MultiLayerPerceptron, self).__init__()
 
         self.endpoint_list = config['columns']['labels']
@@ -16,19 +28,11 @@ class MultiLayerPerceptron(nn.Module):
         self.use_bias = config['model']['use_bias']
         self.lrelu_alpha = config['model']['lrelu_alpha']
         self.linear_units = config['model']['output_head']['linear_units']
-        # self.linear_units = None if self.linear_units == 0 else self.linear_units
-        #self.clinical_variables_linear_units = config['model']['output_head']['clinical_variables_linear_units']
         self.linear_units_endpoint = config['model']['output_head']['linear_units_endpoint']
-        #self.clinical_variables_position = config['model']['output_head']['clinical_variables_position']
+        
 
         self._make_shared_fc_layers()
-        # makes:
-        #   self.shared_fc_layers
-        #   self.n_sublayers_per_linear_layer
-
         self._make_non_shared_endpoint_fc_layers()
-        # makes:
-        #   self.non_shared_endpoint_fc_layers  
     
     def forward(self, x=None, features=None, vectorize=False):
 

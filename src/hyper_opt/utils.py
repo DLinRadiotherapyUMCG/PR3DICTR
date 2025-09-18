@@ -7,16 +7,24 @@ from src.utils.fileHandler import create_file, create_folder
 # TODO: comments and documentation for all of these function
 
 
-def update_config(dic, location, suggested_value):
+def update_config(config, location, suggested_value):
     """
-    Function to update the config based on a given location and 
+    Function to update the config based on a given location and value
+    Args:
+        config (dict): the config dictionary
+        location (list): a list of keys indicating where in the config to update the value
+        suggested_value: the value to set at the given location
+    Returns:
+        config (dict): the updated config dictionary
     """
     if len(location) == 1:
-        dic[location[0]] = suggested_value
-        return dic
+        config[location[0]] = suggested_value
+        return config
     else:
-        dic[location[0]] = update_config(dic[location[0]], location[1:], suggested_value)
-        return dic
+        config[location[0]] = update_config(config[location[0]], location[1:], suggested_value)
+        return config
+
+
 
 def normal_hyperparameters(config, trial):
     for key in config['hyperparam_tuning']['hyperparams'].keys():

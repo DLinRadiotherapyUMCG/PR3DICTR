@@ -13,7 +13,7 @@ from src.training.train import train
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
-from src.hyper_opt.hyperHandler import HyperTuning_Handler
+from src.hyper_opt.OptunaExperimentManager import OptunaExperimentManager
 from src.utils.fileHandler import create_file
 from sklearn.metrics import roc_auc_score
 from src.utils.move_batch_to_device import move_batch_to_device
@@ -156,7 +156,7 @@ if __name__ == '__main__':
     #config['hyperparam_tuning']['optuna']['studyname'] = nameProjectTest
 
     #Load the existing project
-    hyperClass = HyperTuning_Handler(config)
+    hyperClass = OptunaExperimentManager(config)
     df = hyperClass.Optuna_study.trials_dataframe()
 
     # Show the project information

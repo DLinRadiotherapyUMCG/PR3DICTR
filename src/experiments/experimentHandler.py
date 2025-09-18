@@ -1,9 +1,9 @@
 import logging
 
 from src.training.k_fold_cross_validation import K_fold_cross_validation
-import src.hyper_opt.Optuna_hpt as Optuna_hpt
+import pred_RT.src.hyper_opt.utils as utils
 import src.hyper_opt.WandB_functions as WandB_functions
-from src.hyper_opt.hyperHandler import HyperTuning_Handler
+from pred_RT.src.hyper_opt.OptunaExperimentManager import OptunaExperimentManager
 
 
 
@@ -32,7 +32,7 @@ class experimentHandler():
         if self.hyperparam_tuning_mode:
             # Initialise optuna
             logging.info("Setting up optuna")
-            self.hyperHandler = HyperTuning_Handler(config)
+            self.hyperHandler = OptunaExperimentManager(config)
         else:
             # just do cross-validation
             pass

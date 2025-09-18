@@ -14,7 +14,7 @@ def check_improvement(config, val_loss, val_mean_metric_value, best_value):
         improved (bool): a boolean indicating if this epoch was better than the previous best epoch
     """
     improved = False
-    # if otpimising the mean loss
+    # if optimising the mean loss
     if config['training']['stopping_criteria'] == "loss":
         if val_loss < best_value:
             logging.info(f'New lowest loss: {val_loss}')

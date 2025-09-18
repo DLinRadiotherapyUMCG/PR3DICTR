@@ -16,13 +16,9 @@ def save_config(config):
     out_dir = os.path.join(current_dir, out_name_config)
 
     config = format_config_lists_to_flow_style(config) # convert lists to flow style for better readability in yaml
-    
-    print(f"Saving config to {out_dir}")
-    print("DANIEL")
 
     yaml = YAML()
-    yaml.width = 120
-
+    yaml.width = 120 # sets how many characters before it breaks to a new line
     
     with open(out_dir, "w") as f:
         yaml.dump(config, f)

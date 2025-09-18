@@ -4,7 +4,6 @@ from src.utils.loss_func.loss_Focal import FocalLoss
 from src.utils.loss_func.loss_Hill import Hill
 from src.utils.loss_func.loss_ASL import AsymmetricLossOptimized
 # from pred_RT.graveyard.loss_NegativeLog import NegativeLogLikelihood
-from src.utils.loss_func.MultiTox_Loss import MultiTox_Loss
 from src.utils.loss_func.MultiLabel_Loss import MultiLabel_Loss
 
 from src.constants import DEVICE
@@ -22,7 +21,6 @@ def get_loss_function(config : dict, LabelTypesManager):
     loss_name = config['training']['loss']['name'].lower() # make the loss function name lowercase
 
     if loss_name == 'bce':
-        print(config['training']['loss']['BCE']['pos_weight'])
         pos_weights = torch.as_tensor(config['training']['loss']['BCE']['pos_weight'], dtype=torch.float32, device=DEVICE)
         loss_function = torch.nn.BCEWithLogitsLoss(reduction = reduction, pos_weight = pos_weights)
 

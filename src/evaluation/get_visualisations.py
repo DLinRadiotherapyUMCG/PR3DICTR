@@ -34,7 +34,6 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
     df_fold_all_preds = pd.read_csv(predictions_csv_dir, sep=";")
 
 
-    endpoint_list = config['columns']['labels']
     visualisations_list = config['evaluation']['visualisations']['list']
 
     # loops over each dataset

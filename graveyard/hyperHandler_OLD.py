@@ -20,7 +20,7 @@ import numpy as np
 
 from functools import partial
 
-import src.hyper_opt.Optuna_hpt as Optuna_hpt
+import pred_RT.src.hyper_opt.utils as utils
 import src.hyper_opt.WandB_functions as WandB_functions
 
 class HyperTuning_Handler():

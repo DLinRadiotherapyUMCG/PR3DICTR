@@ -12,7 +12,7 @@ from src.models.TransRP_ViT import get_transrp_vit
 from src.models.MLP import MultiLayerPerceptron
 
 class ImageClassifier(nn.Module):
-    def __init__(self, encoder, config, n_features : int, metadata = None):
+    def __init__(self, config, encoder, n_features : int, metadata = None):
         super(ImageClassifier, self).__init__()
 
         # image encoder backbone (CNN, ResNet, etc.)
@@ -104,12 +104,12 @@ def get_classification_model(config, metadata, save_summary=True):
         
         encoder = get_encoder(config, channels, depth, height, width)
         # Put the image encoder into a model
-        model = ImageClassifier(encoder=encoder, config=config, n_features=n_features, metadata=metadata)
+        model = ImageClassifier(config=config, encoder=encoder, n_features=n_features, metadata=metadata)
 
     else:
         logging.info("No image_keys present. Creating clinical-only model (MLP)")
         channels, depth, height, width = 1, 1, 1, 1 # dummy values for model summary
-        model = MultiLayerPerceptron(encoder=None, config=config, n_features=n_features, metadata=metadata)
+        model = MultiLayerPerceptron(config=config, encoder=None, n_features=n_features, metadata=None)
 
     get_model_summary(config=config, model=model, input_size=[(config['training']['batch_size'], channels, depth, height, width), (config['training']['batch_size'], max(n_features, 1))], 
                                                 device=DEVICE, save_to_file=save_summary)
