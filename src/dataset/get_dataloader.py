@@ -17,64 +17,49 @@ from src.dataset.utils.collect_metadata import collect_metadata
 from src.constants import PATIENT_ID_COL_NAME
 
 
+
 def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
     """
-    Helper function that takes in a dataframe, and reformats it as a list of dictionaries
-    The dictionaries contain the patient's data, including the paths to the images and the clinical features. The dictionaries are used in the Dataset classes.
+    Reformats a dataframe into a list of patient dictionaries for Dataset classes.
     Args:
         config (dict): configuration object
-        df (pd.DataFrame): dataframe for this dataloader's (train, val or test) dataset
+        df (pd.DataFrame): dataframe for this dataloader's dataset
     Returns:
-        data_dicts (list of dicts): a list of dictionaries, where each dictionary is one patient
-        patient_ids_list (list): list of patientIDs in this dataset
+        data_dicts (list of dict): one dict per patient
+        patient_ids_list (list): patient IDs in this dataset
     """
     patients_data_dir = config['paths']['images']
     image_keys = config['data']['image_keys']
     clinical_features_columns = config['columns']['clinical_features']
-    label_columns = config['columns']['labels']
 
-    LabelManager = LabelTypesManager(config)  # create a LabelTypesManager object to handle the labels
-    label_columns = LabelManager.label_names_full_list  # get the full list of labels, (including event and days labels for event endpoints)
-
-    # Flatten label_columns in case it contains tuples
-    flattened_label_columns = []
-    for col in label_columns:
+    label_manager = LabelTypesManager(config)
+    label_columns = []
+    for col in label_manager.label_names_full_list:
         if isinstance(col, (list, tuple)):
-            flattened_label_columns.extend(col)
+            label_columns.extend(col)
         else:
-            flattened_label_columns.append(col)
-    label_columns = flattened_label_columns
-    
-    
-    patient_ids_list = [str(patient_id) for patient_id in df[PATIENT_ID_COL_NAME]]
+            label_columns.append(col)
 
-    features_list = [np.array([df[df[PATIENT_ID_COL_NAME] == patient_id][feature].values[0] for feature in
-                             clinical_features_columns]).astype(np.float32) \
-                            for patient_id in patient_ids_list]
+    patient_ids_list = df[PATIENT_ID_COL_NAME].astype(str).tolist()
 
-    label_values_list = [np.array(df[df[PATIENT_ID_COL_NAME] == patient_id][label_columns].values[0]).astype(np.float32) \
-                            for patient_id in patient_ids_list]
-    
-    # make a dictionary for each patient's data
-    data_dicts = [
-            {
-            'features': feature_values,
-            'label_list': label_values,
-            'patient_id': patient_id
-            }
-            for patient_id, feature_values, label_values in zip(patient_ids_list, features_list, label_values_list)
-        ]
-    
-    # add each of the images we want to include (CT, RTDOSE, Segmentation map)
-    # this method makes it possible to not include one of them if we don't want to (I'm looking at you, segmentation map)
+    features_arr = df.set_index(PATIENT_ID_COL_NAME).loc[patient_ids_list, clinical_features_columns].values.astype(np.float32)
+    labels_arr = df.set_index(PATIENT_ID_COL_NAME).loc[patient_ids_list, label_columns].values.astype(np.float32)
+
+    data_dicts = []
     for idx, patient_id in enumerate(patient_ids_list):
+        patient_dict = {
+            'features': features_arr[idx],
+            'label_list': labels_arr[idx],
+            'patient_id': patient_id
+        }
         for image_key in image_keys:
-            data_dicts[idx][image_key] = os.path.join(patients_data_dir, patient_id, image_key + ".npy")
-    
+            patient_dict[image_key] = os.path.join(patients_data_dir, patient_id, f"{image_key}.npy")
+        data_dicts.append(patient_dict)
+
     return data_dicts, patient_ids_list
 
 
-
+    
 
 
 
@@ -85,7 +70,6 @@ def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
 def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation_mode : bool = True):
     """
     Construct PyTorch Dataset object, and then DataLoader.
-
     CacheDataset: caches data in RAM storage. By caching the results of deterministic / non-random preprocessing
         transforms, it accelerates the training data pipeline.
     PersistentDataset: caches data in disk storage instead of RAM storage.
@@ -102,10 +86,10 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
         metadata (dict): dictioanry containing metadata about the input data (e.g. batch size or dimensions of the images)
     """
 
-    dataset_type = config['data']['dataloader']['dataset_type'] # if not validation_mode else 'cache'
+    dataset_type = config['data']['dataloader']['dataset_type'] 
     batch_size = config['training']['batch_size'] # if not validation_mode else 1
     num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else config['data']['dataloader']['num_workers'] // 2
-    persistent_workers = True if num_workers > 0 else False#  config['data']['dataloader']['persistent_workers']
+    persistent_workers = True if num_workers > 0 else False
     drop_last = False
     pin_memory = True if num_workers > 0 else False
     

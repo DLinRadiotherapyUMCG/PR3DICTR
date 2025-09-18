@@ -35,7 +35,7 @@ model:
     linear_units: [32] # shared layers for model head
     n_clinical_layers: 0
     clinical_variables_linear_units: []
-    clinical_variables_position: 3
+    clinical_variables_position: 1
     n_linear_layers_endpoint: 0
     linear_units_endpoint: []
     num_ohe_classes: 1

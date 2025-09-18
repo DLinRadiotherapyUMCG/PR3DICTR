@@ -37,36 +37,29 @@ def remove_excluded_patients(df : pd.DataFrame, config: dict) -> pd.DataFrame:
 
 
 
-def check_image_data_exists(config : dict, df : pd.DataFrame):
+
+def check_image_data_exists(config: dict, df: pd.DataFrame) -> pd.DataFrame:
     """
-    Checks whether the image files folder exists for each patient. Removes all patients what are missing image data files.
+    Removes patients from the dataframe who are missing image data files.
     Args:
-        df (pd.DataFrame): dataset dataframe
         config (dict): config parameters
-    Returns
-        df (pd.Dataframe): dataset dataframe without patients that are missing image data   
+        df (pd.DataFrame): dataset dataframe
+    Returns:
+        pd.DataFrame: dataframe without patients missing image data
     """
     patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
+    image_path = config['paths']['images']
+    available_dirs = set(os.listdir(image_path))
 
-    imagePath = config['paths']['images']
-    ptnDirectories = os.listdir(imagePath)
+    def has_image_data(patient_id):
+        padded_id = str(patient_id).rjust(patientID_length, '0')
+        return str(patient_id) in available_dirs or padded_id in available_dirs
 
-    print("IMAGE PATH", imagePath)
+    mask = df['PatientID'].apply(has_image_data)
+    removed_count = (~mask).sum()
+    logging.info(f"Removed patients (no image data) = {removed_count}")
 
-    ptnClinList = df['PatientID'].tolist()
-    removePtnIDS = []
-    for i in range(len(ptnClinList)):
-        zerosPtnNmbr = str(ptnClinList[i]).rjust(patientID_length,'0')
-        if (ptnClinList[i] in ptnDirectories or zerosPtnNmbr in ptnDirectories):
-            pass
-        else:
-            # Not found --> remove
-            removePtnIDS.append(ptnClinList[i])
-    
-    logging.info(f"Removed patients (no image data) = {len(removePtnIDS)}")
-    df = df[(df['PatientID'].isin(removePtnIDS)) == False]
-
-    return df
+    return df[mask].reset_index(drop=True)
 
 
 
@@ -240,4 +233,13 @@ def subsample_dataset(num_patients_sample, df_dataset : pd.DataFrame) -> pd.Data
 
 
 def has_patient_overlap(config, df1 : pd.DataFrame, df2 : pd.DataFrame):
+    """
+    Check if there are any patients in both dataframes.
+    Args:
+        config (dict): config params
+        df1 (pd.DataFrame): first dataframe
+        df2 (pd.DataFrame): second dataframe
+    Returns:
+        bool: True if there is any patient overlap, False otherwise
+    """
     return any(df1[PATIENT_ID_COL_NAME].isin(df2[PATIENT_ID_COL_NAME]))
