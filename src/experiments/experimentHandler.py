@@ -1,9 +1,9 @@
 import logging
 
 from src.training.k_fold_cross_validation import K_fold_cross_validation
-import pred_RT.src.hyper_opt.utils as utils
+import src.hyper_opt.utils as utils
 import src.hyper_opt.WandB_functions as WandB_functions
-from pred_RT.src.hyper_opt.OptunaExperimentManager import OptunaExperimentManager
+from src.hyper_opt.OptunaExperimentManager import OptunaExperimentManager
 
 
 

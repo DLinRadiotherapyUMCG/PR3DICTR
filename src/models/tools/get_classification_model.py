@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-import os
 import torch
 from torch import nn
 import logging
@@ -87,7 +85,7 @@ class ImageClassifier(nn.Module):
             
             self.encoder.to(DEVICE)
             x = self.forward_image_encoder(temp_x_input, temp_clc_features)
-            print(x.shape)
+            
             return x.shape[1:]
 
 

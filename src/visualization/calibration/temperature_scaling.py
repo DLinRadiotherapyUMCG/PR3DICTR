@@ -1,7 +1,4 @@
-from sklearn.base import BaseEstimator, RegressorMixin
 from scipy.optimize import minimize
-from scipy.special import expit, logit
-import numpy as np
 from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 import torch

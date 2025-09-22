@@ -6,12 +6,16 @@ import torch
 import gc
 
 from src.constants import DEVICE
+
 from src.training.train import train
 from src.training.validate import validate
 from src.dataset.load_dataset import load_dataset, generate_K_fold_cross_validation_splits
-from src.models.tools.get_classification_model import get_classification_model
+from src.dataset.cumulative_sampling import generate_training_data_subsamples
+from src.dataset.LabelTypesManager import LabelTypesManager as LabelTypesManagerClass
 from src.dataset.get_dataloader import make_dataloader   
 from src.dataset.get_transforms import get_transforms
+from src.models.tools.get_classification_model import get_classification_model
+from src.utils.clear_cache import clear_cache
 from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.saving.saving_predictions import concatenate_predictions, save_predictions
 from src.utils.saving.create_results_directory import create_results_directory
@@ -23,9 +27,7 @@ from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
 from src.evaluation.get_visualisations import get_visualizations
-from src.dataset.cumulative_sampling import generate_training_data_subsamples
 
-from src.dataset.LabelTypesManager import LabelTypesManager as LabelTypesManagerClass
 
 
 
@@ -90,9 +92,7 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
 
     # iterate through the folds 
     for fold_idx, dataset_split_dict in enumerate(k_fold_dataframes_list, start=1):
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()  # clear the GPU memory
-        gc.collect()  # clear the CPU memory
+        clear_cache()  # clear the CPU memory
 
         # set up logging and create the results directory
         create_results_directory(config, fold_idx)
@@ -107,7 +107,7 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         # get the data split and make the dataloaders for this fold
         train_data, val_data = dataset_split_dict['train'], dataset_split_dict['val']
         # perform over/undersampling of the training set here
-        if(config['data']['equalizer']['isEnabled']):
+        if config['data']['equalizer']['isEnabled']:
             train_data = label_equalizer(train_data, config)
         train_loader, metadata = make_dataloader(config, train_data, train_transforms, validation_mode=False)
         val_loader, _ = make_dataloader(config, val_data, val_transforms, validation_mode=True)
@@ -216,9 +216,7 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
             val_loader.dataset.shutdown() 
 
         del train_loader, val_loader # delete the dataloaders to free up memory
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache() # clear the GPU memory
-        gc.collect()  # clear the CPU memory
+        clear_cache()  # clear the CPU memory
     
     # if we're doing the dataset amounts experiment, then we don't need to aggregate the results. Just return here
     if config['general']['dataset_amounts_experiment'] == True:

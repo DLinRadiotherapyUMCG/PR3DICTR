@@ -16,7 +16,6 @@ def get_output_head(config, n_features, feature_map_dim_after_encoder = None):
     
     
     # TODO: add more output heads here (i.e. multi-time? )
-    
     else:
         raise ValueError(f"Output head {output_head_name} not recognized")
         

@@ -245,29 +245,6 @@ hyperparam_tuning:
 
 
 
-uncertainty:
-  seed: 42                        # random seed for uncertainty estimation
-  method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
-  metric: 12345
-  deep_ensemble:
-    n_models: 10
-  MC_dropout:
-    n_forward_passes: 10          # number of forward passes to perform for each model in the ensemble
-    dropout_p: 0.2                # dropout probability to use during inference (if not specified, uses the model's default dropout_p)
-    #use_batchnorm: True            # whether to use batchnorm layers in the model (if False, uses dropout instead)
-    #n_forward_passes_per_model: 10 # number of forward passes per model in the ensemble, if using '
-  TTA:
-    n_forward_passes: 10          # number of forward passes to perform for each model
-  
-  filenames:
-    all_predictions_filename: "all_predictions.csv"  # filename to save all predictions of all models in the ensemble
-    mean_predictions_filename: "mean_predictions.csv"  # filename to save the mean predictions of all models in the ensemble
-  dataset_split:
-    n_splits: 1                   # the number of data splits to make
-    validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
-    split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
-
-
 saving:
   config: True               # whether to save the config as a .yaml fule
   best_model: True           # whether to save the model weights on each fold

@@ -7,7 +7,7 @@ import copy
 
 from src.utils.set_random_seed import set_random_seed, generate_random_seed
 from src.training.k_fold_cross_validation import K_fold_cross_validation
-import pred_RT.src.hyper_opt.utils as utils
+import src.hyper_opt.utils as utils
 
 
 class OptunaExperimentManager():

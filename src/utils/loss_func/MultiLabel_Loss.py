@@ -2,7 +2,6 @@ import torch
 from torch import nn
 
 from src.utils.loss_func.loss_NLL import NegativeLogLikelihood
-
 from src.constants import MISSING_DATA_VALUE
 
 

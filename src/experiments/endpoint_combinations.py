@@ -59,7 +59,6 @@ def run_toxicity_combinations_experiment(config, experiment_name, endpoint_combi
         experiment_config = copy.deepcopy(config)
         set_random_seed(experiment_config['general']['seed'])
         
-
         experiment_config['columns']['labels'] = endpoints
         experiment_config['data']['stratify_on'] = endpoints
 

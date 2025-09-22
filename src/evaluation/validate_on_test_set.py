@@ -1,8 +1,5 @@
-import os    
-import torch
-import copy
+import os
 import logging
-import pandas as pd
 
 from src.utils.saving.saving_predictions import save_predictions
 from src.evaluation.mainMetricHandler import mainMetricHandler
@@ -11,12 +8,7 @@ from src.dataset.load_dataset import load_dataset
 from src.dataset.get_transforms import get_transforms
 from src.dataset.get_dataloader import make_dataloader
 from src.training.validate import validate
-from src.models.tools.load_model import load_model
-from src.evaluation.get_metric_function import get_metric_function
-from src.constants import METRIC_TYPES
-from src.evaluation.calculate_metric_for_multiple_endpoints import calculate_metric_for_multiple_endpoints
-from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe import get_predictions_and_labels_from_predictions_dataframe    
-
+from src.models.tools.load_model import load_model   
 from src.config_presets.tools.load_config import load_config
 from src.models.tools.get_classification_model import get_classification_model
 from src.evaluation.get_visualisations import get_visualizations
