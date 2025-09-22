@@ -23,7 +23,11 @@ def adjust_modality(config, image, modality):
         rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
         image = image * rtdose_range + config['data']['preprocessing']['rtdose']['a_min']
 
-    elif modality == 'RTSTRUCT':
+    elif modality == 'PET':
+        pet_range = (config['data']['preprocessing']['pet']['a_max'] - config['data']['preprocessing']['pet']['a_min'])
+        image = (image * pet_range) + config['data']['preprocessing']['pet']['a_min']
+
+    elif modality == 'RTSTRUCT' or modality == 'GTV':
         image = image
 
     return image

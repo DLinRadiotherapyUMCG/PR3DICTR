@@ -13,6 +13,7 @@ from src.utils.saving.alter_filename_for_external_dataset import alter_filename_
 def aggregate_cross_validation_metrics(config: dict,  k_folds_completed: int, sets: list = ['train', 'val']):
     """
     Computes the mean train and validation results for each trial (one trial consists of multiple folds) and saves the results to a csv file.
+    Does this by loading the metrics csv files for each fold, and then computing the mean and std for each metric. The aggregated results are saved to a new csv file.
     
     Args:
         config (dict): config dictionary
@@ -43,7 +44,6 @@ def aggregate_cross_validation_metrics(config: dict,  k_folds_completed: int, se
     folderPath = os.path.join(os.path.join(config["paths"]["results"], config['general']['experiment_name']), config["general"]["trialNumber"])
 
 
-    endpoint_list = config['columns']['labels']
     for set_name in sets:
         df_set = pd.concat(dfs_list_dict[set_name])
 
@@ -65,21 +65,3 @@ def aggregate_cross_validation_metrics(config: dict,  k_folds_completed: int, se
 
 
     
-
-
-
-
-
-# # # FOR TESTING THIS FUNCTION (DANIEL)
-
-# if __name__ == "__main__":
-#     from src.config_presets.tools.get_config import get_config
-
-#     # Load the configuration file
-#     config = get_config('Multi_tox')
-
-#     #config['general']['resultsCurrentDirectory'] = "C:/Users/S.P.M. de Vette/OneDrive - UMCG/Desktop/pred_RT_results/Results_0\Trial_2\KFold1"
-#     # Call the function
-#     aggregate_cross_validation_metrics(config)
-    
-

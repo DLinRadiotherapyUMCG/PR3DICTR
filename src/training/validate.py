@@ -4,7 +4,7 @@ import numpy as np
 
 from src.constants import DEVICE
 from src.utils.move_batch_to_device import move_batch_to_device
-
+from src.training.utils.collect_all_preds_and_labels import collect_all_preds_and_labels
 
 
 def validate(config : dict, model, loss_function, val_loader, metric_handler):
@@ -26,59 +26,49 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
         patientIDs_list: list of patient IDs in the dataloader
     """
     labels = config['columns']['labels']
+    label_types = config['columns']['labels_types']
 
     model.eval()
-
-    total_loss = 0.0
-    total_loss_dict = {lab: 0.0 for lab in labels}
-    num_batches = 0
     
-
-    sigmoid_act = torch.nn.Sigmoid()
-    
+    # to collect all of the predictions and labels
     patientIDs_list = []
     preds_dict = dict.fromkeys(labels, [])
     labels_dict = dict.fromkeys(labels, [])
+    all_targets = torch.tensor([], device=DEVICE, dtype=torch.float32)  # also save all of the targets in a single tensor (to calculate the loss at the end)
     
-    for label in labels:
-        preds_dict[label] = []
-        labels_dict[label] = []
-
-    # patient_IDs_list = val_loader.dataset.patient_IDs_list
-    # print(patient_IDs_list)
-
-    # for idx, ID in enumerate(patient_IDs_list):
-    #     print(idx, ID)
-    #     # get the data and target of the requested patient
-    #     data = val_loader.dataset.__getitem__(idx)
     
     with torch.no_grad():
         for i, batch in enumerate(val_loader):
-            
-                logging.debug(f'Validation batch {i}')
-                inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
+            logging.debug(f'Validation batch {i}')
+            inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
 
-                outputs = model(x=inputs, features=clinical_features)
-                mean_loss, loss_dict = loss_function(outputs, targets)
-
-                total_loss += mean_loss.item()       
-                for label in labels:
-                    total_loss_dict[label] += loss_dict[label].item()
-                
-                for lab_idx, label in enumerate(labels):
-                    preds_dict[label] = preds_dict[label] + list(sigmoid_act(outputs[label]).cpu().detach().numpy().reshape((1,targets[:,lab_idx].shape[0]))[0])
-                    labels_dict[label] = labels_dict[label] + list(targets[:,lab_idx].cpu().detach().numpy().reshape((1,targets[:,lab_idx].shape[0]))[0])
-                
-                num_batches += 1
-                patientIDs_list += list(batch['patient_id'])
+            outputs = model(x=inputs, features=clinical_features)
             
+            # collect all predictions and labels for each label type
+            preds_dict, labels_dict = collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, targets, outputs)
+
+            all_targets = torch.cat([all_targets, targets.detach()], dim=0) if len(all_targets) > 0 else targets.detach()
+            patientIDs_list += list(batch['patient_id'])
+
+        
+    # for validation, we can calculate the loss just once at the end (instead of for each batch)
+    avg_loss, total_loss_dict = loss_function(preds_dict, all_targets)
+    # convert the losses from tensors to floats
+    avg_loss = avg_loss.item()
+    for label in labels:
+        total_loss_dict[label] = total_loss_dict[label].item()
+    logging.debug(f'Validation loss: {avg_loss}')
+
+    # move all preds and labels to CPU
+    for label in labels:
+        preds_dict[label] = preds_dict[label].cpu().detach().numpy()
+        labels_dict[label] = labels_dict[label].cpu().detach().numpy()
 
     mean_metric_value, metric_dict = metric_handler.calculate_metric(preds_dict, labels_dict)
 
-    avg_loss = total_loss / num_batches
-    for label in labels:
-        total_loss_dict[label] = total_loss_dict[label] / num_batches
-
-    logging.debug(f'Validation loss: {avg_loss}')
+    # avg_loss = total_loss / num_batches
+    del outputs, all_targets
 
     return avg_loss, total_loss_dict, mean_metric_value, metric_dict, preds_dict, labels_dict, patientIDs_list
+
+

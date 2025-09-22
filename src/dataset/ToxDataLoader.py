@@ -20,8 +20,6 @@ from torch.utils.data import Dataset
 from monai.data.meta_obj import get_track_meta
 from monai.data.utils import list_data_collate, set_rnd, worker_init_fn
 
-__all__ = ["DataLoader"]
-
 
 class ToxDataLoader(_TorchDataLoader):
     """

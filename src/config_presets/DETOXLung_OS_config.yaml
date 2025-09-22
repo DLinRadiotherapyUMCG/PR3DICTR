@@ -3,7 +3,7 @@ general:
   seed: 42
   device: "cuda"
   firstRun: false
-  experiment_name: 'DETOX2-Lung_OS'
+  experiment_name: 'DETOX-OS_07-2025'
   trialNumber: "Trial_?"
   patientGroup: 0
   optimize: "loss"
@@ -12,17 +12,18 @@ general:
   use_test_set: False
 
 columns:
-  labels: ["OS_Days","OS_Dead"]
-  clinical_features: ["SmokerActive","SmokerStopped", "Gender",
-  "Age","ChemoRad", "ImmunoTherapy",
-  "OperationPerformed","SmokingUntilRecently","Pulmonary_Comorbidity", "RT_FractionDose"] #, "T_Stage","N_Stage","M_Stage"]
+  labels: ['OS']
+  labels_types: ["Event"]
+  clinical_features: ["Age"] #,"SmokerStopped", "Gender",
+  #"Age","ChemoRad", "ImmunoTherapy",
+  #"OperationPerformed","SmokingUntilRecently","Pulmonary_Comorbidity", "RT_FractionDose"] #, "T_Stage","N_Stage","M_Stage"]
   logistic_regression_features: ['']
 
 paths:
-  csv: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ClinicalData/2024_11_01/"
-  images: "C:/Users/r.van.der.wal/Documents/Data/2024_09_04/ImageData/"
-  output: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results_OS/"
-  results: "C:/Users/r.van.der.wal/Documents/Detox_lung/Results_OS/"
+  csv: "/scratch/p315317/Data/Project_2_OsPet/2025_07/"
+  images: "/scratch/p315317/Data/2025_02/Images_small_2mm/"
+  results: "/scratch/p315317/Project/DETOX_Lung_OS/Results/"
+  output: "/scratch/p315317/Project/DETOX_Lung_OS/Results/"
 
 run:
   patienceExhausted: False
@@ -80,14 +81,14 @@ model:
   linear_units_endpoint: [64]
 
 data:
-  trainfile: 'stratified_sampling_full_manual_94_edited.csv'
-  valfile: 'stratified_sampling_full_manual_94_edited.csv'
+  trainfile: 'DL_Cohort_Clean.csv'
+  valfile: 'DL_Cohort_Clean.csv'
   splitvar: "Split"
   patientVar: 'PatientID'
-  stratifyList: ["RP_OneYear", "ImmunoTherapy"]
+  stratifyList: []
   ExcludedVar: [] # "MissingLung"
   ExcludedValue: []
-  imageKeys: ["ct","rtdose","segmentation_map"]
+  imageKeys: ["ct","rtdose"]
 
 
   dataloader:

@@ -10,10 +10,11 @@ from src.constants import PATIENT_ID_COL_NAME
 def save_model(config, model):
     """
     Save the model to the output directory.
-    :param config:
-    :param model:
-    :param model_path:
-    :return:
+    Args:
+        config: configuration dictionary
+        model: PyTorch model to be saved
+    Returns:
+        None
     """
     
     pathToSave = config['general']['resultsCurrentDirectory']
@@ -32,10 +33,11 @@ def save_model(config, model):
 def load_model(config, model):
     """
     Load the model from the output directory.
-    :param config:
-    :param model:
-    :param model_path:
-    :return:
+    Args:
+        config: configuration dictionary
+        model: PyTorch model to be loaded
+    Returns:
+        model: Loaded PyTorch model
     """
     pathToSave = config['general']['resultsCurrentDirectory']
     model_weights_filename = config['saving']['filenames']['model_weights']
@@ -43,15 +45,20 @@ def load_model(config, model):
 
     # Log and Save
     logging.info(f'Loading model from {fileLocation}')
-    model.load_state_dict(torch.load(fileLocation))
+    model.load_state_dict(torch.load(fileLocation, weights_only=True))
     return model
 
+def save_dataset(config, dataset: pd.DataFrame, fileName: str):                    # TODO SIMS: Daniel: does this function ever get used? (answer: no)
+    """
+    Save the dataset dataframe to the output directory
+    Args:
+        config: configuration dictionary
+        fileName: name of the file to save the dataset as (should end with .csv)
+        dataset: dataset to be saved
+    Returns:
+        None
+    """
 
-def save_dataset(config, dataset, fileName):
-    """
-    Save the dataset to the output directory
-    - dataset --> Pytorch dataset object
-    """
     #print("Dataset")
     df = dataset
     #print(df)
@@ -69,6 +76,15 @@ def save_dataset(config, dataset, fileName):
 
 
 def save_config(config, fileName):
+    """
+    Save the config as a .yaml file.
+    Args:
+        config: configuration dictionary
+        fileName: name of the file to save the config as (should end with .yaml)
+    Returns:
+        None
+    """
+
     directoryToSave = config['general']['resultsCurrentDirectory']
     if(fileName.endswith(".yaml") == False):
         fileName = f"{fileName}.yaml"
@@ -77,7 +93,9 @@ def save_config(config, fileName):
         yaml.dump(config,outfile,default_flow_style=False)
 
 
-def save_dataset_summary(config, trainDataset, valDataset, testDataset):
+
+
+def save_dataset_summary(config, trainDataset, valDataset, testDataset):    # TODO SIMS: Daniel: does this function ever get used? (answer: no)
     # Get the patientIds from the different datasets
     trainDataset_ptns = trainDataset[PATIENT_ID_COL_NAME].tolist()
     valDataset_ptns = valDataset[PATIENT_ID_COL_NAME].tolist()

@@ -20,7 +20,8 @@ MISSING_DATA_VALUE = -1   # value for missing endpoints
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # VERBOSE = True
-
+EARLY_NTCP_TIMEPOINTS = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7',]
+LATE_NTCP_TIMEPOINTS = ["W12", "M06", "M12", "M18", "M24", "M36", "M48", "M60"]  
 
 METRIC_TYPES = {
     "Classification" : [
@@ -44,11 +45,24 @@ METRIC_TYPES = {
         'MCE',
         'ACE',
     ],
+    "Event" : [
+        'C-index',
+    ]
+}
+
+METRICS_PER_ENDPOINT_TYPE = {
+    "Binary" : [
+        "Classification",
+        "Calibration",
+        "Regression"
+    ],
+    "Event" : [
+        "Event",
+    ],
 }
 
 
-EARLY_NTCP_TIMEPOINTS = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7',]
-LATE_NTCP_TIMEPOINTS = ["W12", "M06", "M12", "M18", "M24", "M36", "M48", "M60"]  
+
 
 
 
@@ -108,13 +122,20 @@ PLOTTING_PARAMS = {
             "min_val": -200,
             "max_val": 400,
         },
+        "PET" : {
+            "cmap": "magma",
+            "cmap_title": "SUV",
+            "min_val": 0,
+            "max_val": 25,
+        },
         "RTDOSE": {
             "cmap": "dose",
             "cmap_title": "Dose (Gy)",
             "min_val": 0,
             "max_val": 8000,
         },
-        "RTSTRUCT": {"color": "deeppink", "linewidth": 2, "alpha": 0.8, "cmap": "gray"},
+        "RTSTRUCT": {"color": "deeppink", "linewidth": 2, "alpha": 0.8, "cmap": "nipy_spectral"},
+        "GTV" : {"color": "red", "linewidth": 2, "alpha": 0.8, "cmap": "PuRd"},
         "Attention": {
             "cmap": "Attention",
             "cmap_abs": "AttentionAbs",

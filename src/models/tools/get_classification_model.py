@@ -85,8 +85,6 @@ class MultiTox_Classifier(nn.Module):
         else:
             clc_features = features
 
-        #x_dict = self.output_head(x, features[:, :], vectorize=vectorize)
-
         x_dict = self.output_head(x, clc_features, vectorize=vectorize)
 
         return x_dict

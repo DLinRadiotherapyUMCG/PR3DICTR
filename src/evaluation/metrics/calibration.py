@@ -7,13 +7,15 @@ from src.evaluation.metrics.utils import remove_missing, calc_bins
 from sklearn.metrics import brier_score_loss
 
 def brier(config, true, pred):
-    true, pred = remove_missing(true,pred)
+    # true, pred = remove_missing(config,true,pred)
     return brier_score_loss(true, pred)
 
 def ECE(config, true, pred):
     """
     Compute the ECE for a set of predictions and labels.
     """
+    #true, pred = remove_missing(config,true,pred)
+
     bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, bin_type="fixed")
 
     ECE = 0
@@ -26,6 +28,8 @@ def MCE(config, true, pred):
     """
     Compute the MCE for a set of predictions and labels.
     """
+    #true, pred = remove_missing(config,true,pred)
+
     bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, bin_type="fixed")
 
     MCE = 0
@@ -39,7 +43,8 @@ def ACE(config, true, pred):
     Compute the ECE for a set of predictions and labels.
     """
     num_bins = config['evaluation']['metrics']['calibration_bins']
-    
+    #true, pred = remove_missing(config,true,pred)
+
     bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, bin_type="adaptive")
 
     ACE = 0

@@ -2,22 +2,26 @@
 """
 Helper functions for classification metrics
 """
+import logging
 import numpy as np
 from sklearn.metrics import roc_curve
 
 from src.constants import MISSING_DATA_VALUE
 
+
 def remove_missing(config, true, pred):
     """
-    Removes the values that are indicated as missing with the missing indicator -1
+    Removes rows where any value in true or pred is equal to the missing indicator (-1).
     """
     missing_val = MISSING_DATA_VALUE
 
-    pred = pred[np.where(true != missing_val)]
-    true = true[np.where(true != missing_val)]
+    # Create a mask for rows without missing values in true or pred
+    mask = ~(true == missing_val).any(axis=1) #  | (pred == missing_val).any(axis=1))
+
+    true = true[mask]
+    pred = pred[mask]
 
     return true, pred
-
 
 
 def threshold(config, true, pred):
@@ -35,8 +39,7 @@ def threshold(config, true, pred):
         threshold = threshold
         
     else:
-        print('non_proper threshold selection, defaulted to 0.5')
-        threshold = 0.5
+        raise ValueError('Invalid threshold type: {}.'.format(type(threshold)))
 
     # the actual thresholding    
     pred[pred >= threshold] = 1

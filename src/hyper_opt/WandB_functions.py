@@ -24,8 +24,9 @@ def login(config: dict) -> None:
     """ 
     if is_WandB_enabled(config):
         # Login with account
-        wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])            
-    return
+        wandb.login(key=config["hyperparam_tuning"]["WandB"]["API_Key"])   
+        wandb.Settings(quiet=True)  # Suppress WandB output    
+    
 
 
 
@@ -34,7 +35,7 @@ def stop_WandB_trial(config: dict) -> None:
     Finishes a WandB run (e.g. a trial).
     """
     if is_WandB_enabled(config):
-        wandb.finish(quiet=True)
+        wandb.finish()
 
 
 
@@ -45,11 +46,15 @@ def initialise_WandB_group(config: dict, project_name: str, groupName = None, co
     This is useful for grouping together K-folds of the same trial or model.
     """
 
+    dir = config['general']['resultsCurrentDirectory']
+    if dir.endswith('/'):
+        dir = dir[:-1]
+
     if is_WandB_enabled(config):
         wandb.init(
             project = project_name,
             group = groupName,
-            dir=config['general']['resultsCurrentDirectory'][:-1],
+            dir=dir,
             config = config_for_wandb,
             reinit = True
         ) 

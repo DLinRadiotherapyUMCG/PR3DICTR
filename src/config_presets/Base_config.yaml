@@ -10,7 +10,8 @@ general:
   dataset_amounts_experiment: False    # whether the dataset_amounts_experiment is being performed using bootstrapping
 
 columns:
-  labels: ["Xerostomia_M06"]           # the endpoints the model is (going to be) trained on (list)
+  labels: ["Xerostomia_M06", "OS"]           # the endpoints the model is (going to be) trained on (list)
+  labels_types: ["Binary", "Event"]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]  # Clinical features to insert into the model (list)
 
 paths:
@@ -91,6 +92,7 @@ data:
   image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
   image_num_dimensions: 3                            # dimension of each image (each image is 3D, so this is = 3)
   n_training_patients_list: []                       # list of number of patients to use for training (only used if 'dataset_amounts_experiment'=True)
+  event_endpoint_time_unit: "months"  # time unit for the event endpoints (e.g. "days", "months", "years"), should match the time unit in the dataset column names
 
   dataloader:
     dataloader_type: "standard"        # type of dataloader ['standard', 'thread']
@@ -101,11 +103,11 @@ data:
       num_replace_workers: 4           # number of workers to replace cache with
 
   preprocessing:
-    isEnabled: false                   # whether or not preprocessing steps should be applied to the image data files
+    isEnabled: true                   # whether or not preprocessing steps should be applied to the image data files
     crop: true                         # if the image files need cropping
     crop_shape: [96, 96, 96]           # dimension to crop to
-    needs_scaling: ["ct", "rtdose", 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
-    needs_label_mapping: ["segmentation_map"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
+    needs_scaling: ["ct", "rtdose", 'pet', 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
+    needs_label_mapping: ["segmentation_map", "gtv_total"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
     ct: 
       a_min: -200            # lowest range to clip from
       a_max: 400             # highest range to clip from
@@ -123,9 +125,17 @@ data:
       a_max: 12345
       b_min: 0
       b_max: 1
+      clip: true
+    pet:             # example of how to scale a PET image
+      a_min: 0
+      a_max: 25      # SUV units
+      b_min: 0
+      b_max: 1
+      clip: true
     segmentation_map:      # value encoding of the structures in `segmentation_map.npy`, before feeding to model (set to 0 if don't want to include that structure)
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
-
+    gtv_total:
+      target_labels: [0.0, 1.0]  # target labels for the GTV total segmentation map (0 = no GTV, 1 = GTV present)
   kFolds:
     n_splits: 5           # the number of data splits to make
     n_iterations: 5       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
@@ -201,14 +211,17 @@ training:
     learning_rate: 0.001     # learning rate for the GradNorm optimiser
 
 evaluation:
-  main_metric: "AUC"    # the metric shown during training
+  main_metric: 
+    Binary: "AUC"    # the metric shown during training
+    Event: "C-index"
   metrics_list: ["AUC"] #  ["AUC", "accuracy"]   # the metrics to calculate at the end of each fold (list of strings, see constant.py for options)
   metrics:
     threshold: 'YoudenJ'  # how to define the classification metrics threshold
     calibration_bins: 10  # number of bins to use in the calibration metrics
   visualisations: 
-    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve'] # which plots to save per fold
+    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve', 'kaplan_meier'] # which plots to save per fold
     n_bins: 10            # nunber of bins to use in the calibration and reliability plot
+    kaplan_meier_max_timepoint: 60  # maximum time point to show in the Kaplan-Meier plot
 
 hyperparam_tuning:
   WandB:
@@ -239,7 +252,18 @@ uncertainty:
   method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
   metric: 12345
   deep_ensemble:
-    n_models: 5
+    n_models: 10
+  MC_dropout:
+    n_forward_passes: 10          # number of forward passes to perform for each model in the ensemble
+    dropout_p: 0.2                # dropout probability to use during inference (if not specified, uses the model's default dropout_p)
+    #use_batchnorm: True            # whether to use batchnorm layers in the model (if False, uses dropout instead)
+    #n_forward_passes_per_model: 10 # number of forward passes per model in the ensemble, if using '
+  TTA:
+    n_forward_passes: 10          # number of forward passes to perform for each model
+  
+  filenames:
+    all_predictions_filename: "all_predictions.csv"  # filename to save all predictions of all models in the ensemble
+    mean_predictions_filename: "mean_predictions.csv"  # filename to save the mean predictions of all models in the ensemble
   dataset_split:
     n_splits: 1                   # the number of data splits to make
     validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
@@ -260,10 +284,17 @@ saving:
     model_summary: "model_summary.txt"    # filename of the model summary
     config_yaml: "DlModel_Config.yaml"    # filename of the config to save
     model_weights: "DlModel_Weights.pth"  # filename of the (best) model weights
+    library_dependencies_file: "library_dependencies.txt"
     predictions_csv: "model_predictions.csv"  # filename of the predictions on the train/val sets
     test_set_predictions_csv: "test_set_predictions.csv"   # filename of the predictions in the test set (external validation set source are appended to this, e.g. "_MDACC.csv")
     ensemble_predictions_csv: "ensemble_predictions.csv"   # filename of the ensemble predictions
       
+  ModelCard:
+    isEnabled: True
+    saveLocation : 'C:/Users/WalR/OneDrive - UMCG/Documents/Modelcards/'
+    loaded_projectcard_filename : 'projectdetails_card'
+    saved_modelcard_filename : 'autogenerated_card'
+
 
 CITOR:  # features of the CITOR (sub-)models for the early and late endpoints
   aspiration_late:

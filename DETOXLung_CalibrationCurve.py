@@ -25,7 +25,7 @@ import src.visualization.calibration.temperature_scaling
 
 from src.evaluation.validate_on_test_set import validate_models_on_test_set
 import src.visualization.calibration.temperature_scaling as ts
-from src.visualization.calibration.calibration_plots import adaptive_make_calibration_plots
+from src.visualization.calibration.adaptive_make_endpoint_plots import adaptive_make_endpoint_plots
 
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe import get_predictions_and_labels_from_predictions_dataframe
@@ -171,5 +171,5 @@ if __name__ == '__main__':
     #                                    mode='reliability', filedir=rel_plot_export_dir, return_fig=True)
 
     print("Creating figure")
-    adaptive_make_calibration_plots(config, row_dicts=big_results_dict, column_names=endpointArray, title=nameModel, 
+    adaptive_make_endpoint_plots(config, row_dicts=big_results_dict, column_names=endpointArray, title=nameModel, 
                                         mode='calibration', filedir=cal_plot_export_dir, return_fig=False)

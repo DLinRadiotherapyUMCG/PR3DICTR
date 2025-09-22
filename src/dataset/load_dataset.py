@@ -10,6 +10,8 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedShuffleSplit, ShuffleSplit
 
+from src.dataset.LabelTypesManager import LabelTypesManager
+
 from src.constants import PATIENT_ID_LENGTHS_DICT, PATIENT_ID_COL_NAME, SPLIT_COL_NAME
 
 
@@ -76,7 +78,7 @@ def check_image_data_exists(config : dict, df : pd.DataFrame):
 
 
 
-def load_dataset(config : dict):
+def load_dataset(config : dict, modelCard = None):
     """
     Loads the entire dataset from one dataset_csv. Removes any patients that should be excluded or that are missing iamge data, subsamples the dataset (if needed),
     and returns a dataframe containing the train_val patients and a dataframe with the test patients.
@@ -102,10 +104,10 @@ def load_dataset(config : dict):
 
     # if in test mode, and we want to use a subset of the data, then subsample the total dataset
     if config['general']['testMode'] and "n_patients_total" in config['data']:
-        print("Subsampling the dataset for testing purposes.")
+        logging.info("Subsampling the dataset for testing purposes.")
         num_patients_sample = config['data']['n_patients_total']
         df_total = subsample_dataset(num_patients_sample, df_total)
-        print(len(df_total))
+        logging.info(f"Dataset now contains {len(df_total)} patients (after subsampling).")
     
     # split off the test set
     df_test = df_total[df_total[SPLIT_COL_NAME] == "test"]
@@ -115,7 +117,9 @@ def load_dataset(config : dict):
     train_size = df_train_val.shape[0]
     test_size = df_test.shape[0]
     total_size = df_total.shape[0]
-    print(f"Train/Val dataset {train_size} ({train_size/total_size*100}%), Test dataset {test_size} ({test_size/total_size*100}%)")
+    logging.info(f"Train/Val dataset {train_size} ({train_size/total_size*100}%), Test dataset {test_size} ({test_size/total_size*100}%)")
+    if(modelCard != None):
+        modelCard.insert(["training_data","number_of_patients"],total_size)
 
     # check patients not in same dataset
     assert not PtnID_SanityCheck(config,df_train_val,df_test)
@@ -138,11 +142,14 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
     # Check and validate if KFolds settings are active
     k_fold_dataframes_collection = []
 
+    # print("CONFIG N_SPLITS", config["data"]["kFolds"]["n_splits"])
+
     # if the config dictates only 1 n_split, then just do a single train-val split (i.e. no K-fold cross-validation)
     if config["data"]["kFolds"]["n_splits"] == 1:
         logging.warning("WARNING: K-Fold cross-validation is set to 1 split. This is equivalent to a single train-val split.")
         
         train_i_df, val_i_df = generate_single_train_val_split(config, df_development_set)
+                
         k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
         #return [generate_single_train_val_split(config, df_development_set)]
     
@@ -167,13 +174,9 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
             train_i_df = df_development_set.iloc[train_index]
             val_i_df   = df_development_set.iloc[val_index]
 
-            #trainDf_sel = mergeDf.iloc[train_index]
-            if(config['data']['equalizer']['isEnabled']):
-                train_i_df = label_equalizer(train_i_df, config)
-            
-            # TODO: subsampling here !!
             assert not PtnID_SanityCheck(config, train_i_df, val_i_df)
 
+            
             k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
 
     
@@ -197,7 +200,19 @@ def generate_single_train_val_split(config, df_development_set):
     """
     # if the train-val split is stratified or random
     if config["data"]["kFolds"]["split_strategy"] == 'stratified':
-        labels = df_development_set[config['columns']['labels']]
+        LabelManager = LabelTypesManager(config)  # create a LabelTypesManager object to handle the labels
+        label_columns = LabelManager.label_names_full_list  # get the full list of labels, (including event and days labels for event endpoints)
+
+        # Flatten label_columns in case it contains tuples
+        flattened_label_columns = []
+        for col in label_columns:
+            if isinstance(col, (list, tuple)):
+                flattened_label_columns.append(col[0]) # here, we only need to stratify the event column (not the time column)
+            else:
+                flattened_label_columns.append(col)
+        
+        labels = df_development_set[flattened_label_columns]
+
     else:
         labels = None
 
@@ -208,42 +223,6 @@ def generate_single_train_val_split(config, df_development_set):
     assert not PtnID_SanityCheck(config, train_df, val_df)
     
     return train_df, val_df
-
-
-
-
-
-
-def stratified_cumulative_sampling(X, y, sample_sizes, random_state=42):
-    """
-    Perform stratified cumulative sampling.
-    
-    Parameters:
-        X (array-like): Feature matrix.
-        y (array-like): Target labels for stratification.
-        sample_sizes (list): List of cumulative sample sizes (e.g., [100, 200, 300, ...]).
-        random_state (int): Random seed for reproducibility.
-    
-    Returns:
-        dict: Dictionary containing subsets with keys as sample sizes.
-    """
-    sampled_indices = set()
-    subsets = {}
-
-    for size in sample_sizes:
-        print(size)
-        remaining_indices = list(sampled_indices)
-        
-        strat_split = ShuffleSplit(n_splits=1, train_size=size - len(sampled_indices), random_state=random_state)
-        new_indices, _ = next(strat_split.split(X[remaining_indices], y[remaining_indices]))
-        new_indices = np.array(remaining_indices)[new_indices]  # Convert to original index space
-        
-        sampled_indices.update(new_indices)
-        subsets[size] = (X[list(sampled_indices)], y[list(sampled_indices)])
-    
-    return subsets
-
-
 
 
 
@@ -289,21 +268,6 @@ def subsample_dataset(num_patients_sample, df_dataset):
     return df_dataset
 
 
-def subsample_datasets(num_patients_sample, trainDf, valDf, testDf):
-    """
-    Subsample the datasets to that `num_patients_sample` are used in total (across all three datasets).
-    This is used for test mode.
-    """
-    # find the number of patients in each dataset, so that we can preserve the ratio of patients in each dataset (train, val, test)
-    n_train_loaded, n_val_loaded, n_test_loaded = trainDf.shape[0], valDf.shape[0], testDf.shape[0]
-    n_total_loaded = n_train_loaded + n_val_loaded + n_test_loaded
-
-    # Only use 100 patients for training dataset
-    trainDf = trainDf.iloc[:int(n_train_loaded/n_total_loaded * num_patients_sample)]
-    valDf = valDf.iloc[:int(n_val_loaded/n_total_loaded * num_patients_sample)]
-    testDf = testDf.iloc[:int(n_test_loaded/n_total_loaded * num_patients_sample)]
-
-    return trainDf, valDf, testDf
 
 
 

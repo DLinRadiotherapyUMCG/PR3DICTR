@@ -258,3 +258,20 @@ def load_dataset_total(config, patient_ids = None):    # TODO: re-name to 'load_
 
 
 
+
+def subsample_datasets(num_patients_sample, trainDf, valDf, testDf):
+    """
+    Subsample the datasets to that `num_patients_sample` are used in total (across all three datasets).
+    This is used for test mode.
+    """
+    # find the number of patients in each dataset, so that we can preserve the ratio of patients in each dataset (train, val, test)
+    n_train_loaded, n_val_loaded, n_test_loaded = trainDf.shape[0], valDf.shape[0], testDf.shape[0]
+    n_total_loaded = n_train_loaded + n_val_loaded + n_test_loaded
+
+    # Only use 100 patients for training dataset
+    trainDf = trainDf.iloc[:int(n_train_loaded/n_total_loaded * num_patients_sample)]
+    valDf = valDf.iloc[:int(n_val_loaded/n_total_loaded * num_patients_sample)]
+    testDf = testDf.iloc[:int(n_test_loaded/n_total_loaded * num_patients_sample)]
+
+    return trainDf, valDf, testDf
+

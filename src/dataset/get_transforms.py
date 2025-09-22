@@ -257,21 +257,6 @@ def get_transforms(config: dict):
                             ])
     
 
-    # if True:
-    #     from src.constants import DEVICE
-    #     train_transforms = Compose([
-    #         train_transforms,
-    #         EnsureTyped(keys=[concat_key, 'label_list', 'features'], data_type='tensor'),
-    #         ToDeviced(keys=[concat_key, 'label_list', 'features'], device='cuda'),
-    #     ])
-    #     val_transforms = Compose([
-    #         val_transforms,
-    #         EnsureTyped(keys=[concat_key, 'label_list', 'features'], data_type='tensor'),
-    #         ToDeviced(keys=[concat_key, 'label_list', 'features'], device='cuda'),
-    #     ])
-
-        
-
     # Flatten the transforms (removes nested Composes, turns it into one long set of transforms)
     train_transforms = train_transforms.flatten()
     val_transforms = val_transforms.flatten()

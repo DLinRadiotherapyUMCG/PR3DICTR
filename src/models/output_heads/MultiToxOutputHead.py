@@ -24,7 +24,7 @@ class MultiToxOutputHead(torch.nn.Module):
         self.clinical_variables_position = config['model']['clinical_variables_position']
 
         self.variance_logit_head = False
-
+        
         if self.clinical_variables_position >= 0 and self.clinical_variables_linear_units is not None and self.linear_units is None:
             raise ValueError('clinical_variables_position >= 0, clinical_variables_linear_units is None, and '
                              'linear_units is None is not allowed, because clinical_variables_position >= 0 implies '
@@ -32,7 +32,7 @@ class MultiToxOutputHead(torch.nn.Module):
         if self.clinical_variables_position <= 0 and  self.linear_units is not None:
             raise ValueError('clinical_variables_position 0 (or lower)! It\'s indexing must start at 1 (for the first linear layer)!')
         if self.clinical_variables_position > len(self.linear_units)+1:
-            raise ValueError('clinical_variables_position is higher than the number of linear layers + 1! \n'
+            raise ValueError('clinical_variables_position is higher than (the number of linear layers + 1)! \n'
                              f'clinical_variables_position = {self.clinical_variables_position}, linear layers = {len(self.linear_units)}')
         
         #self.flatten = nn.Flatten()
