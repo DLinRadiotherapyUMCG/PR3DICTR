@@ -23,6 +23,8 @@ def load_model_config_for_uncertainty_experiment(config, endpoint_name = "Dyspha
         model_config = load_config("Daniel/uncertainty_models/Hung_Xerostomia")
     elif endpoint_name == "Taste_M06":
         model_config = load_config("Daniel/uncertainty_models/Taste")
+    elif endpoint_name == "Metal_artefact":
+        model_config = load_config("Daniel/uncertainty_models/Metal_artefact")
     else:
         raise ValueError("Endpoint not recognized. Please choose either 'OS', 'LRC', 'Dysphagia_M06', or 'Xerostomia_M06'.")
     
@@ -71,7 +73,7 @@ if __name__ == '__main__':
     from src.uncertainty.MC_dropout import train_MC_dropout_model, collect_bayesian_forward_passes
     
     # Choose the endpoint
-    endpoint = "Taste_M06"
+    endpoint = "Metal_artefact"
     #endpoint = "OS"
 
     config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
@@ -84,11 +86,11 @@ if __name__ == '__main__':
 
 
 
-    config['general']['experiment_name'] = "Tune MC Taste" 
+    config['general']['experiment_name'] = "Tune MC Metal Artefact High Res Missing" 
     dropout_rates = [0.1, 0.2, 0.3, 0.4, 0.5]
 
 
-    # config['data']['equalizer']['isEnabled'] = False
+    config['data']['equalizer']['isEnabled'] = False
 
     for d_rate in dropout_rates:
         #config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
@@ -101,6 +103,11 @@ if __name__ == '__main__':
 
     # MODEL TRAINING
     
+    config['general']['experiment_name'] = "Deep Ensemble Missing"
+    config['general']['trialNumber'] = endpoint
+
+    set_random_seed(config['general']['seed'])
+    train_deep_ensemble_models(config)
 
 
     # 

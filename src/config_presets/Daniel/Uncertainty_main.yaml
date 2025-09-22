@@ -389,7 +389,7 @@ saving:
   plot_training_slices:
     every_n_epochs: 50
     folder_name: figures
-    isEnabled: false
+    isEnabled: true
     n_patients_per_epoch: 1
     n_slices_per_patient: 8
 training:
