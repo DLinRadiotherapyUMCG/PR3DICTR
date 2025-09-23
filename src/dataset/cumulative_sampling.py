@@ -59,7 +59,7 @@ def generate_training_data_subsamples(config, k_fold_dataframes_list: list) -> l
         k_fold_dataframes_list: list of dictionaries containing 'train' and 'val' dataframes for each subsample
     """
     dataset_split_dict = k_fold_dataframes_list[0]
-    df_all_train_patients, df_val = dataset_split_dict['train'], dataset_split_dict['val']
+    df_all_train_patients, df_val = dataset_split_dict['train'], dataset_split_dict['val'] 
 
     k_fold_dataframes_list = []
     sampled_indices = []
@@ -67,7 +67,7 @@ def generate_training_data_subsamples(config, k_fold_dataframes_list: list) -> l
     for n_training_patients in config['data']['n_training_patients_list']:
         df_train_sample, sampled_indices = perform_cumulative_sampling(config, df_all_train_patients, sampled_indices, n_training_patients)
 
-        k_fold_dataframes_list.append({'train': df_train_sample, 'val': df_val})
+        k_fold_dataframes_list.append({'train': df_train_sample, 'val': df_val}) 
         logging.info(f"Sampled {len(df_train_sample)} patients")
 
     return k_fold_dataframes_list

@@ -7,9 +7,6 @@ DtypeLike = Union[np.dtype, type, str, None]
 from monai.config.type_definitions import NdarrayOrTensor, NdarrayTensor
 from monai.utils.enums import TransformBackends
 
-
-
-
 class ConvertMetaTensorToTensor(MapTransform):
     """
     Convert the meta data of the tensor to a pytorch tensor.
@@ -20,7 +17,6 @@ class ConvertMetaTensorToTensor(MapTransform):
         self, keys,
     ) -> None:
         super().__init__(keys)
-        #self.scaler = ScaleIntensityRange(a_min, a_max, b_min, b_max, clip, dtype)
 
     def __call__(self, data: Mapping[Hashable, NdarrayOrTensor]) -> dict[Hashable, NdarrayOrTensor]:
         d = dict(data)

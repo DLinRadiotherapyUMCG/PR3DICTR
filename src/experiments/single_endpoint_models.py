@@ -19,8 +19,6 @@ def get_single_tox_feature_set(endpoint):
 
 
 
-
-
 def run_single_toxicity_models_experiment(config, experiment_name, original_endpoints_list=None):
     """
     This function runs the an experiment using different combinations of endpoints removal experiment. It will retrain the model on the dataset with one of the inputs (CT, dose, segmentations, clinical features) removed.

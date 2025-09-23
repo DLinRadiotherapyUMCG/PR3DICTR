@@ -28,10 +28,6 @@ def get_single_tox_feature_set(endpoint):
     
     return endpoint_features_dict[endpoint]
 
-
-
-
-
 def run_toxicity_combinations_experiment(config, experiment_name, endpoint_combinations_dict=None):
     """
     This function runs the an experiment using different combinations of endpoints removal experiment. It will retrain the model on the dataset with one of the inputs (CT, dose, segmentations, clinical features) removed.

@@ -9,14 +9,11 @@ import pandas as pd
 from monai.data import Dataset, CacheDataset, PersistentDataset, SmartCacheDataset
 from multiprocessing import Manager
 
-
 from src.dataset.LabelTypesManager import LabelTypesManager
 from src.dataset.transforms.MixUp import MixUp
 from src.dataset.ToxDataLoader import ToxDataLoader
 from src.dataset.utils.collect_metadata import collect_metadata
 from src.constants import PATIENT_ID_COL_NAME
-
-
 
 def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
     """
@@ -28,24 +25,25 @@ def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
         data_dicts (list of dict): one dict per patient
         patient_ids_list (list): patient IDs in this dataset
     """
-    patients_data_dir = config['paths']['images']
-    image_keys = config['data']['image_keys']
-    clinical_features_columns = config['columns']['clinical_features']
+    patients_data_dir = config['paths']['images'] # Directory containing any volumetric data per patient
+    image_keys = config['data']['image_keys'] # Keys that indicate the different volumetric data 
+    clinical_features_columns = config['columns']['clinical_features'] # Keys related to the columns containing the clinical data to be used in the model
 
-    label_manager = LabelTypesManager(config)
+    label_manager = LabelTypesManager(config) 
     label_columns = []
+    # Add the keys related to the columns that contain the labels that are to be predicted by the model
     for col in label_manager.label_names_full_list:
         if isinstance(col, (list, tuple)):
             label_columns.extend(col)
         else:
             label_columns.append(col)
 
-    patient_ids_list = df[PATIENT_ID_COL_NAME].astype(str).tolist()
+    patient_ids_list = df[PATIENT_ID_COL_NAME].astype(str).tolist() # Gets the PatientID's 
 
-    features_arr = df.set_index(PATIENT_ID_COL_NAME).loc[patient_ids_list, clinical_features_columns].values.astype(np.float32)
-    labels_arr = df.set_index(PATIENT_ID_COL_NAME).loc[patient_ids_list, label_columns].values.astype(np.float32)
+    features_arr = df.set_index(PATIENT_ID_COL_NAME).loc[patient_ids_list, clinical_features_columns].values.astype(np.float32) # Gets the clinical data from the patients
+    labels_arr = df.set_index(PATIENT_ID_COL_NAME).loc[patient_ids_list, label_columns].values.astype(np.float32)  # Get the labels from the patients
 
-    data_dicts = []
+    data_dicts = [] # Organizes the in and output data per patient, with clinical feaures, labels, patient ids, and image paths
     for idx, patient_id in enumerate(patient_ids_list):
         patient_dict = {
             'features': features_arr[idx],
@@ -57,15 +55,6 @@ def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
         data_dicts.append(patient_dict)
 
     return data_dicts, patient_ids_list
-
-
-    
-
-
-
-
-
-
 
 def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation_mode : bool = True):
     """
@@ -100,7 +89,6 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
         dataloader = None
         metadata = None
         return dataloader, metadata
-
 
     data_dict, patient_IDs_list = prepare_data_dictionaries(config, df_data)  # do some reformatting of the dataframe -> list of dictionaries
     update_dict = None
@@ -163,8 +151,3 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     metadata = collect_metadata(dataloader)
 
     return dataloader, metadata
-
-
-
-
-

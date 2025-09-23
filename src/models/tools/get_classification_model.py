@@ -29,8 +29,6 @@ class ImageClassifier(nn.Module):
             self.flatten = nn.Flatten()
 
             self.output_head = get_output_head(config, n_features)
-
-        
     
     def forward(self, x, features=None, vectorize=False):
         """
@@ -88,10 +86,6 @@ class ImageClassifier(nn.Module):
             
             return x.shape[1:]
 
-
-
-
-
 def get_classification_model(config, metadata, save_summary=True):
   
     channels,depth,height,width,n_features = metadata['channels'], metadata['depth'], metadata['height'], metadata['width'], metadata['n_features']
@@ -99,12 +93,11 @@ def get_classification_model(config, metadata, save_summary=True):
 
     if channels > 0: # if images are present
         logging.info("Creating image model")
-        
         encoder = get_encoder(config, channels, depth, height, width)
-        # Put the image encoder into a model
+        # Put the image encoder into a 3D volume data model
         model = ImageClassifier(config=config, encoder=encoder, n_features=n_features, metadata=metadata)
 
-    else:
+    else: # If you dont use volume data an MLP is made using only tabular information
         logging.info("No image_keys present. Creating clinical-only model (MLP)")
         channels, depth, height, width = 1, 1, 1, 1 # dummy values for model summary
         model = MultiLayerPerceptron(config=config, encoder=None, n_features=n_features, metadata=None)

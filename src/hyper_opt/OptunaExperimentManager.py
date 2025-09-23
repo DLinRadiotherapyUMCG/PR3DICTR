@@ -4,11 +4,9 @@ import traceback
 import os
 import copy
 
-
 from src.utils.set_random_seed import set_random_seed, generate_random_seed
 from src.training.k_fold_cross_validation import K_fold_cross_validation
 import src.hyper_opt.utils as utils
-
 
 class OptunaExperimentManager():
     """
@@ -19,17 +17,13 @@ class OptunaExperimentManager():
         self.Optuna_study = utils.initialize_optuna_study(config) 
         self.config = config
 
-
     def run_optimize_experiment(self):
         """
         Run the hyperparameter tuning experiment
-        """
-        
+        """        
         n_trials = self.config['hyperparam_tuning']['optuna']['n_trials']
 
         self.Optuna_study.optimize(lambda trial: self.run_trial(self.config, trial), n_trials)
-
-
 
     def run_trial(self, config, trial):
         """
@@ -79,9 +73,7 @@ class OptunaExperimentManager():
 
             raise optuna.exceptions.TrialPruned()  # NOTE: this will set the trial to pruned
             
-
         return optuna_results
-
 
     def update_trial_hyperparameters(self, config : dict, trial) -> dict:
         """

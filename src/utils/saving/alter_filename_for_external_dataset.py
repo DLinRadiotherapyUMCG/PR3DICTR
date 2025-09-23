@@ -1,8 +1,6 @@
 from src.constants import MAIN_DATA_SOURCES
 import os
 
-
-
 def alter_filename_if_external_dataset(config, filename : str):
     """
     If the data source is not the main data source (i.e. it is an external test set), 

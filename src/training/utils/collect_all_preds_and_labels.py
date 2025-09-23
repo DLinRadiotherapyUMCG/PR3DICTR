@@ -1,6 +1,5 @@
 import torch
 
-
 def collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, targets, outputs):
     """
     Function that collects all of the predictions and labels for each batch.

@@ -20,28 +20,22 @@ def get_loss_function(config : dict, LabelTypesManager):
     reduction = config['training']['loss']['reduction']
     loss_name = config['training']['loss']['name'].lower() # make the loss function name lowercase
 
-    if loss_name == 'bce':
+    if loss_name == 'bce': # Binairy cross entropy loss
         pos_weights = torch.as_tensor(config['training']['loss']['BCE']['pos_weight'], dtype=torch.float32, device=DEVICE)
         loss_function = torch.nn.BCEWithLogitsLoss(reduction = reduction, pos_weight = pos_weights)
 
-    elif loss_name == 'focal':
+    elif loss_name == 'focal': # Focal loss
         alpha = config['training']['loss']['focal']['alpha']
         gamma = config['training']['loss']['focal']['gamma']
         loss_function = FocalLoss(alpha = alpha, gamma = gamma, reduction=reduction)    
 
-    elif loss_name == 'hill':
-        loss_function = Hill(reduction = reduction) # TODO: add gamma, margin, lamb parameters to configs
+    elif loss_name == 'hill': # Hill loss
+        loss_function = Hill(reduction = reduction) 
 
-    elif loss_name == "asl":
+    elif loss_name == "asl": # Asymetric loss
         gamma_neg = config['training']['loss']['ASL']['gamma_neg']
         gamma_pos = config['training']['loss']['ASL']['gamma_pos']
         loss_function = AsymmetricLossOptimized(gamma_neg=gamma_neg, gamma_pos=gamma_pos, reduction = reduction)
-
-    # elif loss_name == 'nlll':
-    #     # Loss function for time event --> Requires 2 inputs (days, binaryCheckEvent)
-    #     if(len(config['columns']['label']) != 2):
-    #         raise Exception(f"Error: NLLL loss function expects 2 labels and got {config['columns']['label']}, abort code.")
-    #     loss_function = NegativeLogLikelihood(config)
     
     else:
         raise ValueError(f"Loss function {loss_name} not supported.")

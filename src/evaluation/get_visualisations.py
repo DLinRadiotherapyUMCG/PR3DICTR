@@ -6,9 +6,7 @@ from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe 
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
-from src.constants import METRIC_TYPES, METRICS_PER_ENDPOINT_TYPE
-
-
+from src.constants import METRICS_PER_ENDPOINT_TYPE
 
 def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, external_set=False, is_test_set=False, lr: bool = False):
     """
@@ -31,10 +29,9 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
         # gets the directory from the config
         predictions_csv_dir = get_predictions_csv_dir(config, test_set=is_test_set, ensemble_predictions=external_set)
 
-    df_fold_all_preds = pd.read_csv(predictions_csv_dir, sep=";")
+    df_fold_all_preds = pd.read_csv(predictions_csv_dir, sep=";") # All predictions
 
-
-    visualisations_list = config['evaluation']['visualisations']['list']
+    visualisations_list = config['evaluation']['visualisations']['list'] # Read the config to see which visualisations should be generated
 
     # loops over each dataset
     for set_name in sets:
@@ -54,7 +51,6 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
             relevant_labels_per_endpoint_dict = {k: v for k, v in labels_per_endpoint_dict.items() if k in plotting_endpoints}
             relevant_predictions_per_endpoint_dict = {k: v for k, v in predictions_per_endpoint_dict.items() if k in plotting_endpoints}
 
-
             # init a plotting dict
             plotting_dict = [{
                 "name" : set_name,
@@ -63,8 +59,7 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
             }]
             
 
-            # LOOP THROUGH THE PLOTS
-
+            # loop through the plots
             if endpoint_type == 'Binary':
                 # calibration plot
                 if 'calibration' in visualisations_list:
@@ -115,8 +110,7 @@ def get_visualizations(config, sets=['train', 'val'], pred_csv_dir=None, externa
                     filename = alter_filename_if_external_dataset(config, filename)
                     save_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
                     adaptive_make_endpoint_plots(config, plotting_dict, column_names=plotting_endpoints, mode="kaplan_meier", title=f"Kaplan-Meier Plots: {set_name} set", filedir=save_dir, return_fig=False)
-                    
-        
+                            
             else:
                 pass
     

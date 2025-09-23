@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Helper functions for classification metrics
 """
@@ -7,7 +6,6 @@ import numpy as np
 from sklearn.metrics import roc_curve
 
 from src.constants import MISSING_DATA_VALUE
-
 
 def remove_missing(config, true, pred):
     """
@@ -22,7 +20,6 @@ def remove_missing(config, true, pred):
     pred = pred[mask]
 
     return true, pred
-
 
 def threshold(config, true, pred):
     """
@@ -46,8 +43,6 @@ def threshold(config, true, pred):
     pred[pred < threshold] = 0
 
     return true, pred
-
-
 
 def calc_bins(config, y_true, y_pred, bin_type="fixed"):
     """

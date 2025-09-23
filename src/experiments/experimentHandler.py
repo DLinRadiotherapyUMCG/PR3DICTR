@@ -5,9 +5,6 @@ import src.hyper_opt.utils as utils
 import src.hyper_opt.WandB_functions as WandB_functions
 from src.hyper_opt.OptunaExperimentManager import OptunaExperimentManager
 
-
-
-
 class experimentHandler():
     """
     An object to help manage the main experiments. Checks the config to see if you want to do one K-folds run, or if you want
@@ -34,7 +31,7 @@ class experimentHandler():
             logging.info("Setting up optuna")
             self.hyperHandler = OptunaExperimentManager(config)
         else:
-            # just do cross-validation
+            # no need to initialise optuna and the experimenthandler will simply perform k-fold cross validation
             pass
 
 
@@ -50,4 +47,3 @@ class experimentHandler():
         # else, just do cross-validation
         else:
             results = K_fold_cross_validation(config)
-

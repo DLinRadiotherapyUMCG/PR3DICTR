@@ -14,15 +14,10 @@ from monai.transforms import (
 from typing import Collection, Hashable, Iterable, Sequence, TypeVar, Union, Mapping, Optional, Any
 DtypeLike = Union[np.dtype, type, str, None]
 
-
 from src.dataset.transforms.ConvertMetaTensorToTensor import ConvertMetaTensorToTensor
 from src.dataset.transforms.CheckImageDimensions import CheckImageDimensions
 from src.dataset.transforms.get_preprocessing_transforms import get_preprocessing_transforms
 from src.dataset.transforms.get_random_transforms import get_random_transforms
-
-
-
-
 
 def get_transforms(config: dict):
     """
@@ -40,10 +35,8 @@ def get_transforms(config: dict):
     image_keys = config['data']['image_keys']
     concat_key = 'input'
     
-
     """ Start with the generic transforms """
     # get all of the generic transforms (which apply to both the training and the validation/test sets)
-
     generic_transforms = [
         EnsureTyped(keys = ['features', 'label_list', 'patient_id'], data_type='tensor'),  # ensure that the data is a tensor
     ]
@@ -51,13 +44,12 @@ def get_transforms(config: dict):
     if image_keys:
         generic_transforms.extend([
             LoadImaged(keys=image_keys, image_only=True, ensure_channel_first=False),  # load the images
-            CheckImageDimensions(keys=image_keys, desired_num_img_dims=config['data']['image_num_dimensions']),    # checks if there are enough dimensions (eg. [1,96,96,96] and not [96,96,96]), otherwise fixes it
+            CheckImageDimensions(keys=image_keys, desired_num_img_dims=config['data']['image_num_dimensions']),    # checks if there are enough dimensions (eg. [1,xxx,xxx,xxx] and not [xxx,xxx,xxx]), otherwise fixes it
             EnsureTyped(keys=image_keys, data_type='tensor'),
         ]
         )
     
     generic_transforms = Compose(generic_transforms)
-
 
     # if data preprocessing is enabled, add the normalisation transform (e.g. for HNC dataset)
     if config['data']['preprocessing']['isEnabled']:
@@ -124,7 +116,6 @@ def get_transforms(config: dict):
    
     train_transforms = Compose([
                                 train_transforms,
-                                #MONAI_MixUpd(keys=[concat_key], batch_size=config['training']['batch_size'], alpha=1.0),
                                 ConvertMetaTensorToTensor(keys=final_transform_keys),
                                 EnsureTyped(keys=final_transform_keys, data_type='tensor', dtype=torch.float),
                             ])
@@ -140,6 +131,7 @@ def get_transforms(config: dict):
     train_transforms.set_random_state(seed=config['general']['seed'])
     val_transforms.set_random_state(seed=config['general']['seed'])
 
+    # Logging transform info
     for mode, t in zip(['Train', 'Validation'], [train_transforms, val_transforms]):
         logging.debug('{} transforms:'.format(mode))
         for i in t.transforms:

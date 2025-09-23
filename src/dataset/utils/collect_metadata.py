@@ -1,8 +1,3 @@
-
-
-
-
-
 def collect_metadata(dataloader):
     """
     Collects metadata about the dataset from a dataloader, including image dimensions, number of clinical features, and number of labels.
@@ -21,14 +16,9 @@ def collect_metadata(dataloader):
     assert batch_size2 == batch_size3 # all batch sizes should be the same
 
     metadata = {
-        #"channels": channels,
-        #"depth": depth,
-        #"height": height,
-        #"width": width,
         "n_features": n_features,
         "n_labels": n_labels,
     }
-
 
     # collect images metadata only if images are present
 

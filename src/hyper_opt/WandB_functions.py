@@ -5,15 +5,12 @@ import copy
 def is_WandB_enabled(config: dict):
     return config['hyperparam_tuning']['WandB']['isEnabled']
 
-
 def WandB_log(config: dict, results : dict, epoch: int = None):   # UpdateStudy
     """
     Logs an epoch to WandB
     """
     if is_WandB_enabled(config):
         wandb.log(data = copy.deepcopy(results), step = epoch)
-
-
 
 def login(config: dict) -> None:  
     """
@@ -27,17 +24,12 @@ def login(config: dict) -> None:
     else:
         logging.info("Weights and Biases is not enabled in the config, skipping login.")  
 
-
-
 def stop_WandB_trial(config: dict) -> None:
     """
     Finishes a WandB run (e.g. a trial).
     """
     if is_WandB_enabled(config):
         wandb.finish()
-
-
-
 
 def initialise_WandB_group(config: dict, project_name: str, groupName = None, config_for_wandb = None) -> None:
     """
@@ -58,8 +50,6 @@ def initialise_WandB_group(config: dict, project_name: str, groupName = None, co
             reinit = True
         ) 
     
-
-
 def update_WandB_summary_table(config : dict, best_log_dict : dict):
     """
     A helper function to enforce that the WandB summary table contains information about the 'best' epoch,

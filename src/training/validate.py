@@ -50,7 +50,6 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
             all_targets = torch.cat([all_targets, targets.detach()], dim=0) if len(all_targets) > 0 else targets.detach()
             patientIDs_list += list(batch['patient_id'])
 
-        
     # for validation, we can calculate the loss just once at the end (instead of for each batch)
     avg_loss, total_loss_dict = loss_function(preds_dict, all_targets)
     # convert the losses from tensors to floats

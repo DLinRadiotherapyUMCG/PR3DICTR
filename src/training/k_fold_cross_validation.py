@@ -1,9 +1,6 @@
 import os
 import logging
-import pandas as pd
 import numpy as np
-import torch
-import gc
 
 from src.constants import DEVICE
 
@@ -20,16 +17,13 @@ from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.saving.saving_predictions import concatenate_predictions, save_predictions
 from src.utils.saving.create_results_directory import create_results_directory
 from src.utils.list_dicts import append_to_list_dicts
-from src.utils.data_equalizer import get_delimiter, label_equalizer
+from src.utils.data_equalizer import  label_equalizer
 from src.config_presets.tools.save_config import save_config
 from src.hyper_opt.WandB_functions import initialise_WandB_group, stop_WandB_trial
 from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
 from src.evaluation.get_visualisations import get_visualizations
-
-
-
 
 def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
     """
@@ -39,7 +33,6 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         config_for_wandb (dict): a config to send to WandB (optional, usually only used during hyperparameter tuning).
     Returns:
         results (dict): the mean results over each fold.
-
     """
 
     n_splits = config['data']['kFolds']['n_splits']
@@ -66,8 +59,6 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
     val_losses_list_dict   = {endpoint: list() for endpoint in endpoint_list}
     test_losses_list_dict  = {endpoint: list() for endpoint in endpoint_list}
     
-
-
     # load the data, and make K-fold splits
     df_train_val, df_test = load_dataset(config)
     k_fold_dataframes_list = generate_K_fold_cross_validation_splits(config, df_train_val)
@@ -99,7 +90,6 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         logging.info(f'Fold {fold_idx}/{len(k_fold_dataframes_list)}')
         initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=config_for_wandb)
         
-
         """
         MODEL TRAINING
         """

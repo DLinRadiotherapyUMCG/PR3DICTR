@@ -3,8 +3,6 @@ import torch.nn as nn
 
 from src.constants import MISSING_DATA_VALUE
 
-
-
 class Regularization(object):
     def __init__(self, order, weight_decay):
         ''' The initialization of Regularization class
@@ -27,13 +25,9 @@ class Regularization(object):
         reg_loss = self.weight_decay * reg_loss
         return reg_loss
 
-
-
 class NegativeLogLikelihood(nn.Module):
     def __init__(self):
         super(NegativeLogLikelihood, self).__init__()
-        #self.L2_reg = 0.00005
-        #self.reg = Regularization(order=2, weight_decay=self.L2_reg)
 
         self.missing_endpoints_as_tensor = torch.tensor([MISSING_DATA_VALUE])
         self.eps = 0.1  # 1e-8
@@ -47,23 +41,17 @@ class NegativeLogLikelihood(nn.Module):
         self.events_endpoint_list = events_endpoint_list
         self.num_tasks = len(events_endpoint_list)
         
-
     def forward(self, risk_pred, y, e):
         """
         :param risk_pred: (batch_size, num_tasks)
         :param y: (batch_size, num_tasks)
         :param e: (batch_size, num_tasks)
         """
-        # risk_pred = risk_pred.cuda()
-        # y = y.cuda()
-        # e = e.cuda()
-
         
         batch_size, num_tasks = risk_pred.shape
         assert num_tasks == self.num_tasks, "Mismatch in number of tasks"
 
         zero_tensor = torch.tensor(0.0, device=risk_pred.device, dtype=risk_pred.dtype)
-        #total_loss = zero_tensor
         loss_dict = {event : zero_tensor for event in self.events_endpoint_list}
 
         for k, event_name in enumerate(self.events_endpoint_list):
@@ -72,7 +60,6 @@ class NegativeLogLikelihood(nn.Module):
             valid_mask = (e[:, k] != self.missing_endpoints_as_tensor[0])
 
             if valid_mask.sum() < 2:
-                #neg_log_loss = zero_tensor
                 loss_dict[event_name] = zero_tensor
 
             else:
@@ -88,14 +75,11 @@ class NegativeLogLikelihood(nn.Module):
                 mask[(y_k.T - y_k) > 0] = zero_tensor
 
                 log_loss = torch.exp(risk_k) * mask
-                log_loss = torch.sum(log_loss, dim=0) # / (torch.sum(mask, dim=0) + self.eps)
+                log_loss = torch.sum(log_loss, dim=0) 
                 log_loss = torch.log(log_loss).reshape(-1, 1)
                 neg_log_loss = -torch.sum((risk_k - log_loss) * e_k.unsqueeze(1)) / (torch.sum(e_k) + self.eps)
 
-                #total_loss += neg_log_loss
                 loss_dict[event_name] = neg_log_loss / valid_batch_size
 
         return loss_dict
     
-
-

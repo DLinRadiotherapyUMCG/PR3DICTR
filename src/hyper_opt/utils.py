@@ -2,10 +2,7 @@ import os
 import optuna
 import logging
 
-from src.utils.fileHandler import create_file, create_folder
-
-# TODO: comments and documentation for all of these function
-
+from src.utils.fileHandler import create_file
 
 def update_config(config, location, suggested_value):
     """
@@ -24,27 +21,27 @@ def update_config(config, location, suggested_value):
         config[location[0]] = update_config(config[location[0]], location[1:], suggested_value)
         return config
 
-
-
-def normal_hyperparameters(config, trial):
+def normal_hyperparameters(config, trial):    
+    """
+    Handles normal hyperparameters, updates the working config with newly suggested
+    parameters within the ranges per trial
+    """
+    # Loops through the different regular parameters 
     for key in config['hyperparam_tuning']['hyperparams'].keys():
         try:
+            # Gets the required info and location of the hyperparameter
             hyperinfo = config['hyperparam_tuning']['hyperparams'][key]
             location = hyperinfo['location']
-
-            # Check if multi is encountered
-            if(hyperinfo['name'].startswith("n_")):
-                suggested_value = generate_value(trial, hyperinfo)
-            else:   
-                suggested_value = generate_value(trial, hyperinfo)
             
+            # Generates value 
+            suggested_value = generate_value(trial, hyperinfo)
+            
+            # Updates the config with the suggested value
             config = update_config(config,location,suggested_value)
         except Exception as error:
                 print(f"Could not generate hyperparams [Single] with the name '{key}' with following error:\n {error}")
                 raise Exception("Stopped trials due to error.")
     return config
-
-
 
 def derived_hyperparameters(config, trial):
     '''
@@ -114,12 +111,11 @@ def derived_hyperparameters(config, trial):
     return config
 
 
-
-
 def generate_value(trial, hyperinfo):
     """
     Selects and generates a value based on hyperinfo
     """
+    # Set the info for the hyperparameter, range, type, name
     keys = hyperinfo.keys()
     step = None
     log = False
@@ -128,6 +124,7 @@ def generate_value(trial, hyperinfo):
     if 'log' in keys:
         log = hyperinfo['log']
 
+    # Uses the optuna trial backend to generate values based on the specific hyperparameter info
     if hyperinfo['type'] == 'int':
         if step == None:
             step = 1
@@ -144,9 +141,6 @@ def generate_value(trial, hyperinfo):
         suggested_value = trial.suggest_discrete_uniform(hyperinfo['name'], hyperinfo['min'], hyperinfo['max'])       
     
     return suggested_value
-
-
-
 
 def initialize_optuna_study(config):
     study = None
@@ -188,6 +182,4 @@ def initialize_optuna_study(config):
             logging.info("Continuing existing optuna run!")
 
     return study
-
-
 

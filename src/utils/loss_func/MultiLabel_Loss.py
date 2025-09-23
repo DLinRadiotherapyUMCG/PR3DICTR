@@ -4,8 +4,6 @@ from torch import nn
 from src.utils.loss_func.loss_NLL import NegativeLogLikelihood
 from src.constants import MISSING_DATA_VALUE
 
-
-
 class MultiLabel_Loss(nn.Module):
     """
     A class representing the loss function for multi toxicity prediction.
@@ -19,7 +17,6 @@ class MultiLabel_Loss(nn.Module):
         self.endpoints_list = config['columns']['labels']
 
         self.LabelTypesManager = LabelTypesManager
-
         
         # set the loss functions
         self.binary_loss_function = binary_loss_function
@@ -28,8 +25,6 @@ class MultiLabel_Loss(nn.Module):
         # set the endpoint list for the events loss function
         if 'Event' in config['columns']['labels_types']:
             self.events_loss_function.set_endpoint_list(self.LabelTypesManager.endpoint_type_groups_names['Event'])
-
-
 
     def forward(self, outputs_dict, labels_dict):
         
@@ -82,9 +77,6 @@ class MultiLabel_Loss(nn.Module):
 
         return total_loss, loss_dict    
 
-
-
-
     def preprocess_event_target_columns(self, targets):
         """
         Seperates the event endpoints into a binary 'events' tensor and a 'days' tensor.
@@ -104,8 +96,6 @@ class MultiLabel_Loss(nn.Module):
         days = event_targets[:, :, 1::2].squeeze(-1)  # Get the binary events (every second column starting from 0)
 
         return binary_events, days
-
-
 
     def forward_binary_loss_function(self, predictions, targets, endpoint_list: list):
         
@@ -144,5 +134,4 @@ class MultiLabel_Loss(nn.Module):
                 mean_loss = batch_loss[:].sum() / mask[:].sum()
                 batch_loss_dict[endpoint_list[0]] = torch.clamp(mean_loss, min=0, max=10000)  # Optional clamping
                 
-
         return batch_loss_dict

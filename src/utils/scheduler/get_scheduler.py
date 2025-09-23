@@ -1,7 +1,4 @@
 import torch
-from torch.optim import Optimizer
-
-
 
 def get_scheduler(config, optimizer):
     """
@@ -20,8 +17,6 @@ def get_scheduler(config, optimizer):
                                                                         'T_mult'],
                                                                     eta_min=config['training']['scheduler'][
                                                                         'eta_min'])
-    
-    # TODO: add more options here
 
     else:
         raise ValueError(f"Scheduler {config['training']['scheduler']['name']} not supported.")

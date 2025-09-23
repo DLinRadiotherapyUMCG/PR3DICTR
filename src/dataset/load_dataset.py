@@ -11,7 +11,6 @@ from src.dataset.LabelTypesManager import LabelTypesManager
 
 from src.constants import PATIENT_ID_LENGTHS_DICT, PATIENT_ID_COL_NAME, SPLIT_COL_NAME
 
-
 def remove_excluded_patients(df : pd.DataFrame, config: dict) -> pd.DataFrame:
     """
     Function to remove patients that should be excluded. This filtering is performed on certain columns, within which patients with certain values are dropped.
@@ -35,9 +34,6 @@ def remove_excluded_patients(df : pd.DataFrame, config: dict) -> pd.DataFrame:
     # return the filtered dataframe (i.e. the dataset without the excluded patients)
     return df
 
-
-
-
 def check_image_data_exists(config: dict, df: pd.DataFrame) -> pd.DataFrame:
     """
     Removes patients from the dataframe who are missing image data files.
@@ -52,7 +48,10 @@ def check_image_data_exists(config: dict, df: pd.DataFrame) -> pd.DataFrame:
     available_dirs = set(os.listdir(image_path))
 
     def has_image_data(patient_id):
-        padded_id = str(patient_id).rjust(patientID_length, '0')
+        if patient_id.isdigit():
+            padded_id = str(patient_id).rjust(patientID_length, '0')
+        else:
+            padded_id = str(patient_id)
         return str(patient_id) in available_dirs or padded_id in available_dirs
 
     mask = df['PatientID'].apply(has_image_data)
@@ -60,10 +59,6 @@ def check_image_data_exists(config: dict, df: pd.DataFrame) -> pd.DataFrame:
     logging.info(f"Removed patients (no image data) = {removed_count}")
 
     return df[mask].reset_index(drop=True)
-
-
-
-
 
 def load_dataset(config : dict, modelCard = None):
     """
@@ -75,16 +70,16 @@ def load_dataset(config : dict, modelCard = None):
         df_train_val (pd.DataFrame): dataframe with the training and validation set patients
         df_test (pd.DataFrame): dataframe containing only the test set patients
     """
-
     patientID_col = PATIENT_ID_COL_NAME
     # load the dataset (patients are split by 'train_val'/'test') --> one dataframe
     dataset_csv_dir = os.path.join(config['paths']['csv'], config['data']['dataset_csv'])
 
     delimiterFound = get_delimiter(dataset_csv_dir)
     df_total = pd.read_csv(dataset_csv_dir, delimiter=delimiterFound, dtype={'PatientID': str})
-    # make sure the patientID strings are long enough
-    patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
-    df_total[patientID_col] = df_total[patientID_col].apply(lambda x: x.rjust(patientID_length, '0'))  # ['%0.{}d'.format(patient_id_length) % int(x) for x in df[patient_id_col]]
+    # make sure the patientID strings are long enough if the patient ids are digits
+    if df_total[patientID_col][0].value().isdigit():
+        patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
+        df_total[patientID_col] = df_total[patientID_col].apply(lambda x: x.rjust(patientID_length, '0'))  # ['%0.{}d'.format(patient_id_length) % int(x) for x in df[patient_id_col]]
     
     df_total = remove_excluded_patients(df_total, config)
     df_total = check_image_data_exists(config, df_total) 
@@ -113,9 +108,6 @@ def load_dataset(config : dict, modelCard = None):
 
     return df_train_val, df_test
 
-
-
-
 def generate_K_fold_cross_validation_splits(config : dict, df_development_set : pd.DataFrame) -> list:
     """
     Generates K train-val splits of the develoment dataset, using stratified K-Fold cross-validation.
@@ -129,8 +121,6 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
     # Check and validate if KFolds settings are active
     k_fold_dataframes_collection = []
 
-    # print("CONFIG N_SPLITS", config["data"]["kFolds"]["n_splits"])
-
     # if the config dictates only 1 n_split, then just do a single train-val split (i.e. no K-fold cross-validation)
     if config["data"]["kFolds"]["n_splits"] == 1:
         logging.warning("WARNING: K-Fold cross-validation is set to 1 split. This is equivalent to a single train-val split.")
@@ -138,7 +128,6 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
         train_i_df, val_i_df = generate_single_train_val_split(config, df_development_set)
                 
         k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
-        #return [generate_single_train_val_split(config, df_development_set)]
     
     else:
         if config["data"]["kFolds"]["split_strategy"] == 'stratified':
@@ -155,25 +144,16 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
         else:
             raise Exception("Exception: K-fold split strategy not recognized. Please check the configuration file.")
 
-
         for i, (train_index, val_index) in enumerate(k_fold_splits):
             # select the training and validation patients
             train_i_df = df_development_set.iloc[train_index]
             val_i_df   = df_development_set.iloc[val_index]
 
             assert not has_patient_overlap(config, train_i_df, val_i_df)
-
             
             k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
-
     
     return k_fold_dataframes_collection
-
-
-
-
-
-
 
 def generate_single_train_val_split(config, df_development_set : pd.DataFrame):
     """
@@ -211,11 +191,6 @@ def generate_single_train_val_split(config, df_development_set : pd.DataFrame):
     
     return train_df, val_df
 
-
-
-
-
-
 def subsample_dataset(num_patients_sample, df_dataset : pd.DataFrame) -> pd.DataFrame:
     """
     Subsample the datasets to that `num_patients_sample` are used in total.
@@ -226,10 +201,6 @@ def subsample_dataset(num_patients_sample, df_dataset : pd.DataFrame) -> pd.Data
     df_dataset = df_dataset.iloc[:int(num_patients_sample)]  # take the sample 
     
     return df_dataset
-
-
-
-     
 
 
 def has_patient_overlap(config, df1 : pd.DataFrame, df2 : pd.DataFrame):

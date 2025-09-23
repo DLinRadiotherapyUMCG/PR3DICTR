@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from src.models.cnn_pooling import CNN_Pooling
 from src.models.resnet import get_resnet
 from src.models.densenet import get_densenet, get_short_densenet

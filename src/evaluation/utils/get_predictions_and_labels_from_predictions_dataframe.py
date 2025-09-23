@@ -3,8 +3,6 @@ import pandas as pd
 from src.evaluation.metrics.utils import remove_missing
 
 
-
-
 def get_predictions_and_labels_from_predictions_dataframe(config : dict, df_fold_all_preds: pd.DataFrame, set_name:str):
     """
     This function extracts the predictions and labels from the predictions.csv dataframe (from each fold) for a specific set_name (train, val, or test). It also drops the missing values.

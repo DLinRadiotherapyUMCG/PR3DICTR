@@ -6,8 +6,6 @@ import torch
 import copy
 from tqdm import tqdm
 
-
-
 from src.constants import DEVICE
 from src.utils.clear_cache import clear_cache
 from src.utils.optimizer.get_optimizer import get_optimizer
@@ -55,8 +53,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
     # get the main metric with which to evaluate the training loop (e.g. AUC)
     metric_names_list = metricHandler.metric_names_list
-    # temp_main_metric_name = "METRIC"                                                    # NOTE: this is a placeholder!!!!
-
 
     if config['training']['GradNorm']['isEnabled']:
         gradNorm = GradNorm(config = config,
@@ -76,7 +72,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         
     patience_counter = 0
     num_batches_per_epoch = len(train_loader)
-
 
     logging.debug(f'N training batches = {num_batches_per_epoch}')
     logging.debug(f'batch size = {config["training"]["batch_size"]}')
