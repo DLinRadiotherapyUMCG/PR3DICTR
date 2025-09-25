@@ -77,9 +77,9 @@ def load_dataset(config : dict, modelCard = None):
     delimiterFound = get_delimiter(dataset_csv_dir)
     df_total = pd.read_csv(dataset_csv_dir, delimiter=delimiterFound, dtype={'PatientID': str})
     # make sure the patientID strings are long enough if the patient ids are digits
-    if df_total[patientID_col][0].value().isdigit():
-        patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
-        df_total[patientID_col] = df_total[patientID_col].apply(lambda x: x.rjust(patientID_length, '0'))  # ['%0.{}d'.format(patient_id_length) % int(x) for x in df[patient_id_col]]
+
+    patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
+    df_total[patientID_col] = df_total[patientID_col].apply(lambda x: x.rjust(patientID_length, '0'))  # ['%0.{}d'.format(patient_id_length) % int(x) for x in df[patient_id_col]]
     
     df_total = remove_excluded_patients(df_total, config)
     df_total = check_image_data_exists(config, df_total) 

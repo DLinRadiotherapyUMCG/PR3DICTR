@@ -126,7 +126,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
             # plot model inputs
             if (config['saving']['plot_training_slices']['isEnabled']) and (epoch_num == 1 or epoch_num % config['saving']['plot_training_slices']['every_n_epochs'] == 0) and (batch_num == 1):
-                plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)
+                plot_model_inputs(config=config, plot_inputs=inputs, epoch_number=epoch_num)
 
             # Make predictions
             outputs = model(x=inputs, features=clinical_features)

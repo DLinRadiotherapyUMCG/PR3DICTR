@@ -3,7 +3,7 @@ general:
   seed: 42                             # random seed
   firstRun: false                      # if this is the first run of this experiment (# if True, makes new experiment folder)
   experiment_name: 'Base_Experiment'   # name of the experiment folder (contains all trial folders)
-  trialNumber: "Trial_?"               # name of the trial folder (contains fold folders)
+  trialNumber: "Trial_0"               # name of the trial folder (contains fold folders)
   resultsCurrentDirectory: ""          # current working directory
   testMode: False                      # if testing the code (e.g. less patients, or less epochs, etc.)
   use_test_set: False                  # if the test dataset should be loaded
