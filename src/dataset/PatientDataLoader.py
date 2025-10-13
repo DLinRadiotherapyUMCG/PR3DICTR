@@ -10,7 +10,7 @@ from monai.data.meta_obj import get_track_meta
 from monai.data.utils import list_data_collate, set_rnd, worker_init_fn
 
 
-class ToxDataLoader(_TorchDataLoader):
+class PatientDataLoader(_TorchDataLoader):
     """
     An enhanced Normal PyTorch DataLoader, inherits the Normal DataLoader and adds a 'get_patient' function that allows to to retrive the 
     inputs and labels of a specific patient by using only their PatientID

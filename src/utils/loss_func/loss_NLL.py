@@ -30,7 +30,7 @@ class NegativeLogLikelihood(nn.Module):
         super(NegativeLogLikelihood, self).__init__()
 
         self.missing_endpoints_as_tensor = torch.tensor([MISSING_DATA_VALUE])
-        self.eps = 0.1  # 1e-8
+        self.eps = 1e-8
         self.sigmoid = torch.nn.Sigmoid()
 
     def set_endpoint_list(self, events_endpoint_list):
