@@ -75,43 +75,45 @@ if __name__ == '__main__':
     from src.uncertainty.MC_dropout import train_MC_dropout_model, collect_bayesian_forward_passes
     
     # Choose the endpoint
-    endpoint = "Xerostomia_M06"
-    #endpoint = "OS"
 
-    config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
-
-    # SETTINGS FOR DATA AMOUNTS EXPERIMENT
-    config['general']['dataset_amounts_experiment'] = False
-    config['data']['equalizer']['isEnabled'] = False
-
-    config['uncertainty']['deep_ensemble']['n_models'] = 5
-    # config['data']['n_training_patients_list'] = [50, 100, 150, 200]
-
-    config['general']['experiment_name'] = "Small TTA" 
-    config['general']['trialNumber'] = endpoint
-    train_MC_dropout_model(config, UQ_method="TTA")
+    for endpoint in ["Xerostomia_M06"]: # ["Dysphagia_M06",  "Xerostomia_M06"]:
 
 
-    # config['general']['experiment_name'] = "Tune MC Sticky" 
-    dropout_rates = [0.1, 0.2, 0.3, 0.4, 0.5]
+        config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
 
-    
+        # SETTINGS FOR DATA AMOUNTS EXPERIMENT
+        config['general']['dataset_amounts_experiment'] = False
+        config['data']['equalizer']['isEnabled'] = False
 
-    for d_rate in dropout_rates:
-        config['general']['experiment_name'] = "Small MC Dropout"
-        #config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
-        config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
+        # config['uncertainty']['deep_ensemble']['n_models'] = 5
+        # config['data']['n_training_patients_list'] = [50, 100, 150, 200]
 
-        config['general']['trialNumber'] = f"{int(d_rate*100)}" 
+        """
+        config['general']['experiment_name'] = f"Tune MC {endpoint.split('_')[0]} PRIMA" 
+        dropout_rates = [0.1, 0.2, 0.3, 0.4, 0.5]
 
-        train_MC_dropout_model(config, UQ_method="MC_dropout")
+        for d_rate in dropout_rates:
+            #config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
+            config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
+
+            config['general']['trialNumber'] = f"{int(d_rate*100)}" 
+
+            train_MC_dropout_model(config, UQ_method="MC_dropout")
 
 
-    # MODEL TRAINING
-    config['general']['trialNumber'] = endpoint
-    config['general']['experiment_name'] = "Small Deep Ensemble"
-    set_random_seed(config['general']['seed'])
-    train_deep_ensemble_models(config)
+        # TTA
+        config['general']['experiment_name'] = "TTA PRIMA" 
+        config['general']['trialNumber'] = endpoint
+        train_MC_dropout_model(config, UQ_method="TTA")
+        """
+
+        # DEEP ENSEMBLE
+        
+        config['general']['experiment_name'] = "Deep Ensemble PRIMA"
+        config['general']['trialNumber'] = endpoint
+
+        set_random_seed(config['general']['seed'])
+        train_deep_ensemble_models(config)
 
 
     # 

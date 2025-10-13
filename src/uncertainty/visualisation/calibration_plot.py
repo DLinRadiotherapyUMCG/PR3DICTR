@@ -33,7 +33,8 @@ def normalise_uncertainty_values(UQ_metric, normalisation_method="minmax" ):
 
 
 
-def plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method="minmax"):
+def plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, 
+                             plot_type="UQ_calibration", normalisation_method="minmax"):
     ax.plot([0, 1], [0, 1], linestyle='--', color='gray', label='Ideal Calibration')
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
@@ -48,6 +49,8 @@ def plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metric
 
     mean_preds = df_UQ_no_missing_labels['Mean Prediction'].values
 
+    N_bins = len(mean_preds) // 25
+
 
     for UQ_metric_name in UQ_metrics_list:
         UQ_metric = df_UQ_no_missing_labels[UQ_metric_name].values
@@ -56,31 +59,40 @@ def plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metric
         else:
             UQ_metric_norm = normalise_uncertainty_values(UQ_metric, normalisation_method=normalisation_method)
 
-        uq_bins = pd.qcut(UQ_metric_norm, N_bins, labels=False, duplicates='drop')
+        if plot_type == "UQ_calibration":
+            uq_bins = pd.qcut(UQ_metric_norm, N_bins, labels=False, duplicates='drop')
+        elif plot_type == "prediction_calibration":
+            uq_bins = pd.qcut(mean_preds, N_bins, labels=False, duplicates='drop')
+        else:
+            raise ValueError(f"Unknown plot_type: {plot_type}")
+        
         aucs, bin_centers = [], []
         for b in np.unique(uq_bins):
             idx = uq_bins == b
             if ENDPOINT_TYPES[endpoint] == "Binary":
-                if np.unique(true_labels[idx]).size == 2:
-                    # auc = roc_auc_score(true_labels[idx], mean_preds[idx])
-
-                    # auc = np.mean((true_labels[idx] - mean_preds[idx]) ** 2)  # MSE
-                    #config_temp = {'evaluation': {'metrics': {'threshold': 'YoudenJ'}}}
-                    # from sklearn.metrics import  accuracy_score
-                    #s
-                    # auc = accuracy(config_temp, true_labels[idx], mean_preds[idx])
-                    thresh_value = 0.5
-                    auc = accuracy_score(true_labels[idx], mean_preds[idx]>thresh_value)
-                    aucs.append(auc)
-                else:
-                    aucs.append(1)
+                if plot_type == "UQ_calibration":
+                    if np.unique(true_labels[idx]).size == 2:
+                        thresh_value = 0.5
+                        auc = accuracy_score(true_labels[idx], mean_preds[idx]>thresh_value)
+                        aucs.append(auc)
+                    else:
+                        aucs.append(1)                  
+                    
+                    
+                elif plot_type == "prediction_calibration":
+                    aucs.append(true_labels[idx].mean())  # plot the 'observed rate' on y-axis
+                
             else:
                 if np.unique(true_labels[idx][:, 0]).size == 2:
                     auc = concordance_index(true_labels[idx][:, 1], mean_preds[idx], true_labels[idx][:, 0])
                     aucs.append(auc)
                 else:
                     aucs.append(1)
-            bin_centers.append(1- UQ_metric_norm[idx].mean())
+
+            if plot_type == "UQ_calibration":
+                bin_centers.append(1 - UQ_metric_norm[idx].mean())
+            elif plot_type == "prediction_calibration":
+                bin_centers.append(mean_preds[idx].mean())
 
         ax.plot(bin_centers, aucs, 'o', label=UQ_metric_name, color=colours_dict[UQ_metric_name], markersize=5)
         coef = np.polyfit(bin_centers, aucs, 1)
@@ -88,7 +100,10 @@ def plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metric
         x_values = np.linspace(0, 1, 100)
         ax.plot(x_values, linear_fit(x_values), linestyle='-', color=colours_dict[UQ_metric_name], alpha=0.8, linewidth=2)
 
-    ax.set_xlabel("Certainty (1 - uncertainty)")
+    if plot_type == "UQ_calibration":
+        ax.set_xlabel("Certainty (1 - uncertainty)")
+    else:
+        ax.set_xlabel("Prediction")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1.0)
 
@@ -187,6 +202,8 @@ def plot_calibration_error_over_dataset_size(
                 true_labels = df_UQ_no_missing_labels[['True Label Event', 'True Months Event']].values
 
             mean_preds = df_UQ_no_missing_labels['Mean Prediction'].values
+
+            N_bins = len(mean_preds) // 25
             #print(df_UQ_temp)
 
             for UQ_metric_name in UQ_metrics_list:
@@ -317,6 +334,65 @@ def plot_UQ_values_over_dataset_size(
             capsize=3,
             color=colours_dict[uq_metric]
         )
+    
+
+    ax.set_xlabel("N training patients")
+
+
+
+
+def plot_accuracy_over_dataset_size(
+        ax,
+    df_data_dict,
+    endpoint,
+    ENDPOINT_TYPES,
+    UQ_metrics_list,
+    N_bins,
+    colours_dict,
+    normalisation_method="minmax",
+):
+    # Prepare rows for DataFrame
+    rows = []
+
+    N_iterations_list = list(df_data_dict.keys())
+    N_patients_list = list(df_data_dict[N_iterations_list[0]].keys())
+    
+    for iteration in N_iterations_list:
+            
+        for N_patients in N_patients_list:
+            df_UQ_temp = df_data_dict[iteration][N_patients]
+
+
+            if ENDPOINT_TYPES[endpoint] == "Binary":
+                df_UQ_no_missing_labels = df_UQ_temp[df_UQ_temp['True Labels'] != -1]
+                true_labels = df_UQ_no_missing_labels['True Labels'].values
+            else:
+                df_UQ_no_missing_labels = df_UQ_temp[df_UQ_temp['True Label Event'] != -1]
+                true_labels = df_UQ_no_missing_labels[['True Label Event', 'True Months Event']].values
+
+            mean_preds = df_UQ_no_missing_labels['Mean Prediction'].values
+            #print(df_UQ_temp)
+
+            accuracy = accuracy_score(true_labels, mean_preds > 0.5)
+            #accuracy = roc_auc_score(true_labels, mean_preds)
+            rows.append({
+                "endpoint": endpoint,
+                "N_patients": int(N_patients),
+                "accuracy": accuracy
+            })
+
+    
+    df = pd.DataFrame(rows)
+
+    grouped = df.groupby(['N_patients'])['accuracy'].agg(['mean', 'std']).reset_index()
+    ax.errorbar(
+        grouped['N_patients'],
+        grouped['mean'],
+        yerr=grouped['std'],
+        label='Accuracy',
+        marker='o',
+        capsize=3
+    )
     
 
     ax.set_xlabel("N training patients")

@@ -42,7 +42,7 @@ data:
       isEnabled: false
     prob: 0.5
   
-  dataset_csv: Dysphagia_patients.csv
+  dataset_csv: UQ_PRIMA_2025.csv
   equalizer:
     isEnabled: false
     ratio: 0.5
@@ -80,8 +80,8 @@ model:
     vit_heads: 8
     vit_mlp_dim: 128
     vit_patch_size: 8
-  clinical_variables_linear_units: [64]
-  clinical_variables_position: 1
+  clinical_variables_linear_units: [64, 8]
+  clinical_variables_position: 2
   cnn_pooling:
     conv_block_layers: 1
     filters:
@@ -122,13 +122,13 @@ model:
   efficientnetv2:
     use_bias: true
   linear_units:
-  - 256
+  - 16
   linear_units_endpoint: []
   lrelu_alpha: 0.01
   model_name: resnet
-  n_clinical_layers: 0
+  n_clinical_layers: 2
   n_linear_layers: 1
-  n_linear_layers_endpoint: 2
+  n_linear_layers_endpoint: 0
   num_ohe_classes: 1
   output_head:
     name: multitox
@@ -150,7 +150,7 @@ training:
     alpha: 0.5
     isEnabled: false
     learning_rate: 0.001
-  batch_size: 8
+  batch_size: 4
   loss:
     ASL:
       gamma_neg: 4
@@ -165,9 +165,9 @@ training:
     reduction: none
   max_epochs: 200
   optimizer:
-    learning_rate: 0.001
+    learning_rate: 0.0001
     momentum: 0.8
-    name: SGD
+    name: Adam
     weight_decay: 0.00
   patience: 10
   scheduler:

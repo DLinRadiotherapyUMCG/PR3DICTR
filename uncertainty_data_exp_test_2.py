@@ -47,16 +47,64 @@ if __name__ == '__main__':
     training_patients_dict = {
         "OS" : [50, 100, 150, 200], 
         "LRC" : [50, 100, 150],
-        "Dysphagia_M06" : [100, 200, 300, 400, 500, 600, 700, 800],
-        "Xerostomia_M06" : [100, 200, 300, 400, 500, 600, 700, 800]
+        "Dysphagia_M06" : [100, 200, 300, 400, 500, 600, 700],
+        "Xerostomia_M06" : [100, 200, 300, 400, 500, 600, 700],
+        "Metal_artefact" : [10, 50, 100, 200, 500]
     }
 
     endpoints = ["Dysphagia_M06", "Xerostomia_M06", "OS", "LRC"]
 
     endpoints = ["OS", "Dysphagia_M06",  "Xerostomia_M06", "LRC"]
 
-    #endpoints = ["OS"]
-    endpoints = ["Dysphagia_M06"]
+    endpoints = ["OS"]
+
+    endpoints = ['Metal_artefact']
+    endpoints = ["Dysphagia_M06", "Xerostomia_M06"]
+    endpoints = ['Xerostomia_M06']
+
+    for endpoint in endpoints:
+        for idx in range(5):
+        
+            run_config = load_model_config_for_uncertainty_experiment(copy.deepcopy(config), endpoint_name=endpoint)
+        
+            #config['general']['experiment_name'] = "Data MC Dropout"
+            run_config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"
+
+
+            run_config['general']['dataset_amounts_experiment'] = True
+            run_config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
+            
+            set_random_seed(idx)
+            # run_config['general']['experiment_name'] = "Data MC Dropout PRIMA no Aug"
+            # run_config['data']['augmentation']['isEnabled'] = False
+            run_config['general']['experiment_name'] = "Data MC Dropout PRIMA mini_model"
+            train_MC_dropout_model(run_config, UQ_method="MC_dropout")
+
+            torch.cuda.empty_cache()
+            gc.collect()
+            torch.cuda.empty_cache()
+
+
+    for endpoint in endpoints:
+        for idx in range(5):
+        
+            run_config = load_model_config_for_uncertainty_experiment(copy.deepcopy(config), endpoint_name=endpoint)
+        
+            #config['general']['experiment_name'] = "Data MC Dropout"
+            run_config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"
+            
+            run_config['general']['dataset_amounts_experiment'] = True
+            run_config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
+            
+            # if not endpoint == "Dysphagia_M06":
+            set_random_seed(idx) 
+            run_config['general']['experiment_name'] = "Data TTA PRIMA mini_model"
+            train_MC_dropout_model(run_config, UQ_method="TTA")
+
+            torch.cuda.empty_cache()
+            gc.collect()
+            torch.cuda.empty_cache()
+
 
     for endpoint in endpoints:
         for idx in range(5):
@@ -70,28 +118,16 @@ if __name__ == '__main__':
             run_config['general']['dataset_amounts_experiment'] = True
             run_config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
             
-
-            # run_config['training']['max_epochs'] = 1
-
             # if not endpoint == "Dysphagia_M06":
             set_random_seed(idx)
-            run_config['general']['experiment_name'] = "Data MC Dropout no aug"
-            run_config['data']['augmentation']['isEnabled'] = False
-            train_MC_dropout_model(run_config, UQ_method="MC_dropout")
-
-            # if not (idx == 3 and endpoint == "Dysphagia_M06"):
-            #     set_random_seed(idx)
-            #     run_config['general']['experiment_name'] = "Data TTA"
-            #     train_MC_dropout_model(run_config, UQ_method="TTA")
-
-            # set_random_seed(idx)
-            # run_config['general']['experiment_name'] = "Data Deep Ensemble"
-            # run_config['uncertainty']['deep_ensemble']['n_models'] = 5         # NOTE: only 5 models, 10 takes too long for the data experiment
-            # train_deep_ensemble_models(run_config)
+            run_config['general']['experiment_name'] = "Data Deep Ensemble PRIMA mini_model"
+            run_config['uncertainty']['deep_ensemble']['n_models'] = 5         # NOTE: only 5 models, 10 takes too long for the data experiment
+            train_deep_ensemble_models(run_config)
             #evaluate_deep_ensemble_models(run_config)
 
             torch.cuda.empty_cache()
             gc.collect()
             torch.cuda.empty_cache()
+
 
 

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from src.uncertainty.visualisation.calibration_plot import plot_calibration_subplot, plot_error_calibration_subplot, plot_calibration_error_over_dataset_size, plot_UQ_values_over_dataset_size
+from src.uncertainty.visualisation.calibration_plot import plot_calibration_subplot, plot_error_calibration_subplot, plot_calibration_error_over_dataset_size, plot_UQ_values_over_dataset_size, plot_accuracy_over_dataset_size
 from src.uncertainty.visualisation.sparsification_plot import plot_sparsification_subplot
 
 
@@ -15,8 +15,8 @@ def plot_nested_UQ(
     col_key="endpoint",
     normalisation_method="minmax",
     N_bins=5,
-    colours_dict=None
-):
+    colours_dict=None,
+    ):
     
     """
     Plots the nested uncertainty quantification (UQ) results. The function creates a grid of subplots based on the specified row and column keys (which can be "endpoint", "method", or "metric").
@@ -78,8 +78,8 @@ def plot_nested_UQ(
                 ax.set_visible(False)
                 continue
             
-            if plot_type == "calibration":
-                plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
+            if plot_type == "UQ_calibration" or plot_type == "prediction_calibration":
+                plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method, plot_type=plot_type)
             elif plot_type == "error calibration":
                 plot_error_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
             elif plot_type == "sparsification":
@@ -88,6 +88,8 @@ def plot_nested_UQ(
                 plot_calibration_error_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
             elif plot_type == "plot_UQ_values_over_dataset_size":
                 plot_UQ_values_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
+            elif plot_type == "plot_accuracy_over_dataset_size":
+                plot_accuracy_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
             else:
                 raise ValueError(f"Unknown plot_type: {plot_type}")
             
@@ -97,8 +99,10 @@ def plot_nested_UQ(
                 ax.set_title(col_val)
             if j == 0:
                 #ax.set_ylabel("AUC" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
-                if plot_type == "calibration" or plot_type == "sparsification":
+                if plot_type == "UQ_calibration" or plot_type == "sparsification":
                     ax.set_ylabel("Accuracy" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
+                elif plot_type == "prediction_calibration":
+                    ax.set_ylabel("Observed Rate")
                 elif plot_type == "calibration_error_dataset_size":
                     ax.set_ylabel("UQ Calibration Error")
                 elif plot_type == "error calibration":
@@ -116,8 +120,10 @@ def plot_nested_UQ(
             if i == 0 and j == 0:
                 fig.legend(title="UQ Metric", loc='upper right', bbox_to_anchor=(1.2, 0.98))
 
-    if plot_type == "calibration":
+    if plot_type == "UQ_calibration":
         title = "Certainty vs Accuracy"
+    elif plot_type == "prediction_calibration":
+        title = "Prediction vs Observed Rate"
     elif plot_type == "sparsification":
         title = "Number of 'Most Uncertain' Samples Removed vs. Accuracy"
     elif plot_type == "calibration_error_dataset_size":
@@ -126,6 +132,8 @@ def plot_nested_UQ(
         title = "Uncertainty vs Error"
     elif plot_type == "plot_UQ_values_over_dataset_size":
         title = "Training Dataset Size vs. Mean Uncertainty"
+    elif plot_type == "plot_accuracy_over_dataset_size":
+        title = "Training Dataset Size vs. Accuracy"
 
     plt.suptitle(
         title,

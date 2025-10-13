@@ -7,7 +7,7 @@ columns:
   clinical_features: []
   # ["Geslacht", "Leeftijd", "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg"]
   
-  labels: ["UQ_Metal_Artefacts_w_missing"]           # the endpoints the model is (going to be) trained on (list)
+  labels: ["UQ_Metal_Artefacts"]           # the endpoints the model is (going to be) trained on (list)
   labels_types: ["Binary"]
 data:
   preprocessing:
@@ -50,7 +50,7 @@ data:
   excluded_values: []
   excluded_variable_name: []
   image_keys:
-  - ct   # ONYL CT IS NEEDED
+  - ct   # ONLY CT IS NEEDED
   
   
   source: PRIMA
