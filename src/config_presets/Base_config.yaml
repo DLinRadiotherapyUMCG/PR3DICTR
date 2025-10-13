@@ -15,9 +15,9 @@ columns:
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]  # Clinical features to insert into the model (list)
 
 paths:
-  csv: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/bagged_datasets/xerostomia_m06/"  # directory to folder containing the dataset csv
-  images: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/dataset/patients/"             # directory to the folder containing the patient images (numpy files)
-  results: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/hnc-ensemble-master/results/" # directory for where you want to save the results
+  csv: "PATH TO FOLDER CONTAINING CSV FILE"  # directory to folder containing the dataset csv
+  images: "PATH TO FOLDER CONTAINING IMAGES"             # directory to the folder containing the patient images (numpy files)
+  results: "PATH TO FOLDER TO SAVE RESULTS INTO" # directory for where you want to save the results
 
 model:
   model_name: "resnet"            # model architecture ['cnn', 'resnet', 'densenet', 'ViT', 'TransRP', etc.]
@@ -84,7 +84,7 @@ model:
 
 data:
   source: 'UMCG'                                     # the source of the dataset you are using (change this for external validation, see constants.py) # ['PRIMA', 'UMCG', 'MDACC']
-  dataset_csv: 'stratified_sampling_test_542.csv'    # name of the csv containing the IDs, clinical features, and endpoints
+  dataset_csv: 'dataset.csv'                         # name of the csv containing the IDs, clinical features, and endpoints
   stratify_on: []                                    # which column names to use in stratified sampling (list of strings)
   excluded_variable_name: [] # ExcludedVar           # column name of variable to exlude patients by
   excluded_values: [] # ExcludedValue                # values of ^this^  variable to exclude patients by
