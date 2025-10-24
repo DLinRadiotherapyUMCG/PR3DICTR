@@ -60,50 +60,50 @@ if __name__ == '__main__':
 
     endpoints = ['Metal_artefact']
     endpoints = ["Dysphagia_M06", "Xerostomia_M06"]
-    endpoints = ['Xerostomia_M06']
+    #endpoints = ['Xerostomia_M06']
 
-    for endpoint in endpoints:
-        for idx in range(5):
+    # for endpoint in endpoints:
+    #     for idx in [4]: # range(5):
         
-            run_config = load_model_config_for_uncertainty_experiment(copy.deepcopy(config), endpoint_name=endpoint)
+    #         run_config = load_model_config_for_uncertainty_experiment(copy.deepcopy(config), endpoint_name=endpoint)
         
-            #config['general']['experiment_name'] = "Data MC Dropout"
-            run_config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"
+    #         #config['general']['experiment_name'] = "Data MC Dropout"
+    #         run_config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"
 
 
-            run_config['general']['dataset_amounts_experiment'] = True
-            run_config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
+    #         run_config['general']['dataset_amounts_experiment'] = True
+    #         run_config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
             
-            set_random_seed(idx)
-            # run_config['general']['experiment_name'] = "Data MC Dropout PRIMA no Aug"
-            # run_config['data']['augmentation']['isEnabled'] = False
-            run_config['general']['experiment_name'] = "Data MC Dropout PRIMA mini_model"
-            train_MC_dropout_model(run_config, UQ_method="MC_dropout")
+    #         set_random_seed(idx)
+    #         # run_config['general']['experiment_name'] = "Data MC Dropout PRIMA no Aug"
+    #         # run_config['data']['augmentation']['isEnabled'] = False
+    #         run_config['general']['experiment_name'] = "Data MC Dropout PRIMA no Aug"
+    #         train_MC_dropout_model(run_config, UQ_method="MC_dropout")
 
-            torch.cuda.empty_cache()
-            gc.collect()
-            torch.cuda.empty_cache()
+    #         torch.cuda.empty_cache()
+    #         gc.collect()
+    #         torch.cuda.empty_cache()
 
 
-    for endpoint in endpoints:
-        for idx in range(5):
+    # for endpoint in endpoints:
+    #     for idx in range(5):
         
-            run_config = load_model_config_for_uncertainty_experiment(copy.deepcopy(config), endpoint_name=endpoint)
+    #         run_config = load_model_config_for_uncertainty_experiment(copy.deepcopy(config), endpoint_name=endpoint)
         
-            #config['general']['experiment_name'] = "Data MC Dropout"
-            run_config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"
+    #         #config['general']['experiment_name'] = "Data MC Dropout"
+    #         run_config['general']['trialNumber'] = endpoint + f"_run_{idx+1}"
             
-            run_config['general']['dataset_amounts_experiment'] = True
-            run_config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
+    #         run_config['general']['dataset_amounts_experiment'] = True
+    #         run_config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
             
-            # if not endpoint == "Dysphagia_M06":
-            set_random_seed(idx) 
-            run_config['general']['experiment_name'] = "Data TTA PRIMA mini_model"
-            train_MC_dropout_model(run_config, UQ_method="TTA")
+    #         # if not endpoint == "Dysphagia_M06":
+    #         set_random_seed(idx) 
+    #         run_config['general']['experiment_name'] = "Data TTA PRIMA no Aug"
+    #         train_MC_dropout_model(run_config, UQ_method="TTA")
 
-            torch.cuda.empty_cache()
-            gc.collect()
-            torch.cuda.empty_cache()
+    #         torch.cuda.empty_cache()
+    #         gc.collect()
+    #         torch.cuda.empty_cache()
 
 
     for endpoint in endpoints:
@@ -120,7 +120,7 @@ if __name__ == '__main__':
             
             # if not endpoint == "Dysphagia_M06":
             set_random_seed(idx)
-            run_config['general']['experiment_name'] = "Data Deep Ensemble PRIMA mini_model"
+            run_config['general']['experiment_name'] = "Data Deep Ensemble PRIMA no Aug"
             run_config['uncertainty']['deep_ensemble']['n_models'] = 5         # NOTE: only 5 models, 10 takes too long for the data experiment
             train_deep_ensemble_models(run_config)
             #evaluate_deep_ensemble_models(run_config)

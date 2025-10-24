@@ -75,7 +75,7 @@ if __name__ == '__main__':
     from src.uncertainty.MC_dropout import train_MC_dropout_model, collect_bayesian_forward_passes
     
     # Choose the endpoint
-    endpoint = "Xerostomia_M06"
+    endpoint = "Dysphagia_M06"
     #endpoint = "OS"
 
     config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
@@ -87,42 +87,55 @@ if __name__ == '__main__':
     config['uncertainty']['deep_ensemble']['n_models'] = 10
     # config['data']['n_training_patients_list'] = [50, 100, 150, 200]
 
-    config['general']['experiment_name'] = "MC Dropout no Pharynx in training" 
-    config['general']['trialNumber'] = endpoint
-
-    #config['columns']['clinical_features'] = []                      # NOTE: DANIEL CHANGED THIS
-
-    config['data']['dataset_csv'] = "UQ_PRIMA_2025_no_pharynx_in_development_set.csv"
+    augmentation_list = ['affine', 'flip', 'noise', 'random_crop', 'rotate']
 
 
-    train_MC_dropout_model(config, UQ_method="MC_dropout")
+    for augmentation in augmentation_list:
+        config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
+
+        # SETTINGS FOR DATA AMOUNTS EXPERIMENT
+        config['general']['dataset_amounts_experiment'] = False
+        config['data']['equalizer']['isEnabled'] = False
+
+        config['uncertainty']['deep_ensemble']['n_models'] = 10
+
+        # TURN OFF THIS AUGMENTATION
+        config['data']['augmentation']['list'][augmentation]['isEnabled'] = False
 
 
-    # # config['general']['experiment_name'] = "Tune MC Sticky" 
-    # dropout_rates = [0.1, 0.2, 0.3, 0.4, 0.5]
+        config['general']['experiment_name'] = "TTA augmentations experiment" 
+        config['general']['trialNumber'] = f"{endpoint}_no_{augmentation}"
 
-    
-
-    # for d_rate in dropout_rates:
-    #     config['general']['experiment_name'] = "Small MC Dropout"
-    #     #config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
-    #     config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
-
-    #     config['general']['trialNumber'] = f"{int(d_rate*100)}" 
-
-    #     train_MC_dropout_model(config, UQ_method="MC_dropout")
+        # config['columns']['clinical_features'] = []                      # NOTE: DANIEL CHANGED THIS
 
 
-    # # MODEL TRAINING
-    # config['general']['trialNumber'] = endpoint
-    # config['general']['experiment_name'] = "Small Deep Ensemble"
-    # set_random_seed(config['general']['seed'])
-    # train_deep_ensemble_models(config)
+        train_MC_dropout_model(config, UQ_method="TTA")
 
 
-    # 
-    # config['general']['trialNumber'] = f"{endpoint}_with_oversampling_adam" 
-    #config['data']['equalizer']['isEnabled'] = True
+    # for augmentation in augmentation_list:
+    #     #config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
+
+    #     # SETTINGS FOR DATA AMOUNTS EXPERIMENT
+    #     # config['general']['dataset_amounts_experiment'] = False
+    #     # config['data']['equalizer']['isEnabled'] = False
+
+    #     config['uncertainty']['deep_ensemble']['n_models'] = 10
+
+    #     # TURN OFF THIS AUGMENTATION
+    #     if augmentation in enable_list:
+    #         config['data']['augmentation']['list'][augmentation]['isEnabled'] = True
+    #     else:
+    #         config['data']['augmentation']['list'][augmentation]['isEnabled'] = False
+
+
+    # config['general']['experiment_name'] = "TTA augmentations experiment" 
+    # config['general']['trialNumber'] = f"{endpoint}_no_clc_only_rigid"
+
+    # config['columns']['clinical_features'] = []                      # NOTE: DANIEL CHANGED THIS
+
+
+    # train_MC_dropout_model(config, UQ_method="TTA")
+
    
 
 

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from src.uncertainty.visualisation.calibration_plot import plot_calibration_subplot, plot_error_calibration_subplot, plot_calibration_error_over_dataset_size, plot_UQ_values_over_dataset_size, plot_accuracy_over_dataset_size
 from src.uncertainty.visualisation.sparsification_plot import plot_sparsification_subplot
-
+from src.uncertainty.visualisation.correlation_plots import plot_uncertainty_and_error_correlation_subplot, plot_uncertainty_and_error_AUROC_subplot
 
 
 def plot_nested_UQ(
@@ -90,6 +90,10 @@ def plot_nested_UQ(
                 plot_UQ_values_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
             elif plot_type == "plot_accuracy_over_dataset_size":
                 plot_accuracy_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
+            elif plot_type == "uncertainty_error_correlation":
+                plot_uncertainty_and_error_correlation_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, colours_dict, normalisation_method=normalisation_method)
+            elif plot_type == "uncertainty_and_error_AUROC":
+                plot_uncertainty_and_error_AUROC_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, colours_dict, normalisation_method=normalisation_method)
             else:
                 raise ValueError(f"Unknown plot_type: {plot_type}")
             
@@ -134,13 +138,18 @@ def plot_nested_UQ(
         title = "Training Dataset Size vs. Mean Uncertainty"
     elif plot_type == "plot_accuracy_over_dataset_size":
         title = "Training Dataset Size vs. Accuracy"
+    elif plot_type == "uncertainty_error_correlation":
+        title = "Uncertainty vs Error Scatter Plot"
+    elif plot_type == "uncertainty_and_error_AUROC":
+        title = "AUROC of uncertainty vs. correctness"
+
 
     plt.suptitle(
         title,
         fontsize=16
     )
 
-    plt.tight_layout()
+    #plt.tight_layout()
     
     return fig
 

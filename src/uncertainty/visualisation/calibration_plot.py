@@ -19,7 +19,7 @@ def normalise_uncertainty_values(UQ_metric, normalisation_method="minmax" ):
     if normalisation_method is None:
         UQ_metric_normalised = UQ_metric
     elif normalisation_method == "minmax":
-        UQ_metric_normalised = (UQ_metric - np.min(UQ_metric)) / (np.max(UQ_metric) - np.min(UQ_metric) + 1e-8)
+        UQ_metric_normalised = (UQ_metric - np.min(UQ_metric)) / (np.max(UQ_metric) - np.min(UQ_metric))
     elif normalisation_method == "percentile":
         lower = np.percentile(UQ_metric, 5)
         upper = np.percentile(UQ_metric, 95)
@@ -74,6 +74,7 @@ def plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metric
                     if np.unique(true_labels[idx]).size == 2:
                         thresh_value = 0.5
                         auc = accuracy_score(true_labels[idx], mean_preds[idx]>thresh_value)
+                        # auc = roc_auc_score(true_labels[idx], mean_preds[idx])
                         aucs.append(auc)
                     else:
                         aucs.append(1)                  
