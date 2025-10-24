@@ -198,10 +198,19 @@ training:
       gamma_pos: 1     # gamma_positive value for focal loss (default: 1)
     
   scheduler:
-    name: False         # Name of scheduler to use [None, "cosine"]
-    T_0: 40             # (cosine) number of epochs until  restart
-    T_mult: 1           # (coseine) a factor increases after a restart (default: 1)
-    eta_min: 0.00000001 # (cosine)  Minimum learning rate. Default: 0.
+    name: False         # Name of scheduler to use [None, "cosine", "step", "plateau"]
+    cosine:
+      T_0: 40             # (cosine) number of epochs until  restart
+      T_mult: 1           # (cosine) a factor increases after a restart (default: 1)
+      eta_min: 0.00000001 # (cosine)  Minimum learning rate. Default: 0.
+    step:
+      step_size: 50       # (step) number of epochs between each learning rate decay
+      gamma: 0.1          # (step) learning rate decay factor
+    plateau:
+      mode: 'min'               # 'min' or 'max' depending on whether the monitored metric needs to be minimised or maximised
+      factor: 0.1               # factor to reduce the learning rate by
+      patience: 10              # number of epochs with no improvement after which learning rate will be reduced
+      min_lr: 0.00000001        # minimum learning rate
 
   GradNorm:                  
     isEnabled: False         # whether to use GradNorm to balance the gradients of the labels' losses
