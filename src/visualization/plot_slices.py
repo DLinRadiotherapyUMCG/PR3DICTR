@@ -192,6 +192,20 @@ def plot_slices(
     plotting_axis="axial",
     verbose=False,
 ):
+    """
+    Plots multiple rows of image slices with different modalities.
+    Args:
+        row_dicts (list of dict): each dict contains the different image modalities to plot for that row
+        slice_indexes (list of int): list of slice indexes to plot for each row 
+        title (str, optional): title for the entire figure
+        RT_region (str): region for which the RTDOSE colormap should be configured
+        plotting_axis (str): axis along which to plot the slices ('axial', 'sagittal', 'coronal')
+        verbose (bool): whether to print verbose output
+    Returns:
+        fig: matplotlib figure object
+        axs: list of axes in the figure
+    """
+    
     PLOTTING_PARAMS = get_plotting_params(RT_region)
     layer_plotting_order = ["CT", "PET", "RTDOSE", "RTSTRUCT", "GTV", "Attention"]
     colormap_layers = ["Attention", "RTDOSE", "PET", "CT", "GTV", "RTSTRUCT"]
