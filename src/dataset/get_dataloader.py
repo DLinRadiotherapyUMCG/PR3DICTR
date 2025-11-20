@@ -11,7 +11,7 @@ from multiprocessing import Manager
 
 from src.dataset.LabelTypesManager import LabelTypesManager
 from src.dataset.transforms.MixUp import MixUp
-from pred_RT.src.dataset.PatientDataLoader import PatientDataLoader
+from src.dataset.PatientDataLoader import PatientDataLoader
 from src.dataset.utils.collect_metadata import collect_metadata
 from src.constants import PATIENT_ID_COL_NAME
 

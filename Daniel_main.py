@@ -28,7 +28,7 @@ if __name__ == '__main__':
     setup_logging(log_level)
 
     # Load the config
-    config = get_config('Xerostomia_model')
+    config = get_config('Daniel/SPARK.yaml')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])

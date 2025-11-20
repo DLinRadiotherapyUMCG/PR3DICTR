@@ -1,0 +1,275 @@
+general:
+  region: 'HNC'                        # ['HNC', 'LUNG']
+  seed: 42                             # random seed
+  firstRun: false                      # if this is the first run of this experiment (# if True, makes new experiment folder)
+  experiment_name: 'Base_Experiment'   # name of the experiment folder (contains all trial folders)
+  trialNumber: "Trial_?"               # name of the trial folder (contains fold folders)
+  resultsCurrentDirectory: ""          # current working directory
+  testMode: False                      # if testing the code (e.g. less patients, or less epochs, etc.)
+  use_test_set: False                  # if the test dataset should be loaded
+  dataset_amounts_experiment: False    # whether the dataset_amounts_experiment is being performed using bootstrapping
+
+columns:
+  labels: ["Xerostomia_M06"]           # the endpoints the model is (going to be) trained on (list)
+  labels_types: ["Binary"]
+  clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Geslacht", "Leeftijd"]  # Clinical features to insert into the model (list)
+
+paths:
+  # csv: "/home/ai_in_rt/Documents/PRIMA_spreadsheets"  # directory to folder containing the dataset csv
+  # images: "/home/ai_in_rt/Documents/PRIMA_images/dataset_full_2mm_anonymized"             # directory to the folder containing the patient images (numpy files)
+  # results: "/home/ai_in_rt/Documents/results"      # directory for where you want to save the results
+
+  csv: /home/macraedc/data/
+  images: /home/macraedc/data/dataset_full_renamed # dataset_full_2mm_anonymized
+  results: /home/macraedc/SPARK_benchmark
+
+model:
+  model_name: "densenet"            # model architecture ['cnn', 'resnet', 'densenet', 'ViT', 'TransRP', etc.]
+  # general model params
+  output_head:
+    name: "multilabel"        # output module name (i.e. linear layers type)   ['multitox', ]
+    # Linear layer params (output head)
+    n_linear_layers: 1                        # number of (shared) linear layers
+    linear_units: [16]                        # size of each (shared) linear layers
+    n_clinical_layers: 2                      # number of clinical feature layers
+    clinical_variables_linear_units: [32,16]  # sizes of each clinical feature layers
+    clinical_variables_position: 1            # index of `linear_units` to which the clinical features are concatenated (1 = first linear_unit). If there are no linear layers, the clinical features are concatenated to the flattening layer
+    n_linear_layers_endpoint: 1               # number of non-shared linear layers for all endpoints
+    linear_units_endpoint: [64]               # size of each non-shared linear layer
+    num_ohe_classes: 1                        # number of output logits per endpoint [1, 2] (usually 1!)
+  resnet:
+    model_depth: 10      # ResNet model size [10, 18, 34, 50, 101, 152, 200]
+    conv1_kernel_size: 7 # size of the kernel in the first layer of resnet
+    conv1_stride: 2      # stride of that layer
+  densenet:  
+    model_depth: 121  # DenseNet model size [121, 169, 201, 264]
+  efficientnetv2:
+    use_bias: true
+  convnext:
+    model_size: 'tiny'  # ConvNext model size ["tiny", "small", "base", "large", "xlarge"]
+    kernel_size: 3
+    patch_size: 4
+  ViT:
+    vit_patch_size: 8   # sizes of the patches to divide the input image into
+    vit_dim: 128        # dimension of the vector to embed each patch into
+    vit_depth: 4        # number of transformer layers
+    vit_heads: 8        # number of heads per layer (does not add computation, but mlp_dim needs to be divisble by this number)
+    vit_mlp_dim: 128    # size of the MLP layer in the attention encoder block
+    vit_dim_head: 128   # size of the linear layers in the self-attention block
+    vit_emb_dropout: 0.2  # dropout to add to the patch embedding layer
+    vit_dropout_p: 0.2    # dropout for the transformer blocks 
+  TransRP:
+    image_encoder: 'densenet'  # which model to use an an image encoder ['resnet', 'densenet'] (requires their respective configs)
+    clinical_features_method: 'm2'  # which method to use to insert features into (or after) the ViT ["m1", "m2", "m3", "mcb"] 
+    cls_hidden_dim: 128   # the sizes of the linear layers used to embed the clinical features into a CLS token
+    cls_gating: False              # whether to use the cls gating mechanism to weigh the clinical features
+    cls_merge_image_features: False # i the output of the ViT should be the CLS token and the mean of the image tokens (if false, only the CLS token is used)
+    cls_per_class_weighting: False  # aply an alpha per class to the CLS token
+    vit_patch_size: [1,1,1]       # size of the feature map patches
+    vit_dim: 768                  
+    vit_depth: 12            
+    vit_heads: 12
+    vit_mlp_dim: 1024
+    vit_dropout_p: 0.2  
+  cnn_pooling:
+    conv_block_layers: 1                 # number of convolutional layers per block
+    filters: [8, 8, 16, 16, 32]          # number of feature maps per block 
+    kernel_sizes: [7, 5, 4, 3, 3]        # size of convolutional kernels per block
+    strides: [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]  # conv. strides per block
+    pad_value: 0                         # value to pad feature map dimensions with
+    pooling: 'max'                       # which pooling method to use ['avg', 'max', None]
+    pooling_size: 2                      # size of the pooling
+    normalization: 'batch'               # which normalisation method to use ['batch', 'instance']
+    
+data:
+  source: 'PRIMA'                                     # the source of the dataset you are using (change this for external validation, see constants.py) # ['PRIMA', 'UMCG', 'MDACC']
+  dataset_csv: 'MT_dataset_with_all_structs_no_missing.csv'    # name of the csv containing the IDs, clinical features, and endpoints
+  stratify_on: []                                    # which column names to use in stratified sampling (list of strings)
+  excluded_variable_name: [] # ExcludedVar           # column name of variable to exlude patients by
+  excluded_values: [] # ExcludedValue                # values of ^this^  variable to exclude patients by
+  image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
+  image_num_dimensions: 3                            # dimension of each image (each image is 3D, so this is = 3)
+  n_training_patients_list: []                       # list of number of patients to use for training (only used if 'dataset_amounts_experiment'=True)
+
+  dataloader:
+    dataset_type: 'standard'              # ['standard', 'cache', 'smartcache'] # cache: loads all data into RAM for faster training, smartcache: loads a fraction of data into memory
+    num_workers: 16                     # number of workers (cores) to use for data loading in each training batch
+    smartcache:
+      cache_rate: 0.5                  # what fraction of the dataset should be kept in the RAM 
+      num_replace_workers: 4           # number of workers to replace cache with
+
+  preprocessing:
+    isEnabled: false                   # whether or not preprocessing steps should be applied to the image data files
+    crop: true                         # if the image files need cropping
+    crop_shape: [96, 192, 192] # 96, 96]           # dimension to crop to
+    needs_scaling: ["ct", "rtdose", 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
+    needs_label_mapping: ["segmentation_map"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
+    ct: 
+      a_min: -200            # lowest range to clip from
+      a_max: 400             # highest range to clip from
+      b_min: 0               # lowest range to clip to
+      b_max: 1               # higher range to clip to
+      clip: true             # whether or not to clip using the above-mentioned clipping ranges
+    rtdose:
+      a_min: 0
+      a_max: 8000
+      b_min: 0
+      b_max: 1
+      clip: true
+    mri:              # example of how to scale an MRI image
+      a_min: 0
+      a_max: 12345
+      b_min: 0
+      b_max: 1
+    segmentation_map:      # value encoding of the structures in `segmentation_map.npy`, before feeding to model (set to 0 if don't want to include that structure)
+      target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
+
+  kFolds:
+    n_splits: 5           # the number of data splits to make
+    n_iterations: 5       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
+    validation_size: 0.2  # if only 1 split; this is the size of the validation set, the rest goes to training set
+    split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
+    
+
+  equalizer:
+    isEnabled: false     # whether or not to over/under-sampling the training dataset
+    ratio: 0.5           # over/under sample until the ratio of positive and negative instances of each class reaches this value
+    resamplingDirection: 'over'   # ['over', 'under']  
+
+  augmentation:
+    isEnabled: true      # whether or not to apply random augmention during training
+    prob: 0.5            # probability of applying each augmentation (flip is always 0.5)
+    list:
+      flip:
+        isEnabled: True  # left-right flipping (w. 50% chance)
+      random_crop:       
+        isEnabled: True  # randomly crop the image (uses the crop_shape defined in preprocessing)
+      affine:
+        isEnabled: True    # perform affine transformations
+        translate_max: 14  # (pixels) max range to transform by
+        scale_max: 0.02    # TODO: check definition
+        z_scale: -0.2      # TODO: check definition
+      rotate:
+        isEnabled: True    # random rotation
+        max: 45            # max degrees to rotate by
+      noise:
+        isEnabled: True    # add random noise
+        mean: 0            # mean of random noise to add to the image
+        std: 0.1           # standard deviation of that nose
+        
+    mixup:
+      isEnabled: False     # whether to apply MixUp augmention during training
+      alpha: 1.0           # alpha value for MixUp
+
+training:
+  max_epochs: 200            # max number of epoch to train for
+  batch_size: 4              # training batch_size
+  validation_interval: 1     # validate after X training epochs
+  stopping_criteria: "loss"  # What criteria to use for early stopping ['loss', 'metric']
+  patience: 20               # early stopping patience
+  show_progress_bar: True    # whether to show the progress bar on each training epoch (recommend=False for Habrok)
+
+  optimizer:
+    name: "Adam"             # which optimiser to use ['Adan', 'AdamW', 'SGD', 'RMSProp']
+    learning_rate: 0.001     # starting learning rate during training
+    weight_decay: 0.0        # optimiser weight decary
+    momentum: 0.0            # optimser momentum (for 'SGD')
+
+  loss:
+    name: "BCE"    # loss function ['BCE', 'focal', 'hill', 'ASL', 'NLLL']
+    reduction: "none"  # loss function reduction (keep as 'none' !!!)
+    BCE:
+      pos_weight: [1]    # weights for positive instances of each class (list of same length as endpoint labels list) (default:[1])
+    focal:
+      gamma: 2          # gamma for focal loss (default: 2)
+      alpha: 0.25       # alpha value for focal loss (default: 0.25)
+    ASL:
+      gamma_neg: 4     # gamma_negative value for focal loss (default: 4)
+      gamma_pos: 1     # gamma_positive value for focal loss (default: 1)
+    
+  scheduler:
+    name: False         # Name of scheduler to use [None, "cosine", "step", "plateau"]
+    cosine:
+      T_0: 40             # (cosine) number of epochs until  restart
+      T_mult: 1           # (cosine) a factor increases after a restart (default: 1)
+      eta_min: 0.00000001 # (cosine)  Minimum learning rate. Default: 0.
+    step:
+      step_size: 50       # (step) number of epochs between each learning rate decay
+      gamma: 0.1          # (step) learning rate decay factor
+    plateau:
+      mode: 'min'               # 'min' or 'max' depending on whether the monitored metric needs to be minimised or maximised
+      factor: 0.1               # factor to reduce the learning rate by
+      patience: 10              # number of epochs with no improvement after which learning rate will be reduced
+      min_lr: 0.00000001        # minimum learning rate
+
+  GradNorm:                  
+    isEnabled: False         # whether to use GradNorm to balance the gradients of the labels' losses
+    alpha: 0.5               # alpha value for GradNorm (higher -> more imbalance. 0=equal. recommended: less than 2)
+    learning_rate: 0.001     # learning rate for the GradNorm optimiser
+
+evaluation:
+  main_metric: 
+    Binary: "AUC"    # the metric shown during training
+    Event: "C-index"
+  metrics_list: ["AUC"] #  ["AUC", "accuracy"]   # the metrics to calculate at the end of each fold (list of strings, see constant.py for options)
+  metrics:
+    threshold: 'YoudenJ'  # how to define the classification metrics threshold
+    calibration_bins: 10  # number of bins to use in the calibration metrics
+  visualisations: 
+    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve'] # which plots to save per fold
+    n_bins: 10            # nunber of bins to use in the calibration and reliability plot
+
+hyperparam_tuning:
+  WandB:
+    isEnabled: true
+    API_Key: "c7f0f65fac8b7178ad7c5859ba6114775b16e694"
+  optuna:
+    isEnabled: False                    # perform hyperparameter tuning
+    objectives: ["val_mean_AUC"]       # which metrics to optimise on (can be multi-objective)
+    objective_direction: ["maximize"]  # direction to optimise each metric in. must be the same length (and order) as objectives
+    n_trials: 100                      # number of trials to perform
+    n_startup_trials: 30               # number of random trials to perform at the start of the optuna experiment
+    kill_trial_threshold: 0.6          # kill a trial (after 3 folds) if the mean metric value is below this threshold
+    set_new_seeds: True                # whether to set new seeds for each trial
+  # ----  Custom Params -------
+  # Location:= path of the variable in the config
+  # hyperparams:
+  #   Weight_decay: 
+  #     name: 'Weight_Decay'
+  #     type: 'float'
+  #     location: ["training",'optimizer','weight_decay']
+  #     min: 0
+  #     max: 1
+
+
+
+uncertainty:
+  seed: 42                        # random seed for uncertainty estimation
+  method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
+  metric: 12345
+  deep_ensemble:
+    n_models: 5
+  dataset_split:
+    n_splits: 1                   # the number of data splits to make
+    validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
+    split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
+
+
+saving:
+  config: True               # whether to save the config as a .yaml fule
+  best_model: True           # whether to save the model weights on each fold
+  plot_training_slices:      # plotting the model inputs on certain batches
+    isEnabled: True          # enable/disable these plots
+    folder_name: 'figures'   # folder name to save the .png files into
+    every_n_epochs: 50       # make a plot of the first batch every N epochs
+    n_patients_per_epoch: 1  # how many patients to plot from a batch
+    n_slices_per_patient: 8  # how many slices to plot per patient
+  
+  filenames:
+    model_summary: "model_summary.txt"    # filename of the model summary
+    config_yaml: "DlModel_Config.yaml"    # filename of the config to save
+    model_weights: "DlModel_Weights.pth"  # filename of the (best) model weights
+    predictions_csv: "model_predictions.csv"  # filename of the predictions on the train/val sets
+    test_set_predictions_csv: "test_set_predictions.csv"   # filename of the predictions in the test set (external validation set source are appended to this, e.g. "_MDACC.csv")
+    ensemble_predictions_csv: "ensemble_predictions.csv"   # filename of the ensemble predictions
+      
