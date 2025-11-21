@@ -19,6 +19,8 @@ from src.dataset.transforms.CheckImageDimensions import CheckImageDimensions
 from src.dataset.transforms.get_preprocessing_transforms import get_preprocessing_transforms
 from src.dataset.transforms.get_random_transforms import get_random_transforms
 
+from src.constants import DEVICE
+
 def get_transforms(config: dict):
     """
     Function that makes two sets of MONAI transforms: one for training (e.g. with random augmentations) 
@@ -117,12 +119,12 @@ def get_transforms(config: dict):
     train_transforms = Compose([
                                 train_transforms,
                                 ConvertMetaTensorToTensor(keys=final_transform_keys),
-                                EnsureTyped(keys=final_transform_keys, data_type='tensor', dtype=torch.float),
+                                EnsureTyped(keys=final_transform_keys, data_type='tensor') # , dtype=torch.bfloat16,),
                             ])
     val_transforms = Compose([
                                 val_transforms,
                                 ConvertMetaTensorToTensor(keys=final_transform_keys),
-                                EnsureTyped(keys=final_transform_keys, data_type='tensor', dtype=torch.float),
+                                EnsureTyped(keys=final_transform_keys, data_type='tensor') # , dtype=torch.bfloat16),
                             ])
 
     # Flatten the transforms (removes nested Composes, turns it into one long set of transforms)

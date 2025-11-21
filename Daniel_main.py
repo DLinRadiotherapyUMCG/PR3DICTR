@@ -44,6 +44,6 @@ if __name__ == '__main__':
 
     # # # # run the models on the test set
     # trial_dir = config['general']['resultsCurrentDirectory']
-    trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
-    validate_models_on_test_set(config, trial_dir)
+    # trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
+    # validate_models_on_test_set(config, trial_dir)
 

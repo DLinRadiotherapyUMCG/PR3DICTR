@@ -79,7 +79,7 @@ def plot_model_inputs(config, plot_inputs, epoch_number):
             scaled_image = scale_image_to_modality_range(config, image, image_modality_name)
 
             row_dict = {"Label" : image_modality_name,
-                        f"{image_modality_name}": scaled_image}
+                        f"{image_modality_name}": scaled_image.float()}
             plotting_rows_dicts.append(row_dict)
 
 

@@ -92,7 +92,7 @@ data:
   n_training_patients_list: []                       # list of number of patients to use for training (only used if 'dataset_amounts_experiment'=True)
 
   dataloader:
-    dataset_type: 'standard'              # ['standard', 'cache', 'smartcache'] # cache: loads all data into RAM for faster training, smartcache: loads a fraction of data into memory
+    dataset_type: 'cache'              # ['standard', 'cache', 'smartcache'] # cache: loads all data into RAM for faster training, smartcache: loads a fraction of data into memory
     num_workers: 16                     # number of workers (cores) to use for data loading in each training batch
     smartcache:
       cache_rate: 0.5                  # what fraction of the dataset should be kept in the RAM 
@@ -126,7 +126,7 @@ data:
 
   kFolds:
     n_splits: 5           # the number of data splits to make
-    n_iterations: 5       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
+    n_iterations: 1       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
     validation_size: 0.2  # if only 1 split; this is the size of the validation set, the rest goes to training set
     split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
     
@@ -162,7 +162,7 @@ data:
       alpha: 1.0           # alpha value for MixUp
 
 training:
-  max_epochs: 200            # max number of epoch to train for
+  max_epochs: 3            # max number of epoch to train for
   batch_size: 4              # training batch_size
   validation_interval: 1     # validate after X training epochs
   stopping_criteria: "loss"  # What criteria to use for early stopping ['loss', 'metric']

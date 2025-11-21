@@ -4,7 +4,9 @@ import numpy as np
 
 from src.constants import DEVICE
 
-from src.training.train import train
+# from src.training.train import train
+from src.training.train_AMP import train
+
 from src.training.validate import validate
 from src.dataset.load_dataset import load_dataset, generate_K_fold_cross_validation_splits
 from src.dataset.cumulative_sampling import generate_training_data_subsamples

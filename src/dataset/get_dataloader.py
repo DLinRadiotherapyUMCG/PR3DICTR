@@ -136,6 +136,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
 
     dl_args_dict = {'dataset': data_ds, 'batch_size': batch_size, 'shuffle': shuffle, 'sampler': None,
                     'num_workers': num_workers, 'drop_last': drop_last, 'persistent_workers': persistent_workers,
+                    #'multiprocessing_context': 'spawn',
                     'pin_memory': pin_memory, "prefetch_factor": 2} #  }   # "prefetch_factor": 4,
     
     # if we want to perform mixup augmentation, we need to change the collate function 
