@@ -41,7 +41,7 @@ def plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_met
         uq_arr = UQ_metric_iter.copy()
 
         # while np.unique(labels_arr if ENDPOINT_TYPES[endpoint] == "Binary" else labels_arr[:, 0]).size >= 2:
-        for _ in range(len(mean_preds_iter)):
+        for _ in range(len(mean_preds_iter) // 2):
             max_idx = np.argmax(uq_arr)
             preds_arr = np.delete(preds_arr, max_idx, axis=0)
             labels_arr = np.delete(labels_arr, max_idx, axis=0)
@@ -64,5 +64,5 @@ def plot_sparsification_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_met
 
         ax.plot(all_metric_values, label=UQ_metric_name, color=colours_dict[UQ_metric_name])
         ax.set_xlim(0, len(all_metric_values) - 1)
-        ax.set_ylim(0, 1.0)
+        ax.set_ylim(0.4, 1.0)
     ax.set_xlabel("Number of Samples Dropped")

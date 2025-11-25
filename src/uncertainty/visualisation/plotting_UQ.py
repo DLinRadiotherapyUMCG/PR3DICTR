@@ -123,7 +123,7 @@ def plot_nested_UQ(
                 # pass  # xlabel is set in subfunctions
             
             if i == 0 and j == 0:
-                fig.legend(title="UQ Metric", loc='upper right', bbox_to_anchor=(1.15, 0.92))
+                fig.legend(title="UQ Metric", loc='upper right', bbox_to_anchor=(1.1, 0.92))
 
     if plot_type == "UQ_calibration":
         title = "Certainty vs Accuracy"
