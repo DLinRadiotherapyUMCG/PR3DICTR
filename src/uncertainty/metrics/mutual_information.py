@@ -15,8 +15,8 @@ def mutual_information(predictions):
     # Calculate the mean
     mean_predictions = predictions.mean(axis=1)
     
-    entropy_of_mean = binary_entropy(mean_predictions)
-    entropy_per_pass = binary_entropy(predictions)
+    entropy_of_mean = binary_entropy(mean_predictions) # total uncertainty (predictive entropy)
+    entropy_per_pass = binary_entropy(predictions)   # aleatoric uncertainty (expected entropy)
 
     mean_entropy = np.mean(entropy_per_pass, axis=1)
 

@@ -237,7 +237,8 @@ def plot_calibration_error_over_dataset_size(
                             aucs.append(1)
                     bin_centers.append(UQ_metric_norm[idx].mean())
                 
-                value = np.sum(abs(np.array(aucs) - np.array(bin_centers))) / len(aucs)
+                value = np.sum(abs(np.array(aucs) - (1 - np.array(bin_centers)))) / len(aucs)
+
                 # COMPUTE METRIC HERE
                 #value = metric_func(config, aucs, bin_centers)
                 rows.append({
@@ -374,8 +375,13 @@ def plot_accuracy_over_dataset_size(
             mean_preds = df_UQ_no_missing_labels['Mean Prediction'].values
             #print(df_UQ_temp)
 
-            accuracy = accuracy_score(true_labels, mean_preds > 0.5)
-            #accuracy = roc_auc_score(true_labels, mean_preds)
+            # threshold = 0.5
+            fpr, tpr, thresholds = roc_curve(true_labels, mean_preds)
+            idx = np.argmax(tpr - fpr) # use the threshold at the biggest difference between true positive rate and false positive rate
+            threshold = thresholds[idx]
+            
+            accuracy = accuracy_score(true_labels, mean_preds > threshold)
+            accuracy = roc_auc_score(true_labels, mean_preds)
             rows.append({
                 "endpoint": endpoint,
                 "N_patients": int(N_patients),

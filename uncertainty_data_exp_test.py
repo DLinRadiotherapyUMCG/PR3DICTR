@@ -40,20 +40,20 @@ if __name__ == '__main__':
     
     # config['general']['dataset_amounts_experiment'] = False
 
-    config['uncertainty']['deep_ensemble']['n_models'] = 10
+    config['uncertainty']['deep_ensemble']['n_models'] = 5
 
     training_patients_dict = {
         "OS" : [50, 100, 150, 200], 
         "LRC" : [50, 100, 150],
-        "Dysphagia_M06" : [100, 200, 300, 400, 500, 600, 700, 800],
-        "Xerostomia_M06" : [100, 200, 300, 400, 500, 600, 700, 800]
+        "Dysphagia_M06" : [100, 200, 300, 400, 500, 600, 700],
+        "Xerostomia_M06" : [100, 200, 300, 400, 500, 600, 700]
     }
 
     endpoints = ["Dysphagia_M06", "Xerostomia_M06"] # , "OS", "LRC"]
 
-    # endpoints = ["LRC"]
+    # endpoints = ["Dysphagia_M06"]
 
-    for idx in [2, 3, 4]:
+    for idx in [5,6,7,8,9]:
         for endpoint in endpoints:
             run_config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
         
@@ -63,6 +63,10 @@ if __name__ == '__main__':
             
             run_config['general']['dataset_amounts_experiment'] = True
             run_config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
+
+            set_random_seed(idx)
+            # run_config['general']['experiment_name'] = "Data MC Dropout"
+            # train_MC_dropout_model(run_config, UQ_method="MC_dropout")
 
             # run_config['training']['max_epochs'] = 1
 
