@@ -3,18 +3,43 @@ import numpy as np
 
 
 def convert_to_sagittal(arr):
+    """
+    Converts a 3D array from axial view to sagittal view.
+    Args:
+        arr (np.array): 3D array in axial view
+    Returns:
+        sagittal_view_rotated (np.array): 3D array in sagittal view
+    """
     sagittal_view = np.transpose(arr, (2, 1, 0))           # make sagittal view the first axis
     sagittal_view_rotated = np.rot90(sagittal_view, 1, axes=(1, 2))  # rotate the view
     return sagittal_view_rotated
 
 
 def convert_to_coronal(arr):
+    """
+    Converts a 3D array from axial view to coronal view.
+    Args:
+        arr (np.array): 3D array in axial view
+    Returns:
+        coronal_view_rotated (np.array): 3D array in coronal view
+    """
     coronal_view = np.transpose(arr, (1, 2, 0))             # make coronal view the first axis
     coronal_view_rotated = np.rot90(coronal_view, 1, axes=(1, 2))   # rotate the view
     return coronal_view_rotated
 
 
 def rotate_arrs_in_plotting_row_dicts(row_dicts, image_keys, plotting_axis):
+    """
+    Function to rotate all images in a list of dicts to the desired plotting axis (axial, coronal, sagittal).
+    Primarily used for the plot_slices function.
+    Args:
+        row_dicts (list): list of dicts, where each dict is one row to
+        image_keys (list): list of image keys (e.g. ['CT', 'RTDOSE', 'RTSTRUCT'])
+        plotting_axis (str): axis to plot ('axial', 'coronal', 'sagittal')
+    Returns:
+        row_dicts (list): list of dicts, where each dict is one row to plot, with images rotated to the desired axis
+    """
+    
     plotting_axis = plotting_axis.lower()
     for row_dict in row_dicts:
         for key, value in row_dict.items():

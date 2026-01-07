@@ -1,34 +1,32 @@
 import os
 import logging
-import pandas as pd
 import numpy as np
-import torch
-import gc
 
 from src.constants import DEVICE
+
 from src.training.train import train
+
 from src.training.validate import validate
 from src.dataset.load_dataset import load_dataset, generate_K_fold_cross_validation_splits
-from src.models.tools.get_classification_model import get_classification_model
+from src.dataset.cumulative_sampling import generate_training_data_subsamples
+from src.dataset.LabelTypesManager import LabelTypesManager as LabelTypesManagerClass
 from src.dataset.get_dataloader import make_dataloader   
 from src.dataset.get_transforms import get_transforms
+from src.models.tools.get_classification_model import get_classification_model
+from src.utils.clear_cache import clear_cache
 from src.utils.loss_func.get_loss_function import get_loss_function
 from src.utils.saving.saving_predictions import concatenate_predictions, save_predictions
 from src.utils.saving.create_results_directory import create_results_directory
 from src.utils.list_dicts import append_to_list_dicts
-
+from src.utils.data_equalizer import  label_equalizer
 from src.config_presets.tools.save_config import save_config
-from src.hyper_opt.WandB_functions import initialise_WandB_group, login, stop_WandB_trial
+from src.hyper_opt.WandB_functions import initialise_WandB_group, stop_WandB_trial
 from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
 from src.evaluation.get_visualisations import get_visualizations
-from src.dataset.cumulative_sampling import generate_training_data_subsamples
 
-
-
-
-def K_fold_cross_validation(config, config_for_wandb=None):
+def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
     """
     A function to perform K-folds cross-validation. Creates the dataset splits, trains and evaluates a model for N folds.
     Args:
@@ -36,7 +34,6 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         config_for_wandb (dict): a config to send to WandB (optional, usually only used during hyperparameter tuning).
     Returns:
         results (dict): the mean results over each fold.
-
     """
 
     n_splits = config['data']['kFolds']['n_splits']
@@ -47,6 +44,8 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         raise ValueError("The number of k-fold iterations must be greater than 0.")
 
     endpoint_list = config['columns']['labels']
+    LabelTypesManager = LabelTypesManagerClass(config)
+    config['saving']['label_column_names'] = LabelTypesManager.label_names_full_list  # save the label column names in the config for saving predictions
     metric_name = config['evaluation']['main_metric']
 
     # variables for results logging
@@ -61,8 +60,6 @@ def K_fold_cross_validation(config, config_for_wandb=None):
     val_losses_list_dict   = {endpoint: list() for endpoint in endpoint_list}
     test_losses_list_dict  = {endpoint: list() for endpoint in endpoint_list}
     
-
-
     # load the data, and make K-fold splits
     df_train_val, df_test = load_dataset(config)
     k_fold_dataframes_list = generate_K_fold_cross_validation_splits(config, df_train_val)
@@ -82,38 +79,29 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         test_loader, _ = make_dataloader(config, df_test, val_transforms, validation_mode=True)
         
     # get the loss function and metric handler
-    loss_function = get_loss_function(config)
-    metricHandler = mainMetricHandler(config)  # deals with the main metric to print during training
+    loss_function = get_loss_function(config, LabelTypesManager)
+    metricHandler = mainMetricHandler(config, LabelTypesManager)  # deals with the main metric to print during training
 
     # iterate through the folds 
     for fold_idx, dataset_split_dict in enumerate(k_fold_dataframes_list, start=1):
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()  # clear the GPU memory
-        gc.collect()  # clear the CPU memory
+        clear_cache()  # clear the CPU memory
 
         # set up logging and create the results directory
         create_results_directory(config, fold_idx)
         logging.info(f'Fold {fold_idx}/{len(k_fold_dataframes_list)}')
         initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=config_for_wandb)
         
-
         """
         MODEL TRAINING
         """
 
         # get the data split and make the dataloaders for this fold
         train_data, val_data = dataset_split_dict['train'], dataset_split_dict['val']
+        # perform over/undersampling of the training set here
+        if config['data']['equalizer']['isEnabled']:
+            train_data = label_equalizer(train_data, config)
         train_loader, metadata = make_dataloader(config, train_data, train_transforms, validation_mode=False)
         val_loader, _ = make_dataloader(config, val_data, val_transforms, validation_mode=True)
-
-        # if using pos_weight in BCE, then calculate the pos_weight for each class
-        """
-        if config['training']['loss']['name'] == 'BCE' and config['training']['loss']['BCE']['pos_weight'] == 'auto':
-            pos_weight = torch.tensor([(len(train_data) - train_data[endpoint].sum()) / len(train_data) for endpoint in endpoint_list])
-            config['loss']['BCE']['pos_weight'] = pos_weight
-        """
-            #pos_weight = pos_weight.to(DEVICE)
-            #loss_function = get_loss_function(config, pos_weight=pos_weight)
 
         # initialise a model
         logging.info('Getting model')
@@ -135,9 +123,15 @@ def K_fold_cross_validation(config, config_for_wandb=None):
         
         train_loss_value, train_loss_dict, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
         print("   ", train_loss_value, train_mean_metric_val, train_metric_dict)
+        logging.info(f'   Mean {metric_name}: {train_mean_metric_val}')
+        logging.info(f'   Loss: {train_loss_value}')
+        logging.info(f'   Metrics: {train_metric_dict}')
         logging.info('   Validation set')
         val_loss_value, val_loss_dict, val_mean_metric_val, val_metric_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
         print("   ",val_loss_value, val_mean_metric_val, val_metric_dict)
+        logging.info(f'   Mean {metric_name}: {val_mean_metric_val}')
+        logging.info(f'   Loss: {val_loss_value}')
+        logging.info(f'   Metrics: {val_metric_dict}')
 
         # if the test set is enabled, also collect the results on that set
         if config['general']['use_test_set']:
@@ -150,8 +144,8 @@ def K_fold_cross_validation(config, config_for_wandb=None):
             test_mean_metric_val = None
             test_metric_dict = {endpoint: None for endpoint in endpoint_list}
             test_patientIDs_list = []
-            test_preds_dict = {endpoint: [] for endpoint in endpoint_list}
-            test_targets_dict = {endpoint: [] for endpoint in endpoint_list}
+            test_preds_dict = {endpoint: None for endpoint in endpoint_list}
+            test_targets_dict = {endpoint: None for endpoint in endpoint_list}
         
 
         """    
@@ -165,7 +159,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
                                                                    [train_targets_dict, val_targets_dict, test_targets_dict])
 
         # save all the predictions into one csv file
-        save_predictions(config, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
+        save_predictions(config, LabelTypesManager, all_patientIDs_list, all_preds_dict, all_targets_dict, mode_list)
 
 
         # concatenate all of the AUC dicts and loss dicts
@@ -204,7 +198,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
             val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
             mean_val_metric_value = np.mean(list(val_metrics_mean_dict.values()))
 
-            if (val_mean_metric_val < config['hyperparam_tuning']['optuna']['kill_trial_threshold']) and (fold_idx >= 3):
+            if (mean_val_metric_value < config['hyperparam_tuning']['optuna']['kill_trial_threshold']) and (fold_idx >= 3):
                 logging.info(f'Early stopping at fold {fold_idx}. Metric value is too low')
                 break
 
@@ -213,9 +207,7 @@ def K_fold_cross_validation(config, config_for_wandb=None):
             val_loader.dataset.shutdown() 
 
         del train_loader, val_loader # delete the dataloaders to free up memory
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache() # clear the GPU memory
-        gc.collect()  # clear the CPU memory
+        clear_cache()  # clear the CPU memory
     
     # if we're doing the dataset amounts experiment, then we don't need to aggregate the results. Just return here
     if config['general']['dataset_amounts_experiment'] == True:
@@ -272,6 +264,11 @@ def K_fold_cross_validation(config, config_for_wandb=None):
 
     # aggregate all of the metric results for this trial
     aggregate_cross_validation_metrics(config, k_folds_completed=fold_idx, sets=['train', 'val'])
+
+    if(modelCard != None):
+        pathExport = os.path.join(config['modelcard']['saveLocation'],config['modelcard']['saved_modelcard_filename'] + ".json")
+        modelCard.absorb_config_details(config)
+        modelCard.to_json(pathExport)
 
     return results
 

@@ -1,6 +1,4 @@
 
-
-
 def append_to_list_dicts(config : dict, list_dicts : list = [], value_dicts : list = []):
     """
     Takes a list of list_dicts and a list of value_dicts and appends the values of the value_dicts to the list_dicts.

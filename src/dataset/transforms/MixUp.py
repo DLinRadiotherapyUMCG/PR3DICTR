@@ -35,8 +35,7 @@ class MixUp():
 
         keys = list(batch.keys())
         batch_size = batch[keys[0]].shape[0]
-        #device = batch[keys[0]].device
-        
+
         # randomly samply a lambda value from a beta distribution
         lam = np.random.beta(self.alpha, self.alpha) if self.alpha > 0 else 1
 
@@ -45,18 +44,14 @@ class MixUp():
 
         # perform the mixup on the model inputs (labels are dealt with in the training code)
         for key in ['input', 'features']: # , 'label_list']:  # , 'features', 'label_list'
-            #print(key)
             data = batch[key]
-            #data = lam * data + (1 - lam) * data[index, :]
 
             data.mul_(lam).add_((1 - lam) * data[index, :])
-
 
         # return the lambda value and mixing indicies with the batch
         batch['lambda'] = lam
         batch['indices'] = index
-
-
+        
         return batch
 
 

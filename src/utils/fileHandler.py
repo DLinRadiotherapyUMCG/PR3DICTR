@@ -17,7 +17,7 @@ def create_file(pathFile):
 
 def create_folder(path):
     dirPath = path
-    # Check is file
+    # Check if the file exist
     if os.path.isfile(dirPath):
         dirPath = os.path.dirname(dirPath)
 

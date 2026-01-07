@@ -1,19 +1,17 @@
 import csv
 import os
 from typing import Optional, List
-
+import logging
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from src.dataset.transforms.center_crop_3d import center_crop_3d
+
 from src.constants import PATIENT_ID_COL_NAME
 
 def get_delimiter(file_path: str) -> str:
     with open(file_path, 'r') as csvfile:
         delimiter = str(csv.Sniffer().sniff(csvfile.read()).delimiter)
         return delimiter
-
-
 
 # Artificial end-point equality
 def label_equalizer(df, config):
@@ -24,27 +22,30 @@ def label_equalizer(df, config):
     ratio = config['data']['equalizer']['ratio']
     method = config['data']['equalizer']['resamplingDirection']
 
-    X = df[ptnVar].to_numpy()
-    y = df[tox].to_numpy()
+    logging.info(f"Using label equaliser on training set. Direction = {method}, ratio = {ratio}")
+
+    X = df[ptnVar].to_numpy() # Patients 
+    y = df[tox].to_numpy()  # lables
         
     columnHeaders = df.columns
     
     rowsIncluded = []
-    X_c = X.copy()
     y_c = y.copy()
     
     instance_labels =[]
     uniqueValues = np.unique(y)
     C_labels = len(uniqueValues)
         
+    # Get labels were there is an postive label, so an occurence per class 
     for i in range(C_labels):
         instance_labels.append(np.sum(y == uniqueValues[i]))
         
+    # calculate the min and max occurence instances
     freq_max = np.max(instance_labels)    
     freq_min = np.min(instance_labels)
     
+    # Oversample by getting random patients untill the percentages equal out
     if method == 'over':
-        #startPercentage = sum(y == uniqueValues[1])/sum(y == uniqueValues[0]
         for i in range(len(df)):
             rowsIncluded.append(df.iloc[i].values)
         for i in range(len(instance_labels)):
@@ -57,15 +58,13 @@ def label_equalizer(df, config):
                         break
                 for ii in range(rangeIncluded):
                     r_indx = np.where(y_c == np.unique(y_c)[i])[0][np.random.randint(0,instance_labels[i]-1)]
-                    #X = np.append(X,X_c[r_indx])
-                    #y = np.append(y,y_c[r_indx])
                     rowFound = df.iloc[r_indx].values
                     rowsIncluded.append(rowFound)
-            # Create new dataframe
-        
+            # Create new dataframe with oversampled data  
         df_new = pd.DataFrame(rowsIncluded, columns=columnHeaders)        
         return df_new
     
+    # Undersample by removing random patients untill the percentages equal out 
     elif method == 'under':
         for i in range(len(instance_labels)):
             r_indx = np.where(y_c == np.unique(y_c)[i])[0]
@@ -89,5 +88,7 @@ def label_equalizer(df, config):
         # Create new dataframe
         df_new = pd.DataFrame(rowsIncluded, columns=columnHeaders)
         return df_new
-    
-    
+
+    else:
+        raise ValueError(f"resamplingDirection must be 'over' or 'under'. Currently: {method}")
+

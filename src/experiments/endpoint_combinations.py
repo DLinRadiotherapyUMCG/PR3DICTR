@@ -1,5 +1,3 @@
-from src.experiments.experimentHandler import experimentHandler
-
 import numpy as np
 import random
 import torch
@@ -9,9 +7,17 @@ import os
 
 from src.utils.set_random_seed import set_random_seed
 from src.evaluation.validate_on_test_set import validate_models_on_test_set
+from src.experiments.experimentHandler import experimentHandler
 
 
 def get_single_tox_feature_set(endpoint):
+    """
+    Helper function that gets all of the baseline toxicity score features for a given endpoint.
+    Args:
+        endpoint (str): the name of the endpoint
+    Returns:
+        list of str: the names of the baseline toxicity score features for the given endpoint
+    """
 
     endpoint_features_dict = {"Aspiration_M06" : ['Aspiration_W01_Helemaal_niet','Aspiration_W01_Een_beetje',  'Aspiration_W01_Nogal_Heel_erg'],
                               "Dysphagia_M06" : ['Dysphagia_W01_Grade0_1', 'Dysphagia_W01_Grade2', 'Dysphagia_W01_Grade3_4'],
@@ -21,10 +27,6 @@ def get_single_tox_feature_set(endpoint):
                               }
     
     return endpoint_features_dict[endpoint]
-
-
-
-
 
 def run_toxicity_combinations_experiment(config, experiment_name, endpoint_combinations_dict=None):
     """
@@ -36,9 +38,6 @@ def run_toxicity_combinations_experiment(config, experiment_name, endpoint_combi
     
     # set the experiment name
     config['general']['experiment_name'] = experiment_name
-    
-    # these are all of the image keys mentioned in the config file (i.e. a list of what we need to loop through)
-    original_endpoints = config['columns']['labels']
 
     if endpoint_combinations_dict == None:
         endpoint_combinations_dict = {
@@ -56,7 +55,6 @@ def run_toxicity_combinations_experiment(config, experiment_name, endpoint_combi
         experiment_config = copy.deepcopy(config)
         set_random_seed(experiment_config['general']['seed'])
         
-
         experiment_config['columns']['labels'] = endpoints
         experiment_config['data']['stratify_on'] = endpoints
 

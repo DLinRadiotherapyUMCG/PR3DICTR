@@ -68,14 +68,15 @@ def create_custom_colormap(transparency_threshold=0, red_threshold=0.80):
     colors[243:, 3] *= 0.6
     colors[230:243, 3] *= 0.55
     colors[218:230, 3] *= 0.5
-    colors[:218, 3] *= 0.4
+    colors[52:218, 3] *= 0.4
+    colors[:52, 3] *= 0.0
     # Converteer kleuren naar lijst van tuples
     color_list = [tuple(color) for color in colors]
     
     return color_list
 
 # Maak de colormap lijst
-pos_cmap = create_custom_colormap()
+pos_cmap = create_custom_colormap(0)
 
 # Append positive and negative colormaps to create a single colormap
 #att_cmap =  pos_cmap

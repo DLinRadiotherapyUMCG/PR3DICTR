@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# TODO: TESTING IF IT WORKS
-
 class FocalLoss(torch.nn.Module):
     """
     https://pytorch.org/vision/main/_modules/torchvision/ops/focal_loss.html

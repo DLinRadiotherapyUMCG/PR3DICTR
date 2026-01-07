@@ -214,7 +214,7 @@ class ResNet_LReLU(nn.Module):
     
 
 
-def get_resnet(config : dict, model_depth : int, channels : int, lrelu_alpha : float, **kwargs):
+def get_resnet(config : dict, model_depth : int, channels : int, **kwargs):
     """
     ResNet
 
@@ -222,7 +222,6 @@ def get_resnet(config : dict, model_depth : int, channels : int, lrelu_alpha : f
         config (dict): config params
         model_depth (int): ResNet model depth
         channels (int): number of input channels
-        lrelu_alpha (float): leaky ReLU value
         **kwargs:
 
     Returns:
@@ -230,7 +229,8 @@ def get_resnet(config : dict, model_depth : int, channels : int, lrelu_alpha : f
 
     """
     assert model_depth in [10, 18, 34, 50, 101, 152, 200]
-    # assert len(filters) == 4 or len(filters) == 3
+
+    lrelu_alpha = config['model']['lrelu_alpha']
 
     if model_depth == 10:
         model = ResNet_LReLU(config, BasicBlock, [1, 1, 1, 1], block_inplanes=[64, 128, 192, 256], n_input_channels=channels, 
@@ -255,18 +255,4 @@ def get_resnet(config : dict, model_depth : int, channels : int, lrelu_alpha : f
                              lrelu_alpha=lrelu_alpha, **kwargs)
 
     return model
-
-# def get_model():
-#     """
-#     Initialize model.
-#
-#     Returns:
-#
-#     """
-#     model = DenseNet121(
-#         spatial_dims=config.spatial_dims,
-#         in_channels=config.n_input_channels,
-#         out_channels=config.num_classes,
-#     )
-#     return model.to(device=config.device)
 

@@ -47,7 +47,7 @@ from src.config_presets.tools.get_config import get_config
 from src.config_presets.tools.load_config import load_config
 from src.dataset.load_dataset import load_dataset, Complete_SanityCheck
 
-from src.models.tools.save_model import load_model
+from src.models.tools.load_model import load_model
 from src.models.tools.get_classification_model import get_classification_model
 from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.utils.loss_func.get_loss_function import get_loss_function

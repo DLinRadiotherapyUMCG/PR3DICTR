@@ -5,10 +5,11 @@ from src.visualization.plot_slices import plot_slices
 
 
 
-def adjust_modality(config, image, modality):
+def scale_image_to_modality_range(config, image, modality):
     """
     Adjusts the image to the correct range based on the modality.
     Args:
+        config (dict): configuration object
         image (torch.tensor): image to adjust
         modality (str): modality of the image
     Returns:
@@ -23,7 +24,11 @@ def adjust_modality(config, image, modality):
         rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
         image = image * rtdose_range + config['data']['preprocessing']['rtdose']['a_min']
 
-    elif modality == 'RTSTRUCT':
+    elif modality == 'PET':
+        pet_range = (config['data']['preprocessing']['pet']['a_max'] - config['data']['preprocessing']['pet']['a_min'])
+        image = (image * pet_range) + config['data']['preprocessing']['pet']['a_min']
+
+    elif modality == 'RTSTRUCT' or modality == 'GTV':
         image = image
 
     return image
@@ -31,14 +36,14 @@ def adjust_modality(config, image, modality):
 
 
 
-def plot_model_inputs(config, plot_inputs, epoch):
+def plot_model_inputs(config, plot_inputs, epoch_number):
     """
 
     Plots the model inputs (CT, RTDOSE, Segmentation) used during training, and saves the figure as a png.
     Args:
         config (dict): configuration object
         plot_inputs (list): list of model input images
-        epoch (int): current epoch number
+        epoch_number (int): current epoch number
     Returns:
         None
 
@@ -71,18 +76,17 @@ def plot_model_inputs(config, plot_inputs, epoch):
             # get the image out of the tensor
             image = plot_inputs[patient_idx][image_channel_idx].cpu()
             # adjust the scale of the image
-            scaled_image = adjust_modality(config, image, image_modality_name)
+            scaled_image = scale_image_to_modality_range(config, image, image_modality_name)
 
             row_dict = {"Label" : image_modality_name,
-                        f"{image_modality_name}": scaled_image}
+                        f"{image_modality_name}": scaled_image.float()}
             plotting_rows_dicts.append(row_dict)
 
 
-        #slices = [20, 30, 40, 50, 60, 70, 80, 90]
         fig, axes = plot_slices(plotting_rows_dicts, slices, RT_region=config['general']['region'])# , title=f"{patient_id} slices")
-        filename=os.path.join(save_folder, 'epoch_{}_idx_{}.png'.format(epoch, patient_idx))
-        #print(filename)
+        
+        filename=os.path.join(save_folder, 'epoch_{}_idx_{}.png'.format(epoch_number, patient_idx))
         fig.savefig(filename, bbox_inches='tight')
-        plotting_rows_dicts
+
         plt.close(fig)
         plt.clf()

@@ -3,25 +3,35 @@ general:
   seed: 42                             # random seed
   firstRun: false                      # if this is the first run of this experiment (# if True, makes new experiment folder)
   experiment_name: 'Base_Experiment'   # name of the experiment folder (contains all trial folders)
-  trialNumber: "Trial_?"               # name of the trial folder (contains fold folders)
+  trialNumber: "Trial_0"               # name of the trial folder (contains fold folders)
   resultsCurrentDirectory: ""          # current working directory
   testMode: False                      # if testing the code (e.g. less patients, or less epochs, etc.)
   use_test_set: False                  # if the test dataset should be loaded
   dataset_amounts_experiment: False    # whether the dataset_amounts_experiment is being performed using bootstrapping
 
 columns:
-  labels: ["Xerostomia_M06"]           # the endpoints the model is (going to be) trained on (list)
+  labels: ["Xerostomia_M06", "OS"]           # the endpoints the model is (going to be) trained on (list)
+  labels_types: ["Binary", "Event"]
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]  # Clinical features to insert into the model (list)
 
 paths:
-  csv: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/bagged_datasets/xerostomia_m06/"  # directory to folder containing the dataset csv
-  images: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/dataset/patients/"             # directory to the folder containing the patient images (numpy files)
-  results: "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Luuk vd Hoek/Projects collection/Mini projects/SIMS/hnc-ensemble-master/results/" # directory for where you want to save the results
+  csv: "PATH TO FOLDER CONTAINING CSV FILE"  # directory to folder containing the dataset csv
+  images: "PATH TO FOLDER CONTAINING IMAGES"             # directory to the folder containing the patient images (numpy files)
+  results: "PATH TO FOLDER TO SAVE RESULTS INTO" # directory for where you want to save the results
 
 model:
   model_name: "resnet"            # model architecture ['cnn', 'resnet', 'densenet', 'ViT', 'TransRP', etc.]
   output_head:
-    name: "multitox"        # output module name (i.e. linear layers type)   ['multitox', ]
+    name: "multilabel"        # output module name (i.e. linear layers type)   ['multitox', ]
+    # Linear layer params (output head)
+    n_linear_layers: 1                        # number of (shared) linear layers
+    linear_units: [16]                        # size of each (shared) linear layers
+    n_clinical_layers: 2                      # number of clinical feature layers
+    clinical_variables_linear_units: [32,16]  # sizes of each clinical feature layers
+    clinical_variables_position: 1            # index of `linear_units` to which the clinical features are concatenated (1 = first linear_unit). If there are no linear layers, the clinical features are concatenated to the flattening layer
+    n_linear_layers_endpoint: 1               # number of non-shared linear layers for all endpoints
+    linear_units_endpoint: [64]               # size of each non-shared linear layer
+    num_ohe_classes: 1                        # number of output logits per endpoint [1, 2] (usually 1!)
   resnet:
     model_depth: 10      # ResNet model size [10, 18, 34, 50, 101, 152, 200]
     conv1_kernel_size: 7 # size of the kernel in the first layer of resnet
@@ -67,33 +77,23 @@ model:
     normalization: 'batch'               # which normalisation method to use ['batch', 'instance']
     
   # general model params
-  modulated_backbone: False # whtehr to include clinical features in the image encoder 
-  n_clinical_features_in_backbone']: 0 # number of clinical features to include in the image encoder, the first N clinical features are used ['modulated_backbone' must be True]
   lrelu_alpha: 0.1         # leaky ReLu value for the convolutional layers
   dropout_p: 0.1           # dropout probability 
   use_bias: True           # whether or not to use a bias term in the conv. layers
-  # Linear layer params (output head)
-  n_linear_layers: 1                        # number of (shared) linear layers
-  linear_units: [16]                        # size of each (shared) linear layers
-  n_clinical_layers: 2                      # number of clinical feature layers
-  clinical_variables_linear_units: [32,16]  # sizes of each clinical feature layers
-  clinical_variables_position: 1            # index of `linear_units` to which the clinical features are concatenated (1 = first linear_unit). If there are no linear layers, the clinical features are concatenated to the flattening layer
-  n_linear_layers_endpoint: 1               # number of non-shared linear layers for all endpoints
-  linear_units_endpoint: [64]               # size of each non-shared linear layer
-  num_ohe_classes: 1                        # number of output logits per endpoint [1, 2] (usually 1!)
+  
 
 data:
   source: 'UMCG'                                     # the source of the dataset you are using (change this for external validation, see constants.py) # ['PRIMA', 'UMCG', 'MDACC']
-  dataset_csv: 'stratified_sampling_test_542.csv'    # name of the csv containing the IDs, clinical features, and endpoints
+  dataset_csv: 'dataset.csv'                         # name of the csv containing the IDs, clinical features, and endpoints
   stratify_on: []                                    # which column names to use in stratified sampling (list of strings)
   excluded_variable_name: [] # ExcludedVar           # column name of variable to exlude patients by
   excluded_values: [] # ExcludedValue                # values of ^this^  variable to exclude patients by
   image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
   image_num_dimensions: 3                            # dimension of each image (each image is 3D, so this is = 3)
   n_training_patients_list: []                       # list of number of patients to use for training (only used if 'dataset_amounts_experiment'=True)
+  event_endpoint_time_unit: "months"  # time unit for the event endpoints (e.g. "days", "months", "years"), should match the time unit in the dataset column names
 
   dataloader:
-    dataloader_type: "standard"        # type of dataloader ['standard', 'thread']
     dataset_type: 'cache'              # ['standard', 'cache', 'smartcache'] # cache: loads all data into RAM for faster training, smartcache: loads a fraction of data into memory
     num_workers: 8                     # number of workers (cores) to use for data loading in each training batch
     smartcache:
@@ -101,11 +101,11 @@ data:
       num_replace_workers: 4           # number of workers to replace cache with
 
   preprocessing:
-    isEnabled: false                   # whether or not preprocessing steps should be applied to the image data files
+    isEnabled: true                   # whether or not preprocessing steps should be applied to the image data files
     crop: true                         # if the image files need cropping
     crop_shape: [96, 96, 96]           # dimension to crop to
-    needs_scaling: ["ct", "rtdose", 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
-    needs_label_mapping: ["segmentation_map"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
+    needs_scaling: ["ct", "rtdose", 'pet', 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
+    needs_label_mapping: ["segmentation_map", "gtv_total"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
     ct: 
       a_min: -200            # lowest range to clip from
       a_max: 400             # highest range to clip from
@@ -123,9 +123,17 @@ data:
       a_max: 12345
       b_min: 0
       b_max: 1
+      clip: true
+    pet:             # example of how to scale a PET image
+      a_min: 0
+      a_max: 25      # SUV units
+      b_min: 0
+      b_max: 1
+      clip: true
     segmentation_map:      # value encoding of the structures in `segmentation_map.npy`, before feeding to model (set to 0 if don't want to include that structure)
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
-
+    gtv_total:
+      target_labels: [0.0, 1.0]  # target labels for the GTV total segmentation map (0 = no GTV, 1 = GTV present)
   kFolds:
     n_splits: 5           # the number of data splits to make
     n_iterations: 5       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
@@ -190,10 +198,19 @@ training:
       gamma_pos: 1     # gamma_positive value for focal loss (default: 1)
     
   scheduler:
-    name: False         # Name of scheduler to use [None, "cosine"]
-    T_0: 40             # (cosine) number of epochs until  restart
-    T_mult: 1           # (coseine) a factor increases after a restart (default: 1)
-    eta_min: 0.00000001 # (cosine)  Minimum learning rate. Default: 0.
+    name: False         # Name of scheduler to use [None, "cosine", "step", "plateau"]
+    cosine:
+      T_0: 40             # (cosine) number of epochs until  restart
+      T_mult: 1           # (cosine) a factor increases after a restart (default: 1)
+      eta_min: 0.00000001 # (cosine)  Minimum learning rate. Default: 0.
+    step:
+      step_size: 50       # (step) number of epochs between each learning rate decay
+      gamma: 0.1          # (step) learning rate decay factor
+    plateau:
+      mode: 'min'               # 'min' or 'max' depending on whether the monitored metric needs to be minimised or maximised
+      factor: 0.1               # factor to reduce the learning rate by
+      patience: 10              # number of epochs with no improvement after which learning rate will be reduced
+      min_lr: 0.00000001        # minimum learning rate
 
   GradNorm:                  
     isEnabled: False         # whether to use GradNorm to balance the gradients of the labels' losses
@@ -201,14 +218,17 @@ training:
     learning_rate: 0.001     # learning rate for the GradNorm optimiser
 
 evaluation:
-  main_metric: "AUC"    # the metric shown during training
+  main_metric: 
+    Binary: "AUC"    # the metric shown during training
+    Event: "C-index"
   metrics_list: ["AUC"] #  ["AUC", "accuracy"]   # the metrics to calculate at the end of each fold (list of strings, see constant.py for options)
   metrics:
     threshold: 'YoudenJ'  # how to define the classification metrics threshold
     calibration_bins: 10  # number of bins to use in the calibration metrics
   visualisations: 
-    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve'] # which plots to save per fold
+    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve', 'kaplan_meier'] # which plots to save per fold
     n_bins: 10            # nunber of bins to use in the calibration and reliability plot
+    kaplan_meier_max_timepoint: 60  # maximum time point to show in the Kaplan-Meier plot
 
 hyperparam_tuning:
   WandB:
@@ -234,18 +254,6 @@ hyperparam_tuning:
 
 
 
-uncertainty:
-  seed: 42                        # random seed for uncertainty estimation
-  method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
-  metric: 12345
-  deep_ensemble:
-    n_models: 5
-  dataset_split:
-    n_splits: 1                   # the number of data splits to make
-    validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
-    split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
-
-
 saving:
   config: True               # whether to save the config as a .yaml fule
   best_model: True           # whether to save the model weights on each fold
@@ -260,69 +268,14 @@ saving:
     model_summary: "model_summary.txt"    # filename of the model summary
     config_yaml: "DlModel_Config.yaml"    # filename of the config to save
     model_weights: "DlModel_Weights.pth"  # filename of the (best) model weights
+    library_dependencies_file: "library_dependencies.txt"
     predictions_csv: "model_predictions.csv"  # filename of the predictions on the train/val sets
     test_set_predictions_csv: "test_set_predictions.csv"   # filename of the predictions in the test set (external validation set source are appended to this, e.g. "_MDACC.csv")
     ensemble_predictions_csv: "ensemble_predictions.csv"   # filename of the ensemble predictions
       
+  ModelCard:
+    isEnabled: True
+    saveLocation : 'C:/Users/WalR/OneDrive - UMCG/Documents/Modelcards/'
+    loaded_projectcard_filename : 'projectdetails_card'
+    saved_modelcard_filename : 'autogenerated_card'
 
-CITOR:  # features of the CITOR (sub-)models for the early and late endpoints
-  aspiration_late:
-    label: "Aspiration_M06"
-    models:
-      model1:
-        features: ['PCM_Med_meandose', 'Aspiration_W01_Een_beetje', 'Aspiration_W01_Nogal_Heel_erg']
-  aspiration_early:
-    label: "Aspiration_w06"
-    models:
-      model1:
-        features: ['Aspiration_W01_Een_beetje', 'Aspiration_W01_Nogal_Heel_erg']
-  dysphagia_late:
-    label: "Dysphagia_M06"
-    models:
-      model1:
-        features: ['OralCavity_Ext_meandose','PCM_Med_meandose','PCM_Inf_meandose','Dysphagia_W01_Grade2','Dysphagia_W01_Grade3_4','Loctum2_Pharynx','Loctum2_Larynx'] #,'Dysphagia_W01_Grade0_1' ,'Loctum2_Oral_Cavity'
-      model2:
-        features: ['PCM_Sup_meandose','PCM_Med_meandose','PCM_Inf_meandose','Dysphagia_W01_Grade2','Dysphagia_W01_Grade3_4','Loctum2_Pharynx','Loctum2_Larynx'] #,'Loctum2_Oral_Cavity','Dysphagia_W01_Grade0_1'
-  dysphagia_early:
-    label: "Dysphagia_w06"
-    models:
-      model1:
-        features: ['OralCavity_Ext_meandose','PCM_Med_meandose','PCM_Inf_meandose','DYSFAGIE_UMCGshort_W01_Grade2', 'DYSFAGIE_UMCGshort_W01_Grade3_4','Loctum_OC','Loctum_Pharynx','Loctum_Larynx']
-      model2:
-        features: ['PCM_Sup_meandose', 'PCM_Med_meandose', 'PCM_Inf_meandose', 'DYSFAGIE_UMCGshort_W01_Grade2', 'DYSFAGIE_UMCGshort_W01_Grade3_4', 'Loctum_OC', 'Loctum_Pharynx', 'Loctum_Larynx'] 
-  xerostomia_late:
-    label: 'Xerostomia_M06'
-    models:
-      model1:
-        features: ['Submandibular_meandose','Xerostomia_W01_Een_beetje','Xerostomia_W01_Heel_erg'] #,'Xerostomia_W01_Helemaal_niet'] #,'Xerostomia_W01_Helemaal_niet'
-      model2:
-        features: ['Parotid_sum_sqrt','Xerostomia_W01_Een_beetje','Xerostomia_W01_Heel_erg'] #,'Xerostomia_W01_Helemaal_niet'] # 'Xerostomia_W01_Helemaal_niet' 
-  xerostomia_early:
-    label: 'Xerostomia_w06'
-    models:
-      model1:
-        features: ['Submandibular_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Heel_erg'] # ,'Xerostomia_W01_Helemaal_niet'] 
-      model2:
-        features: ['Parotid_sum_sqrt', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Heel_erg'] # ,'Xerostomia_W01_Helemaal_niet'] 
-  taste_late:
-    label: 'Taste_M06'
-    models:
-      model1: 
-        features: ['Parotid_mean_ln', 'OralCavity_mean_sqrt','Age'] # 'Parotid_mean_ln', ln(mean dose parotid glands), sqrt(oral cavity), age
-  taste_early:
-    label: 'Taste_w06'
-    models:
-      model1: 
-        features: ['OralCavity_mean_ln','Age'] # ln(oral cavity), age
-  sticky_saliva_late:
-    label: 'Sticky_M06'
-    models:
-      model1:
-        features: ['Submandibular_meandose', 'Sticky_W01_Een_beetje', 'Sticky_W01_Heel_erg'] # ,'Sticky_W01_Helemaal_niet' BSL scores, submandibular
-      model2:
-        features: ['Parotid_sum_sqrt', 'Sticky_W01_Een_beetje', 'Sticky_W01_Heel_erg'] # ,'Sticky_W01_Helemaal_niet' BSL, parotid (sqrt(mean dose parotid ipsi) + sqrt(mean dose parotid contra))
-  sticky_saliva_early:
-    label: 'Sticky_saliva_w06'
-    models:
-      model1: 
-        features: ['Sticky_W01_Een_beetje','Sticky_W01_Heel_erg','Sticky_W01_Helemaal_niet','Submandibular_meandose'] # BSL, Submandibular glands

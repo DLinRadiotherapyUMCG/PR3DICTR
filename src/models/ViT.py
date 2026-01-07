@@ -4,9 +4,6 @@ import torch.nn as nn
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
-
-
-
 def pair(t):
     return t if isinstance(t, tuple) else (t, t)
 def triplet(t):

@@ -1,8 +1,4 @@
 import torch
-import wandb 
-
-from src.hyper_opt.WandB_functions import WandB_log
-
 
 class GradNorm(torch.nn.Module):
     def __init__(self, config, model, alpha=1, lr=0.001, WandB_is_enabled=False):
@@ -13,8 +9,6 @@ class GradNorm(torch.nn.Module):
         self.iters = 0
 
         self.WandB_is_enabled = WandB_is_enabled
-
-        #self.setup()
 
         self.log_weights = []
         self.log_loss = []
@@ -47,7 +41,6 @@ class GradNorm(torch.nn.Module):
                 last_attention_layer_name = f"Attention Block {config['model']['TransRP']['vit_depth'] - 1}"
                 gradNorm_layer = getattr(model.output_head.transformer.layers, last_attention_layer_name)[1] # get the last attention block
             else:
-                # TODO: a better method for determining the last layer in a normal CNN without any shared linear layers?
                 gradNorm_layer = model.encoder   # if no linear layers are present, use the whole image encoder as the layer for GradNorm (hard to define the last layer)
 
         return gradNorm_layer

@@ -68,22 +68,9 @@ class depthwise_separable_conv(torch.nn.Module):
         return out
 
 
-# NOTE: DANIEL: changed Output class (old version below)
-
 class Output(torch.nn.Linear):
     def __init__(self, in_features, out_features, bias=True):
         super(Output, self).__init__(in_features=in_features, out_features=out_features, bias=bias)
-
-    # class Output(torch.nn.Linear):
-
-
-#     def __init__(self, in_features, out_features, bias=True):
-#         super(Output, self).__init__(in_features=in_features, out_features=out_features, bias=bias)
-#         self.fc = torch.nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
-
-#     def forward(self, x):
-#         out = self.fc(x)
-#         return out
 
 
 class pooling_conv(torch.nn.Module):

@@ -3,14 +3,12 @@ import os
 import numpy as np
 import logging
 
-from src.evaluation.get_evaluation_metric import get_metric_function
-from src.constants import METRIC_TYPES
-from src.evaluation.per_endpoint_metrics import calculate_metric_for_multiple_endpoints
+from src.evaluation.get_metric_function import get_metric_function
+from src.constants import METRIC_TYPES, METRICS_PER_ENDPOINT_TYPE
+from src.evaluation.calculate_metric_for_multiple_endpoints import calculate_metric_for_multiple_endpoints
 from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe import get_predictions_and_labels_from_predictions_dataframe
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
-
-
 
 def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], is_test_set : bool = False, external_set: bool = False, pred_csv_dir: bool = None, lr: bool = False):
     """
@@ -36,40 +34,48 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
 
     df_fold_all_preds = pd.read_csv(predictions_csv_dir, sep=";")
 
-    print(len(df_fold_all_preds))
-
     # loop over the train, val or test sets
     for set_name in sets:
         combined_metrics_df = None
 
         # Replace the placeholder with a call to the new function
         predictions_per_endpoint_dict, labels_per_endpoint_dict = get_predictions_and_labels_from_predictions_dataframe(config, df_fold_all_preds, set_name)
-
         metrics_to_calculate = config['evaluation']['metrics_list']
 
-        # loop over the metric types
-        for metric_type, metric_names in METRIC_TYPES.items():
-            for metric_name in list(metric_names):
-                if metric_name in metrics_to_calculate:
-                            
-                    # get the metric function
-                    metric_function = get_metric_function(metric_name)
+        # loop over the endpoint types
+        for endpoint_type, metric_types_list in METRICS_PER_ENDPOINT_TYPE.items():
 
-                    # calculate the metric for each endpoint
-                    mean_metric_value, results_dict = calculate_metric_for_multiple_endpoints(config, predictions_per_endpoint_dict, labels_per_endpoint_dict, metric_function)
+            # get only the endpoints of the current endpoint_type (i.e. all Binary endpoints, or all Event endpoints)
+            relevant_endpoints = [e for (e, t) in zip(config['columns']['labels'], config['columns']['labels_types']) if t == endpoint_type]
 
-                    # store the results in a dataframe
-                    results_df = pd.DataFrame(results_dict, index=[metric_name])
-                    results_df.insert(0, "MEAN", mean_metric_value)  # put the mean value in the first column of the dataframe
+            predictions_dict_for_endpoint_type = {k: v for k, v in predictions_per_endpoint_dict.items() if k in relevant_endpoints}
+            labels_dict_for_endpoint_type = {k: v for k, v in labels_per_endpoint_dict.items() if k in relevant_endpoints}
 
-                    # append the results to a combined dataframe
-                    if 'combined_results_df' == None:
-                        combined_metrics_df = results_df
-                    else:
-                        combined_metrics_df = pd.concat([combined_metrics_df, results_df])
+            # loop over the different metrics for this endpoint type
+            for metric_type in metric_types_list:
+                for metric_name in METRIC_TYPES[metric_type]:
+                    
+                    if metric_name in metrics_to_calculate:
+                                
+                        # get the metric function
+                        metric_function_dict = {endpoint_type : get_metric_function(metric_name)} 
+
+                        # calculate the metric for each endpoint
+                        mean_metric_value, results_dict = calculate_metric_for_multiple_endpoints(config, predictions_dict_for_endpoint_type, labels_dict_for_endpoint_type, metric_function_dict)
+
+                        # store the results in a dataframe
+                        results_df = pd.DataFrame(results_dict, index=[metric_name])
+                        results_df.insert(0, "MEAN", mean_metric_value)  # put the mean value in the first column of the dataframe
+
+                        # append the results to a combined dataframe
+                        if 'combined_results_df' == None:
+                            combined_metrics_df = results_df
+                        else:
+                            combined_metrics_df = pd.concat([combined_metrics_df, results_df])
 
         # save the combined results to a csv
         combined_metrics_df = combined_metrics_df.sort_index()
+
         if lr:
             filename = f"LR_{set_name}_metrics.csv"
         else:
@@ -78,6 +84,5 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
         filename = alter_filename_if_external_dataset(config, filename)
         combined_metrics_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
         combined_metrics_df.to_csv(combined_metrics_csv_dir, sep=";")
-
 
     logging.info(f"Total evaluation for current fold completed. Results saved in {config['general']['resultsCurrentDirectory']}")

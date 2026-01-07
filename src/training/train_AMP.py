@@ -15,9 +15,11 @@ from src.utils.optimizer.get_optimizer import get_optimizer
 from src.utils.scheduler.get_scheduler import get_scheduler
 from src.utils.move_batch_to_device import move_batch_to_device
 from src.training.validate import validate
-from src.models.tools.save_model import save_model, load_model
+from src.models.tools.save_model import save_model
+from src.models.tools.load_model import load_model
 from src.training.utils.check_improvement import check_improvement
 
+from src.training.utils.collect_all_preds_and_labels import collect_all_preds_and_labels
 from src.hyper_opt.WandB_functions import is_WandB_enabled, update_WandB_summary_table, WandB_log
 from src.visualization.plot_model_inputs import plot_model_inputs
 from src.evaluation.mainMetricHandler import mainMetricHandler
@@ -25,6 +27,8 @@ from src.utils.loss_func.calc_mixup_loss import calc_mixup_loss
 from src.training.utils.gradNorm import GradNorm
 from src.constants import MISSING_DATA_VALUE
 
+import torch._dynamo
+torch._dynamo.config.suppress_errors = True
 
 def train(config, model, loss_function, train_loader, val_loader, metricHandler):
     """
@@ -42,16 +46,16 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
     # Get the names of the end-points being evaluated 
     labels = config['columns']['labels']
+    label_types = config['columns']['labels_types']
 
     # Get loss function, optimizer, and scheduler
-    loss_function = get_loss_function(config)
+    # loss_function = get_loss_function(config)
     optimizer = get_optimizer(config, model)
     if config['training']['scheduler']['name'] is not False:
         scheduler = get_scheduler(config, optimizer)
 
     # get the main metric with which to evaluate the training loop (e.g. AUC)
-    #metricHandler = mainMetricHandler(config)
-    metric_name = metricHandler.metric_name
+    metric_names_list = metricHandler.metric_names_list
     if config['training']['GradNorm']['isEnabled']:
         gradNorm = GradNorm(config = config,
                             model = model, # model.output_head.linear_layers.shared_fc_layers, 
@@ -77,8 +81,12 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
 
     # Create CUDA events for timing
-    start_event = torch.cuda.Event(enable_timing=True)
-    end_event = torch.cuda.Event(enable_timing=True)
+    cuda_available = torch.cuda.is_available()
+    if cuda_available:
+        fwd_start = torch.cuda.Event(enable_timing=True)
+        fwd_end = torch.cuda.Event(enable_timing=True)
+        bwd_start = torch.cuda.Event(enable_timing=True)
+        bwd_end = torch.cuda.Event(enable_timing=True)
     
 
 
@@ -131,7 +139,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
             if show_pbar: pbar.update(1)
 
-            optimizer.zero_grad(set_to_none=True)
+            # optimizer.zero_grad(set_to_none=True)
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
 
             # Record the end event
@@ -164,26 +172,24 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             #print("hi")
             # plot model inputs
             if (config['saving']['plot_training_slices']['isEnabled']) and (epoch_num == 1 or epoch_num % config['saving']['plot_training_slices']['every_n_epochs'] == 0) and (batch_num == 1):
-                plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)
+                plot_model_inputs(config=config, plot_inputs=inputs, epoch_number=epoch_num)
 
             # Make predictions
             #start_event.record()
-            with torch.autocast(device_type='cuda', dtype=torch.float16):
-
-                forward_pass_start_time = time.time()
+            with torch.amp.autocast(device_type='cuda', dtype=torch.bfloat16):
+                    
+                if cuda_available: fwd_start.record()
                 outputs = model(x=inputs, features=clinical_features)
+                if cuda_available: fwd_end.record()
+                
+                if cuda_available:
+                    torch.cuda.synchronize()
+                    forward_ms = fwd_start.elapsed_time(fwd_end) / 1000.0
+                    all_forward_pass_times.append(forward_ms)
 
                 # Record the end event
-                #end_event.record()
-                #torch.cuda.synchronize()  # Wait for the events to complete and calculate elapsed time
-                #forward_pass_time = start_event.elapsed_time(end_event)  # Time in milliseconds
-                forward_pass_time = time.time() - forward_pass_start_time
-                all_forward_pass_times.append(forward_pass_time)
-                logging.debug(f'Time to forward pass {batch_num}: {forward_pass_time:.4f} ms')
+                logging.debug(f'Time to forward pass {batch_num}: {forward_ms:.4f} ms')
 
-                # Record the start event
-                #start_event.record()
-                compute_loss_start_time = time.time()
 
                 # Calculate loss
                 if mixup_is_enabled:
@@ -192,14 +198,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 else:
                     # normal loss calculation
                     loss, loss_dict = loss_function(outputs, targets) 
-
-                # Record the end event
-                # end_event.record()
-                # torch.cuda.synchronize()  # Wait for the events to complete and calculate elapsed time
-                # compute_loss_time = start_event.elapsed_time(end_event)  # Time in milliseconds
-                compute_loss_time = time.time() - compute_loss_start_time
-                all_compute_loss_times.append(compute_loss_time)
-                logging.debug(f'Time to compute loss {batch_num}: {compute_loss_time:.4f} ms')
 
 
             if config['training']['GradNorm']['isEnabled']:
@@ -225,22 +223,25 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 if loss.grad_fn:
                     #start_event.record()
                     start_backward_pass_time = time.time()
+                    if cuda_available: bwd_start.record()
 
                     #loss.backward()
                     scaler.scale(loss).backward()
 
+                    if cuda_available: 
+                        bwd_end.record()
+                        torch.cuda.synchronize()
+                        backward_ms = bwd_start.elapsed_time(bwd_end) / 1000.0
+                        all_backward_pass_times.append(backward_ms)
+                        logging.debug(f'Time to backward pass {batch_num}: {backward_ms:.4f} ms')
+        
                     # Record the end event
                     # end_event.record()
                     # torch.cuda.synchronize()  # Wait for the events to complete and calculate elapsed time
                     # backward_pass_time = start_event.elapsed_time(end_event)  # Time in milliseconds
-                    backward_pass_time = time.time() - start_backward_pass_time
-                    all_backward_pass_times.append(backward_pass_time)
-                    logging.debug(f'Time to backward pass {batch_num}: {backward_pass_time:.4f} ms')
 
             # Calculate AUC            
-            for idx, label in enumerate(labels):
-                out_tot[label] = out_tot[label] + list(sigmoid_act(outputs[label]).cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
-                targets_tot[label] = targets_tot[label] + list(targets[:,idx].cpu().detach().numpy().reshape((1,targets[:,idx].shape[0]))[0])
+            out_tot, targets_tot = collect_all_preds_and_labels(labels, label_types, out_tot, targets_tot, targets, outputs)
 
             # Log the batch loss to the epoch loss
             total_loss += loss.item()
@@ -269,11 +270,11 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
                 all_optimizer_step_times.append(optimizer_step_time)
                 logging.debug(f'Time to optimizer step {batch_num}: {optimizer_step_time:.4f} ms')
 
-            # Step the scheduler
-            if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
-                scheduler.step(epoch_num + (batch_num / num_batches_per_epoch))
-            elif config['training']['scheduler']['name'] in ['cyclic']:
-                scheduler.step()
+                # Step the scheduler
+                if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
+                    scheduler.step(epoch_num + (batch_num / num_batches_per_epoch))
+                elif config['training']['scheduler']['name'] in ['cyclic']:
+                    scheduler.step()
 
 
             # TIMING
@@ -289,6 +290,11 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
         if show_pbar: pbar.close()
 
+        # move all preds and labels to CPU
+        for label in labels:
+            out_tot[label] = out_tot[label].cpu().detach().float().numpy()
+            targets_tot[label] = targets_tot[label].cpu().detach().float().numpy()
+
         # Calculate evaluation metric
         if mixup_is_enabled:
             train_mean_metric_value, train_metric_dict = metricHandler.calculate_mixup_metric(out_tot, targets_tot, mixup_lambda_epoch, mixup_indices_epoch)
@@ -300,30 +306,26 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         for label in labels:
             train_loss_dict[label] = train_loss_dict[label] / num_batches_per_epoch
                 
-        logging.info(f'  Training   Loss={avg_loss:.5f}, {metric_name}s={train_metric_dict}')
-
+        logging.info(f'  Training   Loss={avg_loss:.5f}, metrics={train_metric_dict}')
+        results_log.update({f"train/mean_metric" : train_mean_metric_value})
         results_log.update({'loss_train/mean_loss':avg_loss})
         
-        for key, val in train_metric_dict.items():
+        for metric_name, (key, val) in zip(metric_names_list, train_metric_dict.items()):
             results_log.update({f"train/{key}_{metric_name}" : val})
             results_log.update({f"loss_train/{key}" : train_loss_dict[key]})
-        
-        results_log.update({f"train/mean_{metric_name}" : train_mean_metric_value})
         
         # Perform validation
         if epoch_num % config['training']['validation_interval'] == 0:
 
             start_val_time = time.time()
             val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, val_preds_dict, val_labels_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
-            logging.info(f'  Validation Loss={val_loss_value:.5f}, {metric_name}s={val_metric_dict}')
-            #results_log.update({'val/loss':val_loss_value})
+            logging.info(f'  Validation Loss={val_loss_value:.5f}, metrics={val_metric_dict}')
+            results_log.update({f"val/mean_metric" : val_mean_metric_value})
+            results_log.update({f"loss_val/mean_loss" : val_loss_value})
 
-            for key, val in val_metric_dict.items():
+            for metric_name, (key, val) in zip(metric_names_list, val_metric_dict.items()):
                 results_log.update({f"val/{key}_{metric_name}" : val})
                 results_log.update({f"loss_val/{key}" : val_loss_dict[key]})
-
-            results_log.update({f"val/mean_{metric_name}" : val_mean_metric_value})
-            results_log.update({f"loss_val/mean_loss" : val_loss_value})
 
             logging.info(f'  Validation duration = {(time.time() - start_val_time):.2f} seconds')
 

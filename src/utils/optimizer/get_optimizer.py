@@ -1,31 +1,31 @@
-from torch.optim import Adam, AdamW, SGD, RMSprop
+from torch.optim import Adam, AdamW, SGD
 
 from src.utils.optimizer.AdaBound import AdaBound
 
 def get_optimizer(config, model):
     """
-    Get the optimizer.
-    :param config:
-    :param model:
-    :return: Optimizer
+    Gets the optimizer, for model training.
+    Args:
+        config: configuration dictionary
+        model: PyTorch model to be optimized
+    Returns:
+        optimizer: PyTorch optimizer
     """
-    option = None
+    optimizer = None
     if config['training']['optimizer']['name'] == 'Adam':
-        option = Adam(model.parameters(), lr=config['training']['optimizer']['learning_rate'],
+        optimizer = Adam(model.parameters(), lr=config['training']['optimizer']['learning_rate'],
                          weight_decay=config['training']['optimizer']['weight_decay'])
     elif config['training']['optimizer']['name'] == 'AdamW':
-        option = AdamW(model.parameters(), lr=config['training']['optimizer']['learning_rate'], 
-                 weight_decay=config['training']['optimizer']['weight_decay'])
+        optimizer = AdamW(model.parameters(), lr=config['training']['optimizer']['learning_rate'],
+                          weight_decay=config['training']['optimizer']['weight_decay'])
     elif config['training']['optimizer']['name'] == 'AdaBound':
-        option = AdaBound(model.parameters(), lr=config['training']['optimizer']['learning_rate'], 
-                 final_lr=config['training']['optimizer']['learning_rate'], weight_decay=config['training']['optimizer']['weight_decay'])
+        optimizer = AdaBound(model.parameters(), lr=config['training']['optimizer']['learning_rate'],
+                             final_lr=config['training']['optimizer']['learning_rate'], weight_decay=config['training']['optimizer']['weight_decay'])
     elif config['training']['optimizer']['name'] == 'SGD':
-        option = SGD(model.parameters(), lr=config['training']['optimizer']['learning_rate'], 
-                weight_decay=config['training']['optimizer']['weight_decay'], momentum=config['training']['optimizer']['momentum'])
-    elif config['training']['optimizer']['name'] == 'RMSprop':
-        option = RMSprop(model.parameters(), lr=config['training']['optimizer']['learning_rate'], 
+        optimizer = SGD(model.parameters(), lr=config['training']['optimizer']['learning_rate'],
                 weight_decay=config['training']['optimizer']['weight_decay'], momentum=config['training']['optimizer']['momentum'])
     else:
         raise ValueError(f"Optimizer {config['training']['optimizer']['name']} not supported.")
-    return option
-    
+
+    return optimizer
+

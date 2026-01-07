@@ -1,35 +1,11 @@
 # -*- coding: utf-8 -*-
-
-# from load_config import load_config
-
+import logging
 import yaml
 import os
 
-def load_config(name, pathGiven = ""):
-    """
-    Load the config file for the toxicity.
-    :param tox:
-    :return: Config
-    """
-    
-    if pathGiven == "":
-        #config_path = 'src/config_presets/' + name + '.yaml'
-        config_path = os.path.join("src", "config_presets", name + ".yaml")
-    else:
-        #config_path = pathGiven + '\\' + 'src\\config_presets\\' + name + '.yaml'
-        config_path = os.path.join(pathGiven, "src", "config_presets", name + ".yaml")
+from src.config_presets.tools.load_config import load_config
 
-    print(config_path)
-
-    # Check if the config file exists
-    if not os.path.exists(config_path):
-        raise ValueError('Config file not found. Please check the toxicity_configs folder.')
-
-    # Load the config file
-    with open(config_path, 'r') as f:
-        imported_config = yaml.safe_load(f)
-
-    return imported_config
+from src.dataset.LabelTypesManager import LabelTypesManager
 
 
 def get_config(name, name_base = 'Base_config', pathGiven = ""):
@@ -51,35 +27,33 @@ def get_config(name, name_base = 'Base_config', pathGiven = ""):
         testMode_config = load_config('testMode_config', pathGiven)
         update_config(config, testMode_config, allow_new_keys=True)
 
+    # check the config for errors
+    check_config(config)
     
     return config
 
-# NOTE: old version of update_config
-# def update_config(base, updates, allow_new_keys=False):
-#     """
-#     Recursively updates the base dictionary with values from the updates dictionary.
-#     Only non-dictionary values are overwritten. \
-#     (i.e. if only one thing in the 'model' key needs to be updated, the rest of the 'model' dict will remain the same)
-#     """
-#     for key, value in updates.items():
-#         if (key in base) and (isinstance(base[key], dict)) and (isinstance(value, dict)):
-#             update_config(base[key], value)
-#         else:
-#             base[key] = value
-#             # if key in base:
-#             #     base[key] = value
-#             # else:    
-#             #     if allow_new_keys:
-#             #         base[key] = value 
-#             #     else:                         # NOTE: all things in the update config must already exist in the base config
-#             #         raise ValueError(f'Key `{key}` not found in base config. Please check the config files.')
 
 
-    # Example usage:
-    # base_config = {'a': 1, 'b': {'c': 2, 'd': 3}}
-    # updates = {'b': {'c': 4}, 'e': 5}
-    # update_config(base_config, updates)
-    # print(base_config)  # Output: {'a': 1, 'b': {'c': 4, 'd': 3}, 'e': 5}
+
+def check_config(config):
+    """
+    Check label-related settings in the config file.
+    """
+    assert config['columns']['labels'] is not None, "Labels must be specified in the config file."
+
+    # if labels_types is a string, we can assume that all labels have the same type
+    if type(config['columns']['labels_types']) is str:
+        # if the labels_types is a string, convert it to a list of the same length as the labels list
+        config['columns']['labels_types'] = [config['columns']['labels_types']] * len(config['columns']['labels'])
+    
+    assert len(config['columns']['labels']) == len(config['columns']['labels_types']), "Number of labels must match number of label types."
+
+    # if the label_column_names is not specified, derive them from the labels and label_types in the current confg
+    if "label_column_names" not in config['saving'].keys(): 
+        labelManager = LabelTypesManager(config=config)  # get the label types manager from the config
+        config['saving']['label_column_names'] = labelManager.label_names_full_list
+
+
 
 
 def update_config(base, updates, allow_new_keys=False):

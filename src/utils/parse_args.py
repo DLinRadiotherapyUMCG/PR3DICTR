@@ -1,5 +1,4 @@
 import argparse
-import logging
 
 def parse_args():
     """
@@ -12,6 +11,5 @@ def parse_args():
 
     # Load the toxicity
     log_level = args.log
-
 
     return log_level
