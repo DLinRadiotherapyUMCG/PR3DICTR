@@ -3,7 +3,15 @@ import matplotlib.pyplot as plt
 from src.uncertainty.visualisation.calibration_plot import plot_calibration_subplot, plot_error_calibration_subplot, plot_calibration_error_over_dataset_size, plot_UQ_values_over_dataset_size, plot_accuracy_over_dataset_size
 from src.uncertainty.visualisation.sparsification_plot import plot_sparsification_subplot
 from src.uncertainty.visualisation.correlation_plots import plot_uncertainty_and_error_correlation_subplot, plot_uncertainty_and_error_AUROC_subplot
+from matplotlib.axis import YAxis
 
+
+column_names_dict = {
+    "Dysphagia_M06": "Dysphagia",
+    "Xerostomia_M06": "Xerostomia",
+    "OS_2year_censored" : "2 Year Survival",
+    "LRC_2year_censored" : "2 Year Locoregional Control",
+}
 
 
 def plot_nested_UQ(
@@ -88,7 +96,8 @@ def plot_nested_UQ(
             elif plot_type == "calibration_error_dataset_size":
                 plot_calibration_error_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
             elif plot_type == "plot_UQ_values_over_dataset_size":
-                plot_UQ_values_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
+                is_last_col = (j == n_cols - 1)
+                plot_UQ_values_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method, is_last_col=is_last_col)
             elif plot_type == "plot_accuracy_over_dataset_size":
                 plot_accuracy_over_dataset_size(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metrics_list, N_bins, colours_dict, normalisation_method=normalisation_method)
             elif plot_type == "uncertainty_error_correlation":
@@ -101,6 +110,10 @@ def plot_nested_UQ(
 
             # Titles and labels
             if i == 0 and n_rows >= 1:
+                try:
+                    col_val = column_names_dict[col_val]
+                except KeyError:
+                    pass
                 ax.set_title(col_val)
             if j == 0:
                 #ax.set_ylabel("AUC" if ENDPOINT_TYPES[endpoint] == "Binary" else "C-Index")
@@ -116,14 +129,18 @@ def plot_nested_UQ(
                     ax.set_ylabel("Mean Uncertainty")
                 ax.annotate(row_val, xy=(-0.3, 0.5), xycoords='axes fraction',
                             ha='right', va='center', fontsize=12, rotation=90)
+            else:
+                ax.yaxis.set_visible(False)
             
             # Hide xlabel for all axes except those in the last row
             if i != n_rows - 1:
                 ax.set_xlabel("")  # hide the xlabel for all but the last row
                 # pass  # xlabel is set in subfunctions
             
-            if i == 0 and j == 0:
-                fig.legend(title="UQ Metric", loc='upper right', bbox_to_anchor=(1.1, 0.92))
+            # if i == 0 and j == 0:
+            #     fig.legend(title="UQ Metric", loc='upper right', bbox_to_anchor=(1.1, 0.92))
+
+
 
     if plot_type == "UQ_calibration":
         title = "Certainty vs Accuracy"
@@ -138,7 +155,7 @@ def plot_nested_UQ(
     elif plot_type == "plot_UQ_values_over_dataset_size":
         title = "Training Dataset Size vs. Mean Uncertainty"
     elif plot_type == "plot_accuracy_over_dataset_size":
-        title = "Training Dataset Size vs. Accuracy"
+        title = "Training Dataset Size vs. Classification Performance"
     elif plot_type == "uncertainty_error_correlation":
         title = "Uncertainty vs Error Scatter Plot"
     elif plot_type == "uncertainty_and_error_AUROC":

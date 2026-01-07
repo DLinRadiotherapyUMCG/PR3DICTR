@@ -50,10 +50,11 @@ if __name__ == '__main__':
     }
 
     endpoints = ["Dysphagia_M06", "Xerostomia_M06"] # , "OS", "LRC"]
+    endpoints = ["OS", "LRC"]
 
-    # endpoints = ["Dysphagia_M06"]
+    endpoints = ["Dysphagia_M06"]
 
-    for idx in [5,6,7,8,9]:
+    for idx in [9]:
         for endpoint in endpoints:
             run_config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
         
@@ -64,7 +65,7 @@ if __name__ == '__main__':
             run_config['general']['dataset_amounts_experiment'] = True
             run_config['data']['n_training_patients_list'] = training_patients_dict[endpoint] # , 100, 150] #  [100, 200, 300, 400, 500, 600, 700, 800] # 
 
-            set_random_seed(idx)
+            # set_random_seed(idx)
             # run_config['general']['experiment_name'] = "Data MC Dropout"
             # train_MC_dropout_model(run_config, UQ_method="MC_dropout")
 
@@ -77,12 +78,20 @@ if __name__ == '__main__':
 
 
             # set_random_seed(idx)
-            run_config['general']['experiment_name'] = "Data TTA"
-            train_MC_dropout_model(run_config, UQ_method="TTA")
+            # run_config['general']['experiment_name'] = "Data TTA"
+            # train_MC_dropout_model(run_config, UQ_method="TTA")
 
-            # set_random_seed(idx)
-            # run_config['general']['experiment_name'] = "Data Deep Ensemble"
-            # train_deep_ensemble_models(run_config)
+            training_patients_dict = {
+                "OS" : [ 200], 
+                "LRC" : [ 150],
+                "Dysphagia_M06" : [ 700],
+                "Xerostomia_M06" : [700]
+            }
+
+            set_random_seed(idx)
+            run_config['general']['experiment_name'] = "DGX SPARK"
+            run_config['training']['batch_size'] = 16
+            train_deep_ensemble_models(run_config)
             #evaluate_deep_ensemble_models(run_config)
 
 

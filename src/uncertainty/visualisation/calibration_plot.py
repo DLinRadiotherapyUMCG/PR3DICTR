@@ -101,6 +101,10 @@ def plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metric
         x_values = np.linspace(0, 1, 100)
         ax.plot(x_values, linear_fit(x_values), linestyle='-', color=colours_dict[UQ_metric_name], alpha=0.8, linewidth=2)
 
+        # to note the ACE values on the plot itself
+        # ACE_score = np.sum(np.abs(np.array(aucs) - (np.array(bin_centers)))) / len(aucs)
+        # ax.text(0.6, 0.2 - 0.1 * UQ_metrics_list.index(UQ_metric_name), f"{ACE_score:.2f}", color=colours_dict[UQ_metric_name])
+
     if plot_type == "UQ_calibration":
         ax.set_xlabel("Certainty (1 - uncertainty)")
     else:
@@ -280,6 +284,7 @@ def plot_UQ_values_over_dataset_size(
     N_bins,
     colours_dict,
     normalisation_method="minmax",
+    is_last_col = True
 ):
     # Prepare rows for DataFrame
     rows = []
@@ -324,18 +329,39 @@ def plot_UQ_values_over_dataset_size(
     df = pd.DataFrame(rows)
 
     grouped = df.groupby(['N_patients', 'uq_metric'])['mean_UQ_value'].agg(['mean', 'std']).reset_index()
+    right_ax = None
     for uq_metric in grouped['uq_metric'].unique():
-        subset = grouped[grouped['uq_metric'] == uq_metric]# .sort_values('N_patients')
-        #print(subset)
-        ax.errorbar(
-            subset['N_patients'],
-            subset['mean'],
-            yerr=subset['std'],
-            label=uq_metric,
-            marker='o',
-            capsize=3,
-            color=colours_dict[uq_metric]
-        )
+        subset = grouped[grouped['uq_metric'] == uq_metric]  # .sort_values('N_patients')
+        if uq_metric == "Binary Entropy":
+            # create secondary y-axis once
+            if right_ax is None:
+                right_ax = ax.twinx()
+                right_ax.set_ylim(0, 1)
+                right_ax.tick_params(axis='y', labelcolor=colours_dict[uq_metric])
+                right_ax.spines['right'].set_color(colours_dict[uq_metric])
+                # right_ax.set_ylabel("Binary Entropy")
+            right_ax.errorbar(
+                subset['N_patients'],
+                subset['mean'],
+                yerr=subset['std'],
+                label=uq_metric,
+                marker='o',
+                capsize=3,
+                color=colours_dict[uq_metric]
+            )
+            if not is_last_col:
+                right_ax.yaxis.set_visible(False)
+                #right_ax.spines['right'].set_visible(False)
+        else:
+            ax.errorbar(
+                subset['N_patients'],
+                subset['mean'],
+                yerr=subset['std'],
+                label=uq_metric,
+                marker='o',
+                capsize=3,
+                color=colours_dict[uq_metric]
+            )
     
 
     ax.set_xlabel("N training patients")
@@ -381,11 +407,13 @@ def plot_accuracy_over_dataset_size(
             threshold = thresholds[idx]
             
             accuracy = accuracy_score(true_labels, mean_preds > threshold)
-            accuracy = roc_auc_score(true_labels, mean_preds)
+            auc = roc_auc_score(true_labels, mean_preds)
+            # accuracy = roc_auc_score(true_labels, mean_preds)
             rows.append({
                 "endpoint": endpoint,
                 "N_patients": int(N_patients),
-                "accuracy": accuracy
+                "accuracy": accuracy,
+                'auc' : auc
             })
 
     
@@ -397,6 +425,15 @@ def plot_accuracy_over_dataset_size(
         grouped['mean'],
         yerr=grouped['std'],
         label='Accuracy',
+        marker='o',
+        capsize=3
+    )
+    grouped_auc = df.groupby(['N_patients'])['auc'].agg(['mean', 'std']).reset_index()
+    ax.errorbar(
+        grouped_auc['N_patients'],
+        grouped_auc['mean'],
+        yerr=grouped_auc['std'],
+        label='AUC',
         marker='o',
         capsize=3
     )
