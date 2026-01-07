@@ -116,26 +116,26 @@ PLOT_SLICES_COLOURMAPS= {
 
 PLOTTING_PARAMS = {
     "HNC" : {
-        "CT": {
-            "cmap": "gray",
-            "cmap_title": "HU",
-            "min_val": -200,
-            "max_val": 400,
-        },
-        "PET" : {
-            "cmap": "magma",
-            "cmap_title": "SUV",
-            "min_val": 0,
-            "max_val": 25,
-        },
-        "RTDOSE": {
-            "cmap": "dose",
-            "cmap_title": "Dose (Gy)",
-            "min_val": 0,
-            "max_val": 8000,
-        },
-        "RTSTRUCT": {"color": "deeppink", "linewidth": 2, "alpha": 0.8, "cmap": "nipy_spectral"},
-        "GTV" : {"color": "red", "linewidth": 2, "alpha": 0.8, "cmap": "PuRd"},
+        # "CT": {
+        #     "cmap": "gray",
+        #     "cmap_title": "HU",
+        #     "min_val": -200,
+        #     "max_val": 400,
+        # },
+        # "PET" : {
+        #     "cmap": "magma",
+        #     "cmap_title": "SUV",
+        #     "min_val": 0,
+        #     "max_val": 25,
+        # },
+        # "RTDOSE": {
+        #     "cmap": "dose",
+        #     "cmap_title": "Dose (Gy)",
+        #     "min_val": 0,
+        #     "max_val": 8000,
+        # },
+        #"segmentation_map": {"color": "deeppink", "linewidth": 2, "alpha": 0.8, "cmap": "nipy_spectral"},
+        # "GTV" : {"color": "red", "linewidth": 2, "alpha": 0.8, "cmap": "PuRd"},
         "Attention": {
             "cmap": "Attention",
             "cmap_abs": "AttentionAbs",

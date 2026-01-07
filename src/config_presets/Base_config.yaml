@@ -104,7 +104,7 @@ data:
     isEnabled: true                   # whether or not preprocessing steps should be applied to the image data files
     crop: true                         # if the image files need cropping
     crop_shape: [96, 96, 96]           # dimension to crop to
-    needs_scaling: ["ct", "rtdose", 'pet', 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
+    needs_scaling: ["ct", "rtdose", 'pet'] # , 'mri']         # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
     needs_label_mapping: ["segmentation_map", "gtv_total"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
     ct: 
       a_min: -200            # lowest range to clip from
@@ -112,12 +112,16 @@ data:
       b_min: 0               # lowest range to clip to
       b_max: 1               # higher range to clip to
       clip: true             # whether or not to clip using the above-mentioned clipping ranges
+      cmap: 'gray'           # colormap to use when plotting CT images  
+      cmap_title: 'HU'       # title for the colorbar when plotting CT images
     rtdose:
       a_min: 0
       a_max: 8000
       b_min: 0
       b_max: 1
       clip: true
+      #cmap: 'gray'          
+      cmap_title: 'cGy'       
     mri:              # example of how to scale an MRI image
       a_min: 0
       a_max: 12345
@@ -130,10 +134,20 @@ data:
       b_min: 0
       b_max: 1
       clip: true
+      cmap: 'magma'
+      cmap_title: 'SUV'
     segmentation_map:      # value encoding of the structures in `segmentation_map.npy`, before feeding to model (set to 0 if don't want to include that structure)
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
+      outline_color: 'deeppink'
+      linewidth: 2
+      alpha: 0.8
+      cmap: 'nipy_spectral'
     gtv_total:
       target_labels: [0.0, 1.0]  # target labels for the GTV total segmentation map (0 = no GTV, 1 = GTV present)
+      outline_color: 'red'
+      linewidth: 2
+      alpha: 0.8
+      cmap: 'PuRd'
   kFolds:
     n_splits: 5           # the number of data splits to make
     n_iterations: 5       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
@@ -230,6 +244,28 @@ evaluation:
     n_bins: 10            # nunber of bins to use in the calibration and reliability plot
     kaplan_meier_max_timepoint: 60  # maximum time point to show in the Kaplan-Meier plot
 
+
+
+uncertainty:
+  seed: 42                        # random seed for uncertainty estimation
+  method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
+  metric: 12345
+  deep_ensemble:
+    n_models: 10
+  MC_dropout:
+    n_forward_passes: 50          # number of forward passes to perform for each model in the ensemble
+    dropout_p: 0.2 
+  TTA:
+    n_forward_passes: 50
+  dataset_split:
+    n_splits: 1                   # the number of data splits to make
+    validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
+    split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
+    
+
+
+
+
 hyperparam_tuning:
   WandB:
     isEnabled: false                   # whether or not to log to Weights & Biases
@@ -251,6 +287,7 @@ hyperparam_tuning:
   #     location: ["training",'optimizer','weight_decay']
   #     min: 0
   #     max: 1
+
 
 
 

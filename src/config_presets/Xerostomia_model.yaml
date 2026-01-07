@@ -138,9 +138,6 @@ training:
 
   scheduler:
     name: False # "cosine"
-    T_0: 40
-    T_mult: 1
-    eta_min: 0.00000001
 
   GradNorm:                  
     isEnabled: False         # whether to use GradNorm to balance the gradients of the labels' losses

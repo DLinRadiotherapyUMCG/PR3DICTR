@@ -12,28 +12,6 @@ plt.style.use('default')
 
 # --- Colormap Utilities ---
 
-def create_colormap(cmap_name, min_value, max_value, params=None, N=256):
-    if cmap_name == "gray":
-        cmap = LinearSegmentedColormap.from_list("CT_cmap", ["black", "white"], N=N)
-    elif cmap_name == "RTSTRUCT" or cmap_name == "GTV":
-        colors = [(i / N, 0, 0.5) for i in range(N)]  # this colours list is only used if the RTSTRUCT is plotted as a background (so that each struct is a different colour)
-        cmap = LinearSegmentedColormap.from_list("RTSTRUCT_cmap", colors, N=N)
-    elif cmap_name in ("Attention", "AttentionAbs"):
-        colors_list = params["Attention"]["cmap_abs_colors"]
-        cmap = LinearSegmentedColormap.from_list("Attention_cmap", colors_list, N=N)
-    elif cmap_name == "RTDOSE":
-        cmap, norm, _ = create_RTDOSE_cmap(params["RTcmap"])
-        return cmap, norm
-    elif cmap_name == "PET":
-        cmap_name = params["PET"]["cmap"]
-        cmap = LinearSegmentedColormap.from_list("PET_cmap", cmap_name, N=N)
-    else:
-        cmap = mpl.cm.get_cmap(cmap_name, N)
-
-    norm = Normalize(vmin=min_value, vmax=max_value)
-    
-    return cmap, norm
-
 def rescale_data(data, min_val, max_val):
     if data.min() >= 0 and data.max() <= 1:
         return data * (max_val - min_val) + min_val
@@ -49,122 +27,178 @@ def get_slice_dimensions(input_dict, layer_order):
 # --- Plotting Strategy Classes ---
 
 class ModalityPlotter:
-    def plot(self, axs, data, slices, params, **kwargs):
+    """ Base class for modality plotting strategies """
+    def __init__(self, config, modality_name):
+
+        self.modality_config = config['data']['preprocessing'][modality_name]
+        self.modality_name = modality_name
+        self.RT_region = config['general']['region']
+
+        self.set_colourmaps()
+
+    def set_colourmaps(self):
+        pass
+
+    def plot(self, config, axs, data, slices, params, **kwargs):
         raise NotImplementedError
 
-class CTPlotter(ModalityPlotter):
-    """ Plotting strategy for CT images """
-    def plot(self, axs, CT, slices, params, **kwargs):
-        # plot the CT image slices along this axis of subplots
-        cmap, norm = create_colormap(
-            params["cmap"], params["min_val"], params["max_val"], params
-        )
-        for i, slice_n in enumerate(slices):
-            axs[i].imshow(CT[slice_n], cmap=cmap, norm=norm, interpolation='none')
 
-class PETPlotter(ModalityPlotter):
-    """ Plotting strategy for PET images """
-    def plot(self, axs, PET, slices, params, **kwargs):
-        # plot the PET image slices along this axis of subplots
-        cmap, norm = create_colormap(params["cmap"], params["min_val"], params["max_val"], params)
+class DefaultPlotter(ModalityPlotter):
+    """ Default plotting strategy (just a placeholder)"""
+    def plot(self, config, axs, data, slices, modality_name, params, **kwargs):
+
         for i, slice_n in enumerate(slices):
-            axs[i].imshow(PET[slice_n], cmap=cmap, norm=norm, interpolation='none')
+            axs[i].imshow(data[slice_n], cmap='viridis', interpolation='none')
+
+
+class ImagePlotter(ModalityPlotter):
+    """ Plotting strategy for images (CT, PET, MR, etc.)"""
+
+    def set_colourmaps(self, N = 256):
+        cmap_name = self.modality_config["cmap"]
+        min_val = self.modality_config["a_min"]
+        max_val = self.modality_config["a_max"]
+
+        self.cmap = mpl.cm.get_cmap(cmap_name, N)
+        self.norm  = Normalize(vmin=min_val, vmax=max_val)
+        self.levels = None
+
+    def plot(self, config, axs, image_array, slices, modality_name, params, **kwargs):
+        # plot the CT image slices along this axis of subplots
+
+        for i, slice_n in enumerate(slices):
+            axs[i].imshow(image_array[slice_n], cmap=self.cmap, norm=self.norm, interpolation='none')
+
+
+
+# config, axs[row_idx], row_dict[layer_name], slice_indexes, layer_name, params,
 
 class RTDOSEPlotter(ModalityPlotter):
     """ Plotting strategy for RTDOSE images """
-    def plot(self, axs, RTDOSE, slices, params, RTcmap, is_background=False, **kwargs):
+
+
+    def set_colourmaps(self, N = 256):
+        #RT_region = self.RT_region
+        self.cmap, self.norm, self.levels = create_RTDOSE_cmap(self.RT_region)
+        self.levels = self.levels[1:]
+
+
+    def plot(self, config, axs, RTDOSE, slices, modality_name, params, is_background=False, **kwargs):
         # plot the RTDOSE image slices along this axis of subplots
-        cmap, norm, levels = create_RTDOSE_cmap(RTcmap)
-        levels = levels[1:]
+        cmap = self.cmap
+        norm = self.norm
+        levels = self.levels
+
         for i, slice_n in enumerate(slices):
             slice_data = RTDOSE[slice_n]
             if is_background:
                 # plot the RTDOSE as a background (i.e. the colours should not be transparent)
-                axs[i].contourf(slice_data, cmap=cmap, norm=norm, levels=levels, alpha=1, origin="upper")
-                axs[i].contour(slice_data, levels=levels, norm=norm, colors="white", linewidths=1, alpha=1, origin="upper") # contours are white
+                axs[i].imshow(slice_data, cmap=cmap, norm=norm) # , interpolation='none')
+                # axs[i].contourf(slice_data, cmap=cmap, norm=norm, levels=levels, alpha=1, origin="upper")
+                axs[i].contour(slice_data, levels=levels, norm=norm, colors="white", linewidths=1, alpha=1) # , origin="upper") # contours are white
             else:
                 # plot the RTDOSE with transparency (e.g. for on top of the CT scan)
-                axs[i].contourf(slice_data, cmap=cmap, norm=norm, levels=levels, alpha=0.3, origin="lower")
-                axs[i].contour(slice_data, cmap=cmap, norm=norm, levels=levels, linewidths=1, origin="lower") # contours are coloured
+                axs[i].contourf(slice_data, cmap=cmap, norm=norm, levels=levels, alpha=0.3) # , origin="lower")
+                axs[i].contour(slice_data, cmap=cmap, norm=norm, levels=levels, linewidths=1) # , origin="lower") # contours are coloured
+
 
 class RTSTRUCTPlotter(ModalityPlotter):
     """ Plotting strategy for RTSTRUCT images """
-    def plot(self, axs, RTSTRUCT, slices, params, is_background=False, **kwargs):
+
+    def set_colourmaps(self):
+        min_val = 0
+        max_val = len(self.modality_config['target_labels']) - 1
+        N = max_val + 1
+        #modality_config = self.modality_config
+        colors = [(i / N, 0, 0.5) for i in range(N)]  # this colours list is only used if the RTSTRUCT is plotted as a background (so that each struct is a different colour)
+        
+        cmap_name = self.modality_config["cmap"]
+        self.cmap = mpl.cm.get_cmap(cmap_name, N)
+        #self.cmap = LinearSegmentedColormap.from_list("RTSTRUCT_cmap", colors, N=N)
+        self.norm = Normalize(vmin=min_val, vmax=max_val)
+        self.levels = None
+
+
+    def plot(self, config, axs, RTSTRUCT, slices, modality_name, params, is_background=False, **kwargs):
         # plot the RTSTRUCT image slices along this axis of subplots
-        cmap, norm = create_colormap(params["cmap"], params["min_val"], params["max_val"], params, N= params["max_val"] + 1)
         for i, slice_n in enumerate(slices):
             slice_data = RTSTRUCT[slice_n]
             if is_background:
-                axs[i].imshow(slice_data, cmap=cmap, norm=norm, interpolation='none')
+                axs[i].imshow(slice_data, cmap= self.cmap, norm=self.norm, interpolation='none')
             else:
                 axs[i].contour(
                     slice_data > 0,
-                    colors=params["color"],
-                    linewidths=params["linewidth"],
-                    alpha=params["alpha"],
+                    colors=self.modality_config["outline_color"],
+                    linewidths=self.modality_config["linewidth"],
+                    alpha=self.modality_config["alpha"],
                     origin="lower",
                 )
 
 class AttentionPlotter(ModalityPlotter):
     """ Plotting strategy for Attention maps """
-    def plot(self, axs, Attention, slices, params, global_att_max, **kwargs):
-        # plot the Attention map slices along this axis of subplots
+    def set_attention_colourmaps(self, global_att_max):
         plot_min, plot_max = 0, global_att_max
-        plot_cmap = params["cmap_abs"]
-        cmap, norm = create_colormap(plot_cmap, plot_min, plot_max, params)
+
+        params = constants.PLOTTING_PARAMS["HNC"]["Attention"]
+        
+        colors_list = params["Attention"]["cmap_abs_colors"]
+        N = 256
+        self.cmap = LinearSegmentedColormap.from_list("Attention_cmap", colors_list, N=N)
+
+        self.norm = Normalize(vmin=plot_min, vmax=plot_max) 
+        self.levels = None
+
+
+    def plot(self, config, axs, Attention, slices, params, global_att_max, is_background=False, **kwargs):
+        if is_background:
+            for i in range(len(axs)):
+                axs[i].set_facecolor("black")
+        
         alpha = params["alpha"]
         for i, slice_n in enumerate(slices):
-            axs[i].imshow(Attention[slice_n], cmap=cmap, norm=norm, alpha=alpha, interpolation='none')
+            axs[i].imshow(Attention[slice_n], cmap=self.cmap, norm=self.norm, alpha=alpha, interpolation='none')
+
+
 
 class EmptyPlotter(ModalityPlotter):
     """ Plotting strategy for empty rows (i.e. no data to plot) """
-    def plot(self, axs, _, __, params, color="black", **kwargs):
+    def set_colourmaps(self):
+        self.cmap = None
+        self.norm = None
+
+    def plot(self, config, axs, _, __, params, color="black", **kwargs):
         for ax in axs:
             ax.set_facecolor(color)
 
 # --- Modality Plotter Registry ---
 
 MODALITY_PLOTTERS = {
-    "CT": CTPlotter(),
-    "RTDOSE": RTDOSEPlotter(),
-    "RTSTRUCT": RTSTRUCTPlotter(),
-    "GTV" : RTSTRUCTPlotter(),  # GTV uses the same plotting as RTSTRUCT
-    "Attention": AttentionPlotter(),
-    "PET": PETPlotter(),
-    "Empty": EmptyPlotter(),
+    # "rtdose": RTDOSEPlotter(),
+    # "rtstruct": RTSTRUCTPlotter(),
+    # 'segmentation_map': RTSTRUCTPlotter(),  # RTSTRUCT uses the same plotting as segmentation_map
+    # "gtv" : RTSTRUCTPlotter(),  # GTV uses the same plotting as RTSTRUCT
+    "attention": AttentionPlotter,
+    "empty": EmptyPlotter,
+
+    #"image": ImagePlotter(),
 }
 
 # --- Colorbar Utility ---
 
-def make_row_colorbar(fig, row_ax, num_slices, layer_name, params, global_att_max, RTcmap=None):
+def make_row_colorbar(config, fig, row_ax, num_slices, colorbar_cmap=None, colorbar_norm=None, global_att_max=None):
     [[x10, y10], [x11, y11]] = row_ax[num_slices - 1].get_position().get_points()
     pad, width, height_scalar = 0.01, 0.01, 1
     max_height = y11 - y10
     left_coord = x11 + pad
     bottom_coord = y10 + (max_height * (1 - height_scalar)) / 2
     cbar_ax = fig.add_axes([left_coord, bottom_coord, width, max_height * height_scalar])
-    cbar = None
 
-    if layer_name == "CT":
-        cmap, norm = create_colormap(params["CT"]["cmap"], params["CT"]["min_val"], params["CT"]["max_val"], params)
-        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax, spacing="proportional")
-        cbar.ax.set_title("HU", loc="center", pad=5)
-    elif layer_name == "PET":
-        cmap, norm = create_colormap(params["PET"]["cmap"], params["PET"]["min_val"], params["PET"]["max_val"], params)
-        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax, spacing="proportional")
-        cbar.ax.set_title("SUV", loc="center", pad=5)
-    elif layer_name == "RTDOSE":
-        cmap, norm, levels = create_RTDOSE_cmap(RTcmap)
-        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax, spacing="proportional", ticks=levels[1:])
-        cbar.ax.set_title("cGy", loc="center", pad=5)
-    elif layer_name == "Attention":
-        cmap, norm = create_colormap(params["Attention"]["cmap"], -global_att_max, global_att_max, params)
-        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax, spacing="proportional")
-        cbar.ax.set_title("Attention", loc="center", pad=5)
-        cbar.formatter.set_powerlimits((0, 0))
-    elif layer_name == "RTSTRUCT" or layer_name == "GTV":
-        cmap, norm = create_colormap(params[layer_name]["cmap"], params[layer_name]["min_val"], params[layer_name]["max_val"], params, N=params[layer_name]["max_val"])
-        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax, spacing="proportional")
+    if colorbar_cmap is None or colorbar_norm is None:
+        cbar = None
+    else:
+        cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=colorbar_norm, cmap=colorbar_cmap), cax=cbar_ax, spacing="proportional")
+
+    
     if cbar is not None:
         cbar.ax.yaxis.set_ticks_position("right")
 
@@ -185,13 +219,14 @@ def determine_colorbar_layer(layers_to_plot, colormap_layers):
 
 
 def plot_slices(
-    row_dicts,
-    slice_indexes,
-    title=None,
-    RT_region="HNC",
-    plotting_axis="axial",
-    verbose=False,
-):
+        config,
+        row_dicts,
+        slice_indexes,
+        title=None,
+        RT_region="HNC",
+        plotting_axis="axial",
+        verbose=False,
+    ):
     """
     Plots multiple rows of image slices with different modalities.
     Args:
@@ -207,8 +242,11 @@ def plot_slices(
     """
     
     PLOTTING_PARAMS = get_plotting_params(RT_region)
-    layer_plotting_order = ["CT", "PET", "RTDOSE", "RTSTRUCT", "GTV", "Attention"]
-    colormap_layers = ["Attention", "RTDOSE", "PET", "CT", "GTV", "RTSTRUCT"]
+    layer_plotting_order = ["CT", "PET", "RTDOSE", "RTSTRUCT", "segmentation_map", "GTV", "Attention"]
+    colormap_layers = ["Attention", "RTDOSE", "PET", "CT", "GTV", "RTSTRUCT", "segmentation_map"]
+
+    layer_plotting_order = [l.lower() for l in layer_plotting_order]
+    colormap_layers = [l.lower() for l in colormap_layers]
 
     slice_count = len(slice_indexes)
     row_count = len(row_dicts)
@@ -236,41 +274,61 @@ def plot_slices(
         row_dicts = rotate_arrs_in_plotting_row_dicts(row_dicts, layer_plotting_order, plotting_axis)
 
     for row_idx, row_dict in enumerate(row_dicts):
-        layers_to_plot = [x for x in layer_plotting_order if x in row_dict]
+        layers_to_plot = [x.lower() for x in layer_plotting_order if x in row_dict]
         if verbose:
             print(row_idx, "layers_to_plot:", layers_to_plot)
         colorbar_layer_name = determine_colorbar_layer(layers_to_plot, colormap_layers)
 
         for layer_idx, layer_name in enumerate(layers_to_plot):
-            plotter = MODALITY_PLOTTERS.get(layer_name, MODALITY_PLOTTERS["Empty"])
-            params = PLOTTING_PARAMS.get(layer_name, {})
             kwargs = {}
-            if layer_name == "RTDOSE":
-                kwargs["RTcmap"] = RT_region
-                kwargs["is_background"] = (layer_idx == 0 and "Attention" not in layers_to_plot)
-                row_dict[layer_name] = rescale_data(
-                    row_dict[layer_name],
-                    min_val=PLOTTING_PARAMS["RTDOSE"]["min_val"],
-                    max_val=PLOTTING_PARAMS["RTDOSE"]["max_val"],
-                )
-            if layer_name == "RTSTRUCT" or layer_name == "GTV":
-                params["min_val"] = 0
-                params["max_val"] = row_dict[layer_name].max()
-                #print(params["max_val"])
+
+
+            if layer_name in config['data']['preprocessing']['needs_scaling']:
+                if layer_name == 'rtdose':
+                    plotter = RTDOSEPlotter(config, layer_name)
+                    kwargs["is_background"] = (layer_idx == 0 and "Attention" not in layers_to_plot)
+
+                else:
+                    plotter = ImagePlotter(config, layer_name)
+
+            elif layer_name in config['data']['preprocessing']['needs_label_mapping']:
+                plotter = RTSTRUCTPlotter(config, layer_name)
                 kwargs["is_background"] = (layer_idx == 0)
-            if layer_name == "Attention":
+                    
+            # elif layer_name in MODALITY_PLOTTERS.keys():
+            #     # print(layer_name, MODALITY_PLOTTERS)
+            #     plotter = MODALITY_PLOTTERS.get(layer_name, MODALITY_PLOTTERS[layer_name])
+            elif layer_name == 'attention':
+                plotter = AttentionPlotter(config, layer_name, global_att_max=global_att_max)
+                plotter.set_attention_colourmaps(self, global_att_max)
+            else:
+                plotter = DefaultPlotter(config, layer_name)
+
+            params = PLOTTING_PARAMS.get(layer_name, {})
+            
+            if layer_name == "attention":
                 kwargs["global_att_max"] = global_att_max
                 if layer_idx == 0:
-                    MODALITY_PLOTTERS["Empty"].plot(axs[row_idx], None, None, params, color=params["background_color"])
-            plotter.plot(axs[row_idx], row_dict[layer_name], slice_indexes, params, **kwargs)
+                    # plot a background image
+                    EmptyPlotter(config, layer_name).plot(config, axs[row_idx], None, None, params, color=params["background_color"])
+                    # MODALITY_PLOTTERS["empty"].plot(config, axs[row_idx], None, None, params, color=params["background_color"])
+
+            plotter.plot(config, axs[row_idx], row_dict[layer_name], slice_indexes, layer_name, params, **kwargs)
+
+
+            # if this is the layer to use for the colorbar, make it
+            if layer_name == colorbar_layer_name:
+                colorbar_cmap = plotter.cmap
+                colorbar_norm = plotter.norm
+
 
         make_row_colorbar(
+            config,
             fig,
             row_ax=axs[row_idx],
             num_slices=slice_count,
-            layer_name=colorbar_layer_name,
-            params=PLOTTING_PARAMS,
-            RTcmap=RT_region,
+            colorbar_cmap = colorbar_cmap,
+            colorbar_norm = colorbar_norm,
             global_att_max=global_att_max,
         )
 

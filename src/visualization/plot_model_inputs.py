@@ -16,19 +16,30 @@ def scale_image_to_modality_range(config, image, modality):
         torch.tensor: adjusted image
     """
 
-    if modality == 'CT':
-        ct_range = (config['data']['preprocessing']['ct']['a_max'] - config['data']['preprocessing']['ct']['a_min'])
-        image = (image * ct_range) + config['data']['preprocessing']['ct']['a_min']
+    # if modality == 'CT':
+    #     ct_range = (config['data']['preprocessing']['ct']['a_max'] - config['data']['preprocessing']['ct']['a_min'])
+    #     image = (image * ct_range) + config['data']['preprocessing']['ct']['a_min']
 
-    elif modality == 'RTDOSE':
-        rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
-        image = image * rtdose_range + config['data']['preprocessing']['rtdose']['a_min']
+    # elif modality == 'RTDOSE':
+    #     rtdose_range = (config['data']['preprocessing']['rtdose']['a_max'] - config['data']['preprocessing']['rtdose']['a_min'])
+    #     image = image * rtdose_range + config['data']['preprocessing']['rtdose']['a_min']
 
-    elif modality == 'PET':
-        pet_range = (config['data']['preprocessing']['pet']['a_max'] - config['data']['preprocessing']['pet']['a_min'])
-        image = (image * pet_range) + config['data']['preprocessing']['pet']['a_min']
+    # elif modality == 'PET':
+    #     pet_range = (config['data']['preprocessing']['pet']['a_max'] - config['data']['preprocessing']['pet']['a_min'])
+    #     image = (image * pet_range) + config['data']['preprocessing']['pet']['a_min']
 
-    elif modality == 'RTSTRUCT' or modality == 'GTV':
+    # elif modality == 'RTSTRUCT' or modality == 'GTV':
+    #     image = image
+
+
+    if modality in config['data']['preprocessing']['needs_scaling']:
+        # scale the image back to the original range
+        min_val = config['data']['preprocessing'][modality.lower()]['a_min']
+        max_val = config['data']['preprocessing'][modality.lower()]['a_max']
+        original_range = max_val - min_val
+        #original_range = (config['data']['preprocessing'][modality.lower()]['a_max'] - config['data']['preprocessing'][modality.lower()]['a_min'])
+        image = image * original_range + min_val
+    else:
         image = image
 
     return image
@@ -83,7 +94,7 @@ def plot_model_inputs(config, plot_inputs, epoch_number):
             plotting_rows_dicts.append(row_dict)
 
 
-        fig, axes = plot_slices(plotting_rows_dicts, slices, RT_region=config['general']['region'])# , title=f"{patient_id} slices")
+        fig, axes = plot_slices(config, plotting_rows_dicts, slices, RT_region=config['general']['region'])  # , title=f"{patient_id} slices")
         
         filename=os.path.join(save_folder, 'epoch_{}_idx_{}.png'.format(epoch_number, patient_idx))
         fig.savefig(filename, bbox_inches='tight')
