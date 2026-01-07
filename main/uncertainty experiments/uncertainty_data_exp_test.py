@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     endpoints = ["Dysphagia_M06"]
 
-    for idx in [9]:
+    for idx in range(10):
         for endpoint in endpoints:
             run_config = load_model_config_for_uncertainty_experiment(config, endpoint_name=endpoint)
         
@@ -80,18 +80,4 @@ if __name__ == '__main__':
             # set_random_seed(idx)
             # run_config['general']['experiment_name'] = "Data TTA"
             # train_MC_dropout_model(run_config, UQ_method="TTA")
-
-            training_patients_dict = {
-                "OS" : [ 200], 
-                "LRC" : [ 150],
-                "Dysphagia_M06" : [ 700],
-                "Xerostomia_M06" : [700]
-            }
-
-            set_random_seed(idx)
-            run_config['general']['experiment_name'] = "DGX SPARK"
-            run_config['training']['batch_size'] = 16
-            train_deep_ensemble_models(run_config)
-            #evaluate_deep_ensemble_models(run_config)
-
 
