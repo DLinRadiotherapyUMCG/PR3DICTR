@@ -1,19 +1,15 @@
 import os
 import logging
-from typing import Optional, List, Tuple
-from torch.utils.data import Dataset
 from src.utils.data_equalizer import get_delimiter, label_equalizer
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import StratifiedShuffleSplit, ShuffleSplit
 
 from src.dataset.LabelTypesManager import LabelTypesManager
 
 from src.constants import PATIENT_ID_LENGTHS_DICT, PATIENT_ID_COL_NAME, SPLIT_COL_NAME
-
 
 def remove_excluded_patients(df : pd.DataFrame, config: dict) -> pd.DataFrame:
     """
@@ -28,7 +24,7 @@ def remove_excluded_patients(df : pd.DataFrame, config: dict) -> pd.DataFrame:
     excludedVariables = config['data']['excluded_variable_name']  # column name
     excludedValues = config['data']['excluded_values']           # values
 
-    if(len(excludedVariables) != len(excludedValues)):
+    if len(excludedVariables) != len(excludedValues):
         raise Exception("Exception: Exclusion parameters for patient removal need to have the same size. This contains the excluded variables and values.")
     
     # for each column name, remove patients with the excluded value
@@ -38,45 +34,31 @@ def remove_excluded_patients(df : pd.DataFrame, config: dict) -> pd.DataFrame:
     # return the filtered dataframe (i.e. the dataset without the excluded patients)
     return df
 
-
-
-def check_image_data_exists(config : dict, df : pd.DataFrame):
+def check_image_data_exists(config: dict, df: pd.DataFrame) -> pd.DataFrame:
     """
-    Checks whether the image files folder exists for each patient. Removes all patients what are missing image data files.
+    Removes patients from the dataframe who are missing image data files.
     Args:
-        df (pd.DataFrame): dataset dataframe
         config (dict): config parameters
-    Returns
-        df (pd.Dataframe): dataset dataframe without patients that are missing image data   
+        df (pd.DataFrame): dataset dataframe
+    Returns:
+        pd.DataFrame: dataframe without patients missing image data
     """
     patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
+    image_path = config['paths']['images']
+    available_dirs = set(os.listdir(image_path))
 
-    imagePath = config['paths']['images']
-    ptnDirectories = os.listdir(imagePath)
-
-    ptnClinList = df['PatientID'].tolist()
-    removePtnIDS = []
-    for i in range(len(ptnClinList)):
-        zerosPtnNmbr = str(ptnClinList[i]).rjust(patientID_length,'0')
-        if (ptnClinList[i] in ptnDirectories or zerosPtnNmbr in ptnDirectories):
-            pass
+    def has_image_data(patient_id):
+        if patient_id.isdigit():
+            padded_id = str(patient_id).rjust(patientID_length, '0')
         else:
-            # Not found --> remove
-            removePtnIDS.append(ptnClinList[i])
-    
-    print(f"Removed patients (no image data) = {len(removePtnIDS)}")
-    df = df[(df['PatientID'].isin(removePtnIDS)) == False]
+            padded_id = str(patient_id)
+        return str(patient_id) in available_dirs or padded_id in available_dirs
 
-    return df
+    mask = df['PatientID'].apply(has_image_data)
+    removed_count = (~mask).sum()
+    logging.info(f"Removed patients (no image data) = {removed_count}")
 
-
-# def load_dataset_single(csvPath, config, patient_ids = None):
-#     delimiterFound = get_delimiter(csvPath)
-#     dlDf = pd.read_csv(csvPath, delimiter=delimiterFound, dtype={'PatientID': str})
-
-#     return dlDf
-
-
+    return df[mask].reset_index(drop=True)
 
 def load_dataset(config : dict, modelCard = None):
     """
@@ -88,14 +70,14 @@ def load_dataset(config : dict, modelCard = None):
         df_train_val (pd.DataFrame): dataframe with the training and validation set patients
         df_test (pd.DataFrame): dataframe containing only the test set patients
     """
-
     patientID_col = PATIENT_ID_COL_NAME
     # load the dataset (patients are split by 'train_val'/'test') --> one dataframe
     dataset_csv_dir = os.path.join(config['paths']['csv'], config['data']['dataset_csv'])
 
     delimiterFound = get_delimiter(dataset_csv_dir)
     df_total = pd.read_csv(dataset_csv_dir, delimiter=delimiterFound, dtype={'PatientID': str})
-    # make sure the patientID strings are long enough
+    # make sure the patientID strings are long enough if the patient ids are digits
+
     patientID_length = PATIENT_ID_LENGTHS_DICT[config['data']['source']]
     df_total[patientID_col] = df_total[patientID_col].apply(lambda x: x.rjust(patientID_length, '0'))  # ['%0.{}d'.format(patient_id_length) % int(x) for x in df[patient_id_col]]
     
@@ -118,18 +100,15 @@ def load_dataset(config : dict, modelCard = None):
     test_size = df_test.shape[0]
     total_size = df_total.shape[0]
     logging.info(f"Train/Val dataset {train_size} ({train_size/total_size*100}%), Test dataset {test_size} ({test_size/total_size*100}%)")
-    if(modelCard != None):
+    if modelCard is not None:
         modelCard.insert(["training_data","number_of_patients"],total_size)
 
     # check patients not in same dataset
-    assert not PtnID_SanityCheck(config,df_train_val,df_test)
+    assert not has_patient_overlap(config,df_train_val,df_test)
 
     return df_train_val, df_test
 
-
-
-
-def generate_K_fold_cross_validation_splits(config : dict, df_development_set : pd.DataFrame):
+def generate_K_fold_cross_validation_splits(config : dict, df_development_set : pd.DataFrame) -> list:
     """
     Generates K train-val splits of the develoment dataset, using stratified K-Fold cross-validation.
     Returns a list of dictionaries, where each dictionary contains a train and a validation dataframe: [{'train': df_t1, 'val': df_v1}, ...]
@@ -142,8 +121,6 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
     # Check and validate if KFolds settings are active
     k_fold_dataframes_collection = []
 
-    # print("CONFIG N_SPLITS", config["data"]["kFolds"]["n_splits"])
-
     # if the config dictates only 1 n_split, then just do a single train-val split (i.e. no K-fold cross-validation)
     if config["data"]["kFolds"]["n_splits"] == 1:
         logging.warning("WARNING: K-Fold cross-validation is set to 1 split. This is equivalent to a single train-val split.")
@@ -151,7 +128,6 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
         train_i_df, val_i_df = generate_single_train_val_split(config, df_development_set)
                 
         k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
-        #return [generate_single_train_val_split(config, df_development_set)]
     
     else:
         if config["data"]["kFolds"]["split_strategy"] == 'stratified':
@@ -168,27 +144,18 @@ def generate_K_fold_cross_validation_splits(config : dict, df_development_set : 
         else:
             raise Exception("Exception: K-fold split strategy not recognized. Please check the configuration file.")
 
-
         for i, (train_index, val_index) in enumerate(k_fold_splits):
             # select the training and validation patients
             train_i_df = df_development_set.iloc[train_index]
             val_i_df   = df_development_set.iloc[val_index]
 
-            assert not PtnID_SanityCheck(config, train_i_df, val_i_df)
-
+            assert not has_patient_overlap(config, train_i_df, val_i_df)
             
             k_fold_dataframes_collection.append({"train": train_i_df, "val": val_i_df})
-
     
     return k_fold_dataframes_collection
 
-
-
-
-
-
-
-def generate_single_train_val_split(config, df_development_set):
+def generate_single_train_val_split(config, df_development_set : pd.DataFrame):
     """
     A function to split the development set into 1 train and 1 validation set (in case you want to train just one model)
     Args: 
@@ -220,64 +187,30 @@ def generate_single_train_val_split(config, df_development_set):
     train_df, val_df = train_test_split(df_development_set, test_size=config['data']['kFolds']['validation_size'], stratify=labels, random_state=config['general']['seed'])
     
     # ensure theres no overlap between the sets
-    assert not PtnID_SanityCheck(config, train_df, val_df)
+    assert not has_patient_overlap(config, train_df, val_df)
     
     return train_df, val_df
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def subsample_dataset(num_patients_sample, df_dataset):
+def subsample_dataset(num_patients_sample, df_dataset : pd.DataFrame) -> pd.DataFrame:
     """
     Subsample the datasets to that `num_patients_sample` are used in total.
     This is used for code-testing mode.
     """
-    # find the number of patients in each dataset, so that we can preserve the ratio of patients in each dataset (train, val, test)
-    n_total_loaded = df_dataset.shape[0]
+    # Shuffle the dataset, and then use the first `num_patients_sample` patients as the sample
     df_dataset = df_dataset.sample(frac=1, random_state=42).reset_index(drop=True) # shuffles the rows of the dataframe
-
-    # Only use `num_patients_sample` patients for training dataset
-    df_dataset = df_dataset.iloc[:int(num_patients_sample)]
+    df_dataset = df_dataset.iloc[:int(num_patients_sample)]  # take the sample 
     
     return df_dataset
 
 
-
-
-
-def Complete_SanityCheck(config,dfArray):
-    for i in range(len(dfArray) - 1):
-        for j in range(i + 1,len(dfArray)):
-            if(PtnID_SanityCheck(config,dfArray[i],dfArray[j])):
-                return True
-    return False           
-
-
-def PtnID_SanityCheck(config,df1,df2):
+def has_patient_overlap(config, df1 : pd.DataFrame, df2 : pd.DataFrame):
+    """
+    Check if there are any patients in both dataframes.
+    Args:
+        config (dict): config params
+        df1 (pd.DataFrame): first dataframe
+        df2 (pd.DataFrame): second dataframe
+    Returns:
+        bool: True if there is any patient overlap, False otherwise
+    """
     return any(df1[PATIENT_ID_COL_NAME].isin(df2[PATIENT_ID_COL_NAME]))

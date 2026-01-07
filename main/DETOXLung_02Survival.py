@@ -16,7 +16,7 @@ from src.training.train import train
 from src.utils.logging.logging import setup_logging
 from src.utils.parse_args import parse_args
 from src.utils.set_random_seed import set_random_seed
-from src.hyper_opt.hyperHandler import HyperTuning_Handler
+from pred_RT.src.hyper_opt.OptunaExperimentManager import OptunaExperimentManager
 from src.utils.fileHandler import create_file, create_textfile
 
 from src.evaluation.OLD_get_total_evaluation import get_total_evaluation
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     # MAIN: DL running class with hyperparameter optimization
 
     # TESTING WITHOUT CT
-    hyperClass = HyperTuning_Handler(config)
+    hyperClass = OptunaExperimentManager(config)
     hyperClass.Operate(config)
     hyperClass.Stop()
 

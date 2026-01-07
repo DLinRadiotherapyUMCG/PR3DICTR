@@ -5,7 +5,6 @@ import os
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 import numpy as np
 
-
 def concatenate_predictions(config, list_of_pred_dicts: list[dict], list_of_true_dicts: list[dict]):
     """
     Function to concatenate N dicts of numpy arrays of predictions and true labels into a single dict of numpy arrays.
@@ -35,8 +34,6 @@ def concatenate_predictions(config, list_of_pred_dicts: list[dict], list_of_true
 
     return all_y_pred_dict, all_y_true_dict
 
-
-
 def save_predictions(config: dict, LabelTypesManager, patient_ids: list[str], y_pred_list_dict: dict, y_true_list_dict: dict, mode_list: list[str], 
                      is_test_set:bool=False, ensemble_predictions: bool = False, filename: str = None):
 
@@ -56,8 +53,7 @@ def save_predictions(config: dict, LabelTypesManager, patient_ids: list[str], y_
 
     endpoint_list = config['columns']['labels']
 
-    all_label_column_names = config['saving']['label_column_names'] # LabelTypesManager.label_names_full_list
-    label_column_types = LabelTypesManager.label_types_full_list
+    all_label_column_names = config['saving']['label_column_names'] 
 
     # Initialize df
     df_patient_ids = pd.DataFrame(patient_ids, columns=['PatientID'])
@@ -70,7 +66,7 @@ def save_predictions(config: dict, LabelTypesManager, patient_ids: list[str], y_
         y_true = y_true_list_dict[endpoint]
 
         # Save to DataFrame
-        if config['model']['num_ohe_classes'] == 1:
+        if config['model']['output_head']['num_ohe_classes'] == 1:
             df_y_pred = pd.DataFrame(y_pred, columns=['{}_pred'.format(endpoint)])
 
             # check if this endpoint has just one column in the label, or multiple columns (e.g. event and days)
@@ -89,6 +85,4 @@ def save_predictions(config: dict, LabelTypesManager, patient_ids: list[str], y_
     output_file_dir = get_predictions_csv_dir(config, is_test_set, ensemble_predictions, filename=filename)
 
     df_y.to_csv(output_file_dir, sep=';', index=False)
-
-    print(output_file_dir, "saved with shape", df_y.shape)
 

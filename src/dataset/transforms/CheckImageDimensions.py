@@ -7,9 +7,6 @@ DtypeLike = Union[np.dtype, type, str, None]
 from monai.config.type_definitions import NdarrayOrTensor, NdarrayTensor
 from monai.utils.enums import TransformBackends
 
-
-
-
 class CheckImageDimensions(MapTransform):
     """
     Checks if the image data has the correct number of dimensions. If not, it adds a dimension at the start.
@@ -27,11 +24,8 @@ class CheckImageDimensions(MapTransform):
 
         self.desired_num_img_dims = desired_num_img_dims
         
-
-
     def __call__(self, data: Mapping[Hashable, NdarrayOrTensor]) -> dict[Hashable, NdarrayOrTensor]:
         d = dict(data)
-        #print(d)
         for key in self.key_iterator(d):
             
             num_dims = len(d[key].shape)

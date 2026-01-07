@@ -1,7 +1,5 @@
-import os    
-import torch
-import copy
-import pandas as pd
+import os
+import logging
 
 from src.utils.saving.saving_predictions import save_predictions
 from src.evaluation.mainMetricHandler import mainMetricHandler
@@ -10,12 +8,7 @@ from src.dataset.load_dataset import load_dataset
 from src.dataset.get_transforms import get_transforms
 from src.dataset.get_dataloader import make_dataloader
 from src.training.validate import validate
-from src.models.tools.save_model import load_model
-from src.evaluation.get_metric_function import get_metric_function
-from src.constants import METRIC_TYPES
-from src.evaluation.calculate_metric_for_multiple_endpoints import calculate_metric_for_multiple_endpoints
-from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe import get_predictions_and_labels_from_predictions_dataframe    
-
+from src.models.tools.load_model import load_model   
 from src.config_presets.tools.load_config import load_config
 from src.models.tools.get_classification_model import get_classification_model
 from src.evaluation.get_visualisations import get_visualizations
@@ -24,15 +17,25 @@ from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.dataset.LabelTypesManager import LabelTypesManager as LabelTypesManagerClass
 
 
-def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom\Projectline_HNC_modelling\Users\Luuk vd Hoek\Projects collection\Mini projects\SIMS\hnc-ensemble-master\results\Resnet_optimization_modtype3_2a_depth_newlabels\Trial_19/'): 
+def validate_models_on_test_set(main_config, trial_dir):
+    """
+    Validate all models from a given trial on the test set specified in the main config file.
+    Saves predictions, metrics and visualisations for each fold and for the ensemble of all folds.
+    Args:
+        main_config (dict): Main configuration dictionary containing settings for data, model, training, and evaluation.
+        trial_dir (str): Path to the directory containing the trial with model folds.
+    Returns:
+        None
+    """ 
+
     test_dataset_source = main_config['data']['source']
-    print(f"Validating models on {test_dataset_source} test set")
+    logging.info(f"Validating models on {test_dataset_source} test set")
     # Get paths to folds and config from the experiment
     folds = [f.path for f in os.scandir(trial_dir) if f.is_dir()] # This does asume all folders within a trial are folds
 
-    print(folds)
+    logging.info(f"Found folds: {folds}")
     config_path = os.path.join(folds[0], main_config['saving']['filenames']['config_yaml']) 
-    print(config_path)
+    logging.info(f"Loading config from: {config_path}")
     fold_config = load_config(config_path) # Gets the config folder from the first fold
     
     # Load data and helper functions
@@ -57,10 +60,9 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
     """
     # Generate and save predictions for each fold
 
-    print(folds)
+    logging.info(f"Found folds: {folds}")
     for fold_dir in folds:
-        #print(config_path)
-        print("Evaluating fold at: ", fold_dir)
+        logging.info(f"Evaluating fold at: {fold_dir}")
 
         config_path = os.path.join(fold_dir, main_config['saving']['filenames']['config_yaml']) 
         fold_config = load_config(config_path)
@@ -104,6 +106,8 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
     ENSEMBLE RESULTS
     """
 
+    logging.info(f"Calculating ensemble predictions from {len(folds)} folds")
+
     # Combine the test set results 
     for key in test_combined_preds.keys():
         # Divide the combined predictions by the number of folds
@@ -121,5 +125,7 @@ def validate_models_on_test_set(main_config, trial_dir = r'\\zkh\appdata\RTDicom
 
     # now create the visualisations
     get_visualizations(main_config, sets=['test'], pred_csv_dir=pred_csv_dir)
+
+    logging.info(f"Validation on test set complete.")
     
     

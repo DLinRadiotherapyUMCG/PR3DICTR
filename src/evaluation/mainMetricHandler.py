@@ -3,8 +3,6 @@ import numpy as np
 from src.evaluation.calculate_metric_for_multiple_endpoints import calculate_metric_for_multiple_endpoints
 from src.evaluation.get_metric_function import get_metric_function
 
-###
-
 class mainMetricHandler():
     """
     A class to handle the main metric calculation for the evaluation of the model.
@@ -19,7 +17,6 @@ class mainMetricHandler():
         self.set_metric_functions()
 
         self.LabelTypesManager = LabelTypesManager
-
 
     def set_metric_functions(self):
 
@@ -41,12 +38,10 @@ class mainMetricHandler():
     
         return mean_metric_value, results_dict
     
-
     def calculate_mixup_metric(self, y_pred_list_dict: dict, y_true_list_dict: dict, mixup_lambda_list, mixup_indices_list):
         # function to compute the metric values if MixUp augmentation is applied to the training set
         mixup_indices_list = mixup_indices_list.cpu().tolist()
         mixup_lambda_list = mixup_lambda_list.cpu().tolist()
-
 
         y_true_list_dict_A = y_true_list_dict
         y_true_list_dict_B = {k: [v[i] for i in mixup_indices_list] for k, v in y_true_list_dict.items()}
@@ -59,5 +54,3 @@ class mainMetricHandler():
         mean_metric_value, results_dict = calculate_metric_for_multiple_endpoints(self.config, y_pred, y_true, self.metric_functions, sample_weights=weights)
 
         return mean_metric_value, results_dict
-
-

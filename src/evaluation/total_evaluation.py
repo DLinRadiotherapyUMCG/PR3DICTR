@@ -10,8 +10,6 @@ from src.evaluation.utils.get_predictions_and_labels_from_predictions_dataframe 
 from src.utils.saving.get_predictions_csv_dir import get_predictions_csv_dir
 from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
-
-
 def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], is_test_set : bool = False, external_set: bool = False, pred_csv_dir: bool = None, lr: bool = False):
     """
     A function to calculate the evaluation metrics for the current fold. The current directory is assumed to be the fold directory in the config, but can be manually overwritten.
@@ -42,7 +40,6 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
 
         # Replace the placeholder with a call to the new function
         predictions_per_endpoint_dict, labels_per_endpoint_dict = get_predictions_and_labels_from_predictions_dataframe(config, df_fold_all_preds, set_name)
-
         metrics_to_calculate = config['evaluation']['metrics_list']
 
         # loop over the endpoint types
@@ -61,7 +58,7 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
                     if metric_name in metrics_to_calculate:
                                 
                         # get the metric function
-                        metric_function_dict = {endpoint_type : get_metric_function(metric_name)}            # TODO: this needs to become a dict of metric functions
+                        metric_function_dict = {endpoint_type : get_metric_function(metric_name)} 
 
                         # calculate the metric for each endpoint
                         mean_metric_value, results_dict = calculate_metric_for_multiple_endpoints(config, predictions_dict_for_endpoint_type, labels_dict_for_endpoint_type, metric_function_dict)
@@ -87,6 +84,5 @@ def total_evaluation_current_fold(config: dict, sets: list = ['train', 'val'], i
         filename = alter_filename_if_external_dataset(config, filename)
         combined_metrics_csv_dir = os.path.join(config['general']['resultsCurrentDirectory'], filename)
         combined_metrics_df.to_csv(combined_metrics_csv_dir, sep=";")
-
 
     logging.info(f"Total evaluation for current fold completed. Results saved in {config['general']['resultsCurrentDirectory']}")

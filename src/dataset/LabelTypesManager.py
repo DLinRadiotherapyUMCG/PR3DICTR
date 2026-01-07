@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 
-
 class LabelTypesManager(object):
     """
     A class to handle the label types in the dataset.
@@ -14,13 +13,9 @@ class LabelTypesManager(object):
         self.label_types = config['columns']['labels_types']
         self.event_time_unit = config['data']['event_endpoint_time_unit']  # e.g. "months", "days", "years"
         
-
         self.label_names_full_list, self.label_types_full_list = self.check_label_types(self.labels_list, self.label_types)
         
-
         self.endpoint_type_groups_indicies, self.endpoint_type_groups_names = self.seperate_endpoint_indicies(self.labels_list, self.label_types)
-
-        #print(self.endpoint_type_groups_indicies)
 
         # set the binary endpoint indicies for the labels tensors and the predictions tensors
         if "Binary" in self.endpoint_type_groups_indicies:
@@ -32,7 +27,6 @@ class LabelTypesManager(object):
             self.event_targets_indicies = self.endpoint_type_groups_indicies['Event']
             self.event_predictions_indicies = [i for i, t in enumerate(self.config['columns']['labels_types']) if t == "Event"]
 
-    
     def check_label_types(self, endpoint_list: list, label_types: list):
         """
         Check if the label types in the config match the endpoint list.
@@ -49,7 +43,6 @@ class LabelTypesManager(object):
             output_label_types = ['Binary', 'Binary', ('Event', 'Days'), ('Event', 'Days')]
 
         """
-
         output_endpoint_list = []
         output_label_types = []
         
@@ -59,17 +52,12 @@ class LabelTypesManager(object):
                 output_label_types.append("Binary")
             elif label_type == "Event":
                 # for event endpoints, we need to add the '_days' suffix and '_event' to the endpoint name
-                #output_endpoint_list.append(endpoint_name + "_event")
                 output_endpoint_list.append((f"{endpoint_name}_event", f"{endpoint_name}_{self.event_time_unit}"))
                 output_label_types.append(("Event", self.event_time_unit.capitalize()))
-                #output_label_types.append("Event")
-                #output_endpoint_list.append(endpoint_name + "_days")
             else:
                 raise ValueError(f"Invalid label type: {label_type}. Must be 'Binary' or 'Event'.")
         
-
         return output_endpoint_list, output_label_types
-
 
     def seperate_endpoint_indicies(self, endpoint_list, endpoint_types_list):
         """
@@ -96,16 +84,14 @@ class LabelTypesManager(object):
         endpoint_type_groups_indicies = defaultdict(list)
         endpoint_type_groups_names = defaultdict(list)
 
-
         idx = 0
+        
+        # Goes through the endpoint_list and endpoint_types_list to generate the endpoint_types_groups_names 
         for endpoint, endpoint_type in zip(endpoint_list, endpoint_types_list):
-        #print(endpoint_type)
             if 'Event' == endpoint_type:
                 endpoint_type_groups_indicies[endpoint_type].append([idx, idx + 1])     # NOTE: add two indicies; one for event and one for days
-            #endpoint_type_groups_indicies[endpoint_type].append(idx + 1)
             
                 endpoint_type_groups_names[endpoint_type].append(endpoint)
-            #endpoint_type_groups_names[endpoint_type].append(endpoint_list[idx + 1])
 
                 idx += 2
             else:

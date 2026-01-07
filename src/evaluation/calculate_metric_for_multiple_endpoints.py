@@ -46,4 +46,3 @@ def calculate_metric_for_multiple_endpoints(config: dict, y_pred_list_dict: dict
         mean_metric_value = None  # or 0.0, depending on your use case
 
     return mean_metric_value, results_dict
-

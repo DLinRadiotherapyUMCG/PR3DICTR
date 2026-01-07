@@ -7,15 +7,12 @@ from src.evaluation.metrics.utils import remove_missing, calc_bins
 from sklearn.metrics import brier_score_loss
 
 def brier(config, true, pred):
-    # true, pred = remove_missing(config,true,pred)
     return brier_score_loss(true, pred)
 
-def ECE(config, true, pred):
+def ECE(config, true, pred): # Expected callibration error 
     """
     Compute the ECE for a set of predictions and labels.
     """
-    #true, pred = remove_missing(config,true,pred)
-
     bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, bin_type="fixed")
 
     ECE = 0
@@ -24,12 +21,10 @@ def ECE(config, true, pred):
         ECE += (bin_sizes[i] / sum(bin_sizes)) * abs_conf_dif
     return ECE
 
-def MCE(config, true, pred):
+def MCE(config, true, pred): # Maximum calibration error
     """
     Compute the MCE for a set of predictions and labels.
     """
-    #true, pred = remove_missing(config,true,pred)
-
     bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, bin_type="fixed")
 
     MCE = 0
@@ -38,12 +33,11 @@ def MCE(config, true, pred):
         MCE = max(MCE, abs_conf_dif)
     return MCE
 
-def ACE(config, true, pred):
+def ACE(config, true, pred): # Adaptive calibration error
     """
-    Compute the ECE for a set of predictions and labels.
+    Compute the ACE for a set of predictions and labels.
     """
     num_bins = config['evaluation']['metrics']['calibration_bins']
-    #true, pred = remove_missing(config,true,pred)
 
     bins, _, bin_accs, bin_confs, bin_sizes = calc_bins(config, true, pred, bin_type="adaptive")
 

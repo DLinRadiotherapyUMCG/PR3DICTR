@@ -1,6 +1,3 @@
-"""
-Load data
-"""
 import os
 import json
 import math
@@ -9,77 +6,59 @@ import random
 import logging
 import numpy as np
 import pandas as pd
-from monai.data import Dataset, CacheDataset, PersistentDataset, GDSDataset, DataLoader, ThreadDataLoader, ThreadBuffer, SmartCacheDataset
+from monai.data import Dataset, CacheDataset, PersistentDataset, SmartCacheDataset
 from multiprocessing import Manager
-
 
 from src.dataset.LabelTypesManager import LabelTypesManager
 from src.dataset.transforms.MixUp import MixUp
-
-
+from src.dataset.PatientDataLoader import PatientDataLoader
+from src.dataset.utils.collect_metadata import collect_metadata
+from src.constants import PATIENT_ID_COL_NAME
 
 def prepare_data_dictionaries(config: dict, df: pd.DataFrame):
     """
-    Hehlper function that takes in a dataframe, and reformats it as a list of dictionaries
-    The dictionaries contain the patient's data, including the paths to the images and the clinical features. The dictionaries are used in the Dataset classes.
+    Reformats a dataframe into a list of patient dictionaries for Dataset classes.
     Args:
         config (dict): configuration object
-        df (pd.DataFrame): dataframe for this dataloader's (train, val or test) dataset
+        df (pd.DataFrame): dataframe for this dataloader's dataset
     Returns:
-        data_dicts (list of dicts): a list of dictionaries, where each dictionary is one patient
-        patient_ids_list (list): list of patientIDs in this dataset
+        data_dicts (list of dict): one dict per patient
+        patient_ids_list (list): patient IDs in this dataset
     """
-    patients_data_dir = config['paths']['images']
-    image_keys = config['data']['image_keys']
-    clinical_features_columns = config['columns']['clinical_features']
-    label_columns = config['columns']['labels']
+    patients_data_dir = config['paths']['images'] # Directory containing any volumetric data per patient
+    image_keys = config['data']['image_keys'] # Keys that indicate the different volumetric data 
+    clinical_features_columns = config['columns']['clinical_features'] # Keys related to the columns containing the clinical data to be used in the model
 
-    LabelManager = LabelTypesManager(config)  # create a LabelTypesManager object to handle the labels
-    label_columns = LabelManager.label_names_full_list  # get the full list of labels, (including event and days labels for event endpoints)
-
-    # Flatten label_columns in case it contains tuples
-    flattened_label_columns = []
-    for col in label_columns:
+    label_manager = LabelTypesManager(config) 
+    label_columns = []
+    # Add the keys related to the columns that contain the labels that are to be predicted by the model
+    for col in label_manager.label_names_full_list:
         if isinstance(col, (list, tuple)):
-            flattened_label_columns.extend(col)
+            label_columns.extend(col)
         else:
-            flattened_label_columns.append(col)
-    label_columns = flattened_label_columns
-    
-    
-    patient_ids_list = [str(patient_id) for patient_id in df['PatientID']]
+            label_columns.append(col)
 
-    features_list = [np.array([df[df['PatientID'] == patient_id][feature].values[0] for feature in
-                             clinical_features_columns]).astype(np.float32) \
-                            for patient_id in patient_ids_list]
+    patient_ids_list = df[PATIENT_ID_COL_NAME].astype(str).tolist() # Gets the PatientID's 
 
-    label_values_list = [np.array(df[df['PatientID'] == patient_id][label_columns].values[0]).astype(np.float32) \
-                            for patient_id in patient_ids_list]
-    
-    # make a dictionary for each patient's data
-    data_dicts = [
-            {
-            'features': feature_values,
-            'label_list': label_values,
-            'patient_id': patient_id
-            }
-            for patient_id, feature_values, label_values in zip(patient_ids_list, features_list, label_values_list)
-        ]
-    
-    # add each of the images we want to include (CT, RTDOSE, Segmentation map)
-    # this method makes it possible to not include one of them if we don't want to (I'm looking at you, segmentation map)
+    features_arr = df.set_index(PATIENT_ID_COL_NAME).loc[patient_ids_list, clinical_features_columns].values.astype(np.float32) # Gets the clinical data from the patients
+    labels_arr = df.set_index(PATIENT_ID_COL_NAME).loc[patient_ids_list, label_columns].values.astype(np.float32)  # Get the labels from the patients
+
+    data_dicts = [] # Organizes the in and output data per patient, with clinical feaures, labels, patient ids, and image paths
     for idx, patient_id in enumerate(patient_ids_list):
+        patient_dict = {
+            'features': features_arr[idx],
+            'label_list': labels_arr[idx],
+            'patient_id': patient_id
+        }
         for image_key in image_keys:
-            data_dicts[idx][image_key] = os.path.join(patients_data_dir, patient_id, image_key + ".npy")
-    
+            patient_dict[image_key] = os.path.join(patients_data_dir, patient_id, f"{image_key}.npy")
+        data_dicts.append(patient_dict)
+
     return data_dicts, patient_ids_list
-
-
 
 def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation_mode : bool = True):
     """
     Construct PyTorch Dataset object, and then DataLoader.
-
     CacheDataset: caches data in RAM storage. By caching the results of deterministic / non-random preprocessing
         transforms, it accelerates the training data pipeline.
     PersistentDataset: caches data in disk storage instead of RAM storage.
@@ -96,11 +75,16 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
         metadata (dict): dictioanry containing metadata about the input data (e.g. batch size or dimensions of the images)
     """
 
+<<<<<<< HEAD
     dataset_type = config['data']['dataloader']['dataset_type'] # if not validation_mode else 'cache'
     dataloader_type = config['data']['dataloader']['dataloader_type']        #'standard'
     batch_size = config['training']['batch_size'] if not validation_mode else 1
+=======
+    dataset_type = config['data']['dataloader']['dataset_type'] 
+    batch_size = config['training']['batch_size'] # if not validation_mode else 1
+>>>>>>> SIMS-D
     num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else config['data']['dataloader']['num_workers'] // 2
-    persistent_workers = True if num_workers > 0 else False#  config['data']['dataloader']['persistent_workers']
+    persistent_workers = True if num_workers > 0 else False
     drop_last = False
     pin_memory = True if num_workers > 0 else False
     
@@ -111,7 +95,6 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
         dataloader = None
         metadata = None
         return dataloader, metadata
-
 
     data_dict, patient_IDs_list = prepare_data_dictionaries(config, df_data)  # do some reformatting of the dataframe -> list of dictionaries
     update_dict = None
@@ -153,24 +136,14 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     data_ds = ds_class(**ds_args_dict)
     data_ds.patient_IDs_list = patient_IDs_list
     data_ds.df = df_data
-
-    # Define DataLoader class
-    from src.dataset.ToxDataLoader import ToxDataLoader
-    if dataloader_type in ['standard', None]:
-        dl_class = DataLoader
-    elif dataloader_type == 'thread':
-        dl_class = ThreadDataLoader
-    else:
-        raise ValueError('Invalid dataloader_type: {}.'.format(dataloader_type))
     
-    dl_class = ToxDataLoader
-
-    # Define Dataloader function arguments
+    # Define arguments for Dataloader class
     shuffle = False if validation_mode else True # the validation and test sets should not be shuffled, training should always be shuffled
 
     dl_args_dict = {'dataset': data_ds, 'batch_size': batch_size, 'shuffle': shuffle, 'sampler': None,
-                          'num_workers': num_workers, 'drop_last': drop_last, 'persistent_workers': persistent_workers,
-                          'pin_memory': pin_memory, "prefetch_factor": 2} #  }   # "prefetch_factor": 4,
+                    'num_workers': num_workers, 'drop_last': drop_last, 'persistent_workers': persistent_workers,
+                    #'multiprocessing_context': 'spawn',
+                    'pin_memory': pin_memory, "prefetch_factor": 2} #  }   # "prefetch_factor": 4,
     
     # if we want to perform mixup augmentation, we need to change the collate function 
     # (as mixup is a batch-level augmentation, it can't be done in the transforms)
@@ -179,28 +152,9 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     
     
     # Initialize DataLoader
-    dataloader = dl_class(**dl_args_dict) 
+    dataloader = PatientDataLoader(**dl_args_dict) 
 
-    # collect some metadata about the image dimensions, number of features, etc.
-    example_data = next(iter(dataloader))
-    
-    batch_size1, channels, depth, height, width = example_data['input'].shape
-    batch_size2, n_features = example_data['features'].shape
-    batch_size3, n_labels = example_data['label_list'].shape
-    
-    assert batch_size1 == batch_size2 == batch_size3 # all batch sizes should be the same
+    # collect some metadata about the dimensions of the dataset
+    metadata = collect_metadata(dataloader)
 
-    metadata = {
-        "channels": channels,
-        "depth": depth,
-        "height": height,
-        "width": width,
-        "n_features": n_features,
-        "n_labels": n_labels,
-    }
-    
     return dataloader, metadata
-
-
-
-

@@ -19,7 +19,7 @@ def adaptive_make_endpoint_plots(config, row_dicts, column_names, title=None, mo
 
     """
     n_bins = config['evaluation']['visualisations']['n_bins']
-    colours = ['tab:pink',  'tab:orange', 'tab:green', 'tab:grey', 'tab:blue', 'tab:orange', 'tab:brown', 'tab:cyan']
+    colours = ['tab:pink', 'tab:orange', 'tab:green', 'tab:grey', 'tab:blue', 'tab:orange', 'tab:brown', 'tab:cyan']
 
 
     # set the dimensions of the plot
@@ -34,7 +34,6 @@ def adaptive_make_endpoint_plots(config, row_dicts, column_names, title=None, mo
     if mode == "calibration":
         x_axis_label = "Predicted Rate"
         y_axis_label = "Observed Rate"
-        
     elif mode == "reliability":
         x_axis_label = "Confidence"
         y_axis_label = "Accuracy"

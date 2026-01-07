@@ -1,5 +1,3 @@
-import torch
-
 def calc_mixup_loss(output_dict, targets, loss_function, mixup_indexes, mixup_lambda):
     """
     Compute the loss for the mixup training strategy.

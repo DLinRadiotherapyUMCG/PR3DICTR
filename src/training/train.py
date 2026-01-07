@@ -1,21 +1,19 @@
 import gc
-import os
 import logging
-import pandas as pd
 import numpy as np
 import time
 import torch
-import wandb
 import copy
 from tqdm import tqdm
 
-
 from src.constants import DEVICE
+from src.utils.clear_cache import clear_cache
 from src.utils.optimizer.get_optimizer import get_optimizer
 from src.utils.scheduler.get_scheduler import get_scheduler
 from src.utils.move_batch_to_device import move_batch_to_device
 from src.training.validate import validate
-from src.models.tools.save_model import save_model, load_model
+from src.models.tools.save_model import save_model
+from src.models.tools.load_model import load_model 
 from src.training.utils.check_improvement import check_improvement
 
 from src.training.utils.collect_all_preds_and_labels import collect_all_preds_and_labels
@@ -55,8 +53,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
     # get the main metric with which to evaluate the training loop (e.g. AUC)
     metric_names_list = metricHandler.metric_names_list
-    temp_main_metric_name = "METRIC"                                                    # NOTE: this is a placeholder!!!!
-
 
     if config['training']['GradNorm']['isEnabled']:
         gradNorm = GradNorm(config = config,
@@ -76,7 +72,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         
     patience_counter = 0
     num_batches_per_epoch = len(train_loader)
-
 
     logging.debug(f'N training batches = {num_batches_per_epoch}')
     logging.debug(f'batch size = {config["training"]["batch_size"]}')
@@ -131,7 +126,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
             # plot model inputs
             if (config['saving']['plot_training_slices']['isEnabled']) and (epoch_num == 1 or epoch_num % config['saving']['plot_training_slices']['every_n_epochs'] == 0) and (batch_num == 1):
-                plot_model_inputs(config=config, plot_inputs=inputs, epoch=epoch_num)
+                plot_model_inputs(config=config, plot_inputs=inputs, epoch_number=epoch_num)
 
             # Make predictions
             outputs = model(x=inputs, features=clinical_features)
@@ -196,22 +191,21 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         for label in labels:
             train_loss_dict[label] = train_loss_dict[label] / num_batches_per_epoch
                 
-        logging.info(f'  Training   Loss={avg_loss:.5f}, {temp_main_metric_name}={train_metric_dict}')
-        results_log.update({f"train/mean_{temp_main_metric_name}" : train_mean_metric_value})
+        logging.info(f'  Training   Loss={avg_loss:.5f}, metrics={train_metric_dict}')
+        results_log.update({f"train/mean_metric" : train_mean_metric_value})
         results_log.update({'loss_train/mean_loss':avg_loss})
         
         for metric_name, (key, val) in zip(metric_names_list, train_metric_dict.items()):
             results_log.update({f"train/{key}_{metric_name}" : val})
             results_log.update({f"loss_train/{key}" : train_loss_dict[key]})
-        
-        
+
         
         # Perform validation
         if epoch_num % config['training']['validation_interval'] == 0:
             val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, _, _, _ = validate(config, model, loss_function, val_loader, metricHandler)
 
-            logging.info(f'  Validation Loss={val_loss_value:.5f}, {temp_main_metric_name}s={val_metric_dict}')
-            results_log.update({f"val/mean_{temp_main_metric_name}" : val_mean_metric_value})
+            logging.info(f'  Validation Loss={val_loss_value:.5f}, metrics={val_metric_dict}')
+            results_log.update({f"val/mean_metric" : val_mean_metric_value})
             results_log.update({f"loss_val/mean_loss" : val_loss_value})
 
             for metric_name, (key, val) in zip(metric_names_list, val_metric_dict.items()):
@@ -246,9 +240,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
 
     logging.info('Training complete!')
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-    gc.collect()
+    clear_cache()
 
     # Load the best model, and return it
     if config['saving']['best_model']: 
@@ -259,6 +251,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     return model
 
 
-
+    
 
 

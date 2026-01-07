@@ -59,9 +59,9 @@ class AsymmetricLossOptimized(nn.Module):
         if self.reduction == "none":
             pass
         elif self.reduction == "mean":
-            loss = loss.mean()
+            self.loss = self.loss.mean()
         elif self.reduction == "sum":
-            loss = loss.sum()
+            self.loss = self.loss.sum()
         else:
             raise ValueError(
                 f"Invalid Value for arg 'reduction': '{self.reduction} \n Supported reduction modes: 'none', 'mean', 'sum'"

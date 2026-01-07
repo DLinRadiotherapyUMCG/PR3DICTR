@@ -1,15 +1,8 @@
-from src.experiments.experimentHandler import experimentHandler
-
-import numpy as np
-import random
-import torch
-from monai.utils import set_determinism
 import copy
 import os
 
+from src.experiments.experimentHandler import experimentHandler
 from src.evaluation.validate_on_test_set import validate_models_on_test_set
-
-
 
 def run_input_removal_experiment(config, experiment_name):
     """
@@ -24,7 +17,6 @@ def run_input_removal_experiment(config, experiment_name):
 
     # these are all of the image keys mentioned in the config file (i.e. a list of what we need to loop through)
     all_image_keys = config['data']['image_keys']
-
     
     for image_key in all_image_keys:
         # make a deep copy of the config (probably not necessary, but just to be sure)

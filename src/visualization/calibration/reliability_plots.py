@@ -1,19 +1,8 @@
-import os
-from pathlib import Path
 import matplotlib.patches as mpatches
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn import metrics
-from matplotlib import gridspec
-from sklearn.calibration import calibration_curve
-#from src.utils.metrics.misc import make_colorlist
-#from src.eval.metrics.ECE import calc_bins, compute_ECE, compute_MCE
 from src.evaluation.metrics.utils import calc_bins
 from src.evaluation.metrics.calibration import ECE, MCE
 from src.evaluation.metrics.utils import remove_missing, threshold
-
-from src.visualization.calibration.kaplan_meier import make_row_kaplan_meier_plots
-
 
 
 

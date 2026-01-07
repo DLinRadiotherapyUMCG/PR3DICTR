@@ -1,5 +1,3 @@
-from src.experiments.experimentHandler import experimentHandler
-
 import numpy as np
 import random
 import torch
@@ -9,6 +7,7 @@ import os
 
 from src.utils.set_random_seed import set_random_seed
 from src.evaluation.validate_on_test_set import validate_models_on_test_set
+from src.experiments.experimentHandler import experimentHandler
 
 
 def get_single_tox_feature_set(endpoint):
@@ -28,10 +27,6 @@ def get_single_tox_feature_set(endpoint):
                               }
     
     return endpoint_features_dict[endpoint]
-
-
-
-
 
 def run_toxicity_combinations_experiment(config, experiment_name, endpoint_combinations_dict=None):
     """
@@ -60,7 +55,6 @@ def run_toxicity_combinations_experiment(config, experiment_name, endpoint_combi
         experiment_config = copy.deepcopy(config)
         set_random_seed(experiment_config['general']['seed'])
         
-
         experiment_config['columns']['labels'] = endpoints
         experiment_config['data']['stratify_on'] = endpoints
 

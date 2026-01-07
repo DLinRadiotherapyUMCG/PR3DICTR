@@ -29,7 +29,9 @@ def create_colormap(cmap_name, min_value, max_value, params=None, N=256):
         cmap = LinearSegmentedColormap.from_list("PET_cmap", cmap_name, N=N)
     else:
         cmap = mpl.cm.get_cmap(cmap_name, N)
+
     norm = Normalize(vmin=min_value, vmax=max_value)
+    
     return cmap, norm
 
 def rescale_data(data, min_val, max_val):
@@ -51,7 +53,9 @@ class ModalityPlotter:
         raise NotImplementedError
 
 class CTPlotter(ModalityPlotter):
+    """ Plotting strategy for CT images """
     def plot(self, axs, CT, slices, params, **kwargs):
+        # plot the CT image slices along this axis of subplots
         cmap, norm = create_colormap(
             params["cmap"], params["min_val"], params["max_val"], params
         )
@@ -59,13 +63,17 @@ class CTPlotter(ModalityPlotter):
             axs[i].imshow(CT[slice_n], cmap=cmap, norm=norm, interpolation='none')
 
 class PETPlotter(ModalityPlotter):
+    """ Plotting strategy for PET images """
     def plot(self, axs, PET, slices, params, **kwargs):
+        # plot the PET image slices along this axis of subplots
         cmap, norm = create_colormap(params["cmap"], params["min_val"], params["max_val"], params)
         for i, slice_n in enumerate(slices):
             axs[i].imshow(PET[slice_n], cmap=cmap, norm=norm, interpolation='none')
 
 class RTDOSEPlotter(ModalityPlotter):
+    """ Plotting strategy for RTDOSE images """
     def plot(self, axs, RTDOSE, slices, params, RTcmap, is_background=False, **kwargs):
+        # plot the RTDOSE image slices along this axis of subplots
         cmap, norm, levels = create_RTDOSE_cmap(RTcmap)
         levels = levels[1:]
         for i, slice_n in enumerate(slices):
@@ -80,7 +88,9 @@ class RTDOSEPlotter(ModalityPlotter):
                 axs[i].contour(slice_data, cmap=cmap, norm=norm, levels=levels, linewidths=1, origin="lower") # contours are coloured
 
 class RTSTRUCTPlotter(ModalityPlotter):
+    """ Plotting strategy for RTSTRUCT images """
     def plot(self, axs, RTSTRUCT, slices, params, is_background=False, **kwargs):
+        # plot the RTSTRUCT image slices along this axis of subplots
         cmap, norm = create_colormap(params["cmap"], params["min_val"], params["max_val"], params, N= params["max_val"] + 1)
         for i, slice_n in enumerate(slices):
             slice_data = RTSTRUCT[slice_n]
@@ -96,7 +106,9 @@ class RTSTRUCTPlotter(ModalityPlotter):
                 )
 
 class AttentionPlotter(ModalityPlotter):
+    """ Plotting strategy for Attention maps """
     def plot(self, axs, Attention, slices, params, global_att_max, **kwargs):
+        # plot the Attention map slices along this axis of subplots
         plot_min, plot_max = 0, global_att_max
         plot_cmap = params["cmap_abs"]
         cmap, norm = create_colormap(plot_cmap, plot_min, plot_max, params)
@@ -105,6 +117,7 @@ class AttentionPlotter(ModalityPlotter):
             axs[i].imshow(Attention[slice_n], cmap=cmap, norm=norm, alpha=alpha, interpolation='none')
 
 class EmptyPlotter(ModalityPlotter):
+    """ Plotting strategy for empty rows (i.e. no data to plot) """
     def plot(self, axs, _, __, params, color="black", **kwargs):
         for ax in axs:
             ax.set_facecolor(color)
@@ -163,10 +176,13 @@ def get_plotting_params(RT_region):
     except KeyError:
         raise ValueError(f"Unknown RT region: {RT_region}")
 
+
 def determine_colorbar_layer(layers_to_plot, colormap_layers):
+    # function to figure out which plotted layer should be used for the colorbar (i.e. the most important one)
     for lyr in colormap_layers:
         if lyr in layers_to_plot:
             return lyr
+
 
 def plot_slices(
     row_dicts,
@@ -176,6 +192,20 @@ def plot_slices(
     plotting_axis="axial",
     verbose=False,
 ):
+    """
+    Plots multiple rows of image slices with different modalities.
+    Args:
+        row_dicts (list of dict): each dict contains the different image modalities to plot for that row
+        slice_indexes (list of int): list of slice indexes to plot for each row 
+        title (str, optional): title for the entire figure
+        RT_region (str): region for which the RTDOSE colormap should be configured
+        plotting_axis (str): axis along which to plot the slices ('axial', 'sagittal', 'coronal')
+        verbose (bool): whether to print verbose output
+    Returns:
+        fig: matplotlib figure object
+        axs: list of axes in the figure
+    """
+    
     PLOTTING_PARAMS = get_plotting_params(RT_region)
     layer_plotting_order = ["CT", "PET", "RTDOSE", "RTSTRUCT", "GTV", "Attention"]
     colormap_layers = ["Attention", "RTDOSE", "PET", "CT", "GTV", "RTSTRUCT"]

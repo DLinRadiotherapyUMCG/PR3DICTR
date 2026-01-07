@@ -1,13 +1,8 @@
-from src.experiments.experimentHandler import experimentHandler
-
-import numpy as np
-import random
-import torch
-from monai.utils import set_determinism
 import copy
 import os
-from src.utils.set_random_seed import set_random_seed
 
+from src.utils.set_random_seed import set_random_seed
+from src.experiments.experimentHandler import experimentHandler
 from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
 
@@ -21,8 +16,6 @@ def get_single_tox_feature_set(endpoint):
                               }
     
     return endpoint_features_dict[endpoint]
-
-
 
 
 

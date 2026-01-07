@@ -1,13 +1,7 @@
-import numpy as np
-import random
-import torch
-from monai.utils import set_determinism
 import copy
-import os
 
 from src.utils.set_random_seed import set_random_seed, generate_random_seed
 from src.experiments.experimentHandler import experimentHandler
-
 
 
 def run_dataset_amounts_experiment(config, experiment_name, trial_seeds, dataset_amounts, disable_data_augmentation=True):

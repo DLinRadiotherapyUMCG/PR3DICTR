@@ -1,7 +1,21 @@
 import torch
 
-
 def collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, targets, outputs):
+    """
+    Function that collects all of the predictions and labels for each batch.
+    The preds_dict and labels_dict are updated with the 'targets' and 'outputs' from the current batch.
+    Args:
+        labels (list): a list of label names
+        label_types (list): a list of label types (e.g. 'Binary', 'Event')
+        preds_dict (dict): a dictionary of predictions for each label
+        labels_dict (dict): a dictionary of labels for each label
+        targets (torch.Tensor): the targets for the current batch
+        outputs (dict): a dictionary of model outputs for the current batch (for each label)
+    Returns:
+        preds_dict (dict): updated dictionary of predictions for each label
+        labels_dict (dict): updated dictionary of labels for each label
+    """
+
     sigmoid_act = torch.nn.Sigmoid()
     identity_act = torch.nn.Identity()
 

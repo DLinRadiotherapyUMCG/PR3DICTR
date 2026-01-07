@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 class Hill(nn.Module):
     r""" Hill as described in the paper "Robust Loss Design for Multi-Label Learning with Missing Labels "
@@ -32,7 +31,6 @@ class Hill(nn.Module):
         Returns:
             torch.Tensor: loss
         """
-
         # Calculating predicted probability
         logits_margin = input_logits - self.margin
         pred_pos = torch.sigmoid(logits_margin)
