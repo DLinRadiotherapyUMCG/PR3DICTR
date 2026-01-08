@@ -4,7 +4,7 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 
-from .rtdose_colormap import create_RTDOSE_cmap
+from .slice_plotters.rtdose_colormap import create_RTDOSE_cmap
 from .utils.rotate_image_dimensions import rotate_arrs_in_plotting_row_dicts
 import src.constants as constants
 

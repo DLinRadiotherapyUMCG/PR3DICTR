@@ -113,7 +113,7 @@ data:
       b_max: 1               # higher range to clip to
       clip: true             # whether or not to clip using the above-mentioned clipping ranges
       cmap: 'gray'           # colormap to use when plotting CT images  
-      cmap_title: 'HU'       # title for the colorbar when plotting CT images
+      legend_title: 'HU'       # title for the colorbar when plotting CT images
     rtdose:
       a_min: 0
       a_max: 8000
@@ -121,7 +121,7 @@ data:
       b_max: 1
       clip: true
       #cmap: 'gray'          
-      cmap_title: 'cGy'       
+      legend_title: 'cGy'       
     mri:              # example of how to scale an MRI image
       a_min: 0
       a_max: 12345
@@ -135,13 +135,16 @@ data:
       b_max: 1
       clip: true
       cmap: 'magma'
-      cmap_title: 'SUV'
+      legend_title: 'SUV'
     segmentation_map:      # value encoding of the structures in `segmentation_map.npy`, before feeding to model (set to 0 if don't want to include that structure)
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
-      outline_color: 'deeppink'
+      outline_color: 'deeppink'  # color to use for outlining the segmentation maps, when plotted over images (e.g. CT)
+      normalised_cmap: 'gray'  # colourmap to use for normalised model inputs (this is always used when the max value is >=1)
       linewidth: 2
       alpha: 0.8
-      cmap: 'nipy_spectral'
+      # cmap can be either a matplotlib colormap name (string) or a list of color names (the latter of which is handy when you only want to plot certain structures distinctly):
+      # empty cmap colour names ('') will be transparent when plotting
+      cmap: ['black', '', 'pink', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'gold', 'tab:olive', 'tab:cyan', 'gold', 'deepskyblue', 'crimson', 'lime', 'navy', 'magenta', 'darkorange', 'darkviolet'] # 'turbo'
     gtv_total:
       target_labels: [0.0, 1.0]  # target labels for the GTV total segmentation map (0 = no GTV, 1 = GTV present)
       outline_color: 'red'
