@@ -28,7 +28,7 @@ class RTSTRUCTPlotter(ModalityPlotter):
 
         self.norm = Normalize(vmin=min_val, vmax=max_val)
         levels = np.arange(min_val, max_val + 1)
-        self.norm = BoundaryNorm(boundaries=np.arange(min_val, max_val+2), ncolors=len(levels))
+        self.norm = BoundaryNorm(boundaries=np.arange(min_val, max_val+1), ncolors=len(levels))
 
         if isinstance(cmap_source, list):
             colors_list = [self.cmap(self.norm(i)) for i in range(0, max_val)]
