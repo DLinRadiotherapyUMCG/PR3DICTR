@@ -98,6 +98,9 @@ def plot_slices(
     layer_plotting_order = [l.lower() for l in layer_plotting_order]
     colormap_layers = [l.lower() for l in colormap_layers]
 
+    print("layer_plotting_order", layer_plotting_order)
+    print("colormap_layers", colormap_layers)
+
     slice_count = len(slice_indexes)
     row_count = len(row_dicts)
 

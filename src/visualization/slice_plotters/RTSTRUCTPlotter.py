@@ -3,6 +3,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.colors import LinearSegmentedColormap, Normalize, BoundaryNorm, ListedColormap
+import copy 
 
 from .ModalityPlotter import ModalityPlotter    
 
@@ -62,7 +63,7 @@ class RTSTRUCTPlotter(ModalityPlotter):
 
         # plot the RTSTRUCT image slices along this axis of subplots
         for i, slice_n in enumerate(slices):
-            slice_data = RTSTRUCT[slice_n].copy()
+            slice_data = copy.deepcopy(RTSTRUCT[slice_n])
             slice_data[np.isin(slice_data, self.empty_indices)] = 0  # set empty indices to background (0)
             if is_background:
                 axs[i].imshow(slice_data, cmap=self.cmap_w_background, norm=self.norm_w_background, interpolation='none')
@@ -72,3 +73,5 @@ class RTSTRUCTPlotter(ModalityPlotter):
                     mask = slice_data == label
                     if np.any(mask):
                         axs[i].contour(mask, levels=[0.5], colors=[self.cmap(self.norm(label))], linewidths=2, alpha=1)
+
+            del slice_data

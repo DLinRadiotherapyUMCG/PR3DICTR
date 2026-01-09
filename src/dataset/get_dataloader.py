@@ -75,15 +75,9 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
         metadata (dict): dictioanry containing metadata about the input data (e.g. batch size or dimensions of the images)
     """
 
-<<<<<<< HEAD
-    dataset_type = config['data']['dataloader']['dataset_type'] # if not validation_mode else 'cache'
-    dataloader_type = config['data']['dataloader']['dataloader_type']        #'standard'
-    batch_size = config['training']['batch_size'] if not validation_mode else 1
-=======
     dataset_type = config['data']['dataloader']['dataset_type'] 
     batch_size = config['training']['batch_size'] # if not validation_mode else 1
->>>>>>> SIMS-D
-    num_workers = config['data']['dataloader']['num_workers'] if not validation_mode else config['data']['dataloader']['num_workers'] // 2
+    num_workers = 4 # config['data']['dataloader']['num_workers'] if not validation_mode else config['data']['dataloader']['num_workers'] // 2
     persistent_workers = True if num_workers > 0 else False
     drop_last = False
     pin_memory = True if num_workers > 0 else False
@@ -143,7 +137,7 @@ def make_dataloader(config : dict, df_data: pd.DataFrame, transforms, validation
     dl_args_dict = {'dataset': data_ds, 'batch_size': batch_size, 'shuffle': shuffle, 'sampler': None,
                     'num_workers': num_workers, 'drop_last': drop_last, 'persistent_workers': persistent_workers,
                     #'multiprocessing_context': 'spawn',
-                    'pin_memory': pin_memory, "prefetch_factor": 2} #  }   # "prefetch_factor": 4,
+                    'pin_memory': pin_memory} #  }   # "prefetch_factor": 4,
     
     # if we want to perform mixup augmentation, we need to change the collate function 
     # (as mixup is a batch-level augmentation, it can't be done in the transforms)

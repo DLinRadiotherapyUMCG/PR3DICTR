@@ -79,10 +79,10 @@ def plot_model_inputs(config, plot_inputs, epoch_number):
 
         for image_channel_idx, image_modality_name in enumerate(config['data']['image_keys']):
 
-            image_modality_name = image_modality_name.upper()
+            #image_modality_name = image_modality_name.upper()
 
-            if image_modality_name == "SEGMENTATION_MAP":
-                image_modality_name = "RTSTRUCT"
+            # if image_modality_name == "SEGMENTATION_MAP":
+            #     image_modality_name = "RTSTRUCT"
             
             # get the image out of the tensor
             image = plot_inputs[patient_idx][image_channel_idx].cpu()
@@ -93,6 +93,7 @@ def plot_model_inputs(config, plot_inputs, epoch_number):
                         f"{image_modality_name}": scaled_image.float()}
             plotting_rows_dicts.append(row_dict)
 
+        print(config['data']['image_keys'])
 
         fig, axes = plot_slices(config, plotting_rows_dicts, slices, RT_region=config['general']['region'])  # , title=f"{patient_id} slices")
         

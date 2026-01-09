@@ -3,7 +3,7 @@ general:
   seed: 42
   firstRun: false
   experiment_name: 'Xerostomia_M06'
-  trialNumber: "no images"
+  trialNumber: "test_run"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
   testMode: False
   use_test_set: false
@@ -60,7 +60,7 @@ data:
   image_num_dimensions: 3
 
   dataloader:
-    num_workers: 8           # number of workers (cores) to use for data loading in each training batch
+    num_workers: 4           # number of workers (cores) to use for data loading in each training batch
   
   preprocessing:
     isEnabled: true
@@ -118,7 +118,7 @@ data:
 
 training:
   max_epochs: 100
-  batch_size: 16
+  batch_size: 8
   validation_interval: 1
   stopping_criteria: "loss"   # ['loss', 'metric']    # which criteria to use for early stopping
   patience: 10                                        # early stopping patience
@@ -131,7 +131,7 @@ training:
     momentum: 0.00 # 9   # for SGD
   
   loss:
-    name: "BCE"
+    name: "focal"
     reduction: "none"
     BCE:
       pos_weight: [1]  # either a list, or a single value for all labels, or "auto" to calculate automatically
@@ -179,9 +179,9 @@ saving:
   config: True
   best_model: True
   plot_training_slices:
-    isEnabled: False
+    isEnabled: True
     folder_name: 'figures'
-    every_n_epochs: 50
+    every_n_epochs: 1
     n_patients_per_epoch: 1
     n_slices_per_patient: 8
 

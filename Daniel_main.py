@@ -21,14 +21,23 @@ import random
 import torch
 from monai.utils import set_determinism
 
+CUDA_LAUNCH_BLOCKING=1
+
 if __name__ == '__main__':
+
+    # Clear torch cache
+    import torch
+    torch.cuda.init()
+    
+    torch.cuda.empty_cache()
+    torch.cuda.ipc_collect()
 
     # Setup
     log_level = parse_args()
     setup_logging(log_level)
 
     # Load the config
-    config = get_config('Daniel/SPARK.yaml')
+    config = get_config('Xerostomia_model')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
