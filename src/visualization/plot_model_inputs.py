@@ -75,10 +75,8 @@ def plot_model_inputs(config, plot_inputs, epoch_number):
         num_slices = plot_inputs[patient_idx][0].shape[0]
         num_plot_slices = config['saving']['plot_training_slices']['n_slices_per_patient']
         slices = list(range(0, num_slices, num_slices // (num_plot_slices + 1)))[1:-1]
-
-
+        
         for image_channel_idx, image_modality_name in enumerate(config['data']['image_keys']):
-
             #image_modality_name = image_modality_name.upper()
 
             # if image_modality_name == "SEGMENTATION_MAP":
@@ -92,8 +90,6 @@ def plot_model_inputs(config, plot_inputs, epoch_number):
             row_dict = {"Label" : image_modality_name,
                         f"{image_modality_name}": scaled_image.float()}
             plotting_rows_dicts.append(row_dict)
-
-        print(config['data']['image_keys'])
 
         fig, axes = plot_slices(config, plotting_rows_dicts, slices, RT_region=config['general']['region'])  # , title=f"{patient_id} slices")
         

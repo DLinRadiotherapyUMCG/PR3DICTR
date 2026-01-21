@@ -3,24 +3,29 @@ general:
   seed: 42                             # random seed
   firstRun: false                      # if this is the first run of this experiment (# if True, makes new experiment folder)
   experiment_name: 'Base_Experiment'   # name of the experiment folder (contains all trial folders)
-  trialNumber: "Trial_0"               # name of the trial folder (contains fold folders)
+  trialNumber: "Trial_?"               # name of the trial folder (contains fold folders)
   resultsCurrentDirectory: ""          # current working directory
   testMode: False                      # if testing the code (e.g. less patients, or less epochs, etc.)
   use_test_set: False                  # if the test dataset should be loaded
   dataset_amounts_experiment: False    # whether the dataset_amounts_experiment is being performed using bootstrapping
 
 columns:
-  labels: ["Xerostomia_M06", "OS"]           # the endpoints the model is (going to be) trained on (list)
-  labels_types: ["Binary", "Event"]
-  clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Sex", "Age"]  # Clinical features to insert into the model (list)
+  labels: ["Xerostomia_M06"]           # the endpoints the model is (going to be) trained on (list)
+  labels_types: ["Binary"]
+  clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Geslacht", "Leeftijd"]  # Clinical features to insert into the model (list)
 
 paths:
-  csv: "PATH TO FOLDER CONTAINING CSV FILE"  # directory to folder containing the dataset csv
-  images: "PATH TO FOLDER CONTAINING IMAGES"             # directory to the folder containing the patient images (numpy files)
-  results: "PATH TO FOLDER TO SAVE RESULTS INTO" # directory for where you want to save the results
+  # csv: "/home/ai_in_rt/Documents/PRIMA_spreadsheets"  # directory to folder containing the dataset csv
+  # images: "/home/ai_in_rt/Documents/PRIMA_images/dataset_full_2mm_anonymized"             # directory to the folder containing the patient images (numpy files)
+  # results: "/home/ai_in_rt/Documents/results"      # directory for where you want to save the results
+
+  csv: /home/macraedc/data/
+  images: /home/macraedc/data/dataset_full_renamed # dataset_full_2mm_anonymized
+  results: /home/macraedc/SPARK_benchmark
 
 model:
-  model_name: "resnet"            # model architecture ['cnn', 'resnet', 'densenet', 'ViT', 'TransRP', etc.]
+  model_name: "densenet"            # model architecture ['cnn', 'resnet', 'densenet', 'ViT', 'TransRP', etc.]
+  # general model params
   output_head:
     name: "multilabel"        # output module name (i.e. linear layers type)   ['multitox', ]
     # Linear layer params (output head)
@@ -76,90 +81,52 @@ model:
     pooling_size: 2                      # size of the pooling
     normalization: 'batch'               # which normalisation method to use ['batch', 'instance']
     
-  # general model params
-  lrelu_alpha: 0.1         # leaky ReLu value for the convolutional layers
-  dropout_p: 0.1           # dropout probability 
-  use_bias: True           # whether or not to use a bias term in the conv. layers
-  
-
 data:
-  source: 'UMCG'                                     # the source of the dataset you are using (change this for external validation, see constants.py) # ['PRIMA', 'UMCG', 'MDACC']
-  dataset_csv: 'dataset.csv'                         # name of the csv containing the IDs, clinical features, and endpoints
+  source: 'PRIMA'                                     # the source of the dataset you are using (change this for external validation, see constants.py) # ['PRIMA', 'UMCG', 'MDACC']
+  dataset_csv: 'MT_dataset_with_all_structs_no_missing.csv'    # name of the csv containing the IDs, clinical features, and endpoints
   stratify_on: []                                    # which column names to use in stratified sampling (list of strings)
   excluded_variable_name: [] # ExcludedVar           # column name of variable to exlude patients by
   excluded_values: [] # ExcludedValue                # values of ^this^  variable to exclude patients by
   image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
   image_num_dimensions: 3                            # dimension of each image (each image is 3D, so this is = 3)
   n_training_patients_list: []                       # list of number of patients to use for training (only used if 'dataset_amounts_experiment'=True)
-  event_endpoint_time_unit: "months"  # time unit for the event endpoints (e.g. "days", "months", "years"), should match the time unit in the dataset column names
 
   dataloader:
     dataset_type: 'cache'              # ['standard', 'cache', 'smartcache'] # cache: loads all data into RAM for faster training, smartcache: loads a fraction of data into memory
-    num_workers: 8                     # number of workers (cores) to use for data loading in each training batch
+    num_workers: 16                     # number of workers (cores) to use for data loading in each training batch
     smartcache:
       cache_rate: 0.5                  # what fraction of the dataset should be kept in the RAM 
       num_replace_workers: 4           # number of workers to replace cache with
 
   preprocessing:
-    isEnabled: true                   # whether or not preprocessing steps should be applied to the image data files
+    isEnabled: false                   # whether or not preprocessing steps should be applied to the image data files
     crop: true                         # if the image files need cropping
-    crop_shape: [96, 96, 96]           # dimension to crop to
-    needs_scaling: ["ct", "rtdose", 'pet'] # , 'mri']         # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
-    needs_label_mapping: ["segmentation_map", "gtv_total"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
+    crop_shape: [96, 192, 192] # 96, 96]           # dimension to crop to
+    needs_scaling: ["ct", "rtdose", 'mri']  # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
+    needs_label_mapping: ["segmentation_map"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
     ct: 
       a_min: -200            # lowest range to clip from
       a_max: 400             # highest range to clip from
       b_min: 0               # lowest range to clip to
       b_max: 1               # higher range to clip to
       clip: true             # whether or not to clip using the above-mentioned clipping ranges
-      cmap: 'gray'           # colormap to use when plotting CT images  
-      legend_title: 'HU'       # title for the colorbar when plotting CT images
     rtdose:
       a_min: 0
       a_max: 8000
       b_min: 0
       b_max: 1
       clip: true
-      #cmap: 'gray'          
-      legend_title: 'cGy'       
     mri:              # example of how to scale an MRI image
       a_min: 0
       a_max: 12345
       b_min: 0
       b_max: 1
-      clip: true
-    pet:             # example of how to scale a PET image
-      a_min: 0
-      a_max: 25      # SUV units
-      b_min: 0
-      b_max: 1
-      clip: true
-      cmap: 'magma'
-      legend_title: 'SUV'
-    mandible_dose:              # example of how to scale an MRI image
-      a_min: 0
-      a_max: 8000
-      b_min: 0
-      b_max: 1
-      clip: true
     segmentation_map:      # value encoding of the structures in `segmentation_map.npy`, before feeding to model (set to 0 if don't want to include that structure)
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
-      outline_color: 'deeppink'  # color to use for outlining the segmentation maps, when plotted over images (e.g. CT)
-      normalised_cmap: 'gray'  # colourmap to use for normalised model inputs (this is always used when the max value is >=1)
-      linewidth: 2
-      alpha: 0.8
-      # cmap can be either a matplotlib colormap name (string) or a list of color names (the latter of which is handy when you only want to plot certain structures distinctly):
-      # empty cmap colour names ('') will be transparent when plotting
-      cmap: ['black', '', 'pink', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'gold', 'tab:olive', 'tab:cyan', 'gold', 'deepskyblue', 'crimson', 'lime', 'navy', 'magenta', 'darkorange', 'darkviolet', 'cyan'] # 'turbo'
-    gtv_total:
-      target_labels: [0.0, 1.0]  # target labels for the GTV total segmentation map (0 = no GTV, 1 = GTV present)
-      outline_color: 'red'
-      linewidth: 2
-      alpha: 0.8
-      cmap: 'PuRd'
+
   kFolds:
     n_splits: 5           # the number of data splits to make
-    n_iterations: 5       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
+    n_iterations: 1       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')
     validation_size: 0.2  # if only 1 split; this is the size of the validation set, the rest goes to training set
     split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
     
@@ -195,8 +162,8 @@ data:
       alpha: 1.0           # alpha value for MixUp
 
 training:
-  max_epochs: 200            # max number of epoch to train for
-  batch_size: 8              # training batch_size
+  max_epochs: 3            # max number of epoch to train for
+  batch_size: 4              # training batch_size
   validation_interval: 1     # validate after X training epochs
   stopping_criteria: "loss"  # What criteria to use for early stopping ['loss', 'metric']
   patience: 20               # early stopping patience
@@ -249,38 +216,15 @@ evaluation:
     threshold: 'YoudenJ'  # how to define the classification metrics threshold
     calibration_bins: 10  # number of bins to use in the calibration metrics
   visualisations: 
-    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve', 'kaplan_meier'] # which plots to save per fold
+    list: ['calibration', 'reliability', 'confusion_matrix', 'roc_curve'] # which plots to save per fold
     n_bins: 10            # nunber of bins to use in the calibration and reliability plot
-    kaplan_meier_max_timepoint: 60  # maximum time point to show in the Kaplan-Meier plot
-
-
-
-uncertainty:
-  seed: 42                        # random seed for uncertainty estimation
-  method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
-  metric: 12345
-  deep_ensemble:
-    n_models: 10
-  MC_dropout:
-    n_forward_passes: 50          # number of forward passes to perform for each model in the ensemble
-    dropout_p: 0.2 
-  TTA:
-    n_forward_passes: 50
-  dataset_split:
-    n_splits: 1                   # the number of data splits to make
-    validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
-    split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
-    
-
-
-
 
 hyperparam_tuning:
   WandB:
-    isEnabled: false                   # whether or not to log to Weights & Biases
-    API_Key: "INSERT API KEY HERE"     # WandB API key of your account
+    isEnabled: true
+    API_Key: "c7f0f65fac8b7178ad7c5859ba6114775b16e694"
   optuna:
-    isEnabled: True                    # perform hyperparameter tuning
+    isEnabled: False                    # perform hyperparameter tuning
     objectives: ["val_mean_AUC"]       # which metrics to optimise on (can be multi-objective)
     objective_direction: ["maximize"]  # direction to optimise each metric in. must be the same length (and order) as objectives
     n_trials: 100                      # number of trials to perform
@@ -299,6 +243,17 @@ hyperparam_tuning:
 
 
 
+uncertainty:
+  seed: 42                        # random seed for uncertainty estimation
+  method: 'DeepEnsemble'          # method to use for uncertainty estimation ['MC_dropout', 'DeepEnsemble', 'TTA']  
+  metric: 12345
+  deep_ensemble:
+    n_models: 5
+  dataset_split:
+    n_splits: 1                   # the number of data splits to make
+    validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
+    split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
+
 
 saving:
   config: True               # whether to save the config as a .yaml fule
@@ -309,21 +264,12 @@ saving:
     every_n_epochs: 50       # make a plot of the first batch every N epochs
     n_patients_per_epoch: 1  # how many patients to plot from a batch
     n_slices_per_patient: 8  # how many slices to plot per patient
-    layer_plotting_order: ["CT", "PET", "RTDOSE", "mandible_dose", "RTSTRUCT", "segmentation_map", "GTV", "Attention"] # the order in which to plot the layers
-    colormap_layers: ["Attention", "RTDOSE", "PET", "CT", "GTV", "RTSTRUCT", "segmentation_map", "mandible_dose"] # priority list for colourmaps per row (first is most important)
   
   filenames:
     model_summary: "model_summary.txt"    # filename of the model summary
     config_yaml: "DlModel_Config.yaml"    # filename of the config to save
     model_weights: "DlModel_Weights.pth"  # filename of the (best) model weights
-    library_dependencies_file: "library_dependencies.txt"
     predictions_csv: "model_predictions.csv"  # filename of the predictions on the train/val sets
     test_set_predictions_csv: "test_set_predictions.csv"   # filename of the predictions in the test set (external validation set source are appended to this, e.g. "_MDACC.csv")
     ensemble_predictions_csv: "ensemble_predictions.csv"   # filename of the ensemble predictions
       
-  ModelCard:
-    isEnabled: True
-    saveLocation : 'C:/Users/WalR/OneDrive - UMCG/Documents/Modelcards/'
-    loaded_projectcard_filename : 'projectdetails_card'
-    saved_modelcard_filename : 'autogenerated_card'
-

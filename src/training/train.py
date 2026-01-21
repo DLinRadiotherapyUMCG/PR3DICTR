@@ -199,10 +199,13 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             results_log.update({f"train/{key}_{metric_name}" : val})
             results_log.update({f"loss_train/{key}" : train_loss_dict[key]})
 
+            results_log.update({f'loss_train/min_pred_{key}' : np.min(out_tot[key])})
+            results_log.update({f'loss_train/max_pred_{key}' : np.max(out_tot[key])})
+
         
         # Perform validation
         if epoch_num % config['training']['validation_interval'] == 0:
-            val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, _, _, _ = validate(config, model, loss_function, val_loader, metricHandler)
+            val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, val_preds_dict, _, _ = validate(config, model, loss_function, val_loader, metricHandler)
 
             logging.info(f'  Validation Loss={val_loss_value:.5f}, metrics={val_metric_dict}')
             results_log.update({f"val/mean_metric" : val_mean_metric_value})
@@ -211,6 +214,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             for metric_name, (key, val) in zip(metric_names_list, val_metric_dict.items()):
                 results_log.update({f"val/{key}_{metric_name}" : val})
                 results_log.update({f"loss_val/{key}" : val_loss_dict[key]})
+
+                results_log.update({f'loss_val/min_pred_{key}' : np.min(val_preds_dict[key])})
+                results_log.update({f'loss_val/max_pred_{key}' : np.max(val_preds_dict[key])})
 
             # check if the model has improved on this epoch
             best_value, improved = check_improvement(config, val_loss_value, val_mean_metric_value, best_value)
