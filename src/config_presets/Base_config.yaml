@@ -130,11 +130,11 @@ data:
       clip: true
     pet:             # example of how to scale a PET image
       a_min: 0
-      a_max: 25      # SUV units
+      a_max: 15      # SUV units
       b_min: 0
       b_max: 1
       clip: true
-      cmap: 'magma'
+      cmap: 'hot'
       legend_title: 'SUV'
     mandible_dose:              # example of how to scale an MRI image
       a_min: 0

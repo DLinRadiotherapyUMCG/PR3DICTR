@@ -108,7 +108,7 @@ class TransRP_ViT(nn.Module):
         self.img_size  = img_size
         self.patch_num  = int((img_size[0] / patch_size[0] )* (img_size[1] / patch_size[1]) * (img_size[2] / patch_size[2]))
 
-        config["model"]["output_head"]["name"] = "multitox"
+        config["model"]["output_head"]["name"] = "multilabel"
 
         # if self.clinical_features_method == "m3" and self.n_features > 0:   # join the clinical features only in the linear layers at the very end
         #     self.linear_layers = MultiToxOutputHead(config, n_features)
