@@ -2,6 +2,10 @@ import logging
 import os
 import src
 import wandb
+import numpy as np 
+import torch
+import matplotlib.pyplot as plt
+from torch.utils.data import DataLoader
 
 from src.constants import DEVICE
 
@@ -17,16 +21,10 @@ from src.hyper_opt.OptunaExperimentManager import OptunaExperimentManager
 from src.utils.fileHandler import create_file
 from sklearn.metrics import roc_auc_score
 from src.utils.move_batch_to_device import move_batch_to_device
-
 from src.models.tools.get_classification_model import get_classification_model
 
-from torch.utils.data import DataLoader
 
-import numpy as np 
 
-import torch
-
-import matplotlib.pyplot as plt
 
 def sigmoid(x):
     return 1/(1+np.exp(-x))
@@ -137,6 +135,8 @@ def CITOR_refit(config, toxicity = 'sticky_saliva_late'):
     print('auc:',auc)
     
     return features, coef
+
+
 
 if __name__ == '__main__':
     # Setup

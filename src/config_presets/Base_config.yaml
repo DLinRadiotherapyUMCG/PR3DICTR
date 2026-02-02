@@ -130,11 +130,11 @@ data:
       clip: true
     pet:             # example of how to scale a PET image
       a_min: 0
-      a_max: 25      # SUV units
+      a_max: 20      # SUV units
       b_min: 0
       b_max: 1
       clip: true
-      cmap: 'magma'
+      cmap: 'hot'
       legend_title: 'SUV'
     segmentation_map:      # value encoding of the structures in `segmentation_map.npy`, before feeding to model (set to 0 if don't want to include that structure)
       target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
@@ -144,7 +144,7 @@ data:
       alpha: 0.8
       # cmap can be either a matplotlib colormap name (string) or a list of color names (the latter of which is handy when you only want to plot certain structures distinctly):
       # empty cmap colour names ('') will be transparent when plotting
-      cmap: ['black', '', 'pink', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'gold', 'tab:olive', 'tab:cyan', 'gold', 'deepskyblue', 'crimson', 'lime', 'navy', 'magenta', 'darkorange', 'darkviolet', 'cyan'] # 'turbo'
+      cmap: 'nipy_spectral' # ['black', '', 'pink', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'gold', 'tab:olive', 'tab:cyan', 'gold', 'deepskyblue', 'crimson', 'lime', 'navy', 'magenta', 'darkorange', 'darkviolet', 'cyan'] # 'turbo'
     gtv_total:
       target_labels: [0.0, 1.0]  # target labels for the GTV total segmentation map (0 = no GTV, 1 = GTV present)
       outline_color: 'red'

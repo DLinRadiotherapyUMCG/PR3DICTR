@@ -38,6 +38,8 @@ def calibration_subplot(config, ax, y_pred_all, y_true_all, colour, n_bins=10):
     #label = model_name
 
     ax.plot([0,1], [0,1], "black", label="Ideal") # plot the ideal line
+
+    print(n_bins, len(bin_accs), len(bin_confs))
     
     #ax.plot(mean_predicted_value, fraction_of_positives, shape, label=label, color=colour)
     ax.plot(bin_confs, bin_accs, shape, color=colour)
