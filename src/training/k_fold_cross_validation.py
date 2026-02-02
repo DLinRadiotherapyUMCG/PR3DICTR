@@ -63,6 +63,20 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
     # load the data, and make K-fold splits
     df_train_val, df_test = load_dataset(config)
     k_fold_dataframes_list = generate_K_fold_cross_validation_splits(config, df_train_val)
+
+    if config['training']['loss']['BCE']['pos_weight'] == 'auto':
+        # automatically set the pos_weight for the BCE loss function using the labels columns in df_train_val
+        pos_weight = []
+        for endpoint in endpoint_list:
+            num_pos = (df_train_val[endpoint] == 1).sum()
+            num_neg = (df_train_val[endpoint] == 0).sum()
+            if num_pos == 0:
+                pw = 1.0
+            else:
+                pw = num_neg / num_pos
+            pos_weight.append(float(pw))
+        config['training']['loss']['BCE']['pos_weight'] = pos_weight
+        logging.info(f"Automatically set the pos_weight for the BCE loss function to: {pos_weight}")
     
     # cap the number of iterations, if it is less than the number of k-splits to make
     n_iterations = config['data']['kFolds']['n_iterations']
@@ -109,6 +123,8 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         model.to(device=DEVICE)
         #model = torch.compile(model)
 
+        
+
         # train the model
         model = train(config, model, loss_function, train_loader, val_loader, metricHandler)
         model.eval()
@@ -122,13 +138,14 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
             train_loader.dataset.collate_fn = list_data_collate  # replace the mixup function with a simple collate function
         
         train_loss_value, train_loss_dict, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
-        print("   ", train_loss_value, train_mean_metric_val, train_metric_dict)
+
         logging.info(f'   Mean {metric_name}: {train_mean_metric_val}')
         logging.info(f'   Loss: {train_loss_value}')
         logging.info(f'   Metrics: {train_metric_dict}')
         logging.info('   Validation set')
+
         val_loss_value, val_loss_dict, val_mean_metric_val, val_metric_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
-        print("   ",val_loss_value, val_mean_metric_val, val_metric_dict)
+
         logging.info(f'   Mean {metric_name}: {val_mean_metric_val}')
         logging.info(f'   Loss: {val_loss_value}')
         logging.info(f'   Metrics: {val_metric_dict}')

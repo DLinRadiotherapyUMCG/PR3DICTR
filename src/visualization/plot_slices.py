@@ -92,14 +92,11 @@ def plot_slices(
     """
     
     PLOTTING_PARAMS = get_plotting_params(RT_region)
-    layer_plotting_order = ["CT", "PET", "RTDOSE", "RTSTRUCT", "segmentation_map", "GTV", "Attention"]
-    colormap_layers = ["Attention", "RTDOSE", "PET", "CT", "GTV", "RTSTRUCT", "segmentation_map"]
+    layer_plotting_order = config['saving']['plot_training_slices']['layer_plotting_order']
+    colormap_layers = config['saving']['plot_training_slices']['colormap_layers']
 
     layer_plotting_order = [l.lower() for l in layer_plotting_order]
     colormap_layers = [l.lower() for l in colormap_layers]
-
-    print("layer_plotting_order", layer_plotting_order)
-    print("colormap_layers", colormap_layers)
 
     slice_count = len(slice_indexes)
     row_count = len(row_dicts)
@@ -137,7 +134,7 @@ def plot_slices(
 
             # plot images according to their modalitys
             if layer_name in config['data']['preprocessing']['needs_scaling']:
-                if layer_name == 'rtdose': # RTDOSE is an image that needs scaling, but according to specific colour thresholds
+                if layer_name == 'rtdose' or layer_name == 'mandible_dose': # RTDOSE is an image that needs scaling, but according to specific colour thresholds
                     plotter = RTDOSEPlotter(config, layer_name)
                     kwargs["is_background"] = (layer_idx == 0 and "Attention" not in layers_to_plot)
                 else:
