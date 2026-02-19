@@ -1,13 +1,4 @@
-import logging
 import os
-
-import wandb
-
-# Set working directory to --> "Pred_RT"
-import sys
-#from pathlib import Path
-#path_src = os.getcwd()
-#sys.path.insert(1, path_src)
 
 from src.config_presets.tools.get_config import get_config
 from src.utils.logging.logging import setup_logging
@@ -40,6 +31,6 @@ if __name__ == '__main__':
     # TEST THE ENSEMBLE OF MODELS ON THE TEST SET
     
     # # # # run the models on the test set
-    trial_dir = config['general']['resultsCurrentDirectory']
+    trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
     validate_models_on_test_set(config, trial_dir)
 

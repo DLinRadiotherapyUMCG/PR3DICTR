@@ -21,38 +21,29 @@ import random
 import torch
 from monai.utils import set_determinism
 
-CUDA_LAUNCH_BLOCKING=1
 
 if __name__ == '__main__':
-
-    # Clear torch cache
-    import torch
-    torch.cuda.init()
-    
-    torch.cuda.empty_cache()
-    torch.cuda.ipc_collect()
 
     # Setup
     log_level = parse_args()
     setup_logging(log_level)
 
     # Load the config
-    config = get_config('Xerostomia_model')
+    config = get_config('multitox_model')
 
     # Disable randomness
     set_random_seed(config['general']['seed'])
     
 
-    # # MAIN: DL running class (with optional hyperparameter optimization)
-    expHandler = experimentHandler(config)
-    expHandler.run_experiment(config)
+    # # # MAIN: DL running class (with optional hyperparameter optimization)
+    # expHandler = experimentHandler(config)
+    # expHandler.run_experiment(config)
 
 
-    # TEST ENSEMBLE CODE
-    from src.evaluation.validate_on_test_set import validate_models_on_test_set
+    # # TEST ENSEMBLE CODE
+    # from src.evaluation.validate_on_test_set import validate_models_on_test_set
 
-    # # # # run the models on the test set
-    # trial_dir = config['general']['resultsCurrentDirectory']
+    # # # # # run the models on the test set
     # trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
     # validate_models_on_test_set(config, trial_dir)
 
