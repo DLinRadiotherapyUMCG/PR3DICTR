@@ -41,7 +41,9 @@ def load_model(config, model):
     """
     pathToSave = config['general']['resultsCurrentDirectory']
     model_weights_filename = config['saving']['filenames']['model_weights']
+    
     fileLocation = os.path.join(pathToSave, model_weights_filename)
+    print(fileLocation)
 
     # Log and Save
     logging.info(f'Loading model from {fileLocation}')

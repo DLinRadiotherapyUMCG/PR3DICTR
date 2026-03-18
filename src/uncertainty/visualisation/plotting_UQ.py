@@ -143,7 +143,10 @@ def plot_nested_UQ(
 
 
     if plot_type == "UQ_calibration":
-        title = "Certainty vs Accuracy"
+        title = None # "Certainty vs Accuracy"
+
+        # title = "Calibration Plot for Pharynx Patients"
+
     elif plot_type == "prediction_calibration":
         title = "Prediction vs Observed Rate"
     elif plot_type == "sparsification":

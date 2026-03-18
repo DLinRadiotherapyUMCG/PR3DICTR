@@ -67,12 +67,21 @@ def plot_calibration_subplot(ax, df_UQ_temp, endpoint, ENDPOINT_TYPES, UQ_metric
             raise ValueError(f"Unknown plot_type: {plot_type}")
         
         aucs, bin_centers = [], []
+
+
+        fpr, tpr, thresholds = roc_curve(true_labels, mean_preds)
+        idx = np.argmax(tpr - fpr) # use the threshold at the biggest difference between true positive rate and false positive rate
+        thresh_value = thresholds[idx]
+        # thresh_value = 0.5
+
+        print(f"Threshold for binary classification: {thresh_value:.2f}. UQ_metric_name: {UQ_metric_name}, plot_type: {plot_type}")
+
         for b in np.unique(uq_bins):
             idx = uq_bins == b
             if ENDPOINT_TYPES[endpoint] == "Binary":
                 if plot_type == "UQ_calibration":
                     if np.unique(true_labels[idx]).size == 2:
-                        thresh_value = 0.5
+                        #thresh_value = 0.5
                         auc = accuracy_score(true_labels[idx], mean_preds[idx]>thresh_value)
                         # auc = roc_auc_score(true_labels[idx], mean_preds[idx])
                         aucs.append(auc)

@@ -150,7 +150,7 @@ def post_hoc_collect_bayesian_forward_passes(config, UQ_method = "MC_dropout"):
     experiment_dir = config['general']['resultsCurrentDirectory'] # os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'], 'model_1')
     #model_config = load_config(os.path.join(experiment_dir, config['saving']['filenames']['config_yaml']) )
 
-    collect_bayesian_forward_passes(config=config, experiment_dir=experiment_dir, UQ_method=UQ_method, test_loader=test_loader, metadata=metadata)
+    #collect_bayesian_forward_passes(config=config, experiment_dir=experiment_dir, UQ_method=UQ_method, test_loader=test_loader, metadata=metadata)
 
 
 

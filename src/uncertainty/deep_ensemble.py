@@ -152,7 +152,7 @@ def external_evaluate_deep_ensemble_models(config, experiment_dir):
 
     
 
-    experiment_dir = config['general']['resultsCurrentDirectory'] # os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'], 'model_1')
+    #experiment_dir = config['general']['resultsCurrentDirectory'] # os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'], 'model_1')
     
     for model_idx in range(1, config['uncertainty']['deep_ensemble']['n_models'] + 1):
         model_dir = os.path.join(experiment_dir, f"model_{model_idx}")
@@ -163,10 +163,11 @@ def external_evaluate_deep_ensemble_models(config, experiment_dir):
         print(model_dir, config['saving']['filenames']['config_yaml'])
         model_config = load_config(os.path.join(model_dir, config['saving']['filenames']['config_yaml']))
 
-        model_config['general']['resultsCurrentDirectory'] = model_config['general']['resultsCurrentDirectory'].replace("Dysphagia_M06_v2", "Dysphagia_M06")  # TEMPORARY FIX FOR LOADING CONFIGS WITH THE WRONG FOLDER NAME
+        # model_config['general']['resultsCurrentDirectory'] = model_config['general']['resultsCurrentDirectory'].replace("Dysphagia_M06_v2", "Dysphagia_M06")  # TEMPORARY FIX FOR LOADING CONFIGS WITH THE WRONG FOLDER NAME
 
-        config['general']['resultsCurrentDirectory'] = model_config['general']['resultsCurrentDirectory']  # set the current directory to the model directory to save results in the right place
-        
+        model_config['general']['resultsCurrentDirectory'] = model_dir # config['general']['resultsCurrentDirectory']  # set the current directory to the model directory to save results in the right place
+        config['general']['resultsCurrentDirectory'] = model_dir  # set the current directory to the model directory to save results in the right place
+        # model_config = model_dir
 
         # load in the model weights
         model = get_classification_model(model_config, metadata=metadata, save_summary=False)
