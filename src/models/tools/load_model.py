@@ -2,6 +2,8 @@ import os
 import logging
 import torch
 
+from src.constants import DEVICE
+
 def load_model(config, model):
     """
     Load the model from the output directory.

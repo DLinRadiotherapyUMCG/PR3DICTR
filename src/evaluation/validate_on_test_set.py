@@ -69,7 +69,6 @@ def validate_models_on_test_set(main_config, trial_dir):
         fold_config['general']['resultsCurrentDirectory'] = fold_dir
 
         model = get_classification_model(fold_config, metadata, save_summary=False)
-        model.cuda()
         model = load_model(fold_config, model) # load the saved weights
     
         # get the model predictions on this set
