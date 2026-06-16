@@ -89,12 +89,9 @@ class Bottleneck(nn.Module):
         out = self.conv3(out)
         out = self.bn3(out)
 
-        print("block", out.shape, x.shape)
-
         if self.downsample is not None:
             residual = self.downsample(x)
 
-        #print(out.shape, residual.shape)
         out += residual
         out = self.act(out)
 
