@@ -23,21 +23,8 @@ if __name__ == '__main__':
     set_random_seed(config['general']['seed'])
     
 
-    # # # MAIN: DL running class (with optional hyperparameter optimization)
-    # # this line is used to run the k-fold cross-validation
-    # expHandler = experimentHandler(config)
-    # expHandler.run_experiment(config)
-
-
-    # # TEST THE ENSEMBLE OF MODELS ON THE TEST SET
-    
-    # # # # # run the models on the test set
-    # trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
-    # validate_models_on_test_set(config, trial_dir)
-
-
-
     experiment_name = 'ST_models'
-    config['columns']['labels_types'] = ['Binary']
-    run_single_toxicity_models_experiment(config, experiment_name)
+    original_endpoints_list = ['Dysphagia_M06', 'Aspiration_M06', 'Sticky_M06']
+    # original_endpoints_list = ['Xerostomia_M06', 'Taste_M06']
 
+    run_single_toxicity_models_experiment(config, experiment_name, original_endpoints_list)

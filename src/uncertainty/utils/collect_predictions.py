@@ -67,7 +67,7 @@ def collect_one_predictions_pass(config : dict, model, data_loader, enable_MC_dr
         y_true = labels_dict[endpoint]
 
         # Save to DataFrame
-        if config['model']['num_ohe_classes'] == 1:
+        if config['model']['output_head']['num_ohe_classes'] == 1:
             df_y_pred = pd.DataFrame(y_pred, columns=['{}_pred'.format(endpoint)])
 
             label_column_names = [label_column_names] if isinstance(label_column_names, str) else label_column_names

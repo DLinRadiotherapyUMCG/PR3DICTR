@@ -244,7 +244,7 @@ evaluation:
   main_metric: 
     Binary: "AUC"    # the metric shown during training
     Event: "C-index"
-  metrics_list: ["AUC"] #  ["AUC", "accuracy"]   # the metrics to calculate at the end of each fold (list of strings, see constant.py for options)
+  metrics_list: ["AUC", 'ACE', 'ECE', 'accuracy'] #  ["AUC", "accuracy"]   # the metrics to calculate at the end of each fold (list of strings, see constant.py for options)
   metrics:
     threshold: 'YoudenJ'  # how to define the classification metrics threshold
     calibration_bins: 10  # number of bins to use in the calibration metrics
@@ -270,6 +270,9 @@ uncertainty:
     n_splits: 1                   # the number of data splits to make
     validation_size: 0.2          # if only 1 split; this is the size of the validation set, the rest goes to training set
     split_strategy: 'stratified'  # how to perform the splitting of K_folds ['stratified', 'random']
+  filenames:
+    all_predictions_filename: 'all_UQ_predictions.csv'
+    mean_predictions_filename: 'mean_UQ_predictions.csv'
     
 
 

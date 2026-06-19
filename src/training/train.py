@@ -180,6 +180,8 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             out_tot[label] = out_tot[label].cpu().detach().numpy()
             targets_tot[label] = targets_tot[label].cpu().detach().numpy()
 
+        
+
         # Calculate evaluation metric
         if mixup_is_enabled:
             train_mean_metric_value, train_metric_dict = metricHandler.calculate_mixup_metric(out_tot, targets_tot, mixup_lambda_epoch, mixup_indices_epoch)

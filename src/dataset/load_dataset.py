@@ -165,26 +165,34 @@ def generate_single_train_val_split(config, df_development_set : pd.DataFrame):
         train_df (pd.DataFrame): dataframe containing the training patients
         val_df (pd.DataFrame): dataframe containing the validation patients
     """
-    # if the train-val split is stratified or random
-    if config["data"]["kFolds"]["split_strategy"] == 'stratified':
-        LabelManager = LabelTypesManager(config)  # create a LabelTypesManager object to handle the labels
-        label_columns = LabelManager.label_names_full_list  # get the full list of labels, (including event and days labels for event endpoints)
 
-        # Flatten label_columns in case it contains tuples
-        flattened_label_columns = []
-        for col in label_columns:
-            if isinstance(col, (list, tuple)):
-                flattened_label_columns.append(col[0]) # here, we only need to stratify the event column (not the time column)
-            else:
-                flattened_label_columns.append(col)
+    # just take the first train/val split from generate_K_fold_cross_validation_splits
+    k_fold_dataframes_collection = generate_K_fold_cross_validation_splits(config, df_development_set)
+    
+    train_df = k_fold_dataframes_collection[0]['train']
+    val_df = k_fold_dataframes_collection[0]['val']
+
+    # # if the train-val split is stratified or random
+    # if config["data"]["kFolds"]["split_strategy"] == 'stratified':
+    #     LabelManager = LabelTypesManager(config)  # create a LabelTypesManager object to handle the labels
+    #     label_columns = LabelManager.label_names_full_list  # get the full list of labels, (including event and days labels for event endpoints)
+
+    #     # Flatten label_columns in case it contains tuples
+    #     flattened_label_columns = []
+    #     for col in label_columns:
+    #         if isinstance(col, (list, tuple)):
+    #             flattened_label_columns.append(col[0]) # here, we only need to stratify the event column (not the time column)
+    #         else:
+    #             flattened_label_columns.append(col)
         
-        labels = df_development_set[flattened_label_columns]
+    #     labels = df_development_set[flattened_label_columns]
 
-    else:
-        labels = None
+    # else:
+    #     labels = None
 
-    # perform the split
-    train_df, val_df = train_test_split(df_development_set, test_size=config['data']['kFolds']['validation_size'], stratify=labels, random_state=config['general']['seed'])
+    # # perform the split
+    # print(len(df_development_set))
+    # train_df, val_df = train_test_split(df_development_set, test_size=config['data']['kFolds']['validation_size'], stratify=labels, random_state=config['general']['seed'])
     
     # ensure theres no overlap between the sets
     assert not has_patient_overlap(config, train_df, val_df)

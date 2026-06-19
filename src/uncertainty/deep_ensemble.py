@@ -32,7 +32,7 @@ from src.dataset.LabelTypesManager import LabelTypesManager
 from src.dataset.get_transforms import get_transforms 
 from src.dataset.load_dataset import load_dataset, generate_K_fold_cross_validation_splits
 from src.dataset.get_dataloader import make_dataloader   
-from src.models.tools.save_model import load_model
+from src.models.tools.load_model import load_model
 from src.config_presets.tools.load_config import load_config
 from src.utils.saving.alter_filename_for_external_dataset import alter_filename_if_external_dataset
 
