@@ -47,6 +47,14 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
     LabelTypesManager = LabelTypesManagerClass(config)
     config['saving']['label_column_names'] = LabelTypesManager.label_names_full_list  # save the label column names in the config for saving predictions
     metric_name = config['evaluation']['main_metric']
+    metric_name = 'metric'   # PATCH FIX  !!!!!!!!
+
+
+
+
+    metric_name = 'metric'
+
+    print("METRIC NAME: ", metric_name)
 
     # variables for results logging
     train_metrics_list_dict = {endpoint: list() for endpoint in endpoint_list}
@@ -268,6 +276,8 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
                 "test_mean_loss": mean_test_loss,
               }
     
+    print("RESULTS : ", results)
+    
     for endpoint in endpoint_list:
         # mean AUC per endpoint
         results[f"train_{endpoint}_{metric_name}"] = train_metrics_mean_dict[endpoint]
@@ -278,6 +288,8 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         results[f"train_{endpoint}_loss"] = train_mean_losses_dict[endpoint]
         results[f"val_{endpoint}_loss"] = val_mean_losses_dict[endpoint]
         results[f"test_{endpoint}_loss"] = test_mean_losses_dict[endpoint]
+
+    print("RESULTS : ", results)
 
     # aggregate all of the metric results for this trial
     aggregate_cross_validation_metrics(config, k_folds_completed=fold_idx, sets=['train', 'val'])

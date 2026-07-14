@@ -21,8 +21,17 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['general']['seed'])
 
+    config['general']['experiment_name'] = 'OS_HP_test'
     config['general']['trialNumber'] = 'OS_1_m2_25patience'
     config['training']['patience'] = 25
+
+    config['training']['max_epochs'] = 1
+    config['hyperparam_tuning']['optuna']['isEnabled'] = True
+    config['hyperparam_tuning']['optuna']['objectives'] = ['val_mean_metric']
+    config['data']['kFolds']['n_iterations'] = 2
+
+
+     
     
 
     # # MAIN: DL running class (with optional hyperparameter optimization)

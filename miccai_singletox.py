@@ -24,7 +24,7 @@ if __name__ == '__main__':
     
 
     experiment_name = 'ST_models'
-    original_endpoints_list = ['Dysphagia_M06', 'Aspiration_M06', 'Sticky_M06']
+    original_endpoints_list = None # ['Dysphagia_M06', 'Aspiration_M06', 'Sticky_M06']
     # original_endpoints_list = ['Xerostomia_M06', 'Taste_M06']
 
     run_single_toxicity_models_experiment(config, experiment_name, original_endpoints_list)

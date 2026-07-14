@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
         # MC Dropout
         for d_rate in dropout_rates:
-            model_config['general']['experiment_name'] = f"ST MC Dropout/{endpoint}"
+            model_config['general']['experiment_name'] = f"ST MC Dropout 2/{endpoint}"
             #config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
             model_config['uncertainty']['MC_dropout']['dropout_p'] = d_rate
 

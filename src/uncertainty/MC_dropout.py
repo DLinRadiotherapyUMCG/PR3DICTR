@@ -35,7 +35,6 @@ from src.utils.saving.alter_filename_for_external_dataset import alter_filename_
 
 
 def train_MC_dropout_model(config, UQ_method = "MC_dropout"):
-
     
 
     set_random_seed(config['general']['seed'])  # Set the random seed for reproducibility

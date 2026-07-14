@@ -56,14 +56,15 @@ def run_single_toxicity_models_experiment(config, experiment_name, original_endp
         config['general']['trialNumber'] = endpoint
 
         config['columns']['labels'] = [endpoint]
+        config['columns']['labels_types'] = ['Binary']
         config['columns']['clinical_features'] = main_features + baseline_features_dict[endpoint]
 
         config['data']['stratify_on'] = [endpoint]
         config['training']['loss']['BCE']['pos_weight'] = [1]
 
         # train 5-fold model
-        expHandler = experimentHandler(config)
-        expHandler.run_experiment(config)
+        # expHandler = experimentHandler(config)
+        # expHandler.run_experiment(config)
 
 
 

@@ -284,7 +284,7 @@ hyperparam_tuning:
     API_Key: "INSERT API KEY HERE"     # WandB API key of your account
   optuna:
     isEnabled: True                    # perform hyperparameter tuning
-    objectives: ["val_mean_AUC"]       # which metrics to optimise on (can be multi-objective)
+    objectives: ["val_mean_metric"]       # which metrics to optimise on (can be multi-objective)
     objective_direction: ["maximize"]  # direction to optimise each metric in. must be the same length (and order) as objectives
     n_trials: 100                      # number of trials to perform
     n_startup_trials: 30               # number of random trials to perform at the start of the optuna experiment
@@ -292,13 +292,13 @@ hyperparam_tuning:
     set_new_seeds: True                # whether to set new seeds for each trial
   # ----  Custom Params -------
   # Location:= path of the variable in the config
-  # hyperparams:
-  #   Weight_decay: 
-  #     name: 'Weight_Decay'
-  #     type: 'float'
-  #     location: ["training",'optimizer','weight_decay']
-  #     min: 0
-  #     max: 1
+  hyperparams:
+    Weight_decay: 
+      name: 'Weight_Decay'
+      type: 'float'
+      location: ["training",'optimizer','weight_decay']
+      min: 0
+      max: 1
 
 
 

@@ -32,12 +32,12 @@ if __name__ == '__main__':
     # # TEST THE ENSEMBLE OF MODELS ON THE TEST SET
     
     # # # # # run the models on the test set
-    # trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
-    # validate_models_on_test_set(config, trial_dir)
+    trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
+    validate_models_on_test_set(config, trial_dir)
 
 
 
-    experiment_name = 'ST_models'
-    config['columns']['labels_types'] = ['Binary']
-    run_single_toxicity_models_experiment(config, experiment_name)
+    # experiment_name = 'ST_models'
+    # config['columns']['labels_types'] = ['Binary']
+    # run_single_toxicity_models_experiment(config, experiment_name)
 
