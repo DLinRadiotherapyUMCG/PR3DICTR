@@ -194,7 +194,8 @@ Results and code from studies using PR3DICTR can be found in the [`publications/
 If you use PR3DICTR in your research, please cite: [arxiv](https://arxiv.org/pdf/2604.03203)
 
 ```
-MacRae, D. C., van der Hoek, L., van der Wal, R., de Vette, S. P., Neh, H., Ma, B., ... & van Dijk, L. V. (2026). PR3DICTR: A modular AI framework for medical 3D image-based detection and outcome prediction. arXiv preprint arXiv:2604.03203.
+MacRae, D. C., van der Hoek, L., van der Wal, R., de Vette, S. P., Neh, H., Ma, B., ... & van Dijk, L. V. (2026).
+PR3DICTR: A modular AI framework for medical 3D image-based detection and outcome prediction. arXiv preprint arXiv:2604.03203.
 ```
 
 ---
