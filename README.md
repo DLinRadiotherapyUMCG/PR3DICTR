@@ -152,10 +152,10 @@ Key configurable options:
 
 ## Example Notebooks
 
-The [`notebooks/`](notebooks/) directory contains worked examples using the publicly available [NSCLC-Radiomics dataset](https://doi.org/10.7937/K9/TCIA.2015.PF0M9REI) (Aerts et al., 2014) for sex classification from chest CT:
+The [`notebooks/01_LearningExamples`](notebooks/01_LearningExamples) directory contains examples using the publicly available [NSCLC-Radiomics dataset](https://doi.org/10.7937/K9/TCIA.2015.PF0M9REI) (Aerts et al., 2014) for sex classification from chest CT:
 
-- **`01_data_preprocessing.ipynb`** — data preparation walkthrough
-- **`02_model_training.ipynb`** — full PR3DICTR training run using a ResNet-10
+- **`TCIA_Data_Pre-processing.ipynb`** — data preparation walkthrough
+- **`01_NSCLC_Example.ipynb`** — full PR3DICTR training run using a ResNet-10
 
 
 
@@ -191,7 +191,7 @@ Results and code from studies using PR3DICTR can be found in the [`publications/
 
 ## Citation
 
-If you use PR3DICTR in your research, please cite:
+If you use PR3DICTR in your research, please cite: [arxiv](https://arxiv.org/pdf/2604.03203)
 
 ```
 technical note coming soon!
