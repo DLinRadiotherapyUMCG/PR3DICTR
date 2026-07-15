@@ -175,7 +175,7 @@ Models in PR3DICTR consist of two main components:
 
 Results and code from studies using PR3DICTR can be found in the [`publications/`](publications/) directory. Currently includes:
 
-- **Head & Neck multi-toxicity** — multi-endpoint NTCP modelling for radiotherapy
+- **Head & Neck multi-toxicity** — multi-endpoint NTCP modelling for radiotherapy [article](https://www.sciencedirect.com/science/article/pii/S0167814026001258)
 
 ---
 
