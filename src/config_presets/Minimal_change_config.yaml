@@ -1,0 +1,12 @@
+columns:
+  labels: ["ENDPOINT"]           # the endpoints the model is (going to be) trained on (list)
+  labels_types: ["Binary"]          # Endpoint type "Binary" or "Event"
+  clinical_features: ["FEATURE1","FEATURE2","FEATURE3"]  # Clinical features to insert into the model (list), can be empty
+
+paths:
+  csv: "PATH TO FOLDER CONTAINING CSV FILE"  # directory to folder containing the dataset csv
+  images: "PATH TO FOLDER CONTAINING IMAGES"             # directory to the folder containing the patient images (numpy files)
+  results: "PATH TO FOLDER TO SAVE RESULTS INTO" # directory for where you want to save the results
+
+data:
+  dataset_csv: 'DATASET.csv'                         # name of the csv containing the IDs, clinical features, and endpoints
