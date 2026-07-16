@@ -25,6 +25,9 @@ from src.evaluation.mainMetricHandler import mainMetricHandler
 from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
 from src.evaluation.get_visualisations import get_visualizations
+from src.utils.logging.log_mean_metrics_per_type import log_mean_metrics_per_type
+
+
 
 def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
     """
@@ -46,7 +49,14 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
     endpoint_list = config['columns']['labels']
     LabelTypesManager = LabelTypesManagerClass(config)
     config['saving']['label_column_names'] = LabelTypesManager.label_names_full_list  # save the label column names in the config for saving predictions
-    metric_name = config['evaluation']['main_metric']
+    main_metric_config = config['evaluation']['main_metric']
+    if isinstance(main_metric_config, dict):
+        endpoint_metric_name_dict = {
+            endpoint: main_metric_config[label_type]
+            for endpoint, label_type in zip(endpoint_list, config['columns']['labels_types'])
+        }
+    else:
+        endpoint_metric_name_dict = {endpoint: main_metric_config for endpoint in endpoint_list}
 
     # variables for results logging
     train_metrics_list_dict = {endpoint: list() for endpoint in endpoint_list}
@@ -94,7 +104,8 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         
     # get the loss function and metric handler
     loss_function = get_loss_function(config, LabelTypesManager)
-    metricHandler = mainMetricHandler(config, LabelTypesManager)  # deals with the main metric to print during training
+    metricHandler = mainMetricHandler(config, LabelTypesManager)  # deals with the main metric to print during training    
+
 
     # iterate through the folds 
     for fold_idx, dataset_split_dict in enumerate(k_fold_dataframes_list, start=1):
@@ -118,12 +129,8 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         val_loader, _ = make_dataloader(config, val_data, val_transforms, validation_mode=True)
 
         # initialise a model
-        logging.info('Getting model')
         model = get_classification_model(config, metadata=metadata, save_summary=True)
         model.to(device=DEVICE)
-        #model = torch.compile(model)
-
-        
 
         # train the model
         model = train(config, model, loss_function, train_loader, val_loader, metricHandler)
@@ -131,7 +138,7 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
 
         # get the predictions of the trained model on the training and validation (and test) sets
         logging.info('Getting predictions of best model from this fold:')
-        logging.info('   Training set')
+        logging.info('  Training set')
         # if MixUp is enabled, then it has to be forcibly disabled before the training set is evaluated
         if config['data']['augmentation']['mixup']['isEnabled']: 
             from monai.data.utils import list_data_collate
@@ -139,22 +146,24 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         
         train_loss_value, train_loss_dict, train_mean_metric_val, train_metric_dict, train_preds_dict, train_targets_dict, train_patientIDs_list = validate(config, model, loss_function, train_loader, metricHandler)
 
-        logging.info(f'   Mean {metric_name}: {train_mean_metric_val}')
-        logging.info(f'   Loss: {train_loss_value}')
-        logging.info(f'   Metrics: {train_metric_dict}')
-        logging.info('   Validation set')
+        log_mean_metrics_per_type(config, metricHandler, train_metric_dict)
+        logging.info(f'    Loss: {train_loss_value}')
+        logging.info(f'    Metrics: {train_metric_dict}')
+        logging.info('  Validation set')
 
         val_loss_value, val_loss_dict, val_mean_metric_val, val_metric_dict, val_preds_dict, val_targets_dict, val_patientIDs_list = validate(config, model, loss_function, val_loader, metricHandler)
 
-        logging.info(f'   Mean {metric_name}: {val_mean_metric_val}')
-        logging.info(f'   Loss: {val_loss_value}')
-        logging.info(f'   Metrics: {val_metric_dict}')
+        log_mean_metrics_per_type(config, metricHandler, val_metric_dict)
+        logging.info(f'    Loss: {val_loss_value}')
+        logging.info(f'    Metrics: {val_metric_dict}')
 
         # if the test set is enabled, also collect the results on that set
         if config['general']['use_test_set']:
-            logging.info('   Test set')
+            logging.info('  Test set')
             test_loss_value, test_loss_dict, test_mean_metric_val, test_metric_dict, test_preds_dict, test_targets_dict, test_patientIDs_list = validate(config, model, loss_function, test_loader, metricHandler)
-            print("   ",test_loss_value, test_mean_metric_val, test_metric_dict)
+            log_mean_metrics_per_type(config, metricHandler, test_metric_dict)
+            logging.info(f'    Loss: {test_loss_value}')
+            logging.info(f'    Metrics: {test_metric_dict}')
         else:
             test_loss_value = None
             test_loss_dict = {endpoint: None for endpoint in endpoint_list}
@@ -210,10 +219,10 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         # make the visualisations (plots) for this fold
         get_visualizations(config, sets=sets_to_evaluate, pred_csv_dir=None, external_set=False)
 
-        # to kill optuna trials early, check the mean metrics for this fold
+        # to kill optuna trials early, check the mean metrics for this fold (unweighted mean across present endpoint types)
         if config['hyperparam_tuning']['optuna']['isEnabled']:
             val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
-            mean_val_metric_value = np.mean(list(val_metrics_mean_dict.values()))
+            mean_val_metric_value = np.mean(list(metricHandler.mean_metric_per_type(val_metrics_mean_dict).values()))
 
             if (mean_val_metric_value < config['hyperparam_tuning']['optuna']['kill_trial_threshold']) and (fold_idx >= 3):
                 logging.info(f'Early stopping at fold {fold_idx}. Metric value is too low')
@@ -231,12 +240,9 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         return 
     
 
-    # compute mean AUC per endpoint
-    train_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in train_metrics_list_dict.items()}
-    val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
-    # compute total mean AUC
-    mean_train_metric_value = np.mean(list(train_metrics_mean_dict.values()))
-    mean_val_metric_value = np.mean(list(val_metrics_mean_dict.values()))
+    # compute mean metric per endpoint
+    train_metrics_mean_dict = {endpoint: np.mean(vals) for endpoint, vals in train_metrics_list_dict.items()}
+    val_metrics_mean_dict = {endpoint: np.mean(vals) for endpoint, vals in val_metrics_list_dict.items()}
 
     # compute mean loss per endpoint
     train_mean_losses_dict = {endpoint: np.mean(losses) for endpoint, losses in train_losses_list_dict.items()}
@@ -248,36 +254,38 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
     # do that for the test set
     if config['general']['use_test_set']:
         mean_test_metric_dict = {endpoint: np.mean(aucs) for endpoint, aucs in test_metrics_list_dict.items()}
-        mean_test_metric_value = np.mean(list(mean_test_metric_dict.values()))
         test_mean_losses_dict = {endpoint: np.mean(losses) for endpoint, losses in test_losses_list_dict.items()}
         mean_test_loss = np.mean(test_losses_list)
     else:
         mean_test_metric_dict = {endpoint: None for endpoint in endpoint_list}
-        mean_test_metric_value = None
         test_mean_losses_dict = {endpoint: None for endpoint in endpoint_list}
         mean_test_loss = None
     
-    results = { 
-                # mean AUC
-                f"train_mean_{metric_name}": mean_train_metric_value,
-                f"val_mean_{metric_name}": mean_val_metric_value,
-                f"test_mean_{metric_name}": mean_test_metric_value,
-                # mean Loss
-                "train_mean_loss": mean_train_loss,
-                "val_mean_loss": mean_val_loss,
-                "test_mean_loss": mean_test_loss,
-              }
-    
-    for endpoint in endpoint_list:
-        # mean AUC per endpoint
-        results[f"train_{endpoint}_{metric_name}"] = train_metrics_mean_dict[endpoint]
-        results[f"val_{endpoint}_{metric_name}"] = val_metrics_mean_dict[endpoint]
-        results[f"test_{endpoint}_{metric_name}"] = mean_test_metric_dict[endpoint]
+    results = {
+        "train_mean_loss": mean_train_loss,
+        "val_mean_loss": mean_val_loss,
+        "test_mean_loss": mean_test_loss,
+    }
 
-        # mean loss per endpoint
-        results[f"train_{endpoint}_loss"] = train_mean_losses_dict[endpoint]
-        results[f"val_{endpoint}_loss"] = val_mean_losses_dict[endpoint]
-        results[f"test_{endpoint}_loss"] = test_mean_losses_dict[endpoint]
+    splits = {
+        'train': (train_metrics_mean_dict, train_mean_losses_dict),
+        'val': (val_metrics_mean_dict, val_mean_losses_dict),
+        'test': (mean_test_metric_dict, test_mean_losses_dict),
+    }
+
+    # mean metric per endpoint type (e.g. val_mean_Binary_AUC, val_mean_Event_C-index)
+    for endpoint_type, endpoints in LabelTypesManager.endpoint_type_groups_names.items():
+        metric_name = main_metric_config[endpoint_type] if isinstance(main_metric_config, dict) else main_metric_config
+        for split, (metrics_dict, _) in splits.items():
+            values = [metrics_dict[e] for e in endpoints if metrics_dict[e] is not None]
+            results[f"{split}_mean_{endpoint_type}_{metric_name}"] = np.mean(values) if values else None
+
+    # mean metric and loss per endpoint
+    for endpoint in endpoint_list:
+        metric_name = endpoint_metric_name_dict[endpoint]
+        for split, (metrics_dict, losses_dict) in splits.items():
+            results[f"{split}_{endpoint}_{metric_name}"] = metrics_dict[endpoint]
+            results[f"{split}_{endpoint}_loss"] = losses_dict[endpoint]
 
     # aggregate all of the metric results for this trial
     aggregate_cross_validation_metrics(config, k_folds_completed=fold_idx, sets=['train', 'val'])
@@ -288,6 +296,3 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         modelCard.to_json(pathExport)
 
     return results
-
-    
-

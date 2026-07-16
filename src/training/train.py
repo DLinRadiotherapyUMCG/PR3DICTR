@@ -65,26 +65,26 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     # Initialize the best model and lowest validation loss
     best_model_state_dict = None
     if(config['training']['stopping_criteria'] == "loss"):
-        print("Optimizing based on loss")
+        logging.info("Optimizing based on loss")
         best_value = np.inf
     else:
+        logging.info("Optimizing based on metric")
         best_value = 0
         
     patience_counter = 0
     num_batches_per_epoch = len(train_loader)
 
-    logging.debug(f'N training batches = {num_batches_per_epoch}')
-    logging.debug(f'batch size = {config["training"]["batch_size"]}')
-    
-    # Training loop
+    logging.debug(f'N training batches = {num_batches_per_epoch} (batch size = {config["training"]["batch_size"]})')
     logging.info('Starting training loop')
+
+    # Training loop
     for epoch_num in range(1, config['training']['max_epochs'] + 1):
         logging.info(f'Epoch {epoch_num}')
 
         mixup_lambda_epoch = None
-        improved = False # Flag to indicate if the model has improved on this epoch
-        results_log = dict()  # results log for the current epoch (for WandB)
-        best_log_dict = None  # results dict of the best epoch thus far
+        improved = False         # Flag to indicate if the model has improved on this epoch
+        results_log = dict()     # results log for the current epoch (for WandB)
+        best_log_dict = None     # results dict of the best epoch thus far
         out_tot = dict.fromkeys(labels, [])
         targets_tot = dict.fromkeys(labels, [])
         total_loss = 0.0
@@ -191,8 +191,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         for label in labels:
             train_loss_dict[label] = train_loss_dict[label] / num_batches_per_epoch
                 
-        logging.info(f'  Training   Loss={avg_loss:.5f}, metrics={train_metric_dict}')
-        results_log.update({f"train/mean_metric" : train_mean_metric_value})
+        logging.info(f'   Training   Loss={avg_loss:.5f}, metrics={train_metric_dict}')
+        for endpoint_type, mean_val in metricHandler.mean_metric_per_type(train_metric_dict).items():
+            results_log.update({f"train/mean_metric_{endpoint_type}" : mean_val})
         results_log.update({'loss_train/mean_loss':avg_loss})
         
         for metric_name, (key, val) in zip(metric_names_list, train_metric_dict.items()):
@@ -207,8 +208,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         if epoch_num % config['training']['validation_interval'] == 0:
             val_loss_value, val_loss_dict, val_mean_metric_value, val_metric_dict, val_preds_dict, _, _ = validate(config, model, loss_function, val_loader, metricHandler)
 
-            logging.info(f'  Validation Loss={val_loss_value:.5f}, metrics={val_metric_dict}')
-            results_log.update({f"val/mean_metric" : val_mean_metric_value})
+            logging.info(f'   Validation Loss={val_loss_value:.5f}, metrics={val_metric_dict}')
+            for endpoint_type, mean_val in metricHandler.mean_metric_per_type(val_metric_dict).items():
+                results_log.update({f"val/mean_metric_{endpoint_type}" : mean_val})
             results_log.update({f"loss_val/mean_loss" : val_loss_value})
 
             for metric_name, (key, val) in zip(metric_names_list, val_metric_dict.items()):
@@ -255,8 +257,4 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         model.load_state_dict(best_model_state_dict)    
 
     return model
-
-
-    
-
 

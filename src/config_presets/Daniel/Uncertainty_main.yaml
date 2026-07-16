@@ -292,7 +292,7 @@ hyperparam_tuning:
     objective_direction:
     - maximize
     objectives:
-    - val_mean_AUC
+    - val_mean_Binary_AUC
 model:
   TransRP:
     clinical_features_method: m2

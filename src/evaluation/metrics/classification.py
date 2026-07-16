@@ -26,7 +26,9 @@ def recall(config, true, pred):
     return recall_score(true,pred)
 
 def auc(config, true, pred, sample_weights=None): # Area under the curve
-    return roc_auc_score(true,pred, sample_weight=sample_weights)
+    auc = roc_auc_score(true,pred, sample_weight=sample_weights)
+    return float(auc)
+    #return roc_auc_score(true,pred, sample_weight=sample_weights)
 
 def auc_se(config, true, pred): # standard error of area under the curve
     "from: https://real-statistics.com/descriptive-statistics/roc-curve-classification-table/auc-confidence-interval/"

@@ -16,14 +16,14 @@ def check_improvement(config, val_loss, val_mean_metric_value, best_value):
     # if optimising the mean loss
     if config['training']['stopping_criteria'] == "loss":
         if val_loss < best_value:
-            logging.info(f'New lowest loss: {val_loss}')
+            logging.info(f'   New lowest loss: {val_loss}')
             best_value = val_loss
             improved = True
 
     # if optimising the mean metric (e.g. validation AUC) 
     else:
         if val_mean_metric_value > best_value:
-            logging.info(f'New highest {config["general"]["metric_name"]}: {val_mean_metric_value}')
+            logging.info(f'  New highest {config["general"]["metric_name"]}: {val_mean_metric_value}')
             best_value = val_mean_metric_value
             improved = True
 
