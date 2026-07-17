@@ -190,7 +190,7 @@ hyperparam_tuning:
     API_Key: "c7f0f65fac8b7178ad7c5859ba6114775b16e694"
   optuna:
     isEnabled: False                    # perform hyperparameter tuning
-    objectives: ["val_mean_AUC"]       # which metrics to optimise on (can be multi-objective)
+    objectives: ["val_mean_Binary_AUC"]       # which metrics to optimise on (can be multi-objective)
     objective_direction: ["maximize"]  # direction to optimise each metric in. must be the same length (and order) as objectives
     n_trials: 100                      # number of trials to perform
     n_startup_trials: 30               # number of random trials to perform at the start of the optuna experiment

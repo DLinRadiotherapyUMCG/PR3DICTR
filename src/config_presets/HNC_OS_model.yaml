@@ -9,12 +9,12 @@ general:
   use_test_set: false
 
 columns: # 
-  labels:  ["Xerostomia_M06"]
-  labels_types: ['Binary']
-  clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Geslacht", "Leeftijd"]
+  labels:  ["OS"]
+  labels_types: ['Event']
+  clinical_features: [] # "Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Geslacht", "Leeftijd"]
 paths:
   csv: /home/macraedc/data/
-  images: /home/macraedc/data/dataset_full_2mm_anonymized
+  images: /home/macraedc/data/preprocessed_OS_dataset_2mm
   results: /home/macraedc/rt_pred_results
 
   # csv: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset"
@@ -53,11 +53,12 @@ model:
   
 
 data:
-  source: 'PRIMA'  # ['UMCG', 'MDACC']
-  dataset_csv: 'MT_dataset_with_all_structs_no_missing.csv'  #  MDACC_features_present
-  stratify_on: ["CT_Artefact" ] # "Loctum2"
-  image_keys:  ['ct', 'rtdose', 'segmentation_map']  # the keys of the images to load
+  source: 'UMCG'  # ['UMCG', 'MDACC']
+  dataset_csv: 'OPC_data.csv'  #
+  stratify_on: ["Geslacht" ] # "Loctum2"
+  image_keys:  ['ct', 'pet'] # , 'rtdose', 'segmentation_map']  # the keys of the images to load
   image_num_dimensions: 3
+  event_endpoint_time_unit: "months"
 
   dataloader:
     num_workers: 4           # number of workers (cores) to use for data loading in each training batch
@@ -164,15 +165,38 @@ hyperparam_tuning:
     #MetricsMonitor: [ "train_AUC","train_loss","train_acc",
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
-    isEnabled: false
-    objectives: ["val_mean_Binary_AUC"]          
-    objective_direction: ["maximize"]
+    isEnabled: true
+    objectives: ['val_mean_Event_C-index']          
+    objective_direction: ["maximize"] #, "maximize"]
     n_trials: 200
+    n_startup_trials: 30               # number of random trials to perform at the start of the optuna experiment
+    kill_trial_threshold: 0.55     
   # ----  Custom Params -------
   # Location:= path variable in config
   hyperparams:
-    none
+    learning_rate: 
+      name: 'Learning_rate'
+      type: 'float'
+      location: ['training','optimizer','learning_rate']
+      min: 0.00001
+      max: 0.001
+    optimizer:
+      name: "Optimizer" 
+      type: 'categorical'
+      location: ["training",'optimizer','name']
+      options: ['AdaBound','Adam','SGD']
     # MODEL
+    model_depth:
+      name: "ResNet_depth"
+      type: 'categorical'
+      location: ["model",'resnet','model_depth']
+      options: [10, 18, 34]
+    # loss_function:
+    #   name: "Loss_function"
+    #   type: 'categorical'
+    #   location: ["training",'loss','name']
+    #   options: ['BCE', 'focal']
+    
     
 
 saving:

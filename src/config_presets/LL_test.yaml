@@ -194,7 +194,7 @@ hyperparam_tuning:
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
     isEnabled: true
-    objectives: ["val_mean_AUC"]          
+    objectives: ["val_mean_Binary_AUC"]          
     objective_direction: ["maximize"]
     n_trials: 200
   # ----  Custom Params -------

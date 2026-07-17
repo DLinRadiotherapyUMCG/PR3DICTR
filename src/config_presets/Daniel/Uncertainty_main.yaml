@@ -292,7 +292,7 @@ hyperparam_tuning:
     objective_direction:
     - maximize
     objectives:
-    - val_mean_AUC
+    - val_mean_Binary_AUC
 model:
   TransRP:
     clinical_features_method: m2
@@ -393,7 +393,6 @@ saving:
     n_patients_per_epoch: 1
     n_slices_per_patient: 8
 training:
-  gradient_accumulation_steps: 1
   GradNorm:
     alpha: 0.5
     isEnabled: false

@@ -2,6 +2,7 @@ import numpy as np
 
 from src.evaluation.calculate_metric_for_multiple_endpoints import calculate_metric_for_multiple_endpoints
 from src.evaluation.get_metric_function import get_metric_function
+from src.dataset.LabelTypesManager import LabelTypesManager as LabelTypesManagerClass
 
 class mainMetricHandler():
     """
@@ -16,7 +17,8 @@ class mainMetricHandler():
 
         self.set_metric_functions()
 
-        self.LabelTypesManager = LabelTypesManager
+        # if no LabelTypesManager was passed in, build one from the config (keeps endpoint-type grouping consistent everywhere)
+        self.LabelTypesManager = LabelTypesManager or LabelTypesManagerClass(config)
 
     def set_metric_functions(self):
 
@@ -37,6 +39,20 @@ class mainMetricHandler():
         mean_metric_value, results_dict = calculate_metric_for_multiple_endpoints(self.config, y_pred_list_dict, y_true_list_dict, self.metric_functions)
     
         return mean_metric_value, results_dict
+
+    def mean_metric_per_type(self, metric_dict: dict) -> dict:
+        """
+        Average a per-endpoint metric dict (e.g. from calculate_metric()) into a mean value per endpoint type
+        (e.g. Binary, Event). Only endpoint types actually present in the config are included.
+        Args:
+            metric_dict (dict): per-endpoint metric values, keyed by endpoint name (as in config['columns']['labels'])
+        Returns:
+            dict: {endpoint_type: mean_value}
+        """
+        return {
+            endpoint_type: np.mean([metric_dict[endpoint] for endpoint in endpoints])
+            for endpoint_type, endpoints in self.LabelTypesManager.endpoint_type_groups_names.items()
+        }
     
     def calculate_mixup_metric(self, y_pred_list_dict: dict, y_true_list_dict: dict, mixup_lambda_list, mixup_indices_list):
         # function to compute the metric values if MixUp augmentation is applied to the training set

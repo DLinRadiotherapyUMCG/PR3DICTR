@@ -167,6 +167,10 @@ def initialize_optuna_study(config):
                               constant_liar = True,                # NOTE: this parameter helps to prevent the sampler from suggesting very similar values each time. This is beneficial if model training is very costly/takes long
                             )
 
+        # NOTE: we don't use Optuna's built-in pruners here. Early-stopping of trials is instead handled by our own
+        # custom rule in OptunaExperimentManager._should_prune_trial(), based on intermediate values reported via
+        # trial.report(). We still need `trial.report()` to be called so that intermediate values get recorded on
+        # the trial (and are visible to other trials for comparison), but no pruner acts on them automatically.
         study = optuna.create_study(
                             study_name = studyName, 
                             storage = storage, 

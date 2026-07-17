@@ -6,8 +6,6 @@ import torch.nn as nn
 from monai.networks.blocks.patchembedding import PatchEmbeddingBlock
 from monai.networks.blocks.transformerblock import TransformerBlock
 
-import monai
-
 #from src.models.linear_layers_OLD import Basic_Output_Head, MultiToxOutputHead
 from src.models.ViT import  Transformer
 from src.models.tools.get_output_head import get_output_head
@@ -108,16 +106,11 @@ class TransRP_ViT(nn.Module):
         self.img_size  = img_size
         self.patch_num  = int((img_size[0] / patch_size[0] )* (img_size[1] / patch_size[1]) * (img_size[2] / patch_size[2]))
 
-        config["model"]["output_head"]["name"] = "multitox"
+        config["model"]["output_head"]["name"] = "multilabel"
 
-        # if self.clinical_features_method == "m3" and self.n_features > 0:   # join the clinical features only in the linear layers at the very end
-        #     self.linear_layers = MultiToxOutputHead(config, n_features)
-        # else: # clinical features are added to the input of the transformer (m1 or m2), and so we do not need linear layers for this
-        #     self.linear_layers = Basic_Output_Head(config)
-        
-        if self.clinical_features_method == "m3" and self.n_features > 0: 
+        if self.clinical_features_method == "m3" and self.n_features > 0:   # join the clinical features only in the linear layers at the very end
             n_features_linear_layers = n_features
-        else:
+        else:                                     # clinical features are added to the input of the transformer (m1 or m2), and so we do not need linear layers for this
             n_features_linear_layers = 0
 
         
@@ -128,8 +121,6 @@ class TransRP_ViT(nn.Module):
             )
 
         elif self.clinical_features_method == "cls":
-            #self.cls_token = nn.Parameter(torch.randn(1, 1, hidden_size))
-            #self.clc_embed = nn.Linear(n_features, hidden_size)
             cls_hidden_dim = config["model"]["TransRP"]["cls_hidden_dim"]
             if config["model"]["TransRP"]["cls_gating"]:
                 self.clc_embed = GatedTabularEmbedding(n_features, hidden_size, hidden_dim=cls_hidden_dim)
