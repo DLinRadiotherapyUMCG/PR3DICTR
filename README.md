@@ -173,7 +173,7 @@ Models in PR3DICTR consist of two main components:
 
 ## Publications
 
-Results and code from studies using PR3DICTR can be found in the [`publications/`](publications/) directory. Currently includes:
+Studies using PR3DICTR currently includes:
 
 - A multi-toxicity deep learning approach for normal tissue complication probability modelling in head and neck cancer patients receiving radiotherapy (2026) [article](https://doi.org/10.1016/j.radonc.2026.111486)
 - An evaluation of uncertainty quantification methods and measures for deep learning outcome prediction models in head and neck cancer radiotherapy (2026) [article](https://doi.org/10.1016/j.phro.2026.100978)
