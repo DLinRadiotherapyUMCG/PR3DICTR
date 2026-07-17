@@ -1,4 +1,3 @@
-import gc
 import logging
 import numpy as np
 import time
@@ -6,7 +5,6 @@ import torch
 import copy
 from tqdm import tqdm
 
-from src.constants import DEVICE
 from src.utils.clear_cache import clear_cache
 from src.utils.optimizer.get_optimizer import get_optimizer
 from src.utils.scheduler.get_scheduler import get_scheduler
@@ -15,13 +13,14 @@ from src.training.validate import validate
 from src.models.tools.save_model import save_model
 from src.models.tools.load_model import load_model 
 from src.training.utils.check_improvement import check_improvement
-
 from src.training.utils.collect_all_preds_and_labels import collect_all_preds_and_labels
 from src.hyper_opt.WandB_functions import is_WandB_enabled, update_WandB_summary_table, WandB_log
 from src.visualization.plot_model_inputs import plot_model_inputs
 from src.utils.loss_func.calc_mixup_loss import calc_mixup_loss
 from src.training.utils.gradNorm import GradNorm
-from src.constants import MISSING_DATA_VALUE
+from src.training.utils.step_scheduler import step_scheduler
+
+from src.constants import DEVICE, MISSING_DATA_VALUE
 
 
 def train(config, model, loss_function, train_loader, val_loader, metricHandler):
@@ -161,15 +160,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             # Step the optimizer    
             optimizer.step()
 
-            # Step the scheduler
-            if config['training']['scheduler']['name'] == 'cosine':
-                scheduler.step((epoch_num - 1) + (batch_num / num_batches_per_epoch))
-            if config['training']['scheduler']['name'] == 'exponential':
-                if batch_num % config['training']['scheduler']['step_size'] == 0:
-                    scheduler.step()
-            elif config['training']['scheduler']['name'] in ['cyclic']:
-                scheduler.step()
-
+            # Step the scheduler (if applicable)
+            step_scheduler(config, scheduler, epoch_num, batch_num, num_batches_per_epoch)
+            
 
         if config['data']['dataloader']['dataset_type'] == 'smartcache':
             # update the cache

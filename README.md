@@ -175,17 +175,18 @@ Models in PR3DICTR consist of two main components:
 
 Results and code from studies using PR3DICTR can be found in the [`publications/`](publications/) directory. Currently includes:
 
-- **Head & Neck multi-toxicity** — multi-endpoint NTCP modelling for radiotherapy [article](https://www.sciencedirect.com/science/article/pii/S0167814026001258)
+- A multi-toxicity deep learning approach for normal tissue complication probability modelling in head and neck cancer patients receiving radiotherapy (2026) [article](https://doi.org/10.1016/j.radonc.2026.111486)
+- An evaluation of uncertainty quantification methods and measures for deep learning outcome prediction models in head and neck cancer radiotherapy (2026) [article](https://doi.org/10.1016/j.phro.2026.100978)
 
 ---
 
 ## Roadmap
 
-- [ ] Multi-class classification support
-- [ ] Uncertainty quantification
-- [ ] Attention map visualizations for model interpretability
-- [ ] Semi-automatic model card generation
-- [ ] GUI for config setup
+- [⏳] Multi-class classification support
+- [✅] Uncertainty quantification
+- [⏳] Attention map visualizations for model interpretability
+- [⏳] Semi-automatic model card generation
+- [⏳] GUI for config setup
 
 ---
 
@@ -194,7 +195,7 @@ Results and code from studies using PR3DICTR can be found in the [`publications/
 If you use PR3DICTR in your research, please cite: [arxiv](https://arxiv.org/pdf/2604.03203)
 
 ```
-MacRae, D. C., van der Hoek, L., van der Wal, R., de Vette, S. P., Neh, H., Ma, B., ... & van Dijk, L. V. (2026).
+MacRae, D. C., van der Hoek, L., van der Wal, R., de Vette, S. P., Neh, H., Ma, B., van Ooijen P.M.A., van Dijk, L. V. (2026).
 PR3DICTR: A modular AI framework for medical 3D image-based detection and outcome prediction. arXiv preprint arXiv:2604.03203.
 ```
 
