@@ -3,6 +3,7 @@ import logging
 import numpy as np
 
 from src.constants import DEVICE
+from src.hyper_opt.exceptions import EarlyStopTrial
 
 from src.training.train import train
 
@@ -26,15 +27,19 @@ from src.evaluation.total_evaluation import total_evaluation_current_fold
 from src.evaluation.aggregate_metrics import aggregate_cross_validation_metrics
 from src.evaluation.get_visualisations import get_visualizations
 from src.utils.logging.log_mean_metrics_per_type import log_mean_metrics_per_type
+from src.utils.loss_func.calculate_loss_weights import calculate_BCE_loss_weights
 
 
-
-def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
+def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None, prune_trial_callback=None):
     """
     A function to perform K-folds cross-validation. Creates the dataset splits, trains and evaluates a model for N folds.
     Args:
         config (dict): the config params.
         config_for_wandb (dict): a config to send to WandB (optional, usually only used during hyperparameter tuning).
+        prune_trial_callback (callable, optional): called after each fold as
+            `prune_trial_callback(fold_idx, mean_val_metric_value)`. If it returns True, the trial is pruned by
+            raising `PruneTrial`. This keeps this function agnostic of the hyperparameter-tuning framework used
+            (e.g. Optuna) - the caller decides what "should be pruned" means (e.g. its own pruning rule).
     Returns:
         results (dict): the mean results over each fold.
     """
@@ -76,16 +81,7 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
 
     if config['training']['loss']['BCE']['pos_weight'] == 'auto':
         # automatically set the pos_weight for the BCE loss function using the labels columns in df_train_val
-        pos_weight = []
-        for endpoint in endpoint_list:
-            num_pos = (df_train_val[endpoint] == 1).sum()
-            num_neg = (df_train_val[endpoint] == 0).sum()
-            if num_pos == 0:
-                pw = 1.0
-            else:
-                pw = num_neg / num_pos
-            pos_weight.append(float(pw))
-        config['training']['loss']['BCE']['pos_weight'] = pos_weight
+        pos_weight = calculate_BCE_loss_weights(config, df_train_val)
         logging.info(f"Automatically set the pos_weight for the BCE loss function to: {pos_weight}")
     
     # cap the number of iterations, if it is less than the number of k-splits to make
@@ -113,6 +109,7 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
 
         # set up logging and create the results directory
         create_results_directory(config, fold_idx)
+        save_config(config)         # save the config file for this fold
         logging.info(f'Fold {fold_idx}/{len(k_fold_dataframes_list)}')
         initialise_WandB_group(config, project_name=config['general']['experiment_name'], groupName=config['general']['trialNumber'], config_for_wandb=config_for_wandb)
         
@@ -206,8 +203,7 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         # stop WandB for this fold (init a new one on the next fold)
         stop_WandB_trial(config)
 
-        # save the config file for this fold
-        save_config(config)
+        
 
         sets_to_evaluate = ['train', 'val']
         if config['general']['use_test_set']:
@@ -219,21 +215,20 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
         # make the visualisations (plots) for this fold
         get_visualizations(config, sets=sets_to_evaluate, pred_csv_dir=None, external_set=False)
 
-        # to kill optuna trials early, check the mean metrics for this fold (unweighted mean across present endpoint types)
-        if config['hyperparam_tuning']['optuna']['isEnabled']:
-            val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
-            mean_val_metric_value = np.mean(list(metricHandler.mean_metric_per_type(val_metrics_mean_dict).values()))
-
-            if (mean_val_metric_value < config['hyperparam_tuning']['optuna']['kill_trial_threshold']) and (fold_idx >= 3):
-                logging.info(f'Early stopping at fold {fold_idx}. Metric value is too low')
-                break
-
         if config['data']['dataloader']['dataset_type'] == 'smartcache':
             train_loader.dataset.shutdown()  # shutdown the smartcache dataloader
             val_loader.dataset.shutdown() 
-
         del train_loader, val_loader # delete the dataloaders to free up memory
         clear_cache()  # clear the CPU memory
+
+        # give the caller a chance to stop this trial early based on intermediate (per-fold) results,
+        # e.g. because it is clearly underperforming compared to other trials
+        if config['hyperparam_tuning']['optuna']['isEnabled'] and prune_trial_callback is not None:
+            val_metrics_mean_dict = {endpoint: np.mean(aucs) for endpoint, aucs in val_metrics_list_dict.items()}
+            mean_val_metric_value = np.mean(list(metricHandler.mean_metric_per_type(val_metrics_mean_dict).values()))
+
+            if prune_trial_callback(fold_idx, mean_val_metric_value):
+                raise EarlyStopTrial()
     
     # if we're doing the dataset amounts experiment, then we don't need to aggregate the results. Just return here
     if config['general']['dataset_amounts_experiment'] == True:
@@ -290,9 +285,10 @@ def K_fold_cross_validation(config, config_for_wandb=None, modelCard = None):
     # aggregate all of the metric results for this trial
     aggregate_cross_validation_metrics(config, k_folds_completed=fold_idx, sets=['train', 'val'])
 
-    if(modelCard != None):
+    if modelCard != None:
         pathExport = os.path.join(config['modelcard']['saveLocation'],config['modelcard']['saved_modelcard_filename'] + ".json")
         modelCard.absorb_config_details(config)
         modelCard.to_json(pathExport)
 
     return results
+

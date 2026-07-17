@@ -170,7 +170,7 @@ hyperparam_tuning:
     objective_direction: ["maximize"] #, "maximize"]
     n_trials: 200
     n_startup_trials: 30               # number of random trials to perform at the start of the optuna experiment
-    kill_trial_threshold: 0.6     
+    kill_trial_threshold: 0.55     
   # ----  Custom Params -------
   # Location:= path variable in config
   hyperparams:

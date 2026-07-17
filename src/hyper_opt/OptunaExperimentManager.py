@@ -6,6 +6,7 @@ import copy
 
 from src.utils.set_random_seed import set_random_seed, generate_random_seed
 from src.training.k_fold_cross_validation import K_fold_cross_validation
+from src.hyper_opt.exceptions import EarlyStopTrial
 import src.hyper_opt.utils as utils
 
 class OptunaExperimentManager():
@@ -50,11 +51,18 @@ class OptunaExperimentManager():
         # K-fold cross validation here
         try: # it is possible that the trial fails, likely due to bad hyperparameters leading to a model that is too large
             trial_hyper_param_dict = trial.params
-            all_results = K_fold_cross_validation(trial_config, config_for_wandb=trial_hyper_param_dict)
+            prune_trial_callback = lambda fold_idx, mean_val_metric_value: self.should_prune_trial(trial, fold_idx, mean_val_metric_value)
+            all_results = K_fold_cross_validation(trial_config, config_for_wandb=trial_hyper_param_dict, prune_trial_callback=prune_trial_callback)
     
             # aggregate the results of the K-folds, report them to Optuna
             optuna_results = self.results_handler(trial_config, all_results)
-        
+
+        except EarlyStopTrial:
+            # the trial was intentionally stopped early by our own pruning rule (see should_prune_trial())
+            # this is not a failure, so let Optuna handle it natively (marks the trial as PRUNED, not FAILED)
+            logging.info(f"Trial {trial_config['general']['trialNumber']} was pruned early.")
+            raise optuna.exceptions.TrialPruned()
+
         except Exception as e:
             # print the trial's error to the logger (i.e. the print statements)
             logging.error(f"Error in trial {trial_config['general']['trialNumber']}. See error log .txt file for details.")
@@ -74,6 +82,44 @@ class OptunaExperimentManager():
             raise optuna.exceptions.TrialPruned()  # NOTE: this will set the trial to pruned
             
         return optuna_results
+
+    def should_prune_trial(self, trial, fold_idx, mean_val_metric_value) -> bool:
+        """
+        Rule to decide whether a trial should be stopped early, based on its intermediate (per-fold) results.
+        This intentionally does NOT use Optuna's built-in pruners / trial.should_prune() - it is a simple,
+        fully-owned rule that can be tuned/replaced independently of Optuna's pruning machinery.
+
+        The rule: after a configurable number of warmup folds, prune the trial if its mean validation metric
+        so far is worse than a fixed threshold defined in the config (`kill_trial_threshold`).
+        Args:
+            trial (optuna.trial.Trial): the current trial
+            fold_idx (int): the fold number just completed (1-indexed)
+            mean_val_metric_value (float): this trial's mean validation metric across folds completed so far
+        Returns:
+            bool: True if the trial should be stopped early
+        """
+        optuna_config = self.config['hyperparam_tuning']['optuna']
+        n_warmup_folds = optuna_config.get('pruner_n_warmup_folds', 3)
+        kill_trial_threshold = optuna_config['kill_trial_threshold']
+
+        # report the intermediate value, so it's recorded on the trial (useful for inspection/plotting later)
+        trial.report(mean_val_metric_value, step=fold_idx)
+
+        if fold_idx < n_warmup_folds:
+            return False  # always let a trial complete a minimum number of folds before considering pruning it
+
+        direction = optuna_config['objective_direction'][0]
+        if direction == 'maximize':
+            should_prune = mean_val_metric_value < kill_trial_threshold
+            if should_prune:
+                logging.info(f"Pruning trial {trial.number} at fold {fold_idx}. Mean validation metric {mean_val_metric_value} < threshold {kill_trial_threshold} (objective direction: {direction}).")
+            return should_prune
+        else:
+            should_prune = mean_val_metric_value > kill_trial_threshold
+            if should_prune:
+                logging.info(f"Pruning trial {trial.number} at fold {fold_idx}. Mean validation metric {mean_val_metric_value} > threshold {kill_trial_threshold} (objective direction: {direction}).")
+            return should_prune
+        
 
     def update_trial_hyperparameters(self, config : dict, trial) -> dict:
         """

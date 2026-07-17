@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['general']['seed'])
 
-    config['general']['experiment_name'] = "OS_model_test_HP1"
+    config['general']['experiment_name'] = "OS_model_test_HP4_pruning"
     config['training']['max_epochs'] = 4
     #config['data']['kFolds']['n_iterations'] = 5
     
