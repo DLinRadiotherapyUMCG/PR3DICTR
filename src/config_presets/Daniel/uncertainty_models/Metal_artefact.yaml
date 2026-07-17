@@ -145,7 +145,6 @@ paths:
 
 
 training:
-  gradient_accumulation_steps: 1
   GradNorm:
     alpha: 0.5
     isEnabled: false

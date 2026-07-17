@@ -162,8 +162,11 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
             optimizer.step()
 
             # Step the scheduler
-            if config['training']['scheduler']['name'] in ['cosine', 'exponential']:  # , 'step']:
-                scheduler.step(epoch_num + (batch_num / (num_batches_per_epoch / config['training']['gradient_accumulation_steps'])))
+            if config['training']['scheduler']['name'] == 'cosine':
+                scheduler.step((epoch_num - 1) + (batch_num / num_batches_per_epoch))
+            if config['training']['scheduler']['name'] == 'exponential':
+                if batch_num % config['training']['scheduler']['step_size'] == 0:
+                    scheduler.step()
             elif config['training']['scheduler']['name'] in ['cyclic']:
                 scheduler.step()
 
