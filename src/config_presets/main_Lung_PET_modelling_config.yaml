@@ -91,7 +91,7 @@ data:
       clip: true
     rtdose:
       a_min: 0
-      a_max: 8000
+      a_max: 80
       b_min: 0
       b_max: 1
       clip: true
@@ -144,7 +144,7 @@ data:
 
 
 training:
-  max_epochs: 200
+  max_epochs: 2
   batch_size: 4
   validation_interval: 1
   patience: 10

@@ -25,7 +25,7 @@ class RTSTRUCTPlotter(ModalityPlotter):
             self.cmap = LinearSegmentedColormap.from_list("RTSTRUCT_cmap", processed_colors, N=N)
         else:
             self.empty_indices = []
-            self.cmap = mpl.cm.get_cmap(cmap_source, N)
+            self.cmap = mpl.colormaps[cmap_source].resampled(N)
 
         self.norm = Normalize(vmin=min_val, vmax=max_val)
         levels = np.arange(min_val, max_val + 1)
@@ -49,7 +49,7 @@ class RTSTRUCTPlotter(ModalityPlotter):
         self.levels = [0.5, 1.5]
 
         if is_background:
-            self.cmap_w_background = mpl.cm.get_cmap(self.modality_config["normalised_cmap"], 256)
+            self.cmap_w_background = mpl.colormaps[self.modality_config["normalised_cmap"]].resampled(256)
             self.norm_w_background = Normalize(vmin=0, vmax=1)
 
             self.cmap = self.cmap_w_background

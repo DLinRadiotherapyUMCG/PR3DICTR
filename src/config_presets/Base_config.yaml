@@ -125,7 +125,7 @@ data:
       legend_title: 'HU'       # title for the colorbar when plotting CT images
     rtdose:
       a_min: 0
-      a_max: 8000
+      a_max: 80
       b_min: 0
       b_max: 1
       clip: true

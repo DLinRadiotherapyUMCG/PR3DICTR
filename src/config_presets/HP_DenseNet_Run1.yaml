@@ -1,5 +1,5 @@
 general:
-  experiment_name: "DL_PLR_DenseNet_Run3" # 'DL-PLR-A1_DenseNet-Run1_test'
+  experiment_name: "DL_PLR_DenseNet_Run8" # 'DL-PLR-A1_DenseNet-Run1_test'
   testMode: False
 
 model:
