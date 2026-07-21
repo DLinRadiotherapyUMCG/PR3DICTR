@@ -46,8 +46,8 @@ class _DenseLayer(nn.Module):
         growth_rate: int,
         bn_size: int,
         dropout_prob: float,
-        act: Union[str, tuple] = ("relu", {"inplace": True}),
-        norm: Union[str, tuple] = "batch",
+        #act: Union[str, tuple] = ("relu", {"inplace": True}),
+        #norm: Union[str, tuple] = "batch",
     ) -> None:
         """
         Args:
@@ -93,8 +93,8 @@ class _DenseBlock(nn.Sequential):
         bn_size: int,
         growth_rate: int,
         dropout_prob: float,
-        act: Union[str, tuple] = ("relu", {"inplace": True}),
-        norm: Union[str, tuple] = "batch",
+        #act: Union[str, tuple] = ("relu", {"inplace": True}),
+        #norm: Union[str, tuple] = "batch",
     ) -> None:
         """
         Args:
@@ -110,7 +110,7 @@ class _DenseBlock(nn.Sequential):
         """
         super().__init__()
         for i in range(layers):
-            layer = _DenseLayer(spatial_dims, in_channels, growth_rate, bn_size, dropout_prob, act=act, norm=norm)
+            layer = _DenseLayer(spatial_dims, in_channels, growth_rate, bn_size, dropout_prob)
             in_channels += growth_rate
             self.add_module("denselayer%d" % (i + 1), layer)
 
@@ -121,8 +121,8 @@ class _Transition(nn.Sequential):
         spatial_dims: int,
         in_channels: int,
         out_channels: int,
-        act: Union[str, tuple] = ("relu", {"inplace": True}),
-        norm: Union[str, tuple] = "batch",
+        #act: Union[str, tuple] = ("relu", {"inplace": True}),
+        #norm: Union[str, tuple] = "batch",
     ) -> None:
         """
         Args:
@@ -198,15 +198,17 @@ class DenseNet(nn.Module):
 
         in_channels = init_features
         for i, num_layers in enumerate(block_config):
+            print("Adding dense block ", i+1, " with ", num_layers, " layers")
+            print(n_input_channels, " input channels, ", in_channels, " output channels", bn_size, " bn_size, ", growth_rate, " growth rate, ", dropout_prob, " dropout prob", act, " act, ", norm, " norm")
             block = _DenseBlock(
-                spatial_dims=n_input_channels,
+                spatial_dims=3,
                 layers=num_layers,
                 in_channels=in_channels,
                 bn_size=bn_size,
                 growth_rate=growth_rate,
                 dropout_prob=dropout_prob,
-                act=act,
-                norm=norm,
+                #act=act,
+                #norm=norm,
             )
             self.features.add_module(f"denseblock_{i + 1}", block)
             in_channels += num_layers * growth_rate
@@ -217,7 +219,7 @@ class DenseNet(nn.Module):
             else:
                 _out_channels = in_channels // 2
                 trans = _Transition(
-                    n_input_channels, in_channels=in_channels, out_channels=_out_channels, act=act, norm=norm
+                    n_input_channels, in_channels=in_channels, out_channels=_out_channels, # act=act, norm=norm
                 )
                 self.features.add_module(f"transition_{i + 1}", trans)
                 in_channels = _out_channels

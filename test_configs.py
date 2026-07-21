@@ -21,55 +21,65 @@ from src.evaluation.validate_on_test_set import validate_models_on_test_set
 if __name__ == '__main__':
 
     # Setup
-    parser = argparse.ArgumentParser(description='Model Training Script')
-    parser.add_argument("-p", "--path", type=str,required=True)
-    parser.add_argument("--log-level", type=str, default="INFO")
-    args = parser.parse_args()
-    path_to_config = str(pathlib.Path(args.path))
-    print("Config FIle is ",path_to_config)
-    log_level = args.log_level
-    setup_logging(log_level)
+    # parser = argparse.ArgumentParser(description='Model Training Script')
+    # parser.add_argument("-p", "--path", type=str,required=True)
+    # parser.add_argument("--log-level", type=str, default="INFO")
+    # args = parser.parse_args()
+    # path_to_config = str(pathlib.Path(args.path))
+    # print("Config FIle is ",path_to_config)
+    # log_level = args.log_level
+    # setup_logging(log_level)
 
 
 
-    config = get_config('main_Lung_PET_modelling_config')  
-    total_search_space = config['hyperparam_tuning']['hyperparams'].copy()
+    # config = get_config('main_Lung_PET_modelling_config')  
+    # total_search_space = config['hyperparam_tuning']['hyperparams'].copy()
 
-    # get the model-specific config
-    experiment_config = load_config('HP_TransRP')  # Load the config for the HNC OS model
-    experiment_config = load_config(path_to_config) 
-    model_specific_hyperparam_search_space = experiment_config['hyperparam_tuning']['hyperparams'].copy()
+    # # get the model-specific config
+    # #experiment_config = load_config('HP_TransRP')  # Load the config for the HNC OS model
+    # experiment_config = load_config(path_to_config) 
+    # model_specific_hyperparam_search_space = experiment_config['hyperparam_tuning']['hyperparams'].copy()
     
     
-    print('config 1')
-    print(total_search_space)
+    # print('config 1')
+    # print(total_search_space)
 
-    print('\n\n\n experiment_config')
-    print(model_specific_hyperparam_search_space)
+    # print('\n\n\n experiment_config')
+    # print(model_specific_hyperparam_search_space)
 
-    print('\n\n\n')
+    # print('\n\n\n')
 
-    # merge the configs
-    update_config(base=config, updates=experiment_config)
+    # # merge the configs
+    # update_config(base=config, updates=experiment_config)
 
-    print('config 2')
-    # merge the hyperparameter search spaces
-    print(config['hyperparam_tuning']['hyperparams'])
+    # print('config 2')
+    # # merge the hyperparameter search spaces
+    # print(config['hyperparam_tuning']['hyperparams'])
     
-    total_search_space.update(model_specific_hyperparam_search_space)
+    # total_search_space.update(model_specific_hyperparam_search_space)
 
-    config['hyperparam_tuning']['hyperparams'] = total_search_space
+    # config['hyperparam_tuning']['hyperparams'] = total_search_space
 
     
-    print('done')
-    print(config['hyperparam_tuning']['hyperparams'])
+    # print('done')
+    # print(config['hyperparam_tuning']['hyperparams'])
 
-    print('\n\n\n')
-    print(total_search_space)
+    # print('\n\n\n')
+    # print(total_search_space)
 
-    print(type(total_search_space))
+    # print(type(total_search_space))
 
 
 
-    expHandler = experimentHandler(config)
-    expHandler.run_experiment(config)
+    # expHandler = experimentHandler(config)
+    # expHandler.run_experiment(config)
+
+
+    import numpy as np
+
+    path = "/scratch/hb-LungModeling/Data/DLPOS/PET_Projects_Imaging_v2_SameSize/3316002/segmentation_map.npy"
+    array = np.load(path)
+    print(array.shape)
+    print(np.unique(array))
+
+    

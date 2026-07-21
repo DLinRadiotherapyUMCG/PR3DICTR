@@ -49,6 +49,8 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     optimizer = get_optimizer(config, model)
     if config['training']['scheduler']['name'] is not False:
         scheduler = get_scheduler(config, optimizer)
+    else:
+        scheduler = None
 
     # get the main metric with which to evaluate the training loop (e.g. AUC)
     metric_names_list = metricHandler.metric_names_list

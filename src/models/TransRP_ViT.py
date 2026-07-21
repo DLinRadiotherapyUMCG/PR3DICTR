@@ -52,10 +52,12 @@ class TransRP_ViT(nn.Module):
             post_activation: add a final acivation function to the classification head when `classification` is True.
                 Default to "Tanh" for `nn.Tanh()`. Set to other values to remove this function.
             clinical_features_method: method to incorporate clinical features in the ViT block.
-                "m1": add clinical features as an additional patch to the input of the transformer.
-                "m2": append the clinical features to each patch.
-                "m3": join the clinical features only in the linear layers at the very end.
-                "m4": add clinical features as an additional patch to the input of the transformer, but after the transformer.
+                "m1": add clinical features as an additional patch to the input of the transformer
+                "m2": append the clinical features to each patch
+                "m2_v2": same as m2, but do not make the features vectors longer
+                "m3": join the clinical features only in the linear layers at the very end
+                "cls": use the clinical features as the CLS token
+                "multi_cls": use multiple CLS tokens, one per class
         Examples::
 
             # for single channel input with image size of (96,96,96), conv position embedding and segmentation backbone

@@ -1,0 +1,70 @@
+general:
+  experiment_name: "DL_PLR_ResNet_Run1" # 'DL-PLR-A1_ResNet-Run1_test'
+  testMode: False
+
+model:
+  model_name: "resnet"
+
+hyperparam_tuning:
+  WandB:
+    isEnabled: True
+    API_Key: "c7f0f65fac8b7178ad7c5859ba6114775b16e694" # "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" #"wandb_v1_ZngNXgnWc0ttSWH2LMR7mUeUEKM" #"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" # Luis -  # "7ed1cc01e74dab3990ca774ff0461cdcd3ea5c1c" Roberts 
+  optuna:
+    isEnabled: True                    # perform hyperparameter tuning
+    objectives: ["val_mean_Event_C-index"]       # which metrics to optimise on (can be multi-objective)
+    objective_direction: ["maximize"]  # direction to optimise each metric in. must be the same length (and order) as objectives
+    n_trials: 200                      # number of trials to perform
+    n_startup_trials: 30               # number of random trials to perform at the start of the optuna experiment
+    kill_trial_threshold: 0.0          # kill a trial (after pruner_n_warmup_folds folds) if the mean metric value is below this threshold
+    pruner_n_warmup_folds: 3
+    set_new_seeds: True                # whether to set new seeds for each trial
+  # ----  Custom Params -------
+  # Location:= path variabele in config
+  hyperparams:
+    
+    # ResNet stuff
+    resnet_depth: 
+      name: 'ResNet_Depth'
+      type: 'categorical'
+      location: ['model','resnet','model_depth']
+      options: [18, 34, 50, 101, 152]
+    conv1_kernel_size:
+      name: 'conv1_kernel_size'
+      type: 'categorical'
+      location: ['model','resnet','conv1_kernel_size']
+      options: [3, 5, 7]
+
+
+   # loss_lamb:
+   #   name: Loss_Lamb
+   #   type: 'float'
+   #   location: ['training','loss','lamb']
+   #   min: 0.1
+   #   max: 3.0
+   # loss_margin:
+   #   name: Loss_Margin
+   #   type: 'float'
+   #   location: ['training','loss','margin']
+   #   min: 0.1
+   #   max: 3.0
+   # loss_gamma:
+   #   name: loss_gamma
+   #   type: 'float'
+   #   location: ['training','loss','gamma']
+   #   min: 0.1
+   #   max: 3.0
+    
+   # batch_size:
+   #   name: batch_size
+   #   type: 'categorical'
+   #   location: ["training","batch_size"]
+   #   options: [16]
+
+   # augmentation_noise_std:
+   #   name: augmentation_strength
+   #   type: 'float'
+   #   location: ['data','augmentation',"list","noise","std"]
+   #   min: 0
+   #   max: 0.6
+      
+        

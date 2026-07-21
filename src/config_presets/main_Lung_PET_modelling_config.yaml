@@ -11,7 +11,7 @@ general:
 columns:
   labels: ['LR']
   labels_types: ["Event"]
-  clinical_features: ["Gender","Age","Proton","Chemo","Immuno","Pulm","PerformanceScore","SmokingCat"]
+  clinical_features: ["Gender","Age","Proton","Chemo",]
 
 paths:
   csv: "/scratch/hb-LungModeling/Data/DLPOS/clinicalData/Version3/" #"/scratch/hb-LungModeling/Data/DLPOS/clinicalData/Version3/"
@@ -66,13 +66,13 @@ model:
 
 
 data:
-  dataset_csv: 'DL_Dataset_OS_Habrok_v3.csv' #'DL_Dataset_SmallSimple.csv'
-  image_keys: []  # ["PlanCT","PET","rtdose"] # "pCT.nii.gz"   ,"rtdose"]
+  dataset_csv: 'DL_Dataset_OS_V4.csv' #'DL_Dataset_SmallSimple.csv'
+  image_keys: ["PlanCT","PET","rtdose", "segmentation_map"] # "pCT.nii.gz"   ,"rtdose"]
   event_endpoint_time_unit: "years"
 
   dataloader:
     num_workers: 8           # number of workers (cores) to use for data loading in each training batch
-    dataset_type: 'standard'
+    dataset_type: 'cache'
     smartcache:
       cache_rate: 0.5                  # what fraction of the dataset should be kept in the RAM 
       num_replace_workers: 4           # number of workers to replace cache with
@@ -80,9 +80,10 @@ data:
   preprocessing:
     isEnabled: true
     crop: false
-    needs_scaling: ["PlanCT", 'PET','rtdose']
-    crop_shape: [96, 96, 96]
-    PlanCT:
+    needs_scaling: ["planct", 'pet','rtdose']
+    needs_label_mapping: ["segmentation_map"]
+    crop_shape: [157,214,209] # 96, 96, 96]
+    planct:
       a_min: -1000
       a_max: 600
       b_min: 0
@@ -94,14 +95,18 @@ data:
       b_min: 0
       b_max: 1
       clip: true
-    PET:             # example of how to scale a PET image
+    pet:             # example of how to scale a PET image
       a_min: 0
       a_max: 50      # SUV units
       b_min: 0
       b_max: 1
       clip: true
     segmentation_map:
-      target_labels: []
+      target_labels: [0.0, 1.0, 2.0, 3.0]
+      outline_color: 'deeppink'  # color to use for outlining the segmentation maps, when plotted over images (e.g. CT)
+      normalised_cmap: 'gray'  # colourmap to use for normalised model inputs (this is always used when the max value is >=1)
+      linewidth: 2
+      alpha: 0.8
 
   kFolds:
     n_splits: 4           # the number of data splits to make
@@ -139,10 +144,10 @@ data:
 
 
 training:
-  max_epochs: 1
-  batch_size: 8
+  max_epochs: 200
+  batch_size: 4
   validation_interval: 1
-  patience: 20
+  patience: 10
   stopping_criteria: "loss"  # What criteria to use for early stopping ['loss', 'metric']
   show_progress_bar: false    # whether to show the progress bar on each training epoch (recommend=False for Habrok)
 
@@ -207,43 +212,32 @@ hyperparam_tuning:
   # ----  Custom Params -------
   # Location:= path variabele in config
   hyperparams:
-    Model_Selected:
-      name: 'Model_Selected'
-      type: 'categorical'
-      location: ["model",'model_name']
-      options: ['TransRP']
-      
-#    Model_leakyReLu:
-#      name: 'M_LeakyReLu'
-#      type: 'float'
-#      location: ["model",'lrelu_alpha']
-#      min: 0.0001
-#      max: 0.2
-#    Model_DropOut:
-#      name: 'M_DropOut'
-#      type: 'float'
-#      location: ["model",'dropout_p']
-#      min: 0.0001
-#      max: 0.2
-    Model_N_LinearLayers:
-      name: 'M_N_LL'
+    
+    n_linear_layers:
+      name: 'n_linear_layers'
       type: 'int'
       location: ["model",'output_head','n_linear_layers']
-      min: 1
-      max: 5
-    Model_N_ClinicalLayers:
-      name: 'M_N_CL'
+      min: 0
+      max: 2
+    n_clinical_layers:
+      name: 'n_clinical_layers'
       type: 'int'
       location: ["model",'output_head','n_clinical_layers']
-      min: 1
-      max: 5
+      min: 0
+      max: 2
+    Dropout_rate:
+      name: 'Dropout_rate'
+      type: 'float'
+      location: ["model",'dropout_p']
+      min: 0.0
+      max: 0.5
 
 
     optimizer:
       name: "Optimizer" 
       type: 'categorical'
       location: ["training",'optimizer','name']
-      options: ['Adam','AdaBound','SGD']
+      options: ['Adam','AdamW','AdaBound','SGD']
     learning_rate: 
       name: 'Learning_rate'
       type: 'float'
@@ -251,15 +245,31 @@ hyperparam_tuning:
       min: 0.0000005
       max: 0.05
 
+  derived:
+    n_linear_layers:
+      linear_units:
+        type: 'categorical'
+        name: 'linear_units'
+        location: ['model','output_head','linear_units']
+        options: [4,8,16,32,64,128,256]
+        log: False
+    n_clinical_layers:
+      clinical_variables_linear_units:
+        type: 'categorical'
+        name: 'clinical_variables_linear_units'
+        location: ['model','output_head','clinical_variables_linear_units']
+        options: [4,8,16,32,64,128,256]
+        log: False
 
-        
+
+
 saving:
   config: True               # whether to save the config as a .yaml fule
   best_model: True           # whether to save the model weights on each fold
   plot_training_slices:      # plotting the model inputs on certain batches
-    isEnabled: False          # enable/disable these plots
+    isEnabled: True          # enable/disable these plots
     folder_name: 'figures'   # folder name to save the .png files into
-    every_n_epochs: 50       # make a plot of the first batch every N epochs
+    every_n_epochs: 1       # make a plot of the first batch every N epochs
     n_patients_per_epoch: 1  # how many patients to plot from a batch
     n_slices_per_patient: 8  # how many slices to plot per patient
   

@@ -1,10 +1,10 @@
-2026-07-20 15:13:36.381690: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
-2026-07-20 15:13:37.755501: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:485] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
-2026-07-20 15:13:38.251737: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:8454] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-2026-07-20 15:13:38.434086: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1452] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-2026-07-20 15:13:39.507006: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+2026-07-20 15:16:36.588132: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-07-20 15:16:36.619824: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:485] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-07-20 15:16:36.635549: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:8454] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-07-20 15:16:36.640287: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1452] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-07-20 15:16:36.653259: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
 To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2026-07-20 15:13:50.301471: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+2026-07-20 15:16:38.804660: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
 Config FIle is  HP_TransRP
 src/config_presets/Base_config.yaml
 src/config_presets/main_Lung_PET_modelling_config.yaml
@@ -31,33 +31,32 @@ done
 
 {'Model_Selected': {'name': 'Model_Selected', 'type': 'categorical', 'location': ['model', 'model_name'], 'options': ['TransRP']}, 'Model_N_LinearLayers': {'name': 'M_N_LL', 'type': 'int', 'location': ['model', 'output_head', 'n_linear_layers'], 'min': 1, 'max': 5}, 'Model_N_ClinicalLayers': {'name': 'M_N_CL', 'type': 'int', 'location': ['model', 'output_head', 'n_clinical_layers'], 'min': 1, 'max': 5}, 'optimizer': {'name': 'Optimizer', 'type': 'categorical', 'location': ['training', 'optimizer', 'name'], 'options': ['Adam', 'AdaBound', 'SGD']}, 'learning_rate': {'name': 'Learning_rate', 'type': 'float', 'location': ['training', 'optimizer', 'learning_rate'], 'min': 5e-07, 'max': 0.05}, 'densenet_depth': {'name': 'DenseNet_Depth', 'type': 'categorical', 'location': ['model', 'densenet', 'model_depth'], 'options': [121, 169, 201]}, 'clinical_features_method': {'name': 'clinical_features_method', 'type': 'categorical', 'location': ['model', 'TransRP', 'clinical_features_method'], 'options': ['m1', 'm2', 'm3', 'm4']}, 'ViT_embedding_dim': {'name': 'ViT_embedding_dim', 'type': 'categorical', 'location': ['model', 'TransRP', 'vit_dim'], 'options': [128, 256, 512, 768]}, 'ViT_depth': {'name': 'ViT_depth', 'type': 'categorical', 'location': ['model', 'TransRP', 'vit_depth'], 'options': [2, 4, 6, 8]}, 'vit_heads': {'name': 'vit_heads', 'type': 'categorical', 'location': ['model', 'TransRP', 'vit_heads'], 'options': [16, 32, 64, 128]}, 'vit_mlp_dim': {'name': 'vit_mlp_dim', 'type': 'categorical', 'location': ['model', 'TransRP', 'vit_mlp_dim'], 'options': [256, 512, 1024]}}
 <class 'ruamel.yaml.comments.CommentedMap'>
-[15:14:11] INFO     Starting up experiment handler...    experimentHandler.py:19
+[15:16:44] INFO     Starting up experiment handler...    experimentHandler.py:19
            INFO     Logging into Weights and Biases...     WandB_functions.py:20
 wandb: [wandb.login()] Using explicit session credentials for https://api.wandb.ai.
 wandb: Appending key for api.wandb.ai to your netrc file: /home4/p306883/.netrc
 wandb: Currently logged in as: d-macrae (pri2ma) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
 Weights and Biases is active
-[15:14:13] INFO     Setting up optuna                    experimentHandler.py:31
-3.36.0
-[15:14:16] INFO     Using Optuna storage at:                        utils.py:161
+[15:16:45] INFO     Setting up optuna                    experimentHandler.py:31
+[15:16:46] INFO     Using Optuna storage at:                        utils.py:161
                     sqlite:////scratch/hb-LungModeling/Results/Dani             
                     el_test_folder/TRANSRP TEST/track_optuna.db                 
 /scratch/hb-LungModeling/Python_Environments/DL_ModellingV2/lib/python3.9/site-packages/optuna/samplers/_tpe/sampler.py:319: ExperimentalWarning: ``multivariate`` option is an experimental feature. The interface can change in the future.
   warnings.warn(
 /scratch/hb-LungModeling/Python_Environments/DL_ModellingV2/lib/python3.9/site-packages/optuna/samplers/_tpe/sampler.py:338: ExperimentalWarning: ``constant_liar`` option is an experimental feature. The interface can change in the future.
   warnings.warn(
-[I 2026-07-20 15:14:16,826] A new study created in RDB with name: TRANSRP TEST
-           INFO     First optuna run has been detected!             utils.py:184
+[I 2026-07-20 15:16:46,144] Using an existing study with name 'TRANSRP TEST' instead of creating a new one.
+           INFO     Continuing existing optuna run!                 utils.py:186
            INFO     Use optuna for run optimalization    experimentHandler.py:45
-[15:14:17] ERROR    Error in trial Trial_0. See    OptunaExperimentManager.py:68
+[15:16:47] ERROR    Error in trial Trial_1. See    OptunaExperimentManager.py:68
                     error log .txt file for                                     
                     details.                                                    
            ERROR    [Errno 2] No such file or      OptunaExperimentManager.py:69
                     directory:                                                  
                     '/scratch/hb-LungModeling/Data                              
                     /DLPOS/clinicalData/Version3/D                              
-                    L_Dataset_OS_Habrok_v3.csv'                                 
-[W 2026-07-20 15:14:17,362] Trial 0 failed with parameters: {'Model_Selected': 'TransRP', 'M_N_LL': 2, 'M_N_CL': 1, 'Optimizer': 'Adam', 'Learning_rate': 0.027281543006335302, 'DenseNet_Depth': 169, 'clinical_features_method': 'm1', 'ViT_embedding_dim': 512, 'ViT_depth': 2, 'vit_heads': 64, 'vit_mlp_dim': 256} because of the following error: FileNotFoundError(2, 'No such file or directory').
+                    L_Dataset_OS_V3.csv.csv'                                    
+[W 2026-07-20 15:16:47,189] Trial 1 failed with parameters: {'Model_Selected': 'TransRP', 'M_N_LL': 1, 'M_N_CL': 4, 'Optimizer': 'Adam', 'Learning_rate': 0.026696451449617853, 'DenseNet_Depth': 121, 'clinical_features_method': 'm2', 'ViT_embedding_dim': 256, 'ViT_depth': 8, 'vit_heads': 16, 'vit_mlp_dim': 512} because of the following error: FileNotFoundError(2, 'No such file or directory').
 Traceback (most recent call last):
   File "/scratch/hb-LungModeling/CodeDLPOS_v4/PR3DICTR/src/hyper_opt/OptunaExperimentManager.py", line 55, in run_trial
     all_results = K_fold_cross_validation(trial_config, config_for_wandb=trial_hyper_param_dict, prune_trial_callback=prune_trial_callback)
@@ -67,7 +66,7 @@ Traceback (most recent call last):
     delimiterFound = get_delimiter(dataset_csv_dir)
   File "/scratch/hb-LungModeling/CodeDLPOS_v4/PR3DICTR/src/utils/data_equalizer.py", line 12, in get_delimiter
     with open(file_path, 'r') as csvfile:
-FileNotFoundError: [Errno 2] No such file or directory: '/scratch/hb-LungModeling/Data/DLPOS/clinicalData/Version3/DL_Dataset_OS_Habrok_v3.csv'
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/hb-LungModeling/Data/DLPOS/clinicalData/Version3/DL_Dataset_OS_V3.csv.csv'
 
 During handling of the above exception, another exception occurred:
 
@@ -78,8 +77,8 @@ Traceback (most recent call last):
     self.Optuna_study.optimize(lambda trial: self.run_trial(self.config, trial), n_trials)
   File "/scratch/hb-LungModeling/CodeDLPOS_v4/PR3DICTR/src/hyper_opt/OptunaExperimentManager.py", line 75, in run_trial
     with open(os.path.join(trial_dir, 'error_log.txt'), 'a') as f:
-FileNotFoundError: [Errno 2] No such file or directory: '/scratch/hb-LungModeling/Results/Daniel_test_folder/TRANSRP TEST/Trial_0/error_log.txt'
-[W 2026-07-20 15:14:17,366] Trial 0 failed with value None.
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/hb-LungModeling/Results/Daniel_test_folder/TRANSRP TEST/Trial_1/error_log.txt'
+[W 2026-07-20 15:16:47,191] Trial 1 failed with value None.
 Traceback (most recent call last):
   File "/scratch/hb-LungModeling/CodeDLPOS_v4/PR3DICTR/src/hyper_opt/OptunaExperimentManager.py", line 55, in run_trial
     all_results = K_fold_cross_validation(trial_config, config_for_wandb=trial_hyper_param_dict, prune_trial_callback=prune_trial_callback)
@@ -89,7 +88,7 @@ Traceback (most recent call last):
     delimiterFound = get_delimiter(dataset_csv_dir)
   File "/scratch/hb-LungModeling/CodeDLPOS_v4/PR3DICTR/src/utils/data_equalizer.py", line 12, in get_delimiter
     with open(file_path, 'r') as csvfile:
-FileNotFoundError: [Errno 2] No such file or directory: '/scratch/hb-LungModeling/Data/DLPOS/clinicalData/Version3/DL_Dataset_OS_Habrok_v3.csv'
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/hb-LungModeling/Data/DLPOS/clinicalData/Version3/DL_Dataset_OS_V3.csv.csv'
 
 During handling of the above exception, another exception occurred:
 
@@ -114,17 +113,17 @@ Traceback (most recent call last):
     self.Optuna_study.optimize(lambda trial: self.run_trial(self.config, trial), n_trials)
   File "/scratch/hb-LungModeling/CodeDLPOS_v4/PR3DICTR/src/hyper_opt/OptunaExperimentManager.py", line 75, in run_trial
     with open(os.path.join(trial_dir, 'error_log.txt'), 'a') as f:
-FileNotFoundError: [Errno 2] No such file or directory: '/scratch/hb-LungModeling/Results/Daniel_test_folder/TRANSRP TEST/Trial_0/error_log.txt'
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/hb-LungModeling/Results/Daniel_test_folder/TRANSRP TEST/Trial_1/error_log.txt'
 
 ###############################################################################
 Hábrók Cluster
-Job 30214671 for user p306883
-Finished at: Mon Jul 20 15:14:23 CEST 2026
+Job 30214778 for user p306883
+Finished at: Mon Jul 20 15:16:53 CEST 2026
 
 Job details:
 ============
 
-Job ID                         : 30214671
+Job ID                         : 30214778
 Name                           : short_test_bash.sh
 User                           : p306883
 Partition                      : gpushort
@@ -133,16 +132,16 @@ Number of Nodes                : 1
 Cores                          : 8
 Number of Tasks                : 1
 State                          : FAILED  
-Submit                         : 2026-07-20T15:12:29
-Start                          : 2026-07-20T15:12:30
-End                            : 2026-07-20T15:14:19
+Submit                         : 2026-07-20T15:16:23
+Start                          : 2026-07-20T15:16:24
+End                            : 2026-07-20T15:16:48
 Reserved walltime              : 00:45:00
-Used walltime                  : 00:01:49
-Used CPU time                  : 00:00:30 (Efficiency:  3.42%)
-% User (Computation)           : 60.05%
-% System (I/O)                 : 39.95%
+Used walltime                  : 00:00:24
+Used CPU time                  : 00:00:14 (Efficiency:  7.53%)
+% User (Computation)           : 74.92%
+% System (I/O)                 : 25.08%
 Total memory reserved          : 120G
-Maximum memory used            : 1.30G
+Maximum memory used            : 612.08M
 Requested GPUs                 : 1
 Allocated GPUs                 : a100=1
 Max GPU utilization            : 0%
