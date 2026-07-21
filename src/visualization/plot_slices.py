@@ -95,8 +95,8 @@ def plot_slices(
     layer_plotting_order = config['saving']['plot_training_slices']['layer_plotting_order']
     colormap_layers = config['saving']['plot_training_slices']['colormap_layers']
 
-    layer_plotting_order = [l.lower() for l in layer_plotting_order]
-    colormap_layers = [l.lower() for l in colormap_layers]
+    # layer_plotting_order = [l.lower() for l in layer_plotting_order]
+    # colormap_layers = [l.lower() for l in colormap_layers]
 
     slice_count = len(slice_indexes)
     row_count = len(row_dicts)
@@ -124,7 +124,9 @@ def plot_slices(
         row_dicts = rotate_arrs_in_plotting_row_dicts(row_dicts, layer_plotting_order, plotting_axis)
 
     for row_idx, row_dict in enumerate(row_dicts):
-        layers_to_plot = [x.lower() for x in layer_plotting_order if x in row_dict]
+        #layers_to_plot = [x.lower() for x in layer_plotting_order if x in row_dict]
+        layers_to_plot = [x for x in layer_plotting_order if x in row_dict]
+
         if verbose:
             print(row_idx, "layers_to_plot:", layers_to_plot)
         colorbar_layer_name = determine_colorbar_layer(layers_to_plot, colormap_layers)

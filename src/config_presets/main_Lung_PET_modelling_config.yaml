@@ -67,7 +67,7 @@ model:
 
 data:
   dataset_csv: 'DL_Dataset_OS_V4.csv' #'DL_Dataset_SmallSimple.csv'
-  image_keys: ["PlanCT","PET","rtdose", "segmentation_map"] # "pCT.nii.gz"   ,"rtdose"]
+  image_keys: ["PlanCT", "PET", "rtdose", "segmentation_map"] # "pCT.nii.gz"   ,"rtdose"]
   event_endpoint_time_unit: "years"
 
   dataloader:
@@ -80,10 +80,10 @@ data:
   preprocessing:
     isEnabled: true
     crop: false
-    needs_scaling: ["planct", 'pet','rtdose']
+    needs_scaling: ["PlanCT", 'PET','rtdose']
     needs_label_mapping: ["segmentation_map"]
     crop_shape: [157,214,209] # 96, 96, 96]
-    planct:
+    PlanCT:
       a_min: -1000
       a_max: 600
       b_min: 0
@@ -95,7 +95,7 @@ data:
       b_min: 0
       b_max: 1
       clip: true
-    pet:             # example of how to scale a PET image
+    PET:             # example of how to scale a PET image
       a_min: 0
       a_max: 50      # SUV units
       b_min: 0
@@ -272,6 +272,9 @@ saving:
     every_n_epochs: 1       # make a plot of the first batch every N epochs
     n_patients_per_epoch: 1  # how many patients to plot from a batch
     n_slices_per_patient: 8  # how many slices to plot per patient
+    layer_plotting_order: ["PlanCT", "PET", "rtdose", "segmentation_map"] # the order in which to plot the layers
+    colormap_layers: ["rtdose", "PET", "PlanCT", "segmentation_map"] # priority list for colourmaps per row (first is most important)
+  
   
   filenames:
     model_summary: "model_summary.txt"    # filename of the model summary

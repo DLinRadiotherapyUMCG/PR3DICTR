@@ -34,8 +34,8 @@ def scale_image_to_modality_range(config, image, modality):
 
     if modality in config['data']['preprocessing']['needs_scaling']:
         # scale the image back to the original range
-        min_val = config['data']['preprocessing'][modality.lower()]['a_min']
-        max_val = config['data']['preprocessing'][modality.lower()]['a_max']
+        min_val = config['data']['preprocessing'][modality]['a_min']
+        max_val = config['data']['preprocessing'][modality]['a_max']
         original_range = max_val - min_val
         #original_range = (config['data']['preprocessing'][modality.lower()]['a_max'] - config['data']['preprocessing'][modality.lower()]['a_min'])
         image = image * original_range + min_val

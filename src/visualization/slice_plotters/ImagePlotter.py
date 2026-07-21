@@ -12,7 +12,7 @@ class ImagePlotter(ModalityPlotter):
         min_val = self.modality_config["a_min"]
         max_val = self.modality_config["a_max"]
 
-        self.cmap = mpl.cm.get_cmap(cmap_name, N)
+        self.cmap = mpl.colourmaps[cmap_name].resampled(N)
         self.norm  = Normalize(vmin=min_val, vmax=max_val)
         self.levels = None
 

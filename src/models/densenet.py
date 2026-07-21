@@ -198,8 +198,6 @@ class DenseNet(nn.Module):
 
         in_channels = init_features
         for i, num_layers in enumerate(block_config):
-            print("Adding dense block ", i+1, " with ", num_layers, " layers")
-            print(n_input_channels, " input channels, ", in_channels, " output channels", bn_size, " bn_size, ", growth_rate, " growth rate, ", dropout_prob, " dropout prob", act, " act, ", norm, " norm")
             block = _DenseBlock(
                 spatial_dims=3,
                 layers=num_layers,
