@@ -1,11 +1,9 @@
 general:
   region: 'HNC'                        # ['HNC', 'LUNG']
   seed: 42                             # random seed
-  firstRun: false                      # if this is the first run of this experiment (# if True, makes new experiment folder)
   experiment_name: 'Base_Experiment'   # name of the experiment folder (contains all trial folders)
   trialNumber: "Trial_0"               # name of the trial folder (contains fold folders)
   resultsCurrentDirectory: ""          # current working directory
-  testMode: False                      # if testing the code (e.g. less patients, or less epochs, etc.)
   use_test_set: False                  # if the test dataset should be loaded
   dataset_amounts_experiment: False    # whether the dataset_amounts_experiment is being performed using bootstrapping
 
@@ -106,57 +104,58 @@ data:
     crop_shape: [96, 96, 96]           # dimension to crop to
     needs_scaling: ["ct", "rtdose", 'pet'] # , 'mri']         # list of image types that need to be scaled (a_min, a_max, b_min, b_max, and clip must be defined)
     needs_label_mapping: ["segmentation_map", "gtv_total"]   # list of image types that need label mapping (i.e. binarising OAR structures. target_labels must be defined)
-    ct: 
-      a_min: -200            # lowest range to clip from
-      a_max: 400             # highest range to clip from
-      b_min: 0               # lowest range to clip to
-      b_max: 1               # higher range to clip to
-      clip: true             # whether or not to clip using the above-mentioned clipping ranges
-      cmap: 'gray'           # colormap to use when plotting CT images  
-      legend_title: 'HU'       # title for the colorbar when plotting CT images
-    rtdose:
-      a_min: 0
-      a_max: 8000
-      b_min: 0
-      b_max: 1
-      clip: true
-      #cmap: 'gray'          
-      legend_title: 'cGy'       
-    mri:              # example of how to scale an MRI image
-      a_min: 0
-      a_max: 12345
-      b_min: 0
-      b_max: 1
-      clip: true
-    pet:             # example of how to scale a PET image
-      a_min: 0
-      a_max: 20      # SUV units
-      b_min: 0
-      b_max: 1
-      clip: true
-      cmap: 'hot'
-      legend_title: 'SUV'
-    mandible_dose:              # example of how to scale an MRI image
-      a_min: 0
-      a_max: 8000
-      b_min: 0
-      b_max: 1
-      clip: true
-    segmentation_map:      # value encoding of the structures in `segmentation_map.npy`, before feeding to model (set to 0 if don't want to include that structure)
-      target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
-      outline_color: 'deeppink'  # color to use for outlining the segmentation maps, when plotted over images (e.g. CT)
-      normalised_cmap: 'gray'  # colourmap to use for normalised model inputs (this is always used when the max value is >=1)
-      linewidth: 2
-      alpha: 0.8
-      # cmap can be either a matplotlib colormap name (string) or a list of color names (the latter of which is handy when you only want to plot certain structures distinctly):
-      # empty cmap colour names ('') will be transparent when plotting
-      cmap: 'nipy_spectral' # ['black', '', 'pink', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'gold', 'tab:olive', 'tab:cyan', 'gold', 'deepskyblue', 'crimson', 'lime', 'navy', 'magenta', 'darkorange', 'darkviolet', 'cyan'] # 'turbo'
-    gtv_total:
-      target_labels: [0.0, 1.0]  # target labels for the GTV total segmentation map (0 = no GTV, 1 = GTV present)
-      outline_color: 'red'
-      linewidth: 2
-      alpha: 0.8
-      cmap: 'PuRd'
+    image_modalities:
+      ct: 
+        a_min: -200            # lowest range to clip from
+        a_max: 400             # highest range to clip from
+        b_min: 0               # lowest range to clip to
+        b_max: 1               # higher range to clip to
+        clip: true             # whether or not to clip using the above-mentioned clipping ranges
+        cmap: 'gray'           # colormap to use when plotting CT images  
+        legend_title: 'HU'       # title for the colorbar when plotting CT images
+      rtdose:
+        a_min: 0
+        a_max: 8000
+        b_min: 0
+        b_max: 1
+        clip: true
+        #cmap: 'gray'          
+        legend_title: 'cGy'       
+      mri:              # example of how to scale an MRI image
+        a_min: 0
+        a_max: 12345
+        b_min: 0
+        b_max: 1
+        clip: true
+      pet:             # example of how to scale a PET image
+        a_min: 0
+        a_max: 20      # SUV units
+        b_min: 0
+        b_max: 1
+        clip: true
+        cmap: 'hot'
+        legend_title: 'SUV'
+      mandible_dose:              # example of how to scale an MRI image
+        a_min: 0
+        a_max: 8000
+        b_min: 0
+        b_max: 1
+        clip: true
+      segmentation_map:      # value encoding of the structures in `segmentation_map.npy`, before feeding to model (set to 0 if don't want to include that structure)
+        target_labels: [0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
+        outline_color: 'deeppink'  # color to use for outlining the segmentation maps, when plotted over images (e.g. CT)
+        normalised_cmap: 'gray'  # colourmap to use for normalised model inputs (this is always used when the max value is >=1)
+        linewidth: 2
+        alpha: 0.8
+        # cmap can be either a matplotlib colormap name (string) or a list of color names (the latter of which is handy when you only want to plot certain structures distinctly):
+        # empty cmap colour names ('') will be transparent when plotting
+        cmap: 'nipy_spectral' # ['black', '', 'pink', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'gold', 'tab:olive', 'tab:cyan', 'gold', 'deepskyblue', 'crimson', 'lime', 'navy', 'magenta', 'darkorange', 'darkviolet', 'cyan'] # 'turbo'
+      gtv_total:
+        target_labels: [0.0, 1.0]  # target labels for the GTV total segmentation map (0 = no GTV, 1 = GTV present)
+        outline_color: 'red'
+        linewidth: 2
+        alpha: 0.8
+        cmap: 'PuRd'
   kFolds:
     n_splits: 5           # the number of data splits to make
     n_iterations: 5       # the number of k-fold iterations to perform (i.e. how many to actually train, must be less than or equal to 'n_splits')

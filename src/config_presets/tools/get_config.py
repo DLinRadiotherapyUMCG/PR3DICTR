@@ -8,7 +8,7 @@ from src.config_presets.tools.load_config import load_config
 from src.dataset.LabelTypesManager import LabelTypesManager
 
 
-def get_config(name, name_base = 'Base_config', pathGiven = ""):
+def get_config(name, name_base = 'Base_config', pathGiven = "", testMode = False):
     """
     Constructs config as used throughout the main file 
     """
@@ -23,9 +23,12 @@ def get_config(name, name_base = 'Base_config', pathGiven = ""):
     update_config(config, experiment_config)
 
     # if testMode is active, overwrite the settings used in the testMode_config.yaml file
-    if config['general']['testMode']:
+    if testMode:
+        config['general']['testMode'] = True
         testMode_config = load_config('testMode_config', pathGiven)
         update_config(config, testMode_config, allow_new_keys=True)
+    else:
+        config['general']['testMode'] = False
 
     # check the config for errors
     check_config(config)
@@ -63,7 +66,7 @@ def update_config(base, updates, allow_new_keys=False):
     (i.e. if only one thing in the 'model' key needs to be updated, the rest of the 'model' dict will remain the same)
     """
     for key, value in updates.items():
-        if key == 'hyperparam_tuning': #  override option to allow `hyperparam_tuning` key to be added to the config
+        if key == 'hyperparam_tuning' or key == 'image_modalities': #  override option to allow `hyperparam_tuning` key to be added to the config
             allow_new_keys = True      #  often, this is not in the base config (because then it would need to contain every possible hyperparameter tuning variable)
         
         if (key in base) and (isinstance(base[key], dict)) and (isinstance(value, dict)):  # if we are dealing with nested dictionaries

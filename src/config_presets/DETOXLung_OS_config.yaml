@@ -2,13 +2,11 @@ general:
   region: 'LUNG'
   seed: 42
   device: "cuda"
-  firstRun: false
   experiment_name: 'DETOX-OS_07-2025'
   trialNumber: "Trial_?"
   patientGroup: 0
   optimize: "loss"
   resultsCurrentDirectory: ""
-  testMode: False
   use_test_set: False
 
 columns:

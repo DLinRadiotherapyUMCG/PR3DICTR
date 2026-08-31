@@ -16,16 +16,10 @@ if __name__ == '__main__':
     setup_logging(log_level)
 
     # Load the config
-    # config = get_config('Xerostomia_model')
-    config = get_config('HNC_OS_model')  # Load the config for the HNC OS model
-
-    # Disable randomness
-    set_random_seed(config['general']['seed'])
-
-    config['general']['experiment_name'] = "OS_model_test_HP4_pruning"
-    config['training']['max_epochs'] = 4
-    #config['data']['kFolds']['n_iterations'] = 5
+    config = get_config('Xerostomia_model', testMode=True)  # Load the config with testMode set to True
     
+    # Disable randomness
+    set_random_seed(config['general']['seed'])    
 
     # # MAIN: DL running class (with optional hyperparameter optimization)
     # this line is used to run the k-fold cross-validation

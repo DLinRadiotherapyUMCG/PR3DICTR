@@ -1,11 +1,9 @@
 general:
   region: "HNC"
   seed: 42
-  firstRun: false
   experiment_name: 'CV_layers_test'
   trialNumber: "1"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
-  testMode: false
   use_test_set: false
 
 columns: # 

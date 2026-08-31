@@ -6,7 +6,7 @@ class ModalityPlotter:
     """ Base class for modality plotting strategies """
     def __init__(self, config, modality_name):
 
-        self.modality_config = config['data']['preprocessing'][modality_name]
+        self.modality_config = config['data']['preprocessing']['image_modalities'][modality_name]
         self.modality_name = modality_name
         self.RT_region = config['general']['region']
     

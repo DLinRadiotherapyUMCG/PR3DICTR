@@ -1,11 +1,9 @@
 general:
   region: "HNC"
   seed: 42
-  firstRun: false
   experiment_name: 'Xerostomia_M06'
   trialNumber: "test_run"
   resultsCurrentDirectory:  ""  # "C:/Users/d.c.macrae/Documents/pred_RT"
-  testMode: False
   use_test_set: false
 
 columns: # 

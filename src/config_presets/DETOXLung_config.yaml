@@ -1,10 +1,8 @@
 general:
   seed: 42
-  firstRun: false
   experiment_name: 'Habrok_ResNet18_12_2024'
   trialNumber: "Trial_X"
   resultsCurrentDirectory: ""
-  testMode: False
 
 columns:
   labels: ["RP_OneYear"]
