@@ -42,7 +42,8 @@ def calibration_subplot(config, ax, y_pred_all, y_true_all, colour, n_bins=10):
     #ax.plot(mean_predicted_value, fraction_of_positives, shape, label=label, color=colour)
     ax.plot(bin_confs, bin_accs, shape, color=colour)
     #ax.hist(bin_confs, bins=n_bins)
-    ax.hist(y_pred, weights=np.ones_like(y_pred)/len(y_pred), alpha=0.4, bins=np.maximum(10,n_bins))
+    ax.hist(y_pred, weights=np.ones_like(y_pred)/len(y_pred), alpha=0.5, 
+            bins=np.maximum(10,n_bins), color='#4F81BD')
     """
     NOTE: these three lines are to compute and plot the error bars. The error bars are not currently being plotted
     as the error bar along the y-axis are really long (because they are for the observed rate, not the predicted rate)

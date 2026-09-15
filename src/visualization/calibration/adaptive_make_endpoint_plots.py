@@ -19,7 +19,7 @@ def adaptive_make_endpoint_plots(config, row_dicts, column_names, title=None, mo
 
     """
     n_bins = config['evaluation']['visualisations']['n_bins']
-    colours = ['tab:pink', 'tab:orange', 'tab:green', 'tab:grey', 'tab:blue', 'tab:orange', 'tab:brown', 'tab:cyan']
+    colours = ['tab:pink', 'tab:red', 'tab:green', 'tab:brown', 'dodgerblue', 'tab:orange', 'tab:brown', 'tab:cyan']
 
 
     # set the dimensions of the plot
@@ -67,7 +67,7 @@ def adaptive_make_endpoint_plots(config, row_dicts, column_names, title=None, mo
     # Create title
     if title is not None:
         title_height = 0.92 if len(row_dicts) > 1 else 1
-        fig.suptitle(title, fontsize=20, y=title_height) # place the title at the top of the figure
+        fig.suptitle(title, fontsize='20', y=title_height) # place the title at the top of the figure
 
     # Create subplots
     axs = [
@@ -103,7 +103,8 @@ def adaptive_make_endpoint_plots(config, row_dicts, column_names, title=None, mo
                 axs[i][j].set_xlabel(x_axis_label)
 
             if i == 0:
-                axs[i][j].set_title(column_names[j]) # annotate column subtitle
+                #print(plt.rcParams['axes.labelsize'])
+                axs[i][j].set_title(column_names[j], fontsize=50) # annotate column subtitle
             
             if j != 0:
                 axs[i][j].set_yticklabels([])
@@ -114,10 +115,10 @@ def adaptive_make_endpoint_plots(config, row_dicts, column_names, title=None, mo
                 axs[i][j].annotate(         # annotate row subtitle
                     row_dicts[i]["name"],
                     xy=(0, 0.5),
-                    xytext=(-axs[i][j].yaxis.labelpad - 50, 0),
+                    xytext=(-axs[i][j].yaxis.labelpad - 30, 0),
                     xycoords=axs[i][j].yaxis.label,
                     textcoords="offset points",
-                    size=15,
+                    size=17,
                     ha="center",
                     va="center",
                 )

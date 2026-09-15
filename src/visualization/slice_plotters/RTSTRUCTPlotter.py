@@ -58,7 +58,7 @@ class RTSTRUCTPlotter(ModalityPlotter):
 
     def plot(self, axs, RTSTRUCT, slices, params, is_background=False, **kwargs):
 
-        if RTSTRUCT.max() <= 1:
+        if RTSTRUCT.max() <= 1 or is_background==False: # if the RTSTRUCT is binary or if we are plotting the outlines, use the single outline color
             self.set_single_outline_colour(is_background=is_background)
 
         # plot the RTSTRUCT image slices along this axis of subplots
