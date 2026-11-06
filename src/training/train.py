@@ -1,9 +1,11 @@
+import os
 import logging
 import numpy as np
 import time
 import torch
 import copy
 from tqdm import tqdm
+from zeus.monitor import ZeusMonitor
 
 from src.utils.clear_cache import clear_cache
 from src.utils.optimizer.get_optimizer import get_optimizer
@@ -14,13 +16,15 @@ from src.models.tools.save_model import save_model
 from src.models.tools.load_model import load_model 
 from src.training.utils.check_improvement import check_improvement
 from src.training.utils.collect_all_preds_and_labels import collect_all_preds_and_labels
-from src.hyper_opt.WandB_functions import is_WandB_enabled, update_WandB_summary_table, WandB_log
+from src.hyper_opt.WandB_functions import update_WandB_summary_table, WandB_log
 from src.visualization.plot_model_inputs import plot_model_inputs
 from src.utils.loss_func.calc_mixup_loss import calc_mixup_loss
 from src.training.utils.gradNorm import GradNorm
 from src.training.utils.step_scheduler import step_scheduler
 
 from src.constants import DEVICE, MISSING_DATA_VALUE
+
+from zeus.device import get_gpus, get_cpus
 
 
 def train(config, model, loss_function, train_loader, val_loader, metricHandler):
@@ -36,6 +40,60 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     Returns:
         model: the trained model
     """
+
+    print("PyTorch CUDA available:", torch.cuda.is_available())
+    if torch.cuda.is_available():
+        print("GPU:", torch.cuda.get_device_name(0))
+
+    gpus = get_gpus()
+    print("Zeus GPU:", gpus.get_name(0))
+
+    try:
+        print(
+            "Supports energy counter:",
+            gpus.supports_get_total_energy_consumption(0),
+        )
+        print(
+            "Cumulative energy (mJ):",
+            gpus.get_total_energy_consumption(0),
+        )
+    except Exception as e:
+        print("GPU energy error:", repr(e))
+
+    try:
+        cpus = get_cpus()
+        print("CPU energy:", cpus.get_total_energy_consumption(0))
+    except Exception as e:
+        print("CPU energy error:", repr(e))
+
+
+    import pynvml
+
+    pynvml.nvmlInit()
+
+    handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+
+    try:
+        power = pynvml.nvmlDeviceGetPowerUsage(handle)
+        print(f"GPU power: {power / 1000:.2f} W")
+    except pynvml.NVMLError as e:
+        print("Power measurement unavailable:", e)
+
+
+    try:
+        print("Instant power:", gpus.get_instant_power_usage(0), "mW")
+    except Exception as e:
+        print("Instant power unavailable:", repr(e))
+
+    try:
+        print("Average power:", gpus.get_average_power_usage(0), "mW")
+    except Exception as e:
+        print("Average power unavailable:", repr(e))
+
+    zeus_log_file_path = os.path.join( config['general']['resultsCurrentDirectory'], 'zeus_monitor.log')
+    monitor = ZeusMonitor(gpu_indices=[0],
+                          cpu_indices=None,
+                          log_file=zeus_log_file_path,)
 
     # config run information
     show_pbar = config['training']['show_progress_bar']
@@ -78,6 +136,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
     logging.debug(f'N training batches = {num_batches_per_epoch} (batch size = {config["training"]["batch_size"]})')
     logging.info('Starting training loop')
 
+    # NEW
+    monitor.begin_window("training")
+
     # Training loop
     for epoch_num in range(1, config['training']['max_epochs'] + 1):
         logging.info(f'Epoch {epoch_num}')
@@ -97,6 +158,10 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
   
         if show_pbar:
             pbar = tqdm(total=len(train_loader), desc=f'Epoch {epoch_num}', position=0, leave=True)
+
+        # NEW
+        monitor.begin_window("epoch")
+
 
         for batch_num, batch in enumerate(train_loader, start=1):  
             logging.debug(f'Batch {batch_num} of epoch {epoch_num}')
@@ -164,7 +229,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
 
             # Step the scheduler (if applicable)
             step_scheduler(config, scheduler, epoch_num, batch_num, num_batches_per_epoch)
-            
+
+        measurement = monitor.end_window("epoch")
+        print(f"Epoch {epoch_num}: {measurement.time} s, {measurement.total_energy} J")
 
         if config['data']['dataloader']['dataset_type'] == 'smartcache':
             # update the cache
@@ -253,6 +320,9 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         model = load_model(config, model)
     else:
         model.load_state_dict(best_model_state_dict)    
+
+    measurement = monitor.end_window("training")
+    print(f"Entire training: {measurement.time} s, {measurement.total_energy} J")
 
     return model
 
