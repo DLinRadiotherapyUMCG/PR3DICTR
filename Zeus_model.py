@@ -16,7 +16,7 @@ if __name__ == '__main__':
     setup_logging(log_level)
 
     # Load the config
-    config = get_config('Xerostomia_model', testMode=True)  # Load the config with testMode set to True
+    config = get_config('Habrok_Xero', testMode=False)  
     
     # Disable randomness
     set_random_seed(config['general']['seed'])    
@@ -27,7 +27,6 @@ if __name__ == '__main__':
     # this line is used to run the k-fold cross-validation
     expHandler = experimentHandler(config)
     expHandler.run_experiment(config)
-
 
     # TEST THE ENSEMBLE OF MODELS ON THE TEST SET
     
