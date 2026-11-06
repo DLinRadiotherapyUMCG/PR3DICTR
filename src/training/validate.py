@@ -41,6 +41,7 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
 
     zeus_log_file_path = os.path.join( config['general']['resultsCurrentDirectory'], 'zeus_inference_monitor.log')
     monitor = ZeusMonitor(gpu_indices=[0],
+                          approx_instant_energy=True,
                               cpu_indices=None,
                               log_file=zeus_log_file_path,)
     
@@ -60,7 +61,7 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
 
             all_targets = torch.cat([all_targets, targets.detach()], dim=0) if len(all_targets) > 0 else targets.detach()
             patientIDs_list += list(batch['patient_id'])
-            
+
     monitor.end_window("inference")
 
     # for validation, we can calculate the loss just once at the end (instead of for each batch)
