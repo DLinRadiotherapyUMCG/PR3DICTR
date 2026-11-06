@@ -21,7 +21,8 @@ if __name__ == '__main__':
     # Disable randomness
     set_random_seed(config['general']['seed'])    
 
-    config['training']['max_epochs'] = 2  # Set max_epochs to 1 for testing purposes
+    config['training']['max_epochs'] = 20  # Set max_epochs to 1 for testing purposes
+    config['training']['patience'] = 20  # Set max_epochs to 1 for testing purposes
 
     # # MAIN: DL running class (with optional hyperparameter optimization)
     # this line is used to run the k-fold cross-validation

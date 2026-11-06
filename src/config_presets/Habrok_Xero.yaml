@@ -12,7 +12,7 @@ columns: #
   clinical_features: ["Xerostomia_W01_Helemaal_niet", "Xerostomia_W01_Een_beetje", "Xerostomia_W01_Nogal_Heel_erg", "Geslacht", "Leeftijd"]
 paths:
   csv: /scratch/p306883/PRIMA_dataset/
-  images: /scratch/p306883/PRIMA_dataset/dataset_full_2mm_anonymized
+  images: /scratch/p306883/PRIMA_dataset/dataset_full_renamed # dataset_full_2mm_anonymized
   results: /scratch/p306883/Zeus_results/
 
   # csv: "/scratch/p306883/DL_NTCP_Multitox/datasets/MT_dataset"
@@ -63,7 +63,7 @@ data:
   preprocessing:
     isEnabled: true
     crop: true
-    crop_shape: [96, 96, 96] # 192, 192] #  #  #  
+    crop_shape: [96, 192, 192] #  #  #   # [96, 96, 96] 
     image_modalities:
       ct:
         a_min: -200

@@ -41,55 +41,6 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         model: the trained model
     """
 
-    print("PyTorch CUDA available:", torch.cuda.is_available())
-    if torch.cuda.is_available():
-        print("GPU:", torch.cuda.get_device_name(0))
-
-    gpus = get_gpus()
-    print("Zeus GPU:", gpus.get_name(0))
-
-    try:
-        print(
-            "Supports energy counter:",
-            gpus.supports_get_total_energy_consumption(0),
-        )
-        print(
-            "Cumulative energy (mJ):",
-            gpus.get_total_energy_consumption(0),
-        )
-    except Exception as e:
-        print("GPU energy error:", repr(e))
-
-    try:
-        cpus = get_cpus()
-        print("CPU energy:", cpus.get_total_energy_consumption(0))
-    except Exception as e:
-        print("CPU energy error:", repr(e))
-
-
-    import pynvml
-
-    pynvml.nvmlInit()
-
-    handle = pynvml.nvmlDeviceGetHandleByIndex(0)
-
-    try:
-        power = pynvml.nvmlDeviceGetPowerUsage(handle)
-        print(f"GPU power: {power / 1000:.2f} W")
-    except pynvml.NVMLError as e:
-        print("Power measurement unavailable:", e)
-
-
-    try:
-        print("Instant power:", gpus.get_instant_power_usage(0), "mW")
-    except Exception as e:
-        print("Instant power unavailable:", repr(e))
-
-    try:
-        print("Average power:", gpus.get_average_power_usage(0), "mW")
-    except Exception as e:
-        print("Average power unavailable:", repr(e))
-
     zeus_log_file_path = os.path.join( config['general']['resultsCurrentDirectory'], 'zeus_monitor.log')
     monitor = ZeusMonitor(gpu_indices=[0],
                           cpu_indices=None,
