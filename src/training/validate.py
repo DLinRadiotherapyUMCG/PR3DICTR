@@ -1,10 +1,13 @@
 import torch
 import logging
 import numpy as np 
+import os
 
 from src.constants import DEVICE
 from src.utils.move_batch_to_device import move_batch_to_device
 from src.training.utils.collect_all_preds_and_labels import collect_all_preds_and_labels
+
+from zeus.monitor import ZeusMonitor
 
 
 def validate(config : dict, model, loss_function, val_loader, metric_handler):
@@ -35,20 +38,30 @@ def validate(config : dict, model, loss_function, val_loader, metric_handler):
     preds_dict = dict.fromkeys(labels, [])
     labels_dict = dict.fromkeys(labels, [])
     all_targets = torch.tensor([], device=DEVICE, dtype=torch.float32)  # also save all of the targets in a single tensor (to calculate the loss at the end)
+
+    zeus_log_file_path = os.path.join( config['general']['resultsCurrentDirectory'], 'zeus_inference_monitor.log')
+    monitor = ZeusMonitor(gpu_indices=[0],
+                              cpu_indices=None,
+                              log_file=zeus_log_file_path,)
     
-    
+    monitor.begin_window("inference")
+
     with torch.no_grad():
         for i, batch in enumerate(val_loader):
             logging.debug(f'Validation batch {i}')
             inputs, clinical_features, targets = move_batch_to_device(batch, DEVICE)
 
+            monitor.begin_window("model_forward")
             outputs = model(x=inputs, features=clinical_features)
+            monitor.end_window("model_forward")
             
             # collect all predictions and labels for each label type
             preds_dict, labels_dict = collect_all_preds_and_labels(labels, label_types, preds_dict, labels_dict, targets, outputs)
 
             all_targets = torch.cat([all_targets, targets.detach()], dim=0) if len(all_targets) > 0 else targets.detach()
             patientIDs_list += list(batch['patient_id'])
+            
+    monitor.end_window("inference")
 
     # for validation, we can calculate the loss just once at the end (instead of for each batch)
     avg_loss, total_loss_dict = loss_function(preds_dict, all_targets)

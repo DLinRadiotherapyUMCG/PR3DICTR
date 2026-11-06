@@ -41,7 +41,7 @@ def train(config, model, loss_function, train_loader, val_loader, metricHandler)
         model: the trained model
     """
 
-    zeus_log_file_path = os.path.join( config['general']['resultsCurrentDirectory'], 'zeus_monitor.log')
+    zeus_log_file_path = os.path.join( config['general']['resultsCurrentDirectory'], 'zeus_training_monitor.log')
     monitor = ZeusMonitor(gpu_indices=[0],
                           cpu_indices=None,
                           log_file=zeus_log_file_path,)

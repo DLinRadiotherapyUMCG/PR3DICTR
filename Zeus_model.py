@@ -31,6 +31,8 @@ if __name__ == '__main__':
 
     # TEST THE ENSEMBLE OF MODELS ON THE TEST SET
     
+    config['training']['batch_size'] = 1
+
     # # # # run the models on the test set
     trial_dir = os.path.join(config['paths']['results'], config['general']['experiment_name'], config['general']['trialNumber'])
     validate_models_on_test_set(config, trial_dir)
