@@ -159,7 +159,7 @@ evaluation:
 hyperparam_tuning:
   WandB:
     isEnabled: false
-    API_Key: "c7f0f65fac8b7178ad7c5859ba6114775b16e694"
+    API_Key: none
     #MetricsMonitor: [ "train_AUC","train_loss","train_acc",
     #  "eval_AUC","eval_loss","eval_acc"]
   optuna:
